@@ -201,7 +201,27 @@ async function serveGameAsset(request, env, url) {
     && /^\/vn-roads\/\d+_\d+(?:_\d+_\d+)?\.gz$/.test(pathname);
   if (roadTile) url.pathname = pathname.replace(/\.gz$/,".vrd.gz");
   const legacyTile = roadTile && url.searchParams.get("format") !== "packed";
-  let response = legacyTile ? await legacyRoadTile(request, env, url) : await env.ASSETS.fetch(new Request(url,request));
+  let response;
+  if (["GET","HEAD"].includes(request.method) && /^\/(streetscape|traffic)\/[^/]+\.glb$/.test(pathname)) {
+    url.pathname += ".gz";
+    const input = new Headers(request.headers);
+    // Byte ranges on model URLs refer to the decoded GLB.
+    input.delete("Range");
+    input.delete("If-Range");
+    response = await env.ASSETS.fetch(new Request(url,{method:request.method,headers:input}));
+    if (response.status === 200) {
+      const headers = new Headers(response.headers);
+      headers.delete("Content-Encoding");
+      headers.delete("Content-Length");
+      headers.delete("Content-Disposition");
+      headers.set("Content-Type","model/gltf-binary");
+      headers.set("Accept-Ranges","bytes");
+      const body = request.method === "HEAD" ? null : await RoadTileCodec.content(response);
+      response = new Response(body,{headers});
+    }
+  } else {
+    response = legacyTile ? await legacyRoadTile(request, env, url) : await env.ASSETS.fetch(new Request(url,request));
+  }
   if (isPage && response.ok) {
     const headers = new Headers(response.headers);
     headers.set("Content-Type", "text/html; charset=utf-8");

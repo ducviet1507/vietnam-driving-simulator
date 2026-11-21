@@ -4,10 +4,11 @@ import {packRoadAssets} from "./pack-road-assets.mjs";
 import {prepareSightSurfaces} from "./prepare-sight-surfaces.mjs";
 import {preparePageUrls} from "./page-urls.mjs";
 import {execFileSync} from "node:child_process";
-import {mkdir,mkdtemp,readFile,rename,rm,writeFile} from "node:fs/promises";
+import {mkdir,mkdtemp,readFile,readdir,rename,rm,writeFile} from "node:fs/promises";
 import {tmpdir} from "node:os";
 import {fileURLToPath} from "node:url";
 import path from "node:path";
+import {gzipSync} from "node:zlib";
 
 const root = fileURLToPath(new URL("../", import.meta.url));
 const client = path.join(root,"dist/client");
@@ -25,6 +26,16 @@ try {
   await rm(scratch,{recursive:true,force:true});
 }
 await Promise.all([packRoadAssets(client),prepareSightSurfaces(client)]);
+// Keep each model's public URL while storing just its compressed bytes.
+for (const directory of ["streetscape","traffic"]) {
+  const folder = path.join(client,directory);
+  for (const name of await readdir(folder)) {
+    if (!name.endsWith(".glb")) continue;
+    const model = path.join(folder,name);
+    await writeFile(model+".gz",gzipSync(await readFile(model),{level:9}));
+    await rm(model);
+  }
+}
 const pagePaths = await preparePageUrls(client);
 await packJourneyData(client);
 await bundleJourneyScripts(client);
