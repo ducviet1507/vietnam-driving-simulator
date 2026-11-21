@@ -87,7 +87,7 @@ window.VietnamLandmarks=(()=>{
     function sign(title,x,y,z,width,height,glass=false){
       const canvas=document.createElement('canvas');canvas.width=768;canvas.height=128;
       const g=canvas.getContext('2d');if(!glass){g.fillStyle='#f2dfa7';g.fillRect(0,0,768,128);}
-      g.fillStyle=glass?'#f1f2ef':'#703d39';g.font=glass?'bold 78px Arial':'bold 76px Georgia, serif';g.textAlign='center';g.textBaseline='middle';g.fillText(title,384,67,732);
+      g.fillStyle=glass?'#f1f2ef':'#703d39';g.font=glass?'bold 78px Arial':'bold 76px "Times New Roman", "Noto Serif", serif';g.textAlign='center';g.textBaseline='middle';g.fillText(title,384,67,732);
       const map=new T.CanvasTexture(canvas);map.colorSpace=T.SRGBColorSpace;
       const panel=new T.Mesh(new T.PlaneGeometry(width,height),new T.MeshStandardMaterial({map,transparent:glass,alphaTest:glass?.32:0,roughness:.86}));
       panel.position.set(x,y,z);group.add(panel);

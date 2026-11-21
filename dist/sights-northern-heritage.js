@@ -366,7 +366,7 @@
     const marker=document.createElement('canvas');marker.width=384;marker.height=512;
     const pen=marker.getContext('2d');pen.fillStyle='#866732';pen.textAlign='center';
     for(const [line,y,size] of [['HANG PÁC BÓ',80,44],['CHỦ TỊCH',176,37],['HỒ CHÍ MINH',241,39],['ĐÃ Ở VÀ LÀM VIỆC',303,33],['TỪ 8-2-1941',374,35],['ĐẾN CUỐI THÁNG 3-1941',449,30]]) {
-      pen.font='bold '+size+'px Georgia, serif';pen.fillText(line,192,y,365);
+      pen.font='bold '+size+'px "Times New Roman", "Noto Serif", serif';pen.fillText(line,192,y,365);
     }
     const map=new T.CanvasTexture(marker);map.colorSpace=T.SRGBColorSpace;
     const letters=new T.Mesh(new T.PlaneGeometry(1.02,.65),new T.MeshStandardMaterial({map,transparent:true,alphaTest:.25,roughness:1}));

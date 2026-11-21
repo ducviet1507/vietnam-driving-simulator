@@ -17,7 +17,7 @@
     g.fillStyle = bg; g.fillRect(0, 0, 768, 144);
     g.strokeStyle = fg; g.lineWidth = 5; g.strokeRect(8, 8, 752, 128);
     g.fillStyle = fg;
-    g.font = 'bold 70px Georgia, serif';
+    g.font = 'bold 70px "Times New Roman", "Noto Serif", serif';
     g.textAlign = 'center'; g.textBaseline = 'middle';
     g.fillText(title, 384, 74, 710);
     const map = new T.CanvasTexture(c);

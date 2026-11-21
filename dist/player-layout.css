@@ -21,7 +21,7 @@
 .arcade .grid {inset:60px auto 0 0;width:var(--panel);display:flex;align-items:flex-start;padding:clamp(20px,3vw,48px);color:var(--ink);background:var(--paper);color-scheme:light}
 .arcade .gridcopy {display:block;width:100%;height:auto;max-width:none;min-height:0;margin:auto 0}
 .arcade .gridcopy>small {color:#46665c;text-transform:uppercase;font-size:12px;letter-spacing:.16em}
-.arcade .gridcopy h1 {font:italic 700 clamp(50px,5.8vw,90px)/.94 "Barlow Condensed",Impact,sans-serif;letter-spacing:-.025em;text-shadow:none;margin:6px 0 10px}
+.arcade .gridcopy h1 {font:italic 700 clamp(50px,5.8vw,90px)/.94 "Barlow Condensed",system-ui,sans-serif;letter-spacing:-.025em;text-shadow:none;margin:6px 0 10px}
 .arcade .gridcopy>p {font-size:15px;line-height:1.45;margin:0 0 20px;padding:0;color:#435a50;max-width:32ch}
 .arcade .launchpanel {display:grid;gap:7px;width:100%}
 .arcade .launchpanel label {font-size:13px;font-weight:700;color:#345046;margin:5px 0 0}

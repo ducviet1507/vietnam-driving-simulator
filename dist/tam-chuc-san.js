@@ -102,7 +102,7 @@
     const cloth=document.createElement('canvas');cloth.width=256;cloth.height=512;
     const ctx=cloth.getContext('2d');ctx.fillStyle='#98745b';ctx.fillRect(0,0,256,512);
     ctx.strokeStyle='#d2b16b';ctx.lineWidth=5;ctx.strokeRect(8,8,240,496);
-    ctx.fillStyle='#e4c682';ctx.textAlign='center';ctx.font='bold 44px serif';
+    ctx.fillStyle='#e4c682';ctx.textAlign='center';ctx.font='bold 44px "Times New Roman", "Noto Serif", serif';
     for(const [i,word] of ['TÂM','AN','VẠN','SỰ','AN'].entries())ctx.fillText(word,128,83+i*83);
     const texture=new T.CanvasTexture(cloth);texture.colorSpace=T.SRGBColorSpace;
     const panels=new T.InstancedMesh(new T.PlaneGeometry(1.03,7.3),

@@ -209,6 +209,16 @@ try {
     }
     await page.locator('#secretCapture').click();
     const title=await page.locator('#secretTitle').innerText();
+    await page.evaluate(()=>document.fonts.ready.then(()=>true));
+    const typography=await page.context().newCDPSession(page);
+    try {
+      await typography.send('DOM.enable');
+      await typography.send('CSS.enable');
+      const {root}=await typography.send('DOM.getDocument');
+      const {nodeId}=await typography.send('DOM.querySelector',{nodeId:root.nodeId,selector:'#secretTitle'});
+      const {fonts}=await typography.send('CSS.getPlatformFontsForNode',{nodeId});
+      assert.deepEqual(fonts.map(font=>font.postScriptName),['SourceSerif4-Bold'],'Stamp title uses a fallback font');
+    } finally {await typography.detach();}
     await page.locator('#secretResult [data-postcard]').click();
     const print = page.locator('#postcardPrint');
     await print.waitFor({state:'visible'});

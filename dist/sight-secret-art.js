@@ -322,7 +322,7 @@
       line('M15 17v-2h6m78 0h6v5m-90 65v4h6m76 0h8v-5', ink, 1.4) +
       '<g transform="translate(15 8) scale(.91)"><g class="sight-stamp-print">' + artwork(key,siteId) + '</g></g>' +
       (mark ? '' : line('M18 92h58m-58 2h23', ink, .8)) +
-      '<text x="18" y="103" fill="currentColor" font-family="Georgia,serif" font-size="7.4" font-weight="bold" letter-spacing="1.4">VIỆT NAM</text>' +
+      '<text x="18" y="103" fill="currentColor" font-family="Times New Roman, Noto Serif, serif" font-size="7.4" font-weight="bold" letter-spacing="1.4">VIỆT NAM</text>' +
       postmark(code) + '</g>';
     if (mark) {
       const country = svg.querySelector('text'), origin = document.createElementNS(svg.namespaceURI,'text');

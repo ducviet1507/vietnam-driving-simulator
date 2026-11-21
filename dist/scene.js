@@ -186,7 +186,7 @@
   const marketSign=basic(texture(768,160,c=>{
     c.fillStyle='#773c2e';c.fillRect(0,0,768,160);
     c.strokeStyle='#d1ad73';c.lineWidth=5;c.strokeRect(9,9,750,142);
-    c.font='bold 70px Georgia';c.fillStyle='#fff1c8';c.textAlign='center';c.fillText('CHỢ TRẦN PHÚ',384,107);
+    c.font='bold 70px "Times New Roman", "Noto Serif", serif';c.fillStyle='#fff1c8';c.textAlign='center';c.fillText('CHỢ TRẦN PHÚ',384,107);
   }));
   function market(x,z,side){
     const facing=-side*Math.PI/2;

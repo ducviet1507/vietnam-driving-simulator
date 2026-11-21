@@ -49,7 +49,11 @@ function createSightSecrets(getView, playChime) {
       if (raw) {
         const record = JSON.parse(raw);
         if (record && ['name','title','motif','reveal'].every(k => typeof record[k] === 'string') &&
-            Number.isFinite(record.seed) && Number.isFinite(record.time)) records.set(id, {...record,id});
+            Number.isFinite(record.seed) && Number.isFinite(record.time)) {
+          // Older stamps keep the original atlas label in local storage.
+          const name = record.name.replace(/(^|\s)[\u0300-\u0303\u0306\u0309\u031b\u0323]+/gu, '$1').normalize('NFC');
+          records.set(id, {...record,id,name});
+        }
       }
     } catch { /* Session records also work with storage disabled. */ }
     return records.get(id);

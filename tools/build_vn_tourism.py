@@ -54,6 +54,12 @@ def normalize(name):
                    if not unicodedata.combining(c)).strip()
 
 
+def display_name(name):
+    # A tone mark after whitespace has no letter to attach to.
+    name = re.sub(r"(?<!\S)[\u0300-\u0303\u0306\u0309\u031b\u0323]+", "", name)
+    return unicodedata.normalize("NFC", name.strip())
+
+
 def province_name(tags):
     name = tags.get("name:vi") or tags.get("name") or ""
     if not tags.get("ISO3166-2", "").startswith("VN-") or name.endswith(" cũ"):
@@ -93,7 +99,7 @@ def extract(source):
     provinces, points = [], []
     for obj in processor:
         tags = obj.tags
-        name = (tags.get("name:vi") or tags.get("name") or "").strip()
+        name = display_name(tags.get("name:vi") or tags.get("name") or "")
         if not name or len(name) > 110:
             continue
         if obj.is_area() and not obj.from_way() and tags.get("admin_level") == "4":

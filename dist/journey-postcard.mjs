@@ -1,6 +1,6 @@
 const ink = '#183c35';
 const paper = '#fff6df';
-const display = '"Barlow Condensed", "Arial Narrow", sans-serif';
+const display = '"Barlow Condensed", system-ui, sans-serif';
 
 function lines(ctx, text, width) {
   const result = [];
@@ -57,7 +57,7 @@ export function printPostcard(scene, {title, note, stamp, mark, portrait = false
   const textWidth = w - 240;
   ctx.fillStyle = '#406353'; ctx.font = 'bold 19px system-ui';
   ctx.fillText(stamp ? 'DẤU ĐÃ TÌM  /  ' + stamp : 'LỜI NHẮN TỪ GHẾ PHỤ', left, bottom + 39, textWidth);
-  ctx.fillStyle = ink; ctx.font = 'italic 34px Georgia, serif';
+  ctx.fillStyle = ink; ctx.font = 'italic 34px "Times New Roman", "Noto Serif", serif';
   const noteLines = lines(ctx, note, textWidth);
   noteLines.forEach((line, i) => ctx.fillText(line, left, bottom + 87 + i * 41));
   ctx.fillStyle = '#466356'; ctx.font = '600 19px system-ui';

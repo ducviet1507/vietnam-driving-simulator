@@ -15,6 +15,10 @@ const {sightSecretStories:stories, VietnamLandmarks, VietnamTourism} = context;
 const visits = runInContext('heritageVisits',context);
 const motifs = new Set('turtle lantern lotus sail wing echo beacon leaf ink star shell arch gear drop dragon ridge'.split(' '));
 const covered = new Set();
+for(const {id,name} of VietnamTourism.entries) {
+  assert.equal(name,name.normalize('NFC'),id);
+  assert.doesNotMatch(name,/(?:^|\s)[\u0300-\u0303\u0306\u0309\u031b\u0323]/u,id);
+}
 for(const place of [...VietnamTourism.entries,...VietnamLandmarks.entries,...context.mountainStages]) {
   const card = stories[place.id] || context.sightSecretTheme({...place, kind:place.kind || 'Đường đèo'}, 31415);
   assert.ok(card.length === 4 && motifs.has(card[0]) && card.every(s=>typeof s==='string' && s.trim()),place.id);
