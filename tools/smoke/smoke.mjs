@@ -169,6 +169,7 @@ try {
     await go('/?intro=turtle');
     await page.getByRole('button',{name:'Cầm lái',exact:true}).waitFor();
     await checkPhoneRotation(page,false);
+    assert.equal(await page.evaluate(()=>typeof THREE),'undefined','Departure grid loaded the renderer early');
     assert.equal(await page.evaluate(()=>Boolean(VietnamTourism.complete || window.driveBank)),false);
     await page.getByRole('button',{name:'Cầm lái',exact:true}).click();
     await page.locator('body[data-phase="drive"]').waitFor();
@@ -190,6 +191,20 @@ try {
     }
     await page.locator('#secretCapture').click();
     const title=await page.locator('#secretTitle').innerText();
+    await page.locator('#secretResult [data-postcard]').click();
+    const print = page.locator('#postcardPrint');
+    await print.waitFor({state:'visible'});
+    assert.ok((await print.getAttribute('alt')).includes(title));
+    const firstNote = await print.getAttribute('alt');
+    await page.locator('#postcardNote').click();
+    await page.waitForFunction(old=>!document.getElementById('postcardPrint').hidden &&
+      document.getElementById('postcardPrint').alt!==old,firstNote);
+    const [card] = await Promise.all([page.waitForEvent('download'), page.locator('#postcardSave').click()]);
+    const jpeg = await readFile(await card.path());
+    assert.equal(jpeg.readUInt16BE(0),0xffd8);
+    assert.ok(jpeg.length>10000);
+    await page.locator('#closePostcard').click();
+    assert.equal(await page.locator('#secretResult').isVisible(),true);
     await page.locator('#secretResult [data-stamp-book]').click();
     assert.equal(await page.locator('#stampList strong').innerText(),title);
     await page.keyboard.press('Escape');

@@ -1,3 +1,4 @@
+import {prepareJourneyOpening,writeDeparturePages} from "./prepare-journey-opening.mjs";
 import {bundleJourneyScripts} from "./bundle-journey.mjs";
 import {packJourneyData} from "./pack-journey-data.mjs";
 import {packRoadAssets} from "./pack-road-assets.mjs";
@@ -40,11 +41,13 @@ for (const directory of ["streetscape","traffic"]) {
 }
 const pagePaths = await preparePageUrls(client);
 await packJourneyData(client);
+const departures = await prepareJourneyOpening(client);
 await bundleJourneyScripts(client);
 // Sites normalizes public .html assets with a 307 before invoking the Worker.
 // Keep the document bytes in the asset store and let the Worker own page URLs.
 const documents = path.join(client, "page-content");
 await mkdir(documents, {recursive:true});
+await writeDeparturePages(documents, await readFile(path.join(client, "index.html"),"utf8"), departures);
 for (const page of pagePaths) {
   const stem = page === "/" ? "index" : page.slice(1);
   await rename(path.join(client, stem + ".html"), path.join(documents, stem + ".bin"));
@@ -72,6 +75,7 @@ for (const name of await readdir(client)) {
 // Sites accepts a single ES module as its Worker entry point.
 await writeFile(path.join(server,"index.js"),body
   .replace('import "../dist/road-tile-codec.js";',()=>roadCodec)
+  .replace('import departureIds from "./departure-ids.js";',"const departureIds = new Set("+JSON.stringify(departures.map(stop=>stop.id))+");")
   .replace('import pagePaths from "./page-paths.js";',"const pagePaths = new Set("+JSON.stringify(pagePaths)+");")
   .replace('import courseLengths from "./course-lengths.js";',"const courseLengths = "+JSON.stringify(courses)+";")
   .replace('import guidedLengths from "./guided-lengths.js";',"const guidedLengths = "+JSON.stringify(guided)+";"));

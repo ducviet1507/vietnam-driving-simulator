@@ -14,6 +14,10 @@ ViVu3D là game lái xe 3D trên trình duyệt. Bạn có thể khám phá Vi�
 | [Cúp Bánh Mì](https://vivu3d.com/cup) | Vượt đối thủ ở chặng Ven sông, Đèo trà hoặc một trong sáu cung đèo. Mỗi chặng có bảng thành tích riêng. |
 | [Sân tập và thi thử](https://vivu3d.com/hall) | Ôn lý thuyết hạng B, tập sa hình rồi thử lái đường trường và đường phố. |
 
+## Bưu thiếp Xuyên Việt
+
+Ghé Hồ Gươm rồi bấm **Tạm dừng → Viết bưu thiếp từ đây**. Game in cảnh đang nhìn cùng một lời nhắn từ ghế phụ. Bạn có thể đổi lời, tải ảnh hoặc sao chép link để bạn bè tới cùng điểm hẹn. Khi tìm được dấu ẩn trong góc ngắm địa danh, chọn **Gửi bưu thiếp có dấu** để in cả con dấu lên ảnh. [Khởi hành ở Hồ Gươm](https://vivu3d.com/?intro=turtle) · [Bài đăng và ảnh Xuyên Việt](social/bai-dang-xuyen-viet.txt).
+
 ## Khám phá địa danh
 
 Mỗi điểm ngắm có một con dấu bí mật. Ở Tháp Rùa, hãy để ý ánh lóe trên mặt hồ. Mở **Ngắm địa danh 3D**, chọn **Tìm dấu ẩn**, rồi kéo cảnh hoặc dùng hai phím mũi tên để đưa ánh lóe vào khung. Một số nét khắc chỉ hiện khi lấy nét gần. Xe đang dừng cạnh địa danh cũng có thể **Dò đài FM** để nghe manh mối. Mở **Tùy chọn → Sổ dấu hành trình** để xem lại các dấu đã tìm thấy trên trình duyệt này. [Ghé Tháp Rùa](https://vivu3d.com/?landmark=turtle).

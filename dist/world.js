@@ -96,17 +96,53 @@ async function streamWater(graph){
  }catch{/* Road navigation stays available when this scenery layer is offline. */}
 }
 let framesStarted=false,departureWaterReady=null;
+// Preload the ordered renderer scripts together on the first request for a 3D
+// scene. Keep successful loads across retries so global bindings execute once.
+const rendererFiles=new Map();
+let rendererReady;
+function loadJourneyRenderer(){
+ return rendererReady??=(async()=>{
+   const sources=[...$('journeyRenderer').content.querySelectorAll('script[src]')];
+   for(const {src} of sources){
+     if(rendererFiles.has(src))continue;
+     const preload=document.createElement('link');
+     preload.rel='preload';preload.as='script';preload.href=src;document.head.append(preload);
+     rendererFiles.set(src,{preload,loaded:false});
+   }
+   for(const {src} of sources){
+     const file=rendererFiles.get(src);
+     if(file.loaded)continue;
+     try{
+       await new Promise((resolve,reject)=>{
+         const script=document.createElement('script');script.src=src;
+         script.onload=()=>{script.remove();resolve();};
+         script.onerror=()=>{script.remove();reject(Error('Chưa tải đủ cảnh 3D. Kiểm tra kết nối rồi thử lại.'));};
+         document.head.append(script);
+       });
+       file.loaded=true;
+     }catch(e){rendererFiles.delete(src);throw e;}
+     finally{file.preload.remove();}
+   }
+ })().catch(e=>{rendererReady=null;throw e;});
+}
 async function prepareWorld(graph,token){
+ const progress=text=>{if(token===loadToken&&!$('grid').hidden)$('loadStatus').textContent=text;};
+ progress('Đang dựng cảnh quanh '+$('journeyTitle').textContent+'…');
+ await loadJourneyRenderer();
+ if(token!==loadToken)return false;
  gfx??=createWorldScene($('world'),breakfastCall);
  gfx.preloadVehicle(car.model);gfx.resetFx();
  loadStructuresNear(graph,car.x,car.z);
  await Promise.all([gfx.terrainReady,Promise.resolve(departureWaterReady).then(()=>streamWater(graph)),gfx.loadDistrict(graph,car.x,car.z),
    VietnamTourism.loadRegion(...graph.geo(car.x,car.z))]);
  if(token!==loadToken)return false;
+ progress('Đang nối mặt đường và đặt xe vào làn…');
  if(!await refreshView(gfx.loadRoads)||token!==loadToken)return false;
  seedTraffic();
+ progress('Đang chuẩn bị ánh sáng và buồng lái…');
  await gfx.prepareShaders(car,npcs);
  if(token!==loadToken)return false;
+ progress('');
  if(!framesStarted){framesStarted=true;requestAnimationFrame(frame);}
  return true;
 }
@@ -122,6 +158,7 @@ async function startAt(place,restore=null,guided=null){
  if(site)useSightEntrance(site);
  car.scenicHour=scenicPasses.has(site?.id)?scenicHour():null;
  const departure=restore?null:JourneyDepartures.byId(site?.id);
+ if(departure&&!guided&&!reduceMotion.matches)car.openingPose=1;
  JourneyDepartures.select(departure);
  $('journeyTitle').textContent=departure?.title||site?.name||place[0];
  $('journeyTitle').classList.toggle('longTitle',$('journeyTitle').textContent.length>25);
@@ -165,6 +202,10 @@ async function startAt(place,restore=null,guided=null){
    if(!nearest||nearest.error>4000**2){await graph.load(start.x,start.z,true);nearest=graph.nearest(start.x,start.z);}
    if(token!==loadToken)return;
    if(!nearest||nearest.error>28000**2)throw Error('Chưa có đường ô tô gần điểm này. Hãy chọn điểm khác trên bản đồ.');
+   if(place===JourneyDepartures.pin){
+     $('journeyTitle').textContent=nameOf(nearest.edge);
+     $('journeyCaption').textContent='Điểm hẹn trong bưu thiếp. Xe đã đỗ trên đường gần nhất.';
+   }
    const sight=site||VietnamLandmarks.entries.find(v=>place[0]===v.name+' · '+v.city);
    if(sight)place=[place[0],place[1],place[2],sight];
    car.tourStop=Boolean(sight?.custom||sight&&VietnamLandmarks.entries.includes(sight));
@@ -603,9 +644,11 @@ function frame(now){
    if(mode==='drive'){
      const steps=Math.max(1,Math.ceil(dt*90));
      for(let i=0;i<steps&&mode==='drive';i++)tick(dt/steps);
-     if(car.opening){
+     if(car.openingPose){
        openingCameraTime=Math.min(1,openingCameraTime+dt/.85);
        car.openingPose=reduceMotion.matches||inside?0:1-openingCameraTime**2*(3-2*openingCameraTime);
+     }
+     if(car.opening){
        car.dawn=clamp((210-distance)/85,0,1);
        if(distance>.25)document.body.removeAttribute('data-awaiting-motion');
        if(car.dawn===0){car.opening=false;document.body.removeAttribute('data-lakeside');}
@@ -627,7 +670,7 @@ function frame(now){
    if(mode!=='loading'&&roads&&!document.hidden&&now>=nextWeatherCheck){nextWeatherCheck=now+2000;gfx.weather.locate(...roads.geo(car.x,car.z));}
    car.driving=mode==='drive';car.showroom=mode==='grid';
    vehicleLook.update(dt);
-   if(mode!=='loading'&&mode!=='error'&&mode!=='map'&&!document.hidden){
+   if(mode!=='loading'&&mode!=='error'&&mode!=='map'&&!$('postcard').open&&!document.hidden){
      // Keep steering against the displayed road until the next district is complete.
      // Start inside the overlap, and spend more time if a fast car approaches its edge.
      const gap=gfx.districtDistance(car.x,car.z);
@@ -749,9 +792,9 @@ async function begin(){
  $('scoreBoard').hidden=Boolean(guide&&!guide.route.id);
  $('scoreBoard').textContent=guide?'Bảng hạng · '+guide.route.title:'Xem hạng và gửi thành tích';
  mode='drive';document.body.dataset.phase='drive';$('grid').hidden=true;$('hud').hidden=false;$('touch').hidden=false;$('camera').hidden=false;$('pause').hidden=false;updateHud();
+ if(!guide&&!duel)inform(matchMedia('(pointer:coarse)').matches?'Giữ Ga để lăn bánh · chạm ◀ hoặc ▶ để đánh lái':'Giữ W hoặc ↑ để lên ga · A/D để đánh lái',4);
  if(car.opening){
    document.body.setAttribute('data-awaiting-motion','');
-   if(!matchMedia('(pointer:coarse)').matches&&!duel)inform('Giữ W hoặc ↑ để lên ga',3);
    driveAudio.ignition(car.spec.electric);
  }
  else driveAudio.cue(true);
@@ -920,6 +963,34 @@ $('raceMode').onclick=()=>{
 $('resume').onclick=()=>{$('rest').close();mode='drive';keySet.clear();};
 $('reverse').onclick=()=>{$('resume').click();recover();};
 $('camera').onclick=()=>{inside=!inside;$('camera').textContent=inside?'Góc tài xế':'Góc sau xe';if(mode==='drive')updateHud();};
+let postcardDialog;
+for(const button of document.querySelectorAll('[data-postcard]')){
+ button.onclick=async()=>{
+   if(!gfx||button.disabled)return;
+   const phase=mode;
+   const sightseeing=phase==='tour';
+   const stop=sightseeing?car.sightView?.data:visitTarget()?.data;
+   // Use a known landmark entrance, otherwise share the road the car is on.
+   const [lon,lat]=roads.geo(car.x,car.z);
+   const featured=JourneyDepartures.byId(stop?.id);
+   const address=new URL('./',location.href);
+   if(featured)address.searchParams.set('intro',featured.id);
+   else if(stop?.id)address.searchParams.set(scenicPasses.has(stop.id)?'pass':'landmark',stop.id);
+   else address.searchParams.set('pin',lat.toFixed(5)+','+lon.toFixed(5));
+   const found=sightseeing&&!$('secretResult').hidden;
+   const details={title:featured?.title||stop?.name||nameOf(player.edge),url:address.href,
+     note:featured?.note||'Tạt qua có một tí. Sao ảnh trong máy lại nhiều thế nhỉ?',
+     stamp:found?$('secretTitle').textContent:'',stampArt:found?$('secretPrint').querySelector('svg'):null};
+   button.disabled=true;
+   try{
+     const {createPostcardDialog}=await import('./journey-postcard.mjs');
+     if(mode!==phase||(!sightseeing&&!$('rest').open))return;
+     postcardDialog??=createPostcardDialog();
+     await postcardDialog.open(()=>gfx.capturePhoto(),details);
+   }catch{inform('Chưa mở được bưu thiếp. Hãy thử lại.');}
+   finally{button.disabled=false;}
+ };
+}
 const shutter=$('takePhoto');
 let savingPhoto=false;
 async function takeScenePhoto(){
@@ -1341,6 +1412,7 @@ async function fetchJSON(path){const r=await fetch(path);if(!r.ok)throw Error('C
      if(route)await prepareDrive(route);
      else {await startAt(baSaoDrive);planner.open(false);}
    }
+   else if(JourneyDepartures.pin)await startAt(JourneyDepartures.pin);
    else if(JourneyDepartures.initial)await startAt(featuredDeparture(JourneyDepartures.initial));
    else{
      const saved=JourneyDepartures.trip;

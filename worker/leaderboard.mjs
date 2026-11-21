@@ -1,3 +1,4 @@
+import departureIds from "./departure-ids.js";
 import pagePaths from "./page-paths.js";
 import courseLengths from "./course-lengths.js";
 import guidedLengths from "./guided-lengths.js";
@@ -192,7 +193,13 @@ async function serveGameAsset(request, env, url) {
   const isPage = pagePaths.has(pathname);
   const isText = pathname.endsWith(".txt");
   if (isPage) {
-    const stem = pathname === "/" ? "index" : pathname.slice(1);
+    let stem = pathname === "/" ? "index" : pathname.slice(1);
+    if (pathname === "/" && !["drive","pass","collection","route","pin"].some(key=>url.searchParams.has(key))) {
+      const id = url.searchParams.get("landmark") || url.searchParams.get("intro");
+      if (departureIds.has(id)) stem = "intro-" + id;
+    }
+    // Tracking parameters belong to the visitor URL; the stored document is identical.
+    url.search = "";
     url.pathname = "/page-content/" + stem + ".bin";
   } else if (isText) {
     url.pathname += ".bin";
