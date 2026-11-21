@@ -31,7 +31,8 @@
     });
   }
   const stop={...site,catalogId,id:'cau-vang-ba-na',name:'Cầu Vàng Bà Nà',city:'Đà Nẵng',yaw:0,width:98,depth:82,
-    boundary,solids:[],photo,source,views,viewAngle:views[0].viewAngle,viewElevation:views[0].viewElevation,viewRadius:views[0].viewRadius,
+    boundary,solids:[],photo,source,views,departureView:{angle:1.25,radius:112,eye:45,focus:12},
+    viewAngle:views[0].viewAngle,viewElevation:views[0].viewElevation,viewRadius:views[0].viewRadius,
     description:'Từ ga Marseille, lối đi lát gỗ uốn quanh sườn Bà Nà qua hai bàn tay khổng lồ. Bảy trụ thép đỡ tám nhịp cầu, hai hàng hoa nằm dưới lan can màu vàng.',
     reserve(x,z,pad=0){
       if(Math.hypot(x-14.97,z-35.06)<14.0+pad)return true;
@@ -347,12 +348,14 @@
         'vec2 edge=min(gardenEdge,1.-gardenEdge);float dist=min(edge.x*28.,edge.y*10.);float blades=fract(sin(dot(floor(vMapUv*43.),vec2(36.19,15.43)))*23743.1);diffuseColor.a*=smoothstep(.04,.70,dist+blades*.37);\n#include <alphatest_fragment>');
     };
     const bedPos=[],bedUv=[],fadeUv=[],bedIdx=[],bedRows=52,bedCols=12;
+    // Keep the east forecourt and the approach to its parking space clear.
+    const inForecourt=(x,z)=>x>43&&z>24;
     for(let j=0;j<=bedRows;j++){
       const t=j/bedRows,f=frame(.03+t*.945);
       for(let i=0;i<=bedCols;i++){
         const u=i/bedCols,across=-7.2+u*(22.3+1.9*Math.sin(11*t)+2.0*Math.cos(18*t));
         const p=point(f,across,0);bedPos.push(...p);bedUv.push(p[0]*.24,p[2]*.24);fadeUv.push(t,u);
-        if(j&&i){const q=j*(bedCols+1)+i;bedIdx.push(q-bedCols-2,q-1,q,q-bedCols-2,q,q-bedCols-1);}
+        if(j&&i&&!inForecourt(p[0],p[2])){const q=j*(bedCols+1)+i;bedIdx.push(q-bedCols-2,q-1,q,q-bedCols-2,q,q-bedCols-1);}
       }
     }
     const garden=surface(T,group,bedPos,bedIdx,bedMat,bedUv);garden.castShadow=false;
@@ -362,6 +365,7 @@
       const t=.018+rand()*.962,f=frame(t),u=5.8+rand()*17.9,nearHand=Math.abs(t-.345)<.055||Math.abs(t-.725)<.055;
       if(nearHand&&u<12.8)continue;
       const [x,,z]=point(f,u,0),h=1.25+rand()*2.95,w=h*(.80+rand()*.60),angle=rand()*Math.PI,offset=shrubs.length;
+      if(inForecourt(x,z))continue;
       for(let k=0;k<2;k++)item(shrubs,x,0,z,w,h,1,angle+k*Math.PI/2,rand()>.5?0xabb793:0xc0cba5);
       vegetation.push({x,z,h,offset});
     }
@@ -374,6 +378,7 @@
       const near=Math.abs(t-.345)<.048||Math.abs(t-.725)<.048;
       if(near&&u<13)continue;
       const [x,,z]=point(f,u,0),height=(k<.4?2.6:3.5)+rand()*4.1,spin=rand()*Math.PI,first=treeRows.length;
+      if(inForecourt(x,z))continue;
       for(let j=0;j<2;j++)item(treeRows,x,0,z,height*(.80+rand()*.22),height,1,spin+j*Math.PI/2,0xc0c7a7);
       groves.push({x,z,height,first});
     }

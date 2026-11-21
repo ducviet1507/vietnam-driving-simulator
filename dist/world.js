@@ -118,6 +118,7 @@ async function startAt(place,restore=null,guided=null){
    samePlace(place,baSaoDrive)?'Theo đường Điện Biên Phủ về phía Khả Phong, qua khu dân cư Ba Sao và chân núi.':
    scenicPasses.has(site?.id)?scenicPasses.get(site.id).description:
    site?.accessRoad?'Xuất phát tại '+site.name+' · Đường tham quan mô phỏng.':
+   site?.visitOnArrival?'Xe đỗ trên đường ô tô, cách '+site.name+' khoảng '+atlasDistance(site.approachMeters/1000)+' theo đường chim bay.':
    site?.km?'Chinh phục '+fmt(site.km*1000)+' đường đèo.':[site?.kind,site?.city].filter(Boolean).join(' · ')||'Khám phá những con đường quanh điểm xuất phát.';
  if(guided){
    $('journeyTitle').textContent=guided.title;
@@ -134,7 +135,9 @@ async function startAt(place,restore=null,guided=null){
  try{
    const origin=Array.isArray(restore?.origin)&&restore.origin.length===2&&restore.origin.every(Number.isFinite)?restore.origin:place.slice(1);
    const graph=new VietnamRoads(indexData,...origin),start=graph.point(place[1],place[2]);await graph.load(start.x,start.z);
-   const accessEdge=!restore&&!guided&&graph.edges.get(site?.accessRoad);
+   const atEntrance=!restore&&!guided&&site?.accessRoad&&place[1]===site.start[0]&&place[2]===site.start[1];
+   const accessEdge=atEntrance&&graph.edges.get(site.accessRoad);
+   if(atEntrance&&!accessEdge)throw Error('Chưa tải được đường vào địa danh. Hãy thử lại.');
    let nearest=accessEdge?graph.nearest(start.x,start.z,[accessEdge]):graph.nearest(start.x,start.z);
    if(!nearest||nearest.error>4000**2){await graph.load(start.x,start.z,true);nearest=graph.nearest(start.x,start.z);}
    if(token!==loadToken)return;
@@ -142,7 +145,8 @@ async function startAt(place,restore=null,guided=null){
    const sight=site||VietnamLandmarks.entries.find(v=>place[0]===v.name+' · '+v.city);
    if(sight)place=[place[0],place[1],place[2],sight];
    car.tourStop=Boolean(sight?.custom||sight&&VietnamLandmarks.entries.includes(sight));
-   car.departureView=departure?.view?{...departure.view,...graph.point(site.lon,site.lat),yaw:site.yaw}:null;
+   const view=departure?.view||(atEntrance&&site.departureView);
+   car.departureView=view?{...view,...graph.point(site.lon,site.lat),yaw:site.yaw}:null;
    const bearing=firstDrive?104:samePlace(place,baSaoDrive)?12:sight?.bearing;
    if(Number.isFinite(bearing)&&!restore&&!nearest.edge.oneway){
      nearest.dir=Math.cos(graph.sample(nearest).yaw-bearing*Math.PI/180)>=0?1:-1;
@@ -172,6 +176,7 @@ async function startAt(place,restore=null,guided=null){
    }else if(!await prepareWorld(graph,token))return;
    drawDepartureMap();mode='grid';
    $('challenge').disabled=guided;$('startGuided').disabled=false;$('launch').disabled=false;$('launch').textContent=restore?'Lái tiếp':'Cầm lái';
+   if(site?.visitOnArrival&&!restore&&!guided)await openTour(site);
  }catch(e){if(token===loadToken){$('startGuided').disabled=false;$('loadStatus').textContent=e.message;$('launch').textContent='Thử tải lại';$('launch').disabled=false;mode='error';pendingPlace=place;}}
 }
 async function stream(){
@@ -429,6 +434,7 @@ function updateHud(){
  const grade=Math.round(100*gfx.grade(car.x,car.z,car.yaw));
  const info=[],traffic=player.edge.traffic,limit=roadSpeedLimit(player);
  const onNetwork=!car.offroad&&!car.accessLane;
+ if(onNetwork&&player.edge.visitorRoad)info.push('Đường tham quan mô phỏng');
  if(onNetwork&&traffic){
    if(traffic.bridge)info.push('Cầu');
    if(traffic.tunnel)info.push('Hầm');
@@ -983,7 +989,8 @@ function choosePlace(place,focus=false){
  pendingPlace=place;const site=place[3];
  if(focus)focusedPin=place;
  activeResult=matches.findIndex(p=>samePlace(p,place));$('travel').disabled=!indexData||!!site?.islands;
- $('travel').textContent=atlasChoice?'Dùng làm '+atlasChoice.label:'Đặt điểm xuất phát';
+ $('travel').textContent=atlasChoice?'Dùng làm '+atlasChoice.label:site?.visitOnArrival?'Ngắm '+site.name:
+   site&&!site.accessRoad&&site.approachMeters>=500?'Xuất phát từ đường gần nhất':'Đặt điểm xuất phát';
  const raceLink=$('racePass');raceLink.hidden=!site?.km;
  if(site?.km)raceLink.href='cup.html?route='+encodeURIComponent(site.id);
  const approach=site?.accessRoad?' · đường tham quan mô phỏng':site?.approachMeters>=20?' · điểm dừng xe cách địa danh khoảng '+atlasDistance(site.approachMeters/1000)+' theo đường thẳng':'';

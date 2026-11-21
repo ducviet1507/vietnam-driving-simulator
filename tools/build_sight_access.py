@@ -40,7 +40,7 @@ def sights():
       require('./'+file);
     const sites=new Map(VietnamTourism.entries.map(s=>[s.id,s]));
     for(const s of VietnamLandmarks.entries)sites.set(s.catalogId||s.id,s);
-    console.log(JSON.stringify([...sites].map(([id,s])=>[id,s.id,s.name,s.lon,s.lat,...s.start,s.width||0,s.depth||0])));"""
+    console.log(JSON.stringify([...sites].filter(([,s])=>!s.mappedEntrance).map(([id,s])=>[id,s.id,s.name,s.lon,s.lat,...s.start,s.width||0,s.depth||0])));"""
     return json.loads(subprocess.check_output(["node","-e",extract],cwd=DIST))
 
 
@@ -75,9 +75,9 @@ def road_tree(key):
     return STRtree([LineString(zip(r[6][::2],r[6][1::2])) for r in rows]),rows
 
 
-def road_anchor(old, target, splits):
+def road_anchors(old, target, splits):
     # An approach on a cell boundary may be rounded into the neighbouring tile.
-    best=None
+    choices={}
     for key in sorted({tile_key(old[0]+dx,old[1]+dy,splits) for dx in (-2,0,2) for dy in (-2,0,2)}):
         tree,rows=road_tree(key)
         if not rows: continue
@@ -86,8 +86,9 @@ def road_anchor(old, target, splits):
         gap=tree.geometries[i].distance(Point(old))
         for node,p in [(row[1],row[6][:2]),(row[2],row[6][-2:])]:
             cost=(round(gap),math.dist(p,old)+math.dist(p,target),node)
-            if best is None or cost<best[0]: best=(cost,node,tuple(p))
-    return best[1:] if best else None
+            endpoint=(node,tuple(p))
+            choices[endpoint]=min(cost,choices.get(endpoint,cost))
+    return sorted(choices,key=choices.get)
 
 
 def coastline(source):
@@ -171,9 +172,9 @@ def trace(anchor, target, radius, terrain, coast, building_index, bridge):
         return (h(0,0)*(1-a)+h(1,0)*a)*(1-b)+(h(0,1)*(1-a)+h(1,1)*a)*b
     queue=[(0,0,(0,0))];costs={(0,0):0};parents={}
     while queue:
-        _,cost,cell=heappop(queue)
+        estimate,cost,cell=heappop(queue)
         if cost!=costs[cell]:continue
-        if cost>max(400,gap*2.4) or len(parents)>16000:break
+        if estimate>max(400,gap*2.4) or len(parents)>16000:break
         p=loc(cell)
         if math.dist(p,target)<radius+mesh*2+85:
             gate=next((g for g in gates if math.dist(p,g)<mesh*2+20 and clear(p,g)),None)
@@ -217,11 +218,10 @@ def build(source):
         if math.dist(old,target)<=max(75,radius+20):continue
         bridge=model==BRIDGE
         if bridge:target=BRIDGE_GATE;radius=0
-        join=road_anchor(old,target,index["splits"])
-        if not join:continue
-        node,anchor=join
-        path=trace(anchor,target,radius,terrain,coast,building_index,bridge)
-        if not path:continue
+        for node,anchor in road_anchors(old,target,index["splits"]):
+            path=trace(anchor,target,radius,terrain,coast,building_index,bridge)
+            if path:break
+        else:continue
         # Densify to keep tyre and asphalt heights together on sloping terrain.
         points=[path[0]]
         for a,b in zip(path,path[1:]):
