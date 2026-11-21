@@ -34,7 +34,7 @@ function createDrivingMap(getView) {
       if (f.x1 < cx - halfW || f.x0 > cx + halfW || f.z1 < cz - halfH || f.z0 > cz + halfH) continue;
       path(f.points);
       if (f.kind === 'lake') { g.fillStyle = '#9cc8cf'; g.fill(); }
-      else { g.strokeStyle = '#98c4cb'; g.lineWidth = Math.max(2, scale * 7); g.stroke(); }
+      else { g.strokeStyle = '#98c4cb'; g.lineWidth = Math.max(1.2, scale * (f.width || 7)); g.stroke(); }
     }
     g.lineCap = g.lineJoin = 'round';
     const edges = graph.nearby(cx, cz, Math.max(halfW, halfH) + 12);

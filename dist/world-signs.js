@@ -215,12 +215,12 @@ function createWorldSigns(T, scene, small) {
         const q = graph.sample({...at, s}, offset + 1.1);
         if (!clear(q.x, q.z, width / 2)) continue;
         const crowded = placed.some(a => Math.hypot(q.x-a.x, q.z-a.z) < (Math.cos(a.yaw-q.yaw) > .7 ? 19 : 4));
-        if (!crowded) {p = q; break;}
+        if (!crowded) {p = {...q,s}; break;}
       }
       if (!p) continue;
       placed.push(p);
       // The front of a Three.js plane points along +Z. Face approaching traffic.
-      const x = p.x - cx, z = p.z - cz, yaw = -p.yaw, base = ground(p.x, p.z), y = base + 2.3 + height / 2;
+      const x = p.x - cx, z = p.z - cz, yaw = -p.yaw, base = ground(p.x, p.z, at.edge, p.s), y = base + 2.3 + height / 2;
       const face = new T.Mesh(plane, faceFor(sign, used));
       face.position.set(x, y, z); face.rotation.y = yaw; face.scale.set(width, height, 1);
       face.name = rows ? rows.map(r => r.arrow + ' ' + r.label).join(' / ') : sign.type;
@@ -230,13 +230,13 @@ function createWorldSigns(T, scene, small) {
       back.translateZ(-.025); group.add(back);
       for (const lateral of rows ? [-1.28, 1.28] : [0]) {
         const px = x + lateral * Math.cos(yaw), pz = z - lateral * Math.sin(yaw);
-        const bottom = ground(px + cx, pz + cz), top = y + height * .32;
+        const bottom = ground(px + cx, pz + cz, at.edge, p.s), top = y + height * .32;
         const pole = new T.Mesh(mast, rows ? steel : postMaterial);
         pole.position.set(px, (top + bottom) / 2, pz);
         pole.position.x -= .11 * Math.sin(yaw); pole.position.z -= .11 * Math.cos(yaw);
         pole.scale.y = top - bottom; group.add(pole);
         register({id:'road-sign:' + at.edge.id + ':' + at.dir + ':' + at.s + ':' + lateral,
-          kind:'pole', x:pole.position.x, z:pole.position.z, radius:.085, height:top-bottom, parts:[]});
+          kind:'pole', x:pole.position.x, z:pole.position.z, radius:.085, baseY:bottom,height:top-bottom, parts:[]});
       }
     }
     for (const [key, mat] of faces) if (!used.has(key)) {

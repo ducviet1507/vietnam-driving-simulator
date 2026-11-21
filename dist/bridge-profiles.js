@@ -55,7 +55,7 @@ function buildBridgeProfiles(graph,details={}){
   }
   function pinned(node){
     const links=graph.nodes.get(node)||[];
-    return links.length!==2&&links.some(e=>!e.traffic?.bridge);
+    return links.some(e=>e.traffic?.tunnel&&!e.traffic.bridge)||links.length!==2&&links.some(e=>!e.traffic?.bridge);
   }
   // A span may consist of many short ways or routing edges. Estimate the
   // clearance for the crossing as a whole and preserve explicitly stacked decks.
@@ -79,15 +79,22 @@ function buildBridgeProfiles(graph,details={}){
       }
     }
   }
+  return solveRoadGrades(graph,profiles,levels,grade,pinned,e=>!e.traffic?.tunnel,record);
+}
+
+// Shared by elevated decks and descending tunnel approaches. All displacements
+// are magnitudes here; the caller places them above or below the natural surface.
+function solveRoadGrades(graph,profiles,levels,grade,pinned,eligible,record){
+  const spans=new Set(profiles.keys());
   // Carry approaches along the connected carriageway only. A surface junction
   // pins the road back to grade. A geometric crossing is never a graph node.
   const queue=[...levels.keys()];
   for(let i=0;i<queue.length;i++){
     const node=queue[i],h=levels.get(node);
     for(const edge of graph.nodes.get(node)||[]){
-      if(edge.traffic?.bridge)continue;
-      record(edge);
-      const other=node===edge.start?edge.end:edge.start,next=h-grade*edge.length;
+      if(spans.has(edge.id)||!eligible(edge))continue;
+      record(edge,node);
+      const other=node===edge.start?edge.end:edge.start,next=h-(profiles.get(edge.id).grade??grade)*edge.length;
       if(next>(levels.get(other)||0)+1e-6&&!pinned(other)){
         levels.set(other,next);queue.push(other);
       }
@@ -100,20 +107,20 @@ function buildBridgeProfiles(graph,details={}){
     if(h+1e-6<(levels.get(node)||0)){levels.set(node,h);relax.push(node);}
   }
   for(const id of profiles.keys()){
-    const e=graph.edges.get(id),rise=e.length*grade;
+    const e=graph.edges.get(id),rise=e.length*(profiles.get(id).grade??grade);
     limit(e.start,(levels.get(e.end)||0)+rise);
     limit(e.end,(levels.get(e.start)||0)+rise);
   }
   for(let i=0;i<relax.length;i++){
     const node=relax[i];
     for(const e of graph.nodes.get(node)||[])if(profiles.has(e.id))
-      limit(node===e.start?e.end:e.start,levels.get(node)+grade*e.length);
+      limit(node===e.start?e.end:e.start,levels.get(node)+(profiles.get(e.id).grade??grade)*e.length);
   }
   for(const [id,p] of profiles){
     const e=graph.edges.get(id);
     p.start=levels.get(e.start)||0;p.end=levels.get(e.end)||0;
-    if(p.bridge)continue;
-    const a=Math.min(e.length,p.start/grade),b=Math.max(0,e.length-p.end/grade);
+    if(spans.has(id))continue;
+    const slope=p.grade??grade,a=Math.min(e.length,p.start/slope),b=Math.max(0,e.length-p.end/slope);
     if(a>=b)p.ranges=[[0,e.length]];
     else{
       if(a>0)p.ranges.push([0,a]);
@@ -127,8 +134,8 @@ function buildBridgeProfiles(graph,details={}){
     const a=Math.max(0,Math.min(edge.length,s)),b=edge.length-a;
     if(a===0)return p.start;
     if(b===0)return p.end;
-    const approach=Math.max(0,p.start-grade*a,p.end-grade*b);
-    return p.bridge?Math.max(approach,Math.min(p.top,p.start+grade*a,p.end+grade*b)):approach;
+    const slope=p.grade??grade,approach=Math.max(0,p.start-slope*a,p.end-slope*b);
+    return spans.has(edge.id)?Math.max(approach,Math.min(p.top,p.start+slope*a,p.end+slope*b)):approach;
   }
   return {profiles,lift};
 }
@@ -138,7 +145,7 @@ function buildBridgeProfiles(graph,details={}){
 function bridgeGroundEdges(graph,edges){
   const result=[];
   for(const edge of edges){
-    const profile=graph.bridges?.profiles.get(edge.id);
+    const profile=graph.bridges?.profiles.get(edge.id)||graph.tunnels?.info(edge);
     if(!profile){result.push(edge);continue;}
     let from=0;
     for(const [lo,hi] of [...profile.ranges,[edge.length,edge.length]]){

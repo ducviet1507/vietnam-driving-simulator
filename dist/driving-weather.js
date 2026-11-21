@@ -57,7 +57,7 @@ function createDrivingWeather(THREE,scene,sun,pavement,reference=''){
   const mat=new THREE.LineBasicMaterial({color:0xc4d5df,transparent:true,depthWrite:false});
   const drops=new THREE.LineSegments(geom,mat);drops.frustumCulled=false;drops.visible=false;scene.add(drops);
   const dawnHaze=new THREE.Color(0xe6c9a4);
-  function render(camera,now,dawn=0,worldLighting){
+  function render(camera,now,dawn=0,worldLighting,sheltered=false){
     const mix=1-Math.exp(-Math.min(.2,(now-lastFrame)/1000)*2);lastFrame=now;
     const c=current,code=c?.weather_code||0,night=c&&c.is_day===0;
     const wet=c?(1-dawn)*Math.min(1,Math.max(c.precipitation*1.8,code>=51?.24:0)):0;
@@ -72,7 +72,7 @@ function createDrivingWeather(THREE,scene,sun,pavement,reference=''){
       pavement.roughness+=(base.rough*(1-.58*wet)-pavement.roughness)*mix;
       pavement.color.lerp(fogColor.copy(base.road).multiplyScalar(1-.36*wet),mix);
     }
-    opacity+=(wet-opacity)*mix;drops.visible=opacity>.015;if(!drops.visible)return;
+    opacity+=(wet-opacity)*mix;drops.visible=!sheltered&&opacity>.015;if(!drops.visible)return;
     const n=Math.ceil(count*opacity),snow=[71,73,75,77,85,86].includes(code);
     geom.setDrawRange(0,n*2);mat.opacity=.22+opacity*.42;drops.position.copy(camera.position);
     const wrap=(v,size)=>v-size*Math.floor(v/size);

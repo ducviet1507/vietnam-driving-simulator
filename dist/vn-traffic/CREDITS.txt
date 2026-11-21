@@ -23,3 +23,13 @@ thể thiếu trên từng tuyến. Số nút đèn có thể khác số giao l�
 
 Tạo lại từ thư mục gốc (Python 3.11+ và osmium):
 python tools/build_vn_traffic.py vietnam-261118.osm.pbf dist/vn-roads dist/vn-traffic
+
+tunnels.json dùng cùng bản trích xuất để phân biệt lối xe xuyên qua nhà
+và liên kết các đoạn hầm với cửa hầm. Tim đường, vị trí nút và loại lối
+đi lấy từ OSM. Khi thiếu mặt cắt đo đạc, game ước lượng cao độ sàn, độ
+dốc đường dẫn và tiết diện từ địa hình cùng các đầu tuyến.
+python tools/build_vn_tunnels.py vietnam-261118.osm.pbf dist/vn-roads dist/vn-traffic
+
+Mặt cắt hộp đôi, tĩnh không, chiều dài đường dẫn và độ dốc thiết kế
+của hầm sông Sài Gòn theo Trung tâm Quản lý điều hành giao thông đô thị TP.HCM:
+https://dieuhanhgiaothong-sxd.hochiminhcity.gov.vn/gioi-thieu-tong-quan-duong-ham-thu-thiem-vuot-song-sai-gon-123.html

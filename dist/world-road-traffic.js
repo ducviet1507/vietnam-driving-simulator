@@ -5,24 +5,85 @@ function roadSpeedLimit(cursor){
   return Array.isArray(speed)?speed[cursor.dir>0?0:1]:speed;
 }
 
+function roadSurfaceClass(edge){
+  const tag=edge.traffic?.surface;
+  if(!tag)return 'asphalt';
+  if(tag==='concrete:plates')return 'roadSlabs';
+  if(/^(concrete(?::lanes)?|cement|bê_tông)$/.test(tag))return 'roadConcrete';
+  if(/^(unpaved|gravel|fine_gravel|compacted|dirt|earth|ground|sand|mud|soil|clay|rock|grass|pebblestone)$/.test(tag))return 'earth';
+  if(/^(paving_stones|sett|cobblestone|unhewn_cobblestone|grass_paver)$/.test(tag))return 'pavers';
+  if(tag==='wood')return 'roadWood';
+  if(tag==='metal'||tag==='steel')return 'roadMetal';
+  return 'asphalt';
+}
+
+function roadLaneLayout(edge,halfWidth){
+  const mapped=edge.traffic?.lanes;
+  const lanes=mapped??(edge.oneway?Math.max(1,Math.round(halfWidth/1.75)):halfWidth<2.7?1:halfWidth>=6.75?4:2);
+  // With an odd two-way count and no directional split the middle lane's use
+  // is unknown. Keep traffic in the known outer lanes and omit ambiguous paint.
+  const forward=edge.oneway?lanes:edge.traffic?.forward??Math.floor(lanes/2);
+  const divider=edge.oneway?0:lanes===1||lanes%2&&!edge.traffic?.forward?null:lanes-forward;
+  const surface=roadSurfaceClass(edge);
+  const markEdges=(surface==='asphalt'||surface==='roadConcrete'||surface==='roadSlabs')&&Boolean(mapped||halfWidth>=4.2||edge.graded);
+  return {lanes,divider,forward,markEdges};
+}
+
 function roadLaneOffset(cursor,scooter=false){
-  const {edge,dir}=cursor,half=worldRoadHalfWidth(edge),lanes=edge.traffic?.lanes;
-  if(lanes){
-    const width=2*half/lanes;
-    if(lanes===1)return edge.oneway?0:half*.43;
-    const forward=edge.traffic.forward??(lanes%2===0?lanes/2:null);
-    if(edge.oneway||forward!==null){
-      const count=edge.oneway?lanes:dir>0?forward:lanes-forward;
-      return half-width*(scooter?.5:Math.min(count,2)-.5);
+  const {edge,dir}=cursor,half=worldRoadHalfWidth(edge);
+  const {lanes,forward,divider}=roadLaneLayout(edge,half);
+  if(lanes===1)return edge.oneway?0:half*.43;
+  const count=dir>0||divider===null?forward:lanes-forward;
+  return half-2*half/lanes*(scooter ? .5 : Math.min(count,2)-.5);
+}
+
+function signalStopLineOffset(control){return control.flags&2?2.5:1.4;}
+
+// Emit paint clipped to this piece of the original OSM edge. A dash or a
+// crossing that spans two polyline segments keeps its phase through the bend.
+function roadPaint(edge,layout,half,from,to,emit,{lines=true,controls=true}={}){
+  function band(start,end,left,right,color){
+    const lo=Math.max(from,start),hi=Math.min(to,end);
+    if(hi>lo&&right>left)emit(lo,hi,left,right,color);
+  }
+  if(lines&&layout.markEdges){
+    for(const side of [-1,1]){
+      const offset=side*(half-.23);
+      band(from,to,offset-.055,offset+.055,'white');
+    }
+    for(let lane=1;lane<layout.lanes;lane++){
+      if(layout.divider===null&&(lane===layout.forward||lane===layout.forward+1))continue;
+      const offset=half*(2*lane/layout.lanes-1);
+      const color=lane===layout.divider?'yellow':'white';
+      for(let s=Math.floor(from/10)*10;s<to;s+=10)band(s,s+3.8,offset-.07,offset+.07,color);
     }
   }
-  return scooter?Math.min(3.3,half*.7):Math.min(2.05,half*.47);
+  if(!controls)return;
+  for(const point of edge.controls||[]){
+    if(point.s<from-3||point.s>to+3)continue;
+    if(point.flags&2){
+      for(let offset=-half+.3;offset<half-.3;offset+=.85){
+        band(point.s-1.65,point.s+1.65,offset,Math.min(half-.2,offset+.43),'white');
+      }
+    }
+    if(!(point.flags&4))continue;
+    const dividingOffset=layout.divider===null?0:half*(2*layout.divider/layout.lanes-1);
+    for(const dir of edge.oneway?[1]:[1,-1]){
+      if(!signalApplies(point,edge,dir))continue;
+      const stop=point.s-dir*signalStopLineOffset(point);
+      const left=edge.oneway||dir<0?-half:dividingOffset, right=dir>0?half:dividingOffset;
+      band(stop-.17,stop+.17,left+.13,right-.13,'white');
+    }
+  }
 }
 
 // Perpendicular approaches alternate, opposite approaches share a phase.
 // The clock is simulated and shared by the lenses, the HUD and the vehicles.
 function roadSignalPhase(yaw,seconds){
-  const phase=(seconds+(Math.abs(Math.cos(yaw))>=Math.abs(Math.sin(yaw))?0:28))%56;
+  // Resolve exactly diagonal axes consistently for both travel directions.
+  const axis=Math.cos(2*yaw);
+  const first=Math.abs(axis)<1e-9?Math.sin(2*yaw)>0:axis>0;
+  const phase=(seconds+(first?0:28))%56;
   return phase<23?'green':phase<26?'amber':'red';
 }
 
@@ -43,7 +104,7 @@ function roadControlAhead(graph,cursor,seconds,signalsOnly=false){
       const signal=signalApplies(point,c.edge,c.dir);
       if(!signal&&(signalsOnly||!(point.flags&1)))continue;
       const yaw=graph.sample({edge:c.edge,dir:c.dir,s:point.s}).yaw;
-      best={distance,phase:signal?roadSignalPhase(yaw,seconds):null};
+      best={distance,phase:signal?roadSignalPhase(yaw,seconds):null,stopLineOffset:signal?signalStopLineOffset(point):0};
     }
     if(best)return best;
     travelled+=c.dir>0?c.edge.length-c.s:c.s;

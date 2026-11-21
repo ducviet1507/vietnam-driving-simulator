@@ -16,6 +16,7 @@ class VietnamRoads {
    this.trafficTiles=new Set(index.trafficTiles||[]);
    this.bridgeDetails=index.bridgeDetails||{};
    this.footbridgeTiles=index.footbridgeTiles||{};
+   this.tunnelData=index.tunnelData;
    this.mx=111320*Math.cos(lat*Math.PI/180);this.my=110900;
    this.cache=new Map();this.edges=new Map();this.nodes=new Map();this.buckets=new Map();
    this.stamp=0;
@@ -58,18 +59,20 @@ class VietnamRoads {
            const part=key+'_'+i+'_'+j;if(this.subtiles.has(part))keys.push(part);
          }
      }
-   const signature=keys.join(',');if(this.signature===signature)return;
-   const stamp=++this.stamp,tiles=await Promise.all(keys.map(k=>this.tile(k)));
+   const signature=keys.join(','),stamp=++this.stamp;if(this.signature===signature)return;
+   const tiles=await Promise.all(keys.map(k=>this.tile(k)));
    if(stamp!==this.stamp)return;
    const fresh=new Map(),nodes=new Map(),buckets=new Map();
-   for(const {rows,details} of tiles)for(const row of rows){
+   const trafficById=new Map();
+   for(const {details} of tiles)if(details)for(const [id,tags] of Object.entries(details))trafficById.set(Number(id),tags);
+   for(const {rows} of tiles)for(const row of rows){
      const [id,start,end]=row;if(fresh.has(id))continue;
      let edge=this.edges.get(id);
      if(!edge){
        edge=this.decodeEdge(row);if(!edge)continue;
      }
-     if(!edge.traffic&&details?.[id]){
-       edge.traffic=details[id];
+     if(!edge.traffic&&trafficById.has(id)){
+       edge.traffic=trafficById.get(id);
        edge.controls=(edge.traffic.controls||[]).map(([node,lon,lat,flags,direction])=>{
          const p=this.point(lon/1e5,lat/1e5);
          const s=node===start?0:node===end?edge.length:this.nearest(p.x,p.z,[edge]).s;
@@ -88,6 +91,7 @@ class VietnamRoads {
    }
    this.edges=fresh;this.nodes=nodes;this.buckets=buckets;
    this.bridges=buildBridgeProfiles(this,this.bridgeDetails);
+   this.tunnels=buildTunnelProfiles(this,this.tunnelData);
    this.signature=tiles.some(tile=>tile.details===null)?null:signature;
    for(const k of this.cache.keys())if(!keys.includes(k))this.cache.delete(k);
  }
@@ -98,6 +102,9 @@ class VietnamRoads {
        for(const e of this.buckets.get(a+','+b)||[])unique.add(e);
    return [...unique];
  }
+ roadLevel(edge,s){
+   return this.tunnels?.info(edge)?this.tunnels.lift(edge,s):this.bridges.lift(edge,s);
+ }
  nearest(x,z,candidates=this.edges.values(),level=null){
    let best=null,bestScore=Infinity;
    for(const edge of candidates){
@@ -107,7 +114,7 @@ class VietnamRoads {
        const error=(a.x+vx*f-x)**2+(a.z+vz*f-z)**2;
        if(error>=bestScore)continue;
        const s=edge.dist[i-1]+f*(edge.dist[i]-edge.dist[i-1]);
-       const vertical=level===null?0:this.bridges.lift(edge,s)-level;
+       const vertical=level===null?0:this.roadLevel(edge,s)-level;
        if(level!==null&&Math.abs(vertical)>2.5)continue;
        const score=error+vertical*vertical*4;
        if(score<bestScore){bestScore=score;best={edge,s,dir:1,error};}
@@ -166,22 +173,25 @@ class VietnamRoads {
 class VietnamWater {
  constructor(index,roads){this.tiles=new Set(index.tiles);this.cache=new Map();this.roads=roads;this.features=[];this.request=0;}
  async load(x,z){
-   const [lon,lat]=this.roads.geo(x,z),keys=[];
-   for(let a=Math.floor((lon-.012)*4);a<=Math.floor((lon+.012)*4);a++)
-     for(let b=Math.floor((lat-.012)*4);b<=Math.floor((lat+.012)*4);b++){const k=a+'_'+b;if(this.tiles.has(k))keys.push(k);}
+   const request=++this.request,[lon,lat]=this.roads.geo(x,z),keys=[];
+   const dx=1850/this.roads.mx,dy=1850/this.roads.my;
+   for(let a=Math.floor((lon-dx)*4);a<=Math.floor((lon+dx)*4);a++)
+     for(let b=Math.floor((lat-dy)*4);b<=Math.floor((lat+dy)*4);b++){const k=a+'_'+b;if(this.tiles.has(k))keys.push(k);}
    const sig=keys.join('/');if(this.signature===sig)return false;
-   const request=++this.request,rows=await Promise.all(keys.map(k=>{
+   const rows=await Promise.all(keys.map(k=>{
      if(!this.cache.has(k))this.cache.set(k,fetchMapTile('vn-water/'+k+'.gz').catch(e=>{this.cache.delete(k);throw e;}));
      return this.cache.get(k);
    }));
    if(request!==this.request)return false;
    const features=[],seen=new Set();
-   for(const tile of rows)for(const [kind,name,coords] of tile){
-     const key=kind+coords.length+':'+coords[0]+','+coords[1]+','+coords[2]+','+coords[3]+','+coords.at(-3);
+   for(const tile of rows)for(const [kind,name,coords,mappedWidth] of tile){
+     const key=kind+'|'+name+'|'+(mappedWidth||0)+'|'+coords.join(',');
      if(seen.has(key))continue;seen.add(key);
      const points=[];let x0=Infinity,z0=Infinity,x1=-Infinity,z1=-Infinity;
      for(let i=0;i<coords.length;i+=2){const p=this.roads.point(coords[i]/1e5,coords[i+1]/1e5);points.push(p);x0=Math.min(x0,p.x);x1=Math.max(x1,p.x);z0=Math.min(z0,p.z);z1=Math.max(z1,p.z);}
-     features.push({kind,name,points,x0,z0,x1,z1});
+     const width=mappedWidth||(kind==='stream'?4:kind==='canal'?8:kind==='drain'?2.5:
+       kind==='river'?(/suối/i.test(name)?8:23):0);
+     features.push({kind,name,width,points,x0,z0,x1,z1});
    }
    this.features=features;this.signature=sig;
    for(const k of this.cache.keys())if(!keys.includes(k))this.cache.delete(k);

@@ -86,6 +86,27 @@
     };
     material.rail=new T.MeshStandardMaterial({color:0xaab2af,metalness:.55,roughness:.49,side:T.DoubleSide});
     material.asphalt.side=material.earth.side=T.DoubleSide;
+    material.roadConcrete=material.wall.clone();
+    material.roadConcrete.name='Cast concrete road';
+    material.roadConcrete.color.setHex(0xb1afa3);material.roadConcrete.normalScale.set(.13,.13);material.roadConcrete.side=T.DoubleSide;
+    material.roadSlabs=new T.MeshStandardMaterial({name:'Concrete road panels',color:0xb4b2a8,roughness:.91,side:T.DoubleSide});
+    material.roadWood=new T.MeshStandardMaterial({name:'Timber deck',color:0x8e6e50,roughness:.89,side:T.DoubleSide});
+    material.roadMetal=new T.MeshStandardMaterial({name:'Steel deck',color:0x909997,metalness:.50,roughness:.65,side:T.DoubleSide});
+    // UV runs along the road, then across it. Planks and expansion joints turn with the mapped road.
+    for(const [mat,spacing,joint] of [[material.roadWood,.22,.009],[material.roadSlabs,4.5,.018]]){
+      mat.userData.roadPanels=true;
+      mat.onBeforeCompile=shader=>{
+        shader.vertexShader='varying vec2 deckUV;\n'+shader.vertexShader.replace('#include <begin_vertex>','#include <begin_vertex>\n deckUV=uv;');
+        shader.fragmentShader='varying vec2 deckUV;\n'+shader.fragmentShader.replace('#include <color_fragment>',
+          '#include <color_fragment>\n'+
+          'float phase=deckUV.x/'+spacing.toFixed(2)+'; float aa=max(fwidth(phase),.0001);'+
+          'float jointWidth='+joint.toFixed(3)+'/'+spacing.toFixed(2)+'; float gap=abs(fract(phase+.5)-.5);'+
+          'float body=smoothstep(jointWidth-aa*.5,jointWidth+aa*.5,gap);'+
+          'float board=fract(sin(mod(floor(phase),1024.)*37.7)*917.1);'+
+          'diffuseColor.rgb*=mix(mix(.6,.96+.06*board,body),.99,smoothstep(.2,.8,aa));');
+      };
+      mat.customProgramCacheKey=()=>mat.name;
+    }
     material.pavers=new T.MeshStandardMaterial({color:0xb5ada4,roughness:.91,side:T.DoubleSide});
     const grassClump=createVergeGrass(T);
     material.vergeGrass=new T.MeshLambertMaterial({vertexColors:true,side:T.DoubleSide});
@@ -128,6 +149,7 @@
     let shorePatch=null;
     const shoreEarth=texture('verge-earth.webp',true);
     const landOrigin=new T.Vector2();
+    const tunnelCut=createTunnelCut(T);
     // Low-frequency variation is fixed in geographic space. Close-up grain stays sharp.
     for(const mat of [meadow,upland]){
       mat.onBeforeCompile=shader=>{
@@ -138,6 +160,7 @@
           '#include <map_fragment>\n float patchiness=sin(dot(groundMetres,vec2(.035,.019)))+.55*cos(dot(groundMetres,vec2(-.015,.047))); diffuseColor.rgb*=vec3(.96,.98,.95)+patchiness*vec3(.08,.035,.05); vec3 silt=texture2D(shoreEarth,groundMetres*.58).rgb; float bank=clamp(bankWet+(silt.g-.17)*.7,0.,1.)*smoothstep(0.,.2,bankWet); diffuseColor.rgb=mix(diffuseColor.rgb,silt*mix(vec3(.84,.78,.66),vec3(.34,.31,.25),bankWet),bank);');
         coverMap.shade(shader);landscapes.shade(shader);grounds.shade(shader);
         relief.passSurface.shade(shader,'groundMetres','(.40+.46*smoothstep(35.,450.,length(vViewPosition)))*(1.-bankWet)');
+        tunnelCut.shade(shader,'groundMetres');
         // The satellite texels span several metres. Restore ground-scale contrast
         // after the regional tint, including at the edge of a streamed tile.
         shader.fragmentShader=shader.fragmentShader.replace('#include <alphamap_fragment>',`
@@ -151,9 +174,13 @@
     }
     land.rotation.x=-Math.PI/2;land.position.y=-.17;land.receiveShadow=true;scene.add(land);
     const waterSurface=createDrivingWater(T,true);
+    const shadeWater=waterSurface.material.onBeforeCompile;
+    waterSurface.material.onBeforeCompile=function(shader,renderer){
+      shadeWater.call(this,shader,renderer);tunnelCut.shade(shader,'waterMetres');
+    };
     surfaces.weatheredAsphalt(material.asphalt,atmosphere.wetness,asphaltOrigin,waterSurface.reflection);
     for(const finish of [...Object.values(material),meadow,upland,waterSurface.material])atmosphere.registerFinish(finish);
-    const relief=createVietnamRelief(T,scene,graphics.profile.id==='low',landscapes);
+    const relief=createVietnamRelief(T,scene,graphics.profile.id==='low',landscapes,tunnelCut);
     const unitBox=new T.BoxGeometry(),unitPlane=new T.PlaneGeometry(),unitPole=new T.CylinderGeometry(.5,.5,1,8);
     const roofSection=new T.Shape();roofSection.moveTo(-.5,0);roofSection.lineTo(0,1);roofSection.lineTo(.5,0);roofSection.closePath();
     const gable=new T.ExtrudeGeometry(roofSection,{depth:1,bevelEnabled:false});gable.translate(0,0,-.5);
@@ -161,9 +188,9 @@
     const temp=new T.Object3D(),tone=new T.Color();
     const roadsideImpact=createRoadsideImpact(T,scene,relief.ground);
     let roadway=relief.ground,shoreBed=()=>null,wooded=false;
-    let pavementLift=()=>0,bridges=null;
+    let pavementLift=()=>0,bridges=null,tunnels=null;
     const driveGround=(x,z,edge)=>{
-      const deck=bridges?.at(x,z,edge);
+      const deck=tunnels?.at(x,z,edge)??bridges?.at(x,z,edge);
       if(deck!=null)return deck;
       const lift=pavementLift(x-originX,z-originZ);
       return lift?roadway(x,z)+lift:(shoreBed(x,z)??roadway(x,z));
@@ -172,10 +199,11 @@
       const dx=2.2*Math.sin(yaw),dz=-2.2*Math.cos(yaw);
       // Sample the slope along the road's tangent so the edge of a raised deck
       // doesn't induce a near-vertical roll when a tyre gets near the rail.
-      if(edge&&bridges?.at(x,z,edge)!=null){
+      const structure=edge&&(sceneGraph?.tunnels.info(edge)?tunnels:bridges);
+      if(structure?.at(x,z,edge)!=null){
         const c=sceneGraph.nearest(x,z,[edge]),p=sceneGraph.sample(c);
         const a=Math.max(0,c.s-2.2),b=Math.min(edge.length,c.s+2.2);
-        return (bridges.height(edge,b)-bridges.height(edge,a))/(b-a)*Math.cos(yaw-p.yaw);
+        return (structure.height(edge,b)-structure.height(edge,a))/(b-a)*Math.cos(yaw-p.yaw);
       }
       return (driveGround(x+dx,z+dz)-driveGround(x-dx,z-dz))/4.4;
     }
@@ -201,10 +229,12 @@
         }
       return o;
     }
-    function contact(x,z,r=.95,y=null){
+    function contact(x,z,r=.95,y=null,edge=null){
       const px=x-originX,pz=z-originZ;
+      const inBore=edge&&sceneGraph.tunnels.info(edge)?.bore&&tunnels.at(x,z,edge,r+1)!=null;
       let hit=null;
       for(const o of obstacleCells.get(obstacleKey(px,pz))||[]){
+        if(inBore&&o.baseY==null)continue;
         if(y!==null){
           const base=o.baseY??relief.ground(x,z);
           if(y+1.35<base||y>base+(o.height??7)+.12)continue;
@@ -225,6 +255,7 @@
         }
         if(depth>0&&(!hit||depth>hit.depth))hit={nx,nz,depth,kind:o.kind,id:o.id,height:o.height,pointX:x+nx*(depth-r),pointZ:z+nz*(depth-r)};
       }
+      if(inBore)return hit;
       return hit||landmarks?.contact(x,z,r,y)||(y===null||y<relief.ground(x,z)+3?district.contact(x,z,r):null);
     }
     function discardRoads(){
@@ -239,6 +270,8 @@
       relief.setOrigin(graph,cx,cz);
       sceneGraph=graph;
       bridges=graph?createBridgeDistrict(graph,edges,cx,cz,relief.ground):null;
+      tunnels=graph?createTunnelDistrict(graph,edges,relief.ground):null;
+      tunnelCut.update(graph,tunnels,cx,cz);
       const localGround=(x,z)=>relief.ground(cx+x,cz+z);
       landmarks?.setOrigin(graph,cx,cz,relief.ground,bridges?.signatureHeight);
       grounds.prepare(graph,cx,cz,landmarks);
@@ -290,7 +323,7 @@
       }
 
       const segments=[],cells=new Map(),roadData=[],landData=[],bankData=[],railVerts=[],railIndices=[],cutVerts=[],cutUv=[],cutIndices=[],yellow=[],white=[],wires=[],junctions=new Map(),batches=new Map(),candidates=[],rivals=new Map();
-      const gravelData=[],pavedData=[],crossings=new Set();
+      const roadSurfaces={asphalt:roadData,earth:[],pavers:[],roadConcrete:[],roadSlabs:[],roadWood:[],roadMetal:[]};
       obstacleCells=new Map();
       roadsideImpact.rebase(cx,cz);
       const cellSize=32,cutoff=650,detailRadius=graphics.profile.scenery;
@@ -447,37 +480,28 @@
         instance(kind==='tea'?'tree':kind,geo,x,0,z,w,h,w,angle,color,owner,cell);
       }
       function quad(points,ax,az,bx,bz,cx,cz,dx,dz){points.push(ax,az,bx,bz,cx,cz,cx,cz,bx,bz,dx,dz);}
-      const roadSections=[];
+      const sectionsFor=new Map([roadData,roadSurfaces.roadSlabs,roadSurfaces.roadWood].map(data=>[data,[]]));
       function strip(target,s,start,end,l,r){
         const n=s.graded?Math.max(1,Math.ceil((end-start)/5)):1;
         for(let j=0;j<n;j++){
           const a=start+(end-start)*j/n,b=start+(end-start)*(j+1)/n;
           const ax=s.ax+s.fx*a,az=s.az+s.fz*a,bx=s.ax+s.fx*b,bz=s.az+s.fz*b;
-          if(target===roadData)roadSections.push(s,s);
+          sectionsFor.get(target)?.push(s,s);
           quad(target,ax+s.nx*l,az+s.nz*l,ax+s.nx*r,az+s.nz*r,bx+s.nx*l,bz+s.nz*l,bx+s.nx*r,bz+s.nz*r);
         }
       }
       const groundEdges=graph?bridgeGroundEdges(graph,edges):edges;
       for(const e of groundEdges){
         const width=window.worldRoadHalfWidth(e);
-        const finish=e.traffic?.surface;
-        const loose=/^(unpaved|gravel|fine_gravel|compacted|dirt|earth|ground|sand|mud)$/.test(finish);
-        const pavement=loose?gravelData:/^(paving_stones|sett|cobblestone)$/.test(finish)?pavedData:roadData;
+        const finish=roadSurfaceClass(e),pavement=roadSurfaces[finish],source=e.sourceEdge||e;
         const cityStreet=e.kind==='residential'||e.kind==='living_street'||/^phố\s/i.test(e.name);
-        for(const point of e.controls||[]){
-          if(!(point.flags&2)||crossings.has(point.node))continue;
-          const p=graph.sample({edge:e.sourceEdge||e,dir:1,s:point.s}),x=p.x-cx,z=p.z-cz;
-          if(Math.hypot(x,z)>cutoff)continue;
-          crossings.add(point.node);
-          const fx=Math.sin(p.yaw),fz=-Math.cos(p.yaw),nx=-fz,nz=fx;
-          const cross={ax:x-fx*1.65,az:z-fz*1.65,fx,fz,nx,nz};
-          for(let offset=-width+.3;offset<width-.3;offset+=.85)strip(white,cross,0,3.3,offset,Math.min(width-.2,offset+.43));
-        }
+        let nextStation=e.sourceEdge?graph.nearest(e.points[0].x,e.points[0].z,[source]).s:0;
         for(let i=1;i<e.points.length;i++){
           const a=e.points[i-1],b=e.points[i];
           let ax=a.x-cx,az=a.z-cz,bx=b.x-cx,bz=b.z-cz;
-          if(Math.min(ax,bx)>cutoff||Math.max(ax,bx)<-cutoff||Math.min(az,bz)>cutoff||Math.max(az,bz)<-cutoff)continue;
           const dx=bx-ax,dz=bz-az,length=Math.hypot(dx,dz);if(length<.05)continue;
+          const station=nextStation;nextStation+=length;
+          if(Math.min(ax,bx)>cutoff||Math.max(ax,bx)<-cutoff||Math.min(az,bz)>cutoff||Math.max(az,bz)<-cutoff)continue;
           const fx=dx/length,fz=dz/length,nx=-fz,nz=fx;
           const near=Math.max(0,Math.min(length,-ax*fx-az*fz)),perp=Math.hypot(ax+near*fx,az+near*fz);
           if(perp>cutoff)continue;
@@ -486,9 +510,9 @@
           const mx=graph?111320*Math.cos(latitude*Math.PI/180)/graph.mx:1;
           const sourceLength=Math.hypot(dx*mx,dz);
           const s={ax,az,bx,bz,fx,fz,nx,nz,len:length,sourceLength,w:width,kind:e.kind,oneway:e.oneway,rank:perp,seed};
-          s.traffic=e.traffic;s.loose=loose;
-          s.roadMaterial=loose?material.earth:pavement===pavedData?material.pavers:material.asphalt;
+          s.traffic=e.traffic;s.station=station;s.source=source;s.roadMaterial=material[finish];
           s.graded=namedPass(e)||relief.altitude((a.x+b.x)*.5,(a.z+b.z)*.5)>280&&(e.visitorRoad||!district.builtUp(cx+(ax+bx)*.5,cz+(az+bz)*.5)&&!['residential','service','living_street'].includes(e.kind));
+          s.laneLayout=roadLaneLayout(s,width);
           if(s.graded){
             const n=Math.max(1,Math.ceil(length/12));s.interval=length/n;s.crown=[];
             for(let j=0;j<=n;j++){
@@ -508,6 +532,8 @@
           if(!s.authoredPavement)strip(landData,s,0,s.len,-width-.85,width+.85);
           if(s.graded){strip(pavement,s,0,s.len,-width,0);strip(pavement,s,0,s.len,0,width);}
           else strip(pavement,s,0,s.len,-width,width);
+          if(source.controls?.length)roadPaint(source,s.laneLayout,width,station,nextStation,
+            (lo,hi,l,r)=>strip(white,s,lo-station,hi-station,l,r),{lines:false});
           for(const [x,z] of [[ax,az],[bx,bz]]){
             const k=Math.round(x*10)+','+Math.round(z*10);
             const node=junctions.get(k);if(node){if(width>node.r){node.r=width;node.pavement=pavement;}node.n++;}else junctions.set(k,{x,z,r:width,n:1,pavement});
@@ -518,9 +544,10 @@
       // Share the formation height at every OSM node to keep joined ribbons continuous.
       // Keep generated trees, shop plots and street furniture out of the bridge
       // footprint. Upper decks never enter the ground-level sidewalk contours.
-      if(bridges)for(const edge of bridges.edges){
+      if(graph)for(const edge of [...bridges.edges,...tunnels.edges]){
         const w=worldRoadHalfWidth(edge);
-        for(const [start,end] of bridges.bridgeInfo(edge).ranges)for(let i=1;i<edge.dist.length;i++){
+        const profile=bridges.bridgeInfo(edge)||graph.tunnels.info(edge);
+        for(const [start,end] of profile.ranges)for(let i=1;i<edge.dist.length;i++){
           const lo=Math.max(start,edge.dist[i-1]),hi=Math.min(end,edge.dist[i]);
           if(hi<=lo)continue;
           const a=graph.sample({edge,s:lo,dir:1}),b=graph.sample({edge,s:hi,dir:1});
@@ -660,20 +687,8 @@
             instance('white',unitBox,x,y+.72,z,.18,.16,.18,0,0xc13f31);
           }
         }
-        if(!s.loose&&(s.traffic?.lanes||s.w>=4.2||s.graded)){
-          for(const side of [-1,1])strip(white,s,start,end,side*s.w*.94-.055,side*s.w*.94+.055);
-          const lanes=s.traffic?.lanes;
-          if(lanes){
-            const divide=s.oneway?0:lanes-(s.traffic.forward??lanes/2);
-            for(let i=1;i<lanes;i++){
-              const offset=s.w*(2*i/lanes-1);
-              for(let u=start+1;u<end;u+=10)strip(i===divide?yellow:white,s,u,Math.min(end,u+3.7),offset-.07,offset+.07);
-            }
-          }else{
-            for(let u=start+1;u<end;u+=10)strip(s.oneway?white:yellow,s,u,Math.min(end,u+3.7),-.074,.074);
-            if(s.w>=6.75)for(let u=start+2;u<end;u+=11)for(const side of [-1,1])strip(white,s,u,Math.min(end,u+3),side*s.w*.49-.065,side*s.w*.49+.065);
-          }
-        }
+        roadPaint(s.source,s.laneLayout,s.w,s.station+start,s.station+end,(lo,hi,l,r,color)=>
+          strip(color==='yellow'?yellow:white,s,lo-s.station,hi-s.station,l,r),{controls:false});
         if(s.rank>detailRadius||s.len<3)continue;
         if(!s.graded&&s.w>=4.2&&s.len>=24){
           const spacing=s.w>6?31:38;
@@ -892,7 +907,10 @@
           const h=groundHeight?groundHeight(x,z):roadway(cx+x,cz+z);
           verts.push(x,h+y,z);
           if(asphalt)crossSection.push(section?(x-section.ax)*section.nx+(z-section.az)*section.nz:0,section?.w||0);
-          if(mat.userData.templeSurface||mat===material.pavers)uv.push(cx+x,cz+z);
+          if(mat.userData.roadPanels&&section){
+            const dx=x-section.ax,dz=z-section.az;
+            uv.push(section.station+dx*section.fx+dz*section.fz,dx*section.nx+dz*section.nz);
+          }else if(mat.userData.templeSurface||mat===material.pavers)uv.push(cx+x,cz+z);
           else uv.push(x*freq+(cx*freq)%1,z*freq+(cz*freq)%1);
         }
         const fitRoad=wooded&&(mat===material.pavers||mat===curbStone);
@@ -936,8 +954,9 @@
           split(left,axis+1);split(right,axis);
         }
         const same=(a,b,c,o)=>Math.floor((Math.min(a,b,c)+o)/step)===Math.floor((Math.max(a,b,c)+o)/step);
+        const sections=sectionsFor.get(data);
         for(let i=0;i<data.length;i+=6){
-          if(asphalt)section=data===roadData?roadSections[i/6]:null;
+          if(sections)section=sections[i/6];
           const ax=data[i],az=data[i+1],bx=data[i+2],bz=data[i+3],dx=data[i+4],dz=data[i+5];
           if(same(ax,bx,dx,cx)&&same(az,bz,dz,cz)&&same(ax+az,bx+bz,dx+dz,cx+cz)){
             if(fitRoad)triangle([ax,az],[bx,bz],[dx,dz]);else{vertex(ax,az);vertex(bx,bz);vertex(dx,dz);}
@@ -993,8 +1012,9 @@
           if(paving.length){temple??=createTempleSurfaces(T);surface(paving,temple.paving,-.14,1,localGround);}
         }
       }
-      surface(landData,material.earth,-.032,.77);surface(roadData,material.asphalt,.002,.25);
-      surface(gravelData,material.earth,.002,.48);surface(pavedData,material.pavers,.002,1);
+      surface(landData,material.earth,-.032,.77);
+      for(const [finish,data] of Object.entries(roadSurfaces))
+        surface(data,material[finish],.002,finish==='earth' ? .48 : finish==='pavers' ? 1 : .25);
       for(const [mat,data] of aprons)surface(data,mat,.001,mat===material.earth ? .48 : mat===material.pavers ? 1 : .25);
       surface(yellow,material.yellow,.026,1);surface(white,material.white,.026,1);
       walks.build(roadGroup,surface,material.pavers,curbStone);pavementLift=walks.liftAt;
@@ -1014,9 +1034,11 @@
         m.castShadow=b.mat!=='vergeGrass';m.receiveShadow=true;roadGroup.add(m);
       }
       if(bridges)buildBridgeMeshes(T,{...bridges,graph,cx,cz,radius:cutoff,group:roadGroup,material,ground:relief.ground,registerObstacle});
+      if(tunnels?.edges.length)buildTunnelMeshes(T,{...tunnels,graph,cx,cz,radius:cutoff,group:roadGroup,material,ground:relief.ground,registerObstacle});
       streetLife.rebuild(graph,cx,cz,segments,(x,z,r)=>!blocked(x-cx,z-cz,r)&&!contact(x,z,r));
-      rebuildSigns(graph,edges,cx,cz,(x,z,r)=>!blocked(x-cx,z-cz,r)&&!contact(x,z,r),driveGround,registerObstacle);
-      mappedLights.rebuild(graph,edges,cx,cz,(x,z,e,s)=>bridges?.bridgeInfo(e)?bridges.height(e,s):driveGround(x,z));
+      const signGround=(x,z,e,s)=>graph?.tunnels.info(e)?tunnels.height(e,s):bridges?.bridgeInfo(e)?bridges.height(e,s):driveGround(x,z);
+      rebuildSigns(graph,edges,cx,cz,(x,z,r)=>!blocked(x-cx,z-cz,r)&&!contact(x,z,r),signGround,registerObstacle);
+      mappedLights.rebuild(graph,edges,cx,cz,signGround);
       breakfast.place(graph,cx,cz,segments,(x,z,r)=>!blocked(x,z,r)&&!contact(x+cx,z+cz,r),driveGround);
       centralStreetscapes?.place(graph,cx,cz,segments,(x,z,r)=>!blocked(x,z,r)&&!contact(x+cx,z+cz,r),driveGround,district.streetFronts,streetLife.places);
       shadowStamp=-1000;
@@ -1248,6 +1270,16 @@
           look.set(x+dx*15,car.y+2.7,z+dz*15);
         }
       }
+      if(car.edge&&sceneGraph?.tunnels.info(car.edge)?.bore&&!car.sightView&&!inside){
+        // Keep the chase camera in the driver's bore on bends and at the mouth.
+        const road=sceneGraph.nearest(eye.x+originX,eye.z+originZ,[car.edge]),p=sceneGraph.sample(road);
+        const q=tunnels.section(car.edge),dx=eye.x+originX-p.x,dz=eye.z+originZ-p.z;
+        const across=dx*Math.cos(p.yaw)+dz*Math.sin(p.yaw);
+        const safe=Math.max(.25,q.roadHalfWidth-.4),correction=Math.max(-safe,Math.min(safe,across))-across;
+        eye.x+=Math.cos(p.yaw)*correction;eye.z+=Math.sin(p.yaw)*correction;
+        const floor=tunnels.height(car.edge,road.s);
+        eye.y=Math.max(floor+.5,Math.min(floor+q.spring-.25,eye.y));
+      }
       if(car.flood){eye.y=Math.max(eye.y,car.flood.level+2.2);look.set(x,car.flood.level-.25,z);}
       camera.position.copy(eye);camera.lookAt(look);
       if(car.sightView){
@@ -1281,8 +1313,9 @@
       sightings.update(dt,car,originX,originZ,camera.aspect);
       if(breakfast.update(car,dt))onBreakfastCall?.();
       atmosphere.setHour(car.sightView?.hour??car.scenicHour);
-      weather.render(camera,now,car.dawn||0,atmosphere.update);
-      headlight.intensity=car.flood?0:atmosphere.lamps.value*2600;
+      const sheltered=!car.sightView&&car.edge&&sceneGraph?.tunnels.info(car.edge)?.bore;
+      weather.render(camera,now,car.dawn||0,atmosphere.update,sheltered);
+      headlight.intensity=car.flood?0:(sheltered?1:atmosphere.lamps.value)*2600;
       headlight.visible=headlight.intensity>3;
       material.glass.emissiveIntensity=atmosphere.lamps.value*.37;
       material.lantern.emissiveIntensity=atmosphere.lamps.value*3.2;
@@ -1320,6 +1353,6 @@
       markerPoint.project(camera);
       return markerPoint.z>0 && markerPoint.z<1 && Math.abs(markerPoint.x)<.92 && Math.abs(markerPoint.y)<.9 ? markerPoint : null;
     }
-    return {hitDashboardMap,refreshMap:cabin.refreshMap,projectSummit,weather,streetLife,accessLane:grounds.accessLane,loadStructures:structures.load,preloadVehicle:loadModel,waterAt:(x,z,edge)=>{const wet=waterAt(x,z),deck=wet&&bridges?.at(x,z,edge);return wet&&deck!=null&&deck>=wet.level?null:wet;},terrainReady:relief.ready,grade:driveGrade,ground:driveGround,setRoads,render,resize:graphics.resize,contact,loadDistrict:async(g,x,z)=>(await Promise.all([district.load(g,x,z),osmBuildings.load(g,x,z),relief.loadLocal(g,x,z),landscapes.load(g,x,z),grounds.load(g,x,z),environment.load(g,x,z),amenities.load(g,x,z)])).some(Boolean),splash:(x,z,nx,nz,strength,level)=>driveFx.impact(x,z,nx,nz,strength,'water',level,.3),sightFootprint:district.footprint,nearLandmark:(x,z)=>landmarks?.nearest(x,z),reactToContact:roadsideImpact.react,impact:(x,z,nx,nz,s,k,h=0,g)=>driveFx.impact(x,z,nx,nz,s,k,driveGround(x,z)+h,g),scrape:(x,y,z,vx,vz)=>driveFx.scrape(x,driveGround(x,z)+y,z,vx,vz),resetFx(){driveFx.reset();roadsideImpact.reset();sightings.reset();}};
+    return {hitDashboardMap,refreshMap:cabin.refreshMap,projectSummit,weather,streetLife,accessLane:grounds.accessLane,loadStructures:structures.load,preloadVehicle:loadModel,waterAt:(x,z,edge)=>{if(edge&&sceneGraph.tunnels.info(edge)?.bore&&tunnels.at(x,z,edge)!=null)return null;const wet=waterAt(x,z),deck=wet&&bridges?.at(x,z,edge);return wet&&deck!=null&&deck>=wet.level?null:wet;},terrainReady:relief.ready,grade:driveGrade,ground:driveGround,setRoads,render,resize:graphics.resize,contact,loadDistrict:async(g,x,z)=>(await Promise.all([district.load(g,x,z),osmBuildings.load(g,x,z),relief.loadLocal(g,x,z),landscapes.load(g,x,z),grounds.load(g,x,z),environment.load(g,x,z),amenities.load(g,x,z)])).some(Boolean),splash:(x,z,nx,nz,strength,level)=>driveFx.impact(x,z,nx,nz,strength,'water',level,.3),sightFootprint:district.footprint,nearLandmark:(x,z)=>landmarks?.nearest(x,z),reactToContact:roadsideImpact.react,impact:(x,z,nx,nz,s,k,h=0,g,edge)=>driveFx.impact(x,z,nx,nz,s,k,driveGround(x,z,edge)+h,g),scrape:(x,y,z,vx,vz,edge)=>driveFx.scrape(x,driveGround(x,z,edge)+y,z,vx,vz),resetFx(){driveFx.reset();roadsideImpact.reset();sightings.reset();}};
   };
 })();

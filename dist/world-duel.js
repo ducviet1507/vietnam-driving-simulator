@@ -38,7 +38,7 @@ class RollingDuel {
  }
  pose(){
    const c=this.at(this.opponent),lane=Math.min(worldRoadHalfWidth(c.edge)*.48,2.2);
-   Object.assign(this.actor,this.graph.sample(c,lane),{edge:c.edge,deckLift:this.graph.bridges.lift(c.edge,c.s),speed:this.speed});
+   Object.assign(this.actor,this.graph.sample(c,lane),{edge:c.edge,deckLift:this.graph.roadLevel(c.edge,c.s),speed:this.speed});
  }
  move(cursor,traveled,dt,traffic){
    this.ensure(Math.max(this.player,this.opponent)+150);

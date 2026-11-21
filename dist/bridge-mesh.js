@@ -16,7 +16,8 @@
   window.buildBridgeMeshes=function(T,options){
     const {edges,graph,cx,cz,radius,group,material,height,ground,bridgeInfo,registerObstacle,signatureHeight}=options;
     if(!graph)return;
-    const kit=assets(T,material),deck=[],uv=[],carriageway=[],faces=[],colors=[],poses=[],tints=[];
+    const kit=assets(T,material),decks=new Map(),faces=[],colors=[],poses=[],tints=[];
+    let activeDeck;
     const tint=new T.Color(),matrix=new T.Matrix4();
     const inRange=(x,z,margin=0)=>Math.hypot(x-cx,z-cz)<=radius+margin;
     function beam(a,b,width,depth,color){
@@ -37,8 +38,13 @@
       for(const p of points){
         const x=p.x-cx,z=p.z-cz;
         if(halfWidth){
-          deck.push(x,p.y,z);uv.push(x*.25+(cx*.25)%1,z*.25+(cz*.25)%1);
-          carriageway.push(p.offset,halfWidth);
+          const {positions,uv,finish}=activeDeck;
+          positions.push(x,p.y,z);
+          const freq=finish==='earth' ? .48 : .25;
+          if(finish==='roadSlabs'||finish==='roadWood')uv.push(p.s,p.offset);
+          else if(finish==='pavers')uv.push(p.x,p.z);
+          else uv.push(x*freq+(cx*freq)%1,z*freq+(cz*freq)%1);
+          if(finish==='asphalt')activeDeck.carriageway.push(p.offset,halfWidth);
         }else{
           faces.push(x,p.y,z);colors.push(tint.r,tint.g,tint.b);
         }
@@ -46,7 +52,7 @@
     }
     function quad(a,b,c,d,color,halfWidth=0){polygon([a,b,d,b,c,d],color,halfWidth);}
     function at(row,offset,y=0){
-      return {x:row.x+row.nx*offset,y:row.y+y,z:row.z+row.nz*offset,offset};
+      return {x:row.x+row.nx*offset,y:row.y+y,z:row.z+row.nz*offset,s:row.s,offset};
     }
     function ribbon(a,b,left,right,y,color,halfWidth=0){
       quad(at(a,left,y),at(a,right,y),at(b,right,y),at(b,left,y),color,halfWidth);
@@ -54,12 +60,6 @@
     function intermediate(a,b,s){
       const t=(s-a.s)/(b.s-a.s);
       return {s,x:mix(a.x,b.x,t),z:mix(a.z,b.z,t),y:mix(a.y,b.y,t),nx:mix(a.nx,b.nx,t),nz:mix(a.nz,b.nz,t)};
-    }
-    function dashed(a,b,offset,color){
-      for(let station=Math.floor(a.s/10)*10;station<b.s;station+=10){
-        const lo=Math.max(a.s,station),hi=Math.min(b.s,station+3.8);
-        if(hi>lo)ribbon(intermediate(a,b,lo),intermediate(a,b,hi),offset-.072,offset+.072,.028,color);
-      }
     }
     function barrier(edge,a,b,side,offset){
       const p=at(a,offset),q=at(b,offset),dx=q.x-p.x,dz=q.z-p.z,len=Math.hypot(dx,dz);
@@ -298,8 +298,9 @@
       if(!info)continue;
       const w=width(edge),row=rowSampler(edge),major=/^(motorway|trunk)/.test(edge.kind);
       const heavy=major||w>=6,depth=Math.min(1.38,Math.max(.56,w*.14));
-      const lanes=edge.traffic?.lanes??(edge.oneway?Math.max(1,Math.round(w/1.75)):w<2.7?1:2);
-      const divider=edge.oneway?0:lanes-(edge.traffic?.forward??Math.ceil(lanes/2));
+      const layout=roadLaneLayout(edge,w),finish=roadSurfaceClass(edge);
+      if(!decks.has(finish))decks.set(finish,{finish,positions:[],uv:[],carriageway:[]});
+      activeDeck=decks.get(finish);
       const apron=node=>(graph.nodes.get(node)?.length||0)>2?w+1.4:0;
       const railMin=apron(edge.start),railMax=edge.length-apron(edge.end);
       for(const [start,end] of info.ranges){
@@ -337,15 +338,9 @@
             if(s-prev.s<.0001)continue;
             const next=row(s,i);
             ribbon(prev,next,-w,w,.004,0,w);
-            for(const side of [-1,1]){
-              const o=side*(w-.23);
-              ribbon(prev,next,o-.055,o+.055,.026,0xebe9db);
-            }
-            for(let lane=1;lane<lanes;lane++){
-              const o=w*(2*lane/lanes-1);
-              if(lane===divider)ribbon(prev,next,o-.07,o+.07,.028,0xe4bd58);
-              else dashed(prev,next,o,0xefeddf);
-            }
+            roadPaint(edge,layout,w,prev.s,s,(lo,hi,left,right,color)=>
+              ribbon(intermediate(prev,next,lo),intermediate(prev,next,hi),left,right,.028,
+                color==='yellow'?0xf0ca63:0xe8e8d7),{lines:prev.s>=railMin&&s<=railMax});
             const owned=options.authoredAt?.(edge,(prev.s+s)/2)??info.landmark;
             if(!owned){
               for(const side of [-1,1]){
@@ -531,7 +526,11 @@
       g.computeVertexNormals();
       const m=new T.Mesh(g,mat);m.name=name;m.castShadow=m.receiveShadow=true;group.add(m);
     }
-    mesh(deck,material.asphalt,'Mapped bridge decks',[['uv',uv,2],['carriageway',carriageway,2]]);
+    for(const {finish,positions,uv,carriageway} of decks.values()){
+      const attributes=[['uv',uv,2]];
+      if(finish==='asphalt')attributes.push(['carriageway',carriageway,2]);
+      mesh(positions,material[finish],'Mapped bridge decks',attributes);
+    }
     mesh(faces,kit.faces,'Bridge fascia and markings',[['color',colors,3]]);
     if(tints.length){
       const members=new T.InstancedMesh(kit.box,kit.beams,tints.length);
