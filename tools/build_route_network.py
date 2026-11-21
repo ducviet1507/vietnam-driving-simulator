@@ -22,10 +22,13 @@ BUILD = """
 const fs=require('node:fs'),path=require('node:path'),zlib=require('node:zlib');
 const dist=process.argv[1],network=require(path.join(dist,'route-network-core.js'));
 const index=JSON.parse(fs.readFileSync(path.join(dist,'vn-roads/index.json')));
+const accessOnly=new Set(index.sightAccess?.only),accessTiles=new Set(index.sightAccess?.tiles);
 const traffic=new Set(JSON.parse(fs.readFileSync(path.join(dist,'vn-traffic/index.json'))).tiles);
 function load(folder,key){return JSON.parse(zlib.gunzipSync(fs.readFileSync(path.join(dist,folder,key+'.gz'))));}
 for(const key of process.argv.slice(2)){
-  const graph=new network.Tile(index,key,load('vn-roads',key),traffic.has(key)?load('vn-traffic',key):{});
+  const rows=accessOnly.has(key)?[]:load('vn-roads',key);
+  if(accessTiles.has(key))rows.push(...load('vn-access',key));
+  const graph=new network.Tile(index,key,rows,traffic.has(key)?load('vn-traffic',key):{});
   process.stdout.write(JSON.stringify([key,graph.overlay()])+'\\n');
 }
 """
@@ -42,7 +45,7 @@ def build(dist, workers):
     traffic = json.loads((dist / "vn-traffic/index.json").read_bytes())
     if roads["sourceSha256"] != traffic["graphSourceSha256"] or roads["osmTimestamp"] != traffic["osmTimestamp"]:
         raise ValueError("Road and traffic snapshots must match.")
-    tiles = sorted((set(roads["tiles"]) - set(roads["splits"])) | set(roads["subtiles"]))
+    tiles = sorted((set(roads["tiles"]) - set(roads["splits"])) | set(roads["subtiles"]) | set(roads.get("sightAccess", {}).get("only", [])))
     groups = [tiles[i:i+12] for i in range(0, len(tiles), 12)]
     data = {}
     with concurrent.futures.ThreadPoolExecutor(max_workers=workers) as pool:
@@ -77,6 +80,8 @@ def build(dist, workers):
     metadata = {"version": 1, "source": roads["sourceSha256"], "timestamp": roads["osmTimestamp"],
                 "attribution": "© OpenStreetMap contributors, ODbL 1.0; see vn-roads/CREDITS.txt",
                 "tiles": parts}
+    if "sightAccess" in roads:
+        metadata["sightAccess"] = roads["sightAccess"]["revision"]
     raw = json.dumps(metadata, ensure_ascii=False, separators=(",", ":")).encode()
     payload = gzip.compress(raw, compresslevel=7, mtime=0)
     (folder / "portals.gz").write_bytes(payload)

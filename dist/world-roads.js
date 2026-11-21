@@ -8,7 +8,10 @@ async function fetchMapTile(url){
 // connect edges so an overpass does not accidentally become a turn.
 class VietnamRoads {
  constructor(index,lon,lat){
-   this.available=new Set(index.tiles);this.splits=index.splits||{};this.subtiles=new Set(index.subtiles||[]);
+   this.readRows=RoadTileCodec.roadRows(index);
+   this.available=new Set([...index.tiles,...(index.sightAccess?.addedParents||[])]);
+   this.splits=index.splits||{};this.subtiles=new Set([...(index.subtiles||[]),...(index.sightAccess?.addedSubtiles||[])]);
+   this.visitorEdges=new Set(Object.values(index.sightAccess?.stops||{}).map(stop=>stop[0]));
    this.remote=index.tileBase;this.local=new Set(index.localTiles||[]);this.lon=lon;this.lat=lat;
    this.trafficTiles=new Set(index.trafficTiles||[]);
    this.mx=111320*Math.cos(lat*Math.PI/180);this.my=110900;
@@ -25,7 +28,7 @@ class VietnamRoads {
      points.push(p);dist.push(length);
    }
    if(length<.5)return null;
-   const edge={id,start,end,name,kind,oneway:Boolean(oneway),points,dist,length};
+   const edge={id,start,end,name,kind,oneway:Boolean(oneway),points,dist,length,visitorRoad:this.visitorEdges.has(id)};
    if(kind==='service')edge.authoredHalfWidth=window.VietnamRoadWidths?.get(Math.min(start,end)+':'+Math.max(start,end));
    return edge;
  }
@@ -33,7 +36,7 @@ class VietnamRoads {
    if(!this.cache.has(key)){
      const pending=(async()=>{
        const base=this.remote&&!this.local.has(key)?this.remote:'vn-roads/';
-       const [rows,details]=await Promise.all([fetchMapTile(RoadTileCodec.tileURL(base,key)),this.trafficTiles.has(key)
+       const [rows,details]=await Promise.all([this.readRows(key,base,fetchMapTile),this.trafficTiles.has(key)
          ?fetchMapTile('vn-traffic/'+key+'.gz').catch(()=>null):undefined]);
        if(details===null)this.cache.delete(key);
        return {rows,details};

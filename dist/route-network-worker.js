@@ -22,7 +22,7 @@ function cached(map,key,limit,load){
 }
 
 function boxes(index){
-  const keys=[...index.tiles.filter(k=>!index.splits?.[k]),...(index.subtiles||[])];
+  const keys=[...index.tiles.filter(k=>!index.splits?.[k]),...(index.subtiles||[]),...(index.sightAccess?.only||[])];
   return keys.map(key=>{
     const [x,y,i=0,j=0]=key.split('_').map(Number),size=.25/(index.splits?.[x+'_'+y]||1);
     return {key,lon:x/4+i*size,lat:y/4+j*size,size};
@@ -97,7 +97,11 @@ async function plan({index,start,finish},progress){
   }
   const activeTraffic=new Set(traffic),local=new Set(index.localTiles||[]);
   const raw=new Map(),graphs=new Map();
-  const rows=key=>cached(raw,key,3,()=>readAsset(RoadTileCodec.tileURL(index.tileBase&&!local.has(key)?index.tileBase:'vn-roads/',key)));
+  const readRows=RoadTileCodec.roadRows(index);
+  const rows=key=>cached(raw,key,3,()=>{
+    const base=index.tileBase&&!local.has(key)?index.tileBase:'vn-roads/';
+    return readRows(key,base,readAsset);
+  });
   const tile=key=>cached(graphs,key,3,async()=>{
     const [data,details]=await Promise.all([rows(key),activeTraffic.has(key)?readAsset('vn-traffic/'+key+'.gz'):{}]);
     raw.delete(key);
@@ -153,7 +157,7 @@ async function plan({index,start,finish},progress){
   if(first.size && last.size){
     raw.clear();graphs.clear();
     const overlay=await readAsset('route-network/portals.gz');
-    if(overlay.version!==1 || overlay.source!==index.sourceSha256 || overlay.timestamp!==index.osmTimestamp)
+    if(overlay.version!==1 || overlay.source!==index.sourceSha256 || overlay.timestamp!==index.osmTimestamp || overlay.sightAccess!==index.sightAccess?.revision)
       throw new RouteError('version','Dữ liệu đường vừa thay đổi. Hãy tải lại trang.');
     const entries=new Map();
     const matrices=new Map(), regionByKey=new Map(regions.map(r=>[r.key,r]));

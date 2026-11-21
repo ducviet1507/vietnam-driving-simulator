@@ -2,7 +2,7 @@
 (()=>{
   const sites=window.VietnamSights??=[],catalog=new Map(VietnamTourism.entries.map(site=>[site.id,site]));
   // Road junction on Hoàng Diệu leading to the public gate (OSM n6539666886).
-  const visitorArrival={start:[105.8390715,21.0336681],approachMeters:null};
+  const visitorArrival={start:[105.8390715,21.0336681],approachMeters:null,mappedEntrance:true};
   function register(id,way,details,build){
     const catalogId='osm-way-'+way,map='https://www.openstreetmap.org/way/'+way;
     sites.push({province:'Hà Nội',city:'Hà Nội',locality:'Hà Nội',region:'Bắc Bộ',kind:'Di tích',

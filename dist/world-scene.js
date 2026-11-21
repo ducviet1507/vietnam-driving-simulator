@@ -475,7 +475,7 @@
           const sourceLength=Math.hypot(dx*mx,dz);
           const s={ax,az,bx,bz,fx,fz,nx,nz,len:length,sourceLength,w:width,kind:e.kind,oneway:e.oneway,rank:perp,seed};
           s.traffic=e.traffic;s.loose=loose;
-          s.graded=namedPass(e)||relief.altitude((a.x+b.x)*.5,(a.z+b.z)*.5)>280&&!district.builtUp(cx+(ax+bx)*.5,cz+(az+bz)*.5)&&!['residential','service','living_street'].includes(e.kind);
+          s.graded=namedPass(e)||relief.altitude((a.x+b.x)*.5,(a.z+b.z)*.5)>280&&(e.visitorRoad||!district.builtUp(cx+(ax+bx)*.5,cz+(az+bz)*.5)&&!['residential','service','living_street'].includes(e.kind));
           if(s.graded){
             const n=Math.max(1,Math.ceil(length/12));s.interval=length/n;s.crown=[];
             for(let j=0;j<=n;j++){

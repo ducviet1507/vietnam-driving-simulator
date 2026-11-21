@@ -9,6 +9,9 @@ https://download.geofabrik.de/asia/vietnam/vietnam-261118.osm.pbf
 
 The game graph contains selected public motor-vehicle road classes. Edge endpoints
 follow the source OSM topology and intermediate shape points are simplified.
+The visitor approaches in ../vn-access/ are simulated alignments. Their junctions
+use this road graph. The generator uses OSM coastlines, building footprints and
+water geometry together with the game's elevation raster to place the roads.
 Mapped traffic controls and supported turn restrictions are packaged separately
 in ../vn-traffic/. Signal timing is simulated. Live traffic and temporary
 closures are outside this road dataset.
