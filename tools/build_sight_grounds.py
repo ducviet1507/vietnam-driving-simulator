@@ -12,7 +12,8 @@ from pathlib import Path
 import subprocess
 
 import osmium
-from shapely import STRtree, from_wkb
+from shapely import STRtree, from_wkb, union_all
+from shapely.affinity import scale
 from shapely.geometry import Point, LineString, box
 
 from build_tour_buildings import metres
@@ -21,6 +22,80 @@ from build_tour_buildings import metres
 ROOT = Path(__file__).resolve().parents[1]
 GRID, SCALE = 32, 1000000
 KEYS = ("highway","barrier","amenity","leisure","man_made","natural","tourism","historic","landuse","place")
+WALLS = {"wall", "hedge", "city_wall"}
+GATES = {"gate", "entrance", "lift_gate", "swing_gate", "sliding_gate", "kissing_gate", "stile"}
+RESTRICTED = {"private", "no", "military", "forestry", "agricultural"}
+
+
+def visitor_way_width(tags):
+    road = tags.get("highway")
+    if tags.get("area") == "yes" or any(tags.get(k) not in {None, "no"} for k in ("bridge", "tunnel", "indoor")):
+        return 0
+    if road in {"steps", "path", "footway", "pedestrian", "cycleway"}:
+        access = tags.get("foot", tags.get("access"))
+        fallback = 1.5 if road == "path" else 2.4
+    elif road in {"service", "residential", "living_street", "unclassified", "tertiary", "secondary", "primary"}:
+        access = next((tags[k] for k in ("motorcar", "motor_vehicle", "vehicle", "access") if k in tags), None)
+        fallback = 4 if road == "service" else 5.5
+    else:
+        return 0
+    return 0 if access in RESTRICTED else min(14, metres(tags.get("width")) or fallback)
+
+
+def visitor_access(source):
+    # Match node IDs. Roads on the other side of a wall or on an overpass do
+    # not imply an entrance. A tagged gate width takes priority over road width.
+    wall_nodes, denied, gates, crossings = set(), set(), {}, {}
+    wall_edges, lane_ends, entrance_lanes = set(), set(), set()
+    objects = osmium.FileProcessor(source, osmium.osm.NODE | osmium.osm.WAY)
+    for obj in objects.with_filter(osmium.filter.KeyFilter("barrier", "entrance")):
+        barrier = obj.tags.get("barrier")
+        if obj.is_way():
+            if barrier in WALLS:
+                refs = [n.ref for n in obj.nodes]
+                wall_nodes.update(refs)
+                wall_edges.update(tuple(sorted(pair)) for pair in zip(refs, refs[1:]))
+            continue
+        if (obj.tags.get("locked") == "yes" or obj.tags.get("access") in RESTRICTED
+                or barrier and barrier not in GATES or obj.tags.get("entrance") in {"no", "emergency", "exit"}):
+            denied.add(obj.id)
+        elif barrier in GATES or obj.tags.get("entrance"):
+            width = metres(obj.tags.get("width")) or metres(obj.tags.get("maxwidth:physical"))
+            gates[obj.id] = width or (1.1 if barrier in {"kissing_gate", "stile"} else 0)
+    candidates = wall_nodes | gates.keys()
+    for way in osmium.FileProcessor(source, osmium.osm.WAY).with_filter(osmium.filter.KeyFilter("highway")):
+        refs = [n.ref for n in way.nodes]
+        shared = candidates.intersection(refs) - denied
+        if not shared:
+            continue
+        width = visitor_way_width(way.tags)
+        if not width:
+            continue
+        # A path following the wall shares an edge, not just a crossing node.
+        along = set()
+        for a, b in zip(refs, refs[1:]):
+            if a in shared and b in shared and tuple(sorted((a,b))) in wall_edges:
+                along.update((a,b))
+        shared.difference_update(ref for ref in along if ref not in gates)
+        for ref in shared:
+            crossings[ref] = max(width, crossings.get(ref, 0))
+        if shared and way.tags["highway"] == "service":
+            entrance_lanes.add(way.id)
+            lane_ends.update((refs[0], refs[-1]))
+    openings = {ref: min(14, gates.get(ref) or crossings.get(ref) or 2.4)
+                for ref in wall_nodes.intersection(gates.keys() | crossings.keys())}
+    return openings, entrance_lanes, lane_ends
+
+
+def cut_openings(wall, nodes, openings):
+    cuts = []
+    for n in nodes:
+        if n.ref in openings and n.location.valid():
+            radius = openings[n.ref] / 2
+            circle = Point(n.lon, n.lat).buffer(1)
+            cuts.append(scale(circle, radius / (111320 * math.cos(math.radians(n.lat))), radius / 110900,
+                              origin=(n.lon, n.lat)))
+    return wall.difference(union_all(cuts)) if cuts else wall
 
 
 def feature(tags, area=False, point=False):
@@ -61,10 +136,12 @@ def feature(tags, area=False, point=False):
         return
     if tags.get("natural")=="tree_row":
         return "avenue"
-    if tags.get("barrier") in {"wall","hedge","city_wall"}:
+    if tags.get("barrier") in WALLS:
         return tags["barrier"]
     if tags.get("man_made")=="pier":
         return "pier"
+    if road == "service" and visitor_way_width(tags):
+        return "drive"
     if road in {"steps","path","footway","pedestrian"}:
         if tags.get("footway") in {"sidewalk","crossing"} or tags.get("bridge") not in {None,"no"}:
             return
@@ -88,6 +165,7 @@ def pack(coords):
 
 
 def build(source, output):
+    openings, entrance_lanes, lane_ends = visitor_access(source)
     script = "global.window=global;require('./dist/tourism-catalog');console.log(JSON.stringify(VietnamTourism.entries.flatMap(s=>[[s.lon,s.lat],s.start])))"
     sites = json.loads(subprocess.check_output(["node","-e",script],cwd=ROOT))
     boxes = [box(x-.0048,y-.00455,x+.0048,y+.00455) for x,y in sites]
@@ -101,6 +179,8 @@ def build(source, output):
         node,area = obj.is_node(),obj.is_area()
         kind = feature(obj.tags,area,node)
         if not kind or obj.is_relation():
+            continue
+        if kind == "drive" and obj.id not in entrance_lanes and not any(n.ref in lane_ends for n in obj.nodes):
             continue
         if node:
             shape = Point(obj.location.lon,obj.location.lat)
@@ -122,6 +202,10 @@ def build(source, output):
         w,s,e,n = shape.bounds
         if not len(nearby.query(shape,predicate="intersects")):
             continue
+        if kind in WALLS:
+            shape = cut_openings(shape, obj.nodes, openings)
+            if shape.is_empty:
+                continue
         size = metres(obj.tags.get("height" if kind in {"wall","city_wall","hedge","flagpole","stele","stone","obelisk","tree","pine","palm","avenue"} else "width"))
         for i in range(math.floor(w*GRID),math.floor(e*GRID)+1):
             for j in range(math.floor(s*GRID),math.floor(n*GRID)+1):

@@ -38,15 +38,17 @@ function save(){
  try{localStorage.setItem('taylai.world.trip',JSON.stringify({lon,lat,navigation,label:source[0],destination:source[3]?.id,distance,passes,dir:player.dir,edge:player.edge.id,yaw:car.yaw,origin:[roads.lon,roads.lat]}));}catch{}
 }
 function parkOnRoad(){
- const p=roads.sample(player,stance());car.flood=null;car.wading=null;DriveBody.reset(car);Object.assign(car,p);cooldown=1;
+ const p=roads.sample(player,stance());car.flood=null;car.wading=null;car.accessLane=false;DriveBody.reset(car);Object.assign(car,p);cooldown=1;
 }
 function trackRoad(){
  const around=roads.nearby(car.x,car.z,22);
  const nearest=roads.nearest(car.x,car.z,around);
- if(!nearest){car.offroad=true;player.error=Infinity;return;}
+ const onNetwork=nearest&&nearest.error<=worldRoadHalfWidth(nearest.edge)**2;
+ car.accessLane=!onNetwork&&districtView?.graph===roads&&gfx.accessLane(car.x,car.z);
+ car.offroad=!onNetwork&&!car.accessLane;
+ if(!nearest){player.error=Infinity;return;}
  const bearing=roads.sample(nearest).yaw;
  nearest.dir=Math.cos(car.yaw-bearing)>=0?1:-1;player=nearest;
- car.offroad=nearest.error>worldRoadHalfWidth(nearest.edge)**2;
 }
 let districtView=null,structureRequest=null,pendingDistrict=null;
 function loadStructuresNear(graph,x,z){
@@ -374,7 +376,7 @@ function tick(dt){
  if(mode==='drive')waterStep(dt);
  trackRoad();const moved=Math.hypot(car.x-x,car.z-z);distance+=moved;
  if(mode!=='drive')return;
- if(guide && guide.timeMs===null && guide.update(player,!car.offroad&&!car.flood)){
+ if(guide && guide.timeMs===null && guide.update(player,!car.offroad&&!car.accessLane&&!car.flood)){
    guide.timeMs=Math.max(1,Math.round(performance.now()-guideStarted));
    if(guide.route.id)boardFor(guide.route).arrive();
    $('arrivalTitle').textContent='Đã đến '+guide.route.finishLabel;
@@ -426,20 +428,21 @@ function updateHud(){
  if(landmark)$('landmark').textContent=landmark.data.name+' · cách xe '+atlasDistance(landmark.distance/1000);
  const grade=Math.round(100*gfx.grade(car.x,car.z,car.yaw));
  const info=[],traffic=player.edge.traffic,limit=roadSpeedLimit(player);
- if(!car.offroad&&traffic){
+ const onNetwork=!car.offroad&&!car.accessLane;
+ if(onNetwork&&traffic){
    if(traffic.bridge)info.push('Cầu');
    if(traffic.tunnel)info.push('Hầm');
    if(traffic.lanes)info.push(traffic.lanes+' làn');
    if(limit)info.push('Giới hạn '+limit+' km/h');
  }
- const control=car.offroad?null:roadControlAhead(roads,player,performance.now()/1000);
+ const control=onNetwork?roadControlAhead(roads,player,performance.now()/1000):null;
  if(control){
    const label=({red:'Đèn đỏ',amber:'Đèn vàng',green:'Đèn xanh'})[control.phase]||'Lối sang đường';
    info.push(label+' · '+Math.max(0,Math.round(control.distance))+' m');
  }
  $('roadFacts').hidden=!info.length;$('roadFacts').textContent=info.join(' · ');
- $('street').textContent=nameOf(player.edge)+(Math.abs(grade)>=2?' · '+(grade>0?'↑ ':'↓ ')+Math.abs(grade)+'%':'');$('speed').textContent=Math.round(Math.abs(car.speed)*3.6);$('trip').textContent=fmt(distance)+' · '+passes+' lượt vượt';$('hp').value=hp;$('nitro').value=nitro;
- const fork=branchAhead(),plan=duel&&fork?duel.nextAt(fork.node):null;
+ $('street').textContent=(car.accessLane?'Đường nội bộ':nameOf(player.edge))+(Math.abs(grade)>=2?' · '+(grade>0?'↑ ':'↓ ')+Math.abs(grade)+'%':'');$('speed').textContent=Math.round(Math.abs(car.speed)*3.6);$('trip').textContent=fmt(distance)+' · '+passes+' lượt vượt';$('hp').value=hp;$('nitro').value=nitro;
+ const fork=onNetwork?branchAhead():null,plan=duel&&fork?duel.nextAt(fork.node):null;
  $('duelInfo').hidden=!duel;
  if(duel)$('duelInfo').textContent='CHẶNG '+duel.round+' · '+(duel.player>=duel.opponent?'1/2':'2/2')+' · CÒN '+Math.ceil(duel.gate-duel.player)+' M';
  $('turnInfo').textContent=car.flood?'Xe ngập nước · chờ cứu hộ':car.wading?'Đang lội nước':duel?.offCourse?'Lệch lộ trình · tự lái về vệt xanh trên bản đồ':car.offroad?'Ngoài mặt đường':plan?'Giao lộ sau '+Math.ceil(fork.left)+' m · '+branchText(fork.options.find(o=>o.edge.id===plan.edge.id)?.angle||0):fork?'Giao lộ sau '+Math.ceil(fork.left)+' m':'';

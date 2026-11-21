@@ -9,7 +9,7 @@ function createSightGrounds(T,small){
   const texture=new T.CanvasTexture(canvas);
   texture.generateMipmaps=false;texture.minFilter=T.LinearFilter;
   const uniforms={visitorMap:{value:texture},visitorOrigin:{value:new T.Vector2()},visitorActive:{value:0}};
-  const codes={sand:1,rock:2,lawn:3,orchard:3,tea:3,court:4,trail:5,walk:6,steps:6};
+  const codes={sand:1,rock:2,lawn:3,orchard:3,tea:3,court:4,trail:5,walk:6,steps:6,drive:7};
   const cache=new Map(),states=new WeakMap();
   let manifest,mask,fixtures=[],originX=0,originZ=0;
   async function load(graph,x,z){
@@ -64,6 +64,7 @@ function createSightGrounds(T,small){
           tint=(type==4.?vec3(.36,.325,.282):vec3(.325,.274,.214))*(1.+fade*(.14*(slab-.5)-.34*(1.-seam.x*seam.y)));
         }
         if(type==5.)tint=vec3(.235,.16,.095);
+        if(type==7.)tint=vec3(.23,.225,.21);
         diffuseColor.rgb=mix(diffuseColor.rgb,tint*grain,sampleGround.a*(1.-bankWet)*.92);
       }`);
   }
@@ -98,12 +99,11 @@ function createSightGrounds(T,small){
       for(let i=1;i<points.length;i++)pen.lineTo(...points[i]);
       if(closed)pen.closePath();
     }
-    for(const {kind,code,rings,size} of layers){
-      const area=code<5;pen.beginPath();
-      for(const ring of rings)trace(ring,area);
-      pen.fillStyle=pen.strokeStyle='rgb('+Math.round(code*255/8)+' 0 0)';
-      if(area)pen.fill('evenodd');
-      else{pen.lineWidth=Math.min(14,size||(kind==='trail'?1.5:2.4));pen.stroke();}
+    for(const {code,rings} of layers){
+      if(code>=5)continue;
+      pen.beginPath();
+      for(const ring of rings)trace(ring,true);
+      pen.fillStyle='rgb('+Math.round(code*255/8)+' 0 0)';pen.fill('evenodd');
     }
     // Detailed architectural models already include paving and landscaping.
     pen.globalCompositeOperation='destination-out';
@@ -111,13 +111,23 @@ function createSightGrounds(T,small){
       pen.beginPath();trace(ring.map(p=>[p.x-cx,p.y-cz]),true);pen.fill();
     }
     pen.globalCompositeOperation='source-over';
+    // An approach can run through a modeled gate and into its courtyard.
+    for(const {kind,code,rings,size} of layers){
+      if(code<5)continue;
+      pen.beginPath();
+      for(const ring of rings)trace(ring,false);
+      pen.lineWidth=Math.min(14,size||(kind==='drive'?4:kind==='trail'?1.5:2.4));
+      pen.strokeStyle='rgb('+Math.round(code*255/8)+' 0 0)';pen.stroke();
+    }
     mask=pen.getImageData(0,0,canvas.width,canvas.height).data;
     uniforms.visitorOrigin.value.set(cx,cz);uniforms.visitorActive.value=1;texture.needsUpdate=true;
   }
-  function mapped(x,z){
-    if(!mask)return false;
+  function groundCode(x,z){
+    if(!mask)return 0;
     const i=Math.floor((.5+(x-originX)/span)*canvas.width),j=Math.floor((.5+(z-originZ)/span)*canvas.height);
-    return i>=0&&j>=0&&i<canvas.width&&j<canvas.height&&mask[(j*canvas.width+i)*4+3]>100;
+    if(i<0||j<0||i>=canvas.width||j>=canvas.height)return 0;
+    const pixel=(j*canvas.width+i)*4;
+    return mask[pixel+3]>100?Math.round(mask[pixel]*8/255):0;
   }
   // Structural features share one vertex-coloured draw, with metre-space joints
   // on brickwork and end grain on timber. Keep the original path bearings.
@@ -268,5 +278,5 @@ function createSightGrounds(T,small){
     geo.computeVertexNormals();
     const mesh=new T.Mesh(geo,material);mesh.name='Mapped visitor grounds';mesh.castShadow=mesh.receiveShadow=true;group.add(mesh);
   }
-  return {load,prepare,shade,mapped,build};
+  return {load,prepare,shade,mapped:(x,z)=>groundCode(x,z)>0,accessLane:(x,z)=>groundCode(x,z)===codes.drive,build};
 }

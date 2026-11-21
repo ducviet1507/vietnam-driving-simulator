@@ -1,6 +1,8 @@
 'use strict';
 (()=>{
   const sites=window.VietnamSights??=[],catalog=new Map(VietnamTourism.entries.map(site=>[site.id,site]));
+  // Road junction on Hoàng Diệu leading to the public gate (OSM n6539666886).
+  const visitorArrival={start:[105.8390715,21.0336681],approachMeters:null};
   function register(id,way,details,build){
     const catalogId='osm-way-'+way,map='https://www.openstreetmap.org/way/'+way;
     sites.push({province:'Hà Nội',city:'Hà Nội',locality:'Hà Nội',region:'Bắc Bộ',kind:'Di tích',
@@ -150,7 +152,7 @@
     stamp(round,0x9d9681,0,18,6.12,.055,3.65,.055);wavingFlag(1.72,1.04,0,19.8,6.12);
     for(const side of [-1,1])tree(T,kit,side*26,-13,10.4,4.6);
   }
-  register('doan-mon-thang-long',696389268,{yaw:-.111,width:75,depth:30,
+  register('doan-mon-thang-long',696389268,{...visitorArrival,yaw:-.111,width:75,depth:30,
     source:'https://hoangthanhthanglong.vn/doan-mon/',photo:'https://hoangthanhthanglong.vn/wp-content/uploads/2019/04/doan-mon-02.jpg',
     boundary:[[-23,-15],[-9.2,-15],[-9.2,-.8],[11.4,-.8],[11.4,-15],[25,-15],[25,8.5],[38.3,8.5],[38.3,13],[24.9,13],[-23.2,13.4],[-36.2,12.6],[-36.2,8.4],[-23.2,8.4]],
     reserve:(x,z,p)=>Math.abs(x)<38+p&&z> -16-p&&z<30+p,
@@ -273,7 +275,7 @@
     for(const side of [-1,1])carvedDragon(T,kit,rx+side*1.60,rz-3.85,4.36,2.49,-1,.80);
     for(const [x,z,ht,r] of [[-9,-4,13,7.2],[10.3,-6,13.7,7.7],[-22,2,10.1,5.6],[24,1.5,11.3,6.1]])tree(T,kit,x,z,ht,r,h);
   }
-  register('dien-kinh-thien',1497572243,{yaw:-.09,width:53,depth:34,
+  register('dien-kinh-thien',1497572243,{...visitorArrival,visitOnArrival:true,yaw:-.09,width:53,depth:34,
     source:'https://trungbayonline.hoangthanhthanglong.vn/BaoVatQuocGia/detailBacKinhThien',photo:'https://trungbayonline.hoangthanhthanglong.vn/Content/BaoVatQuocGia/assets/img/backinhthien/bo-bac/PL08_2.jpg',
     boundary:[[-26.3,7.5],[-6.9,7.5],[-6.9,15.6],[6.9,15.6],[6.9,7.5],[26,7.5],[26,-12.1],[16.6,-12.1],[16.6,-14.2],[-19.5,-14.2],[-19.5,-12.6],[-26.3,-12.6]],
     reserve:(x,z,p)=>Math.abs(x)<28+p&&z> -19-p&&z<27+p,
@@ -281,7 +283,7 @@
     views:[{name:'Thềm rồng thời Lê sơ',offset:[-1.20,13.30],height:3.15,viewRadius:11.6,viewElevation:.13,viewAngle:.28},
       {name:'Đầu rồng đá năm 1467',offset:[.83,14.76],height:2.1,viewRadius:4.2,viewElevation:.11,viewAngle:1.08},
       {name:'Nền điện và hai thềm đá',offset:[0,0],height:5.6,viewRadius:42,viewElevation:.48,viewAngle:.62}],
-    description:'Ở thềm phía nam, hai thành đá chạm rồng và hai thành chạm mây hóa rồng chia bậc cấp thành ba lối. Bộ thành bậc được dựng năm 1467. Một thềm nhỏ hơn từ thời Lê Trung hưng còn ở góc tây bắc nền điện.'},terrace);
+    description:'Từ cổng 19C Hoàng Diệu, qua Đoan Môn tới thềm rồng. Hai thành rồng đá và hai thành mây hóa rồng từ năm 1467 chia thềm nam thành ba lối. Thềm nhỏ thời Lê Trung hưng nằm ở góc tây bắc nền điện.'},terrace);
   function pavilion(T,kit){
     const {box,stamp,profile,sign}=kit,grey=0xd7d3c6,trim=0xbdb9aa,red=0x9f4934,wood=0x884332,lacquer=0xb35c40;
     for(const [w,y,h] of [[6.55,.105,.21],[6.18,.32,.22],[5.84,.51,.16]])box(0x9f9283,0,y,0,w,h,w);
