@@ -170,6 +170,10 @@ try {
     await page.getByRole('button',{name:'Cầm lái',exact:true}).waitFor();
     await checkPhoneRotation(page,false);
     assert.equal(await page.evaluate(()=>typeof THREE),'undefined','Departure grid loaded the renderer early');
+    assert.equal(await page.evaluate(async()=>{
+      const fonts=await document.fonts.load('italic 700 48px "Barlow Condensed"');
+      return fonts.length>0 && fonts.every(font=>font.status==='loaded');
+    }),true,'Opening typography missing from the bundled stylesheet');
     assert.equal(await page.evaluate(()=>Boolean(VietnamTourism.complete || window.driveBank)),false);
     await page.getByRole('button',{name:'Cầm lái',exact:true}).click();
     await page.locator('body[data-phase="drive"]').waitFor();

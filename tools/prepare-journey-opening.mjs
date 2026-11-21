@@ -16,7 +16,8 @@ export async function prepareJourneyOpening(client) {
   const head = html.slice(0,html.indexOf('</head>'));
   const tags = [...head.matchAll(/<link rel="stylesheet" href="([\w-]+\.css)">/g)];
   const sheets = await Promise.all(tags.map(tag => readFile(path.join(client,tag[1]),'utf8')));
-  const css = sheets.join('\n'), hash = createHash('sha256').update(css).digest('hex').slice(0,16);
+  // A byte-order mark is only valid at the beginning of the combined resource.
+  const css = sheets.map(sheet => sheet.replace(/^\uFEFF/,'')).join('\n'), hash = createHash('sha256').update(css).digest('hex').slice(0,16);
   const bundle = 'journey-' + hash + '.css';
   await writeFile(path.join(client,bundle),css);
   for (const [i,tag] of tags.entries()) html = html.replace(tag[0], i === 0 ? '<link rel="stylesheet" href="'+bundle+'">' : '');
