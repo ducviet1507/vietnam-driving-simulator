@@ -100,6 +100,7 @@ function createWorldStreetLife(T,scene,small,environment,amenities){
     models.get(asset).then(data=>{
       if(walkers.get(p.key)!==item)return;
       const rig=TrafficModels.clone(data.scene);group.add(rig);
+      rig.traverse(part=>{if(part.isMesh){part.castShadow=true;part.receiveShadow=true;}});
       const clip=data.animations.find(c=>c.name==='walk');
       if(clip){item.mixer=new T.AnimationMixer(rig);item.mixer.clipAction(clip).play();item.mixer.setTime(p.phase);}
     }).catch(()=>{});

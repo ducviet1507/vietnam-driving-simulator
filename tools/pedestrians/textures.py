@@ -31,44 +31,17 @@ def label(draw, x, y, value, size, colour):
     draw.text((x, y), value, font=font(size), anchor="mm", fill=colour, stroke_width=0)
 
 
-def face_panel(style):
-    dora = style == "doraemon"
-    image = Image.new("RGB", (768, 256), BLUE if dora else SKIN)
+def mascot_face():
+    image = Image.new("RGB", (768,256), BLUE)
     d = ImageDraw.Draw(image)
-    if dora:
-        d.ellipse((31, 34, 353, 269), fill=WHITE)
-        for side in (-1, 1):
-            x = 192 + side * 21
-            d.ellipse((x-23, 24, x+23, 103), fill="white", outline=INK, width=3)
-            d.ellipse((x-6-side*8, 65, x+6-side*8, 90), fill=INK)
-            for y, tip in [(114, 94), (126, 125), (138, 157)]:
-                d.line((192+side*34, y, 192+side*106, tip), fill=INK, width=3)
-        d.line((192, 104, 192, 171), fill=INK, width=3)
-        d.ellipse((176, 84, 208, 113), fill="#d73335", outline=INK, width=2)
-        d.ellipse((181, 88, 188, 94), fill="white")
-        d.chord((115, 121, 269, 213), 12, 168, fill="#923442", outline=INK, width=3)
-        d.pieslice((153, 174, 231, 211), 0, 180, fill="#fb8273")
-        return image
-    warrior = style in ("goku", "vegeta")
-    for side in (-1, 1):
-        x = 192 + side * 35
-        # The outer corner tilts up on the two Saiyans.
-        if warrior:
-            d.polygon([(x-side*23, 146), (x+side*24, 120), (x+side*17, 149),
-                       (x-side*16, 154)], fill=WHITE, outline=INK, width=3)
-            d.line((x-side*22, 137, x+side*23, 113), fill=HAIR, width=10)
-        else:
-            d.ellipse((x-16, 123, x+16, 155), fill=WHITE)
-            d.arc((x-15, 110, x+14, 134), 198, 324, fill=HAIR, width=4)
-        d.ellipse((x-7, 131, x+7, 152), fill=INK)
-        d.ellipse((x-3, 134, x, 139), fill="white")
-        if style == "nobita":
-            d.ellipse((x-34, 100, x+34, 174), outline=INK, width=6)
-            d.line((x+side*32, 126, x+side*77, 116), fill=INK, width=5)
-    if style == "nobita":
-        d.line((187, 134, 197, 134), fill=INK, width=5)
-    d.line((192, 150, 186, 164, 196, 165), fill="#b17159", width=3)
-    d.arc((175, 166, 209, 188), 12, 165, fill="#794747", width=3)
+    d.ellipse((34,39,350,279),fill="#eee9d8")
+    d.ellipse((38,41,346,263),fill="#fff7e7")
+    for side in (-1,1):
+        for y,tip in [(115,94),(130,128),(145,163)]:
+            d.line((192+side*33,y,192+side*100,tip),fill="#393545",width=3)
+    d.line((192,106,192,161),fill="#42333a",width=3)
+    d.chord((116,111,268,211),13,167,fill="#75353b",outline="#433438",width=3)
+    d.pieslice((147,166,237,208),0,180,fill="#df8071")
     return image
 
 
@@ -145,8 +118,17 @@ def shirt_panel(style, colour):
 
 def atlas(style, colour):
     image = Image.new("RGB", (768, 528), "white")
-    image.paste(face_panel(style), (0, 0))
+    image.paste(mascot_face(), (0, 0))
     image.paste(shirt_panel(style, colour), (0, 260))
+    # Painted tonal falloff on the blue dome and warm muzzle, including the side view.
+    import numpy as np
+    pixels = np.asarray(image,dtype=float).copy()
+    for offset in (0,260):
+        yy,xx = np.mgrid[0:256,0:768]
+        side = np.cos((xx/768-.25)*2*np.pi)
+        tone = .93+.055*side+.035*np.cos(yy/255*np.pi)
+        pixels[offset:offset+256] *= tone[:,:,None]
+    image = Image.fromarray(np.uint8(pixels.clip(0,255)))
     output = BytesIO()
     image.save(output, "PNG", optimize=True)
     return output.getvalue()

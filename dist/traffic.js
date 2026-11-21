@@ -61,6 +61,7 @@ window.createStreetTraffic = function(scene,contactMap) {
       if(riderColor!==undefined){
         seatDriver(rig,riderColor);
       }else{
+        rig.traverse(part=>{if(part.isMesh){part.castShadow=true;part.receiveShadow=true;}});
         const mixer=new T.AnimationMixer(rig),actions={};
         for(const clip of data.animations)actions[clip.name]=mixer.clipAction(clip);
         item.animate=(state,delta)=>{

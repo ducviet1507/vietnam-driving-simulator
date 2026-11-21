@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import {createHash} from 'node:crypto';
 import {readFileSync} from 'node:fs';
 import {runInNewContext} from 'node:vm';
 
@@ -19,6 +20,15 @@ for (const group of groups) {
     assert.equal(counts.get(name), 1000 / group.length, name);
     const glb = readFileSync(new URL('traffic/' + name + '.glb', dist));
     const model = JSON.parse(glb.toString('utf8', 20, 20 + glb.readUInt32LE(12)));
+    for (const buffer of model.buffers.filter(buffer => buffer.uri)) {
+      const rig = readFileSync(new URL('traffic/' + buffer.uri, dist));
+      assert.equal(rig.length, buffer.byteLength, name + ' shared rig size');
+      assert.equal(createHash('sha256').update(rig).digest('hex'), model.asset.extras.sharedRigSha256,
+        name + ' shared rig changed; regenerate the costume');
+    }
+    for (const view of model.bufferViews) {
+      assert.ok((view.byteOffset || 0) + view.byteLength <= model.buffers[view.buffer].byteLength, name);
+    }
     assert.deepEqual(model.animations.map(clip => clip.name).sort(), ['idle', 'look_around', 'walk', 'wave']);
   }
 }

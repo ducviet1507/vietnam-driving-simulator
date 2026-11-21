@@ -12,6 +12,8 @@ https://tevy.dev/models/casual-walker
 https://tevy.dev/models/hiker
 https://tevy.dev/models/road-worker
 
+The themed street pedestrians adapt those three CC0 human rigs with original clothing, painted graphics and costume geometry. Doraemon uses a separate original mesh and walk cycle.
+
 GLTFLoader and SkeletonUtils are from three.js r160, MIT. The license is in ../THREE-LICENSE.txt.
 
 Leafy Grass by Charlotte Baglioni and Brown Mud by Rob Tuytel, Poly Haven, CC0. The diffuse maps were converted to WebP for the roadside grass and earth.
