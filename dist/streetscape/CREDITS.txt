@@ -70,3 +70,11 @@ https://www.openstreetmap.org/copyright
 https://download.geofabrik.de/asia/vietnam.html
 
 Photographs in the visitor atlas are distributed with individual credits, source file pages and licences in sight-photos/index.json. These credits are also shown beneath each photograph in the game.
+
+Roadside tree geometry and foliage colors were adapted from these CC0 Poly Haven models and bark scans.
+https://polyhaven.com/a/island_tree_01
+https://polyhaven.com/a/jacaranda_tree
+https://polyhaven.com/a/tree_small_02
+https://polyhaven.com/a/pine_sapling_medium
+https://polyhaven.com/a/pine_bark
+https://polyhaven.com/a/palm_bark

@@ -1,157 +1,144 @@
 'use strict';
 
-// All species grow from (0,0,0) to unit height. Scale X and Z by the crown
-// diameter so the visible trunk and its collision pivot stay on the same spot.
+// Unit-height assets are rooted at the collision pivot. Identical trees share
+// geometry and materials across a batch, including the simpler distance meshes.
+let roadsideTreeAtlas;
 function createTreeModels(T){
   const cache=new Map();
-  const detail=new T.TextureLoader().load('streetscape/tree-detail.webp');
-  detail.colorSpace=T.SRGBColorSpace;
-  const material=new T.MeshLambertMaterial({map:detail,vertexColors:true,alphaTest:.42});
-  const palmMaterial=material.clone();
-  palmMaterial.side=T.DoubleSide; // Both surfaces of each folded frond are visible.
+  const atlas=roadsideTreeAtlas??=new T.TextureLoader().load('streetscape/tree-canopies.webp');
+  atlas.colorSpace=T.SRGBColorSpace;
+  atlas.userData.sightShared=true;
+  atlas.anisotropy=4;
+  const material=new T.MeshLambertMaterial({map:atlas,vertexColors:true,alphaTest:.31,side:T.DoubleSide});
+  material.onBeforeCompile=shader=>{
+    // The same sun lights both sides of a cluster of small leaves. Use the
+    // crown's outward normal through the cluster, regardless of viewing angle.
+    shader.fragmentShader=shader.fragmentShader.replace('#include <normal_fragment_begin>',
+      '#include <normal_fragment_begin>\n if(vMapUv.y>.125) normal*=faceDirection;');
+  };
+  const palmMaterial=new T.MeshLambertMaterial({map:atlas,vertexColors:true,side:T.DoubleSide});
   function variantAt(x,z){
     const hash=Math.imul(Math.round(x*4),73856093)^Math.imul(Math.round(z*4),19349663);
     return (Math.imul(hash^(hash>>>16),0x45d9f3b)>>>16)%4;
   }
+  const bytes=text=>Uint8Array.from(atob(text),c=>c.charCodeAt(0));
   function geometry(kind,compact=false,variant=0){
     const key=kind+(compact?' grove ':' roadside ')+variant;
     if(cache.has(key))return cache.get(key);
-    const positions=[],colors=[],uv=[],indices=[],seams=[],color=new T.Color();
-    const tau=Math.PI*2;
-    function vertex(x,y,z,tint,light,u,v){
-      positions.push(x,y,z);color.setHex(tint).multiplyScalar(light);
-      colors.push(color.r,color.g,color.b);uv.push(u,v);return positions.length/3-1;
+    const positions=[],normals=[],colors=[],uv=[],indices=[],shade=new T.Color(),tau=Math.PI*2;
+    function vertex(x,y,z,nx,ny,nz,tile,u,v,tint,exposure=1){
+      const inv=1/(Math.hypot(nx,ny,nz)||1);
+      positions.push(x,y,z);normals.push(nx*inv,ny*inv,nz*inv);
+      shade.setHex(tint).multiplyScalar(exposure);colors.push(shade.r,shade.g,shade.b);
+      // Two gutter pixels on every side separate adjacent slices at small mips.
+      const inset=2/320,span=1-2*inset;
+      uv.push((tile%8+inset+u*span)/8,(7-Math.floor(tile/8)+inset+v*span)/8);
+      return positions.length/3-1;
     }
-    // The left half of the atlas is fully opaque, including the entire crown.
-    // Only the small terminal sprays sample the cutout in the right half.
-    function surface(rows,sides,point,tint,bark=false){
-      const start=positions.length/3;
-      for(let j=0;j<rows;j++){
-        for(let i=0;i<=sides;i++){
-          const a=(i%sides)*tau/sides,[x,y,z,light]=point(j,a);
-          const n=vertex(x,y,z,tint,light,(bark?.254:.004)+.242*i/sides,.01+.98*j/(rows-1));
-          if(j&&i){
-            const b=n-sides-1;
-            indices.push(b-1,n-1,b,b,n-1,n);
-          }
-        }
-        seams.push([start+j*(sides+1),start+j*(sides+1)+sides]);
+    if(kind==='palm'){
+      const bend=[.09,-.19,.035,.21][variant],head=[.76,.80,.82,.74][variant];
+      const stemAt=t=>[bend*(t*t)*(1.30-.30*t),head*t,.035*Math.sin(t*2.7+variant)*t];
+      const tube=(rings,sides,tile,tint)=>{
+        let previous;
+        rings.forEach(([x,y,z,r,light],j)=>{
+          const row=[];
+          for(let i=0;i<=sides;i++){
+            const a=i*tau/sides,c=Math.cos(a),s=Math.sin(a);
+            row.push(vertex(x+c*r,y,z+s*r,c,.045,s,tile,i/sides,j/(rings.length-1),tint,light));
+            if(j&&i)indices.push(previous[i-1],row[i-1],previous[i],previous[i],row[i-1],row[i]);
+          }previous=row;
+        });
+      };
+      const rings=[];
+      for(let j=0;j<=12;j++){
+        const t=j/12,r=.020+.019*(1-t)**4+.013*Math.exp(-22*t);
+        rings.push([...stemAt(t),r,.87+.12*t]);
       }
-    }
-    function stem(x,y,z,tx,ty,tz,r0,r1,sides=6){
-      surface(2,sides,(j,a)=>{
-        const r=j?r1:r0;
-        return [(j?tx:x)+r*Math.cos(a),j?ty:y,(j?tz:z)+r*Math.sin(a),.78+.16*Math.cos(a*3)+j*.12];
-      },kind==='palm'?0x9b9075:0x83715a,true);
-    }
-    function sprays(x,y,z,rx,ry,rz,phase,tint,count){
-      for(let k=0;k<count;k++){
-        const a=phase+k*tau/count,c=Math.cos(a),s=Math.sin(a);
-        const width=.61+.11*Math.sin(k*5),height=.22*Math.cos(k*2+phase);
-        function point(r,side,h,u,v,light){
-          return vertex(x+rx*(r*c-side*s),y+ry*(h+height),
-            z+rz*(r*s+side*c),tint,light,.505+.49*u,.01+.98*v);
+      tube(rings,compact?7:12,62,0xfff5de);
+      const [cx,cy,cz]=stemAt(1),fronds=13+variant,segments=compact?9:23;
+      // Each frond has an arched midrib, two ranks of folded pinnae and
+      // independently drooping tips. The oldest fronds hang below the bud.
+      for(let k=0;k<fronds;k++){
+        const a=k*2.39996+variant*.66,dx=Math.cos(a),dz=Math.sin(a),age=k/(fronds-1);
+        const span=.08+(.40+.04*Math.sin(k*2.7))*Math.sin(age*2.1);
+        const lift=.18-.09*age,end=.25-.54*age+.035*Math.cos(k*1.7);
+        const baseShade=age>.87?0xe5bb73:k%3===0?0xe4f0bb:0xecf7d6;
+        function blade(t,side,offset,drop,u,v,light){
+          const lateral=.026*Math.sin(t*2.5+k)*t+side*offset;
+          return vertex(cx+dx*span*t-dz*lateral,cy+lift*Math.sin(t*Math.PI)+end*t*t-drop,
+            cz+dz*span*t+dx*lateral,.25*dx-.18*side*dz,1,.25*dz+.18*side*dx,63,u,v,baseShade,light);
         }
-        const base=positions.length/3;
-        for(const [r,h,v,light] of [[.64,.70,1,1.04],[1.02,.14,.53,.94],[1.10,-.70,0,.76]]){
-          point(r,-width,h,0,v,light);point(r+.10,0,h+.07,.5,v,light);point(r,width,h,1,v,light);
-        }
-        for(let j=0;j<2;j++)for(let i=0;i<2;i++){
-          const p=base+j*3+i;indices.push(p,p+1,p+3,p+1,p+4,p+3);
-        }
-      }
-    }
-    function crown(x,y,z,rx,ry,rz,phase,tint,sides){
-      const widths=[0,.79,1,.73,0],heights=[-1,-.56,.05,.63,1];
-      surface(5,sides,(j,a)=>{
-        const turn=a+phase+.12*Math.sin(j),lobe=Math.cos(3*a+phase)+.6*Math.sin(5*a-j*.7);
-        const r=widths[j]*(1+.11*lobe);
-        return [x+rx*r*Math.cos(turn),y+ry*(heights[j]+.13*widths[j]*lobe),
-          z+rz*r*Math.sin(turn),.57+.095*j+.055*lobe];
-      },tint);
-      sprays(x,y,z,rx,ry,rz,phase,tint,compact?4:6);
-    }
-    if(kind==='tree'||kind==='tea'){
-      // Spreading rain tree, upright oval crown, tiered tropical almond and a
-      // low forked shade tree. Dimensions describe the silhouette at maturity.
-      const [spread,base,depth,limbs,lean,leafTint]=[
-        [1.03,.62,.16,6,.028,0x819852],[.63,.49,.26,4,-.027,0x688752],
-        [.88,.46,.12,7,.008,0x89934c],[1.00,.46,.21,5,-.09,0x66884c]
-      ][variant];
-      if(kind!=='tea'){
-        stem(0,-.022,0,lean*.42,base*.57,-.008,.038,.023);
-        stem(lean*.42,base*.57,-.008,lean,base+.22,.023,.024,.011);
-      }
-      if(kind==='tea'){
-        crown(0,.50,0,.50,.50,.43,.7,0x809a52,9);
-      }else if(compact){
-        const bottom=base-depth;
-        crown(lean,(1+bottom)/2,0,.46*spread,(1-bottom)/2,.43*spread,.51+variant,leafTint,10);
-        if(variant===2)crown(0,.53,0,.45,.12,.40,1.2,0x70864b,7);
-      }else{
-        for(let i=0;i<limbs;i++){
-          const f=i/(limbs-1),a=i*2.4+.33+variant,dx=Math.cos(a),dz=Math.sin(a);
-          const r=(.21+.045*Math.sin(i*7))*(variant===2?1-.56*f:1)*spread;
-          const y=base+(variant===2?.37:.18)*f;
-          stem(lean*.42,base*.54+.10*f,-.008,lean+dx*r,y+.025,dz*r,.021,.009,5);
-          crown(lean+dx*r,y,dz*r,(.25+.032*Math.cos(i))*spread,depth*(.77+.16*f),.24*spread,
-            a,i%3===1?0x708548:leafTint,9);
-        }
-        const topDepth=variant===2?.125:variant===1?.26:.19;
-        crown(lean,1-topDepth,.018,.30*spread,topDepth,.28*spread,.92,leafTint,9);
-      }
-    }else if(kind==='pine'){
-      stem(0,-.02,0,.012,.92,-.01,.033,.007);
-      const tiers=(compact?3:5)+(variant%2),sides=compact?8:14;
-      const apron=[.39,.47,.32,.43][variant],skirt=[.19,.28,.14,.36][variant];
-      for(let i=0;i<tiers;i++){
-        const f=i/(tiers-1),y=skirt+(.80-skirt)*f,w=apron*(1-.69*f),top=.34-.14*f;
-        surface(3,sides,(j,a)=>{
-          const turn=a+i*1.79+variant*.73,tip=Math.cos(a*sides/2);
-          const r=j===0?.025:j===1?w*(.85+.16*tip+.11*Math.sin(a*3+i)):0;
-          const h=j===0?y+.035:j===1?y+.055-.046*tip+.025*Math.sin(a*3+i):y+top;
-          return [r*Math.cos(turn)+.012*f,h,r*Math.sin(turn),j===0?.51:j===1?.79+.11*tip:1.06];
-        },[0x56794e,0x648054,0x52735a,0x71885b][(variant+i%2)%4]);
-        if(!compact)sprays(.012*f,y+.05,0,w*.88,top*.49,w*.88,i*1.79,0x697f56,7);
-      }
-    }else if(kind==='palm'){
-      const bend=[.08,-.16,.026,.20][variant],head=[.85,.80,.89,.83][variant];
-      stem(0,-.018,0,bend*.16,.39,.012,.045,.029,8);
-      stem(bend*.16,.39,.012,bend*.82,head-.10,.01,.029,.021,8);
-      stem(bend*.82,head-.10,.01,bend,head,0,.021,.030,8);
-      // Fold the blades about an arched midrib. Each pair of leaflets sweeps
-      // back to the stem, leaving real slots between the tapered outer tips.
-      const lower=6+variant;
-      for(let i=0;i<lower+4;i++){
-        const a=i*2.4+variant*.72,dx=Math.cos(a),dz=Math.sin(a),upper=i>=lower;
-        const span=upper?.28:.44+.035*Math.cos(i+variant),drop=upper?.015:.17+variant*.045+.035*Math.cos(i);
-        const lift=upper?1-head:.115,n=compact?4:upper?8:11,tint=i%3===0?0x8c9b51:0x708d49;
-        function point(t,side,width,sag,light){
-          return vertex(bend+dx*span*t-dz*width*side,head+lift*Math.sin(t*Math.PI)-drop*t*t-sag,
-            dz*span*t+dx*width*side,tint,light,.008+.236*t,side<0?.07:.92);
-        }
-        for(let j=0;j<n;j++){
-          const t=j/n,end=(j+1)/n,m=(t+end)/2,w=.095*(.18+.82*Math.sin(m*Math.PI));
-          const base=point(t,0,0,0,1.08),tip=point(end,0,0,0,1.02);
+        let last=[];
+        for(let j=0;j<=segments;j++){
+          const t=j/segments,r=.0055*(1-.88*t),rib=[blade(t,-1,r,0,.48,t,.90),blade(t,1,r,0,.52,t,1.14)];
+          if(j)indices.push(last[0],last[1],rib[0],last[1],rib[1],rib[0]);
+          last=rib;
+          if(j===segments)break;
           for(const side of [-1,1]){
-            const outer=point(Math.min(1,end+.057),side,w,w*.44,.78);
-            const inner=point(m,side,w*.67,w*.31,.90);
-            indices.push(base,inner,outer,base,outer,tip);
+            const wave=Math.sin(k*9.12+j*4.73+side),w=.095*(.15+.85*Math.sin(Math.PI*(.05+.93*t)))*(1+.16*wave);
+            const sweep=.06+.11*t+.022*wave,m=t+.45/segments;
+            const base=blade(t,side,r,0,.02,.12,.89);
+            const front=blade(m+sweep*.38,side,w*.6,.10*w,.23,.75,1.06);
+            const ridge=blade(m+sweep*.45,side,w*.65,.065*w,.51,.70,1.18);
+            const back=blade(m+sweep*.48+.38/segments,side,w*.54,.18*w,.76,.68,.81);
+            const tip=blade(m+sweep,side,w,w*(.56+.33*age+.15*wave),.86,.92,.91);
+            indices.push(base,front,ridge,front,tip,ridge,base,ridge,back,ridge,tip,back);
           }
         }
       }
+    }else{
+      const slot=kind==='pine'?3:kind==='tea'?0:[1,2,0,1][variant];
+      const scan=window.treeScanData[slot],wood=scan.wood[compact?1:0],root=scan.root;
+      function position(x,y,z){
+        // Vary the growth habit around the same rooted skeleton. Warp bark
+        // and foliage together so the ends of branches stay seated in the leaves.
+        x-=root[0];z-=root[1];y-=.009;
+        const f=Math.max(0,y);
+        if(kind==='tea')return [x,Math.max(-.02,(y-.14)/.86),z];
+        if(kind==='pine')return [x*(.82+variant*.07)+.038*Math.sin(f*2+variant)*f,y,z*(1.03-.07*variant)];
+        if(variant===3)return [-x*(.79+.20*f)+.065*f*f,Math.sign(y)*Math.abs(y)**.82,z*(.88+.20*f)];
+        return [x,y,z];
+      }
+      const xyz=new Int16Array(bytes(wood[0]).buffer),faces=new Uint16Array(bytes(wood[1]).buffer);
+      const trunk=new T.BufferGeometry(),points=[];
+      for(let i=0;i<xyz.length;i+=3)points.push(...position(xyz[i]/16000,xyz[i+1]/16000,xyz[i+2]/16000));
+      trunk.setAttribute('position',new T.Float32BufferAttribute(points,3));trunk.setIndex(new T.BufferAttribute(faces,1));
+      trunk.computeVertexNormals();
+      const n=trunk.attributes.normal.array;
+      for(let i=0;i<points.length;i+=3){
+        const x=points[i],y=points[i+1],z=points[i+2];
+        const u=.5+Math.atan2(z,x)/tau;
+        vertex(x,y,z,n[i],n[i+1],n[i+2],kind==='pine'?60:61,u,Math.max(0,Math.min(1,y)),0xf5f2e8);
+      }
+      indices.push(...faces);trunk.dispose();
+      const stride=compact?2:1,axes=[[2,0,1],[0,2,1],[1,0,2]];
+      for(let layer=0;layer<scan.layers.length;layer++){
+        const [d,h,v]=axes[Math.floor(layer/5)],tile=slot*15+layer;
+        const depths=bytes(scan.layers[layer][0]),occupied=bytes(scan.layers[layer][1]),grid=new Map();
+        function corner(i,j){
+          const id=j*9+i;
+          if(grid.has(id))return grid.get(id);
+          const p=[0,0,0];p[d]=depths[id]/255;p[h]=i/8;p[v]=j/8;
+          const [x,y,z]=position(...p);
+          const light=.83+.14*p[1]+.13*Math.min(.7,Math.hypot(p[0]-.5,p[2]-.5));
+          const index=vertex(x,y,z,(p[0]-.5)*1.45,.58+.55*p[1],(p[2]-.5)*1.45,
+            tile,i/8,j/8,variant===3?0xfff4df:0xffffff,light);
+          grid.set(id,index);return index;
+        }
+        for(let j=0;j<8;j+=stride)for(let i=0;i<8;i+=stride){
+          let filled=false;
+          for(let y=j;y<j+stride;y++)for(let x=i;x<i+stride;x++)filled||=Boolean(occupied[y]&(1<<x));
+          if(!filled)continue;
+          const a=corner(i,j),b=corner(i+stride,j),c=corner(i,j+stride),e=corner(i+stride,j+stride);
+          indices.push(a,b,c,b,e,c);
+        }
+      }
     }
-    const g=new T.BufferGeometry();
-    g.name='Tree model: '+key;
+    const g=new T.BufferGeometry();g.name='Tree model: '+key;
     g.setAttribute('position',new T.Float32BufferAttribute(positions,3));
-    g.setAttribute('color',new T.Float32BufferAttribute(colors,3));
+    g.setAttribute('normal',new T.Float32BufferAttribute(normals,3));
     g.setAttribute('uv',new T.Float32BufferAttribute(uv,2));
-    g.setIndex(indices);g.computeVertexNormals();
-    const normals=g.attributes.normal,left=new T.Vector3(),right=new T.Vector3();
-    for(const [first,last] of seams){
-      left.fromBufferAttribute(normals,first).add(right.fromBufferAttribute(normals,last)).normalize();
-      normals.setXYZ(first,left.x,left.y,left.z);normals.setXYZ(last,left.x,left.y,left.z);
-    }
+    g.setAttribute('color',new T.Float32BufferAttribute(colors,3));g.setIndex(indices);
     cache.set(key,g);return g;
   }
   function grove(group,stems,compact=true){
