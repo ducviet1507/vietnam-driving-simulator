@@ -131,7 +131,10 @@ window.createStreetTraffic = function(scene,contactMap) {
     [actor('school-student','person',9.4,29,.23,.27,0),'casual-walker'],
     [actor('school-walker','person',9.5,39,.22,.25,-.6),'hiker']
   ];
-  for(const [person,name] of people)attachPerson(person,name).catch(e=>console.warn(name,e));
+  for(const [person,ordinary] of people){
+    const model=choosePedestrianModel(Math.random(),ordinary);
+    attachPerson(person,model).catch(e=>console.warn(model,e));
+  }
   const vehicles=cars.concat(bikes);
   let previousFrame=performance.now();
   window.strikeStreetTraffic=(other,hit,event,x,z)=>{

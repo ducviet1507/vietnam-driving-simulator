@@ -8,7 +8,7 @@ const vietnamPlaceTypes={
 function createWorldStreetLife(T,scene,small,environment,amenities){
   const walkGroup=new T.Group();
   walkGroup.name='Người đi bộ';scene.add(walkGroup);
-  const walkers=[],models=new Map(),bins=new Map();
+  const walkers=new Map(),models=new Map(),bins=new Map();
   let graph,places=[],paths=[],originX=0,originZ=0,walkTime=0;
   function localHour(){return (new Date().getUTCHours()+7)%24;}
   function interest(kind,h){
@@ -56,7 +56,8 @@ function createWorldStreetLife(T,scene,small,environment,amenities){
         const score=activity(g,x,z,s.kind,hour).walkers;
         const hash=(Math.imul(s.seed^k,2654435761)>>>0)/4294967296;
         if(hash>score*.88)continue;
-        candidates.push({x,z,fx:s.fx,fz:s.fz,span,phase:hash*53,rank:distance/(.45+score),key:s.seed+':'+k});
+        candidates.push({x,z,fx:s.fx,fz:s.fz,span,phase:hash*53,rank:distance/(.45+score),
+          key:s.seed+':'+k,model:pathPedestrianModel(s.seed,k)});
       }
     }
     candidates.sort((a,b)=>a.rank-b.rank);
@@ -70,6 +71,14 @@ function createWorldStreetLife(T,scene,small,environment,amenities){
       }
       if(valid)paths.push(p);
     }
+    const active=new Set(paths.map(p=>p.key));
+    for(const [key,item] of walkers){
+      if(active.has(key))continue;
+      walkGroup.remove(item.group);
+      item.mixer?.stopAllAction();
+      item.group.traverse(part=>{if(part.isSkinnedMesh)part.skeleton.dispose();});
+      walkers.delete(key);
+    }
   }
   function rebuild(g,x,z,segments,clear){
     graph=g;originX=x;originZ=z;
@@ -82,25 +91,26 @@ function createWorldStreetLife(T,scene,small,environment,amenities){
     }
     updatePaths(g,segments,clear);
   }
-  function walker(i){
-    if(walkers[i])return walkers[i];
+  function walker(p){
+    if(walkers.has(p.key))return walkers.get(p.key);
     const group=new T.Group();walkGroup.add(group);
-    const item={group};walkers[i]=item;
-    const asset=i%3===1?'hiker':'casual-walker';
+    const item={group};walkers.set(p.key,item);
+    const asset=p.model;
     if(!models.has(asset))models.set(asset,TrafficModels.load.loadAsync('traffic/'+asset+'.glb'));
     models.get(asset).then(data=>{
+      if(walkers.get(p.key)!==item)return;
       const rig=TrafficModels.clone(data.scene);group.add(rig);
       const clip=data.animations.find(c=>c.name==='walk');
-      if(clip){item.mixer=new T.AnimationMixer(rig);item.mixer.clipAction(clip).play();item.mixer.setTime(i*.31);}
+      if(clip){item.mixer=new T.AnimationMixer(rig);item.mixer.clipAction(clip).play();item.mixer.setTime(p.phase);}
     }).catch(()=>{});
     return item;
   }
   function render(dt,x,z,ground){
     walkTime+=dt;
-    for(let i=0;i<Math.max(paths.length,walkers.length);i++){
-      const p=paths[i],visible=p&&Math.hypot(p.x-x,p.z-z)<175;
-      if(!visible){if(walkers[i])walkers[i].group.visible=false;continue;}
-      const actor=walker(i),t=(p.phase+walkTime*(.9+(i%3)*.12))%(4*p.span);
+    for(const p of paths){
+      const visible=Math.hypot(p.x-x,p.z-z)<175;
+      if(!visible){const item=walkers.get(p.key);if(item)item.group.visible=false;continue;}
+      const actor=walker(p),t=(p.phase+walkTime*(.9+(p.phase%3)*.12))%(4*p.span);
       const along=p.span-Math.abs(t-2*p.span),sign=t<2*p.span?1:-1;
       const wx=p.x+p.fx*along,wz=p.z+p.fz*along;
       actor.group.position.set(wx-originX,ground(wx,wz)+.015,wz-originZ);
