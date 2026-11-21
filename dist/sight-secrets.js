@@ -39,7 +39,9 @@ function createSightSecrets(getView, playChime) {
     const seed = identity(place.id);
     const [motif, title, clue, reveal] = window.sightSecretStories[place.id] ||
       window.sightSecretStories[place.catalogId] || window.sightSecretTheme(place, seed);
-    return {seed, motif, title, clue, reveal};
+    const coordinates = [place.lat,place.lon].every(Number.isFinite) ?
+      place.lat.toFixed(3)+'°N '+place.lon.toFixed(3)+'°E' : '';
+    return {seed, motif, title, clue, reveal, coordinates};
   }
   function readRecord(id) {
     try {
@@ -47,7 +49,7 @@ function createSightSecrets(getView, playChime) {
       if (raw) {
         const record = JSON.parse(raw);
         if (record && ['name','title','motif','reveal'].every(k => typeof record[k] === 'string') &&
-            Number.isFinite(record.seed) && Number.isFinite(record.time)) records.set(id, record);
+            Number.isFinite(record.seed) && Number.isFinite(record.time)) records.set(id, {...record,id});
       }
     } catch { /* Session records also work with storage disabled. */ }
     return records.get(id);
@@ -55,8 +57,9 @@ function createSightSecrets(getView, playChime) {
   function remember() {
     const existing = readRecord(site.id);
     if (existing) return;
-    const record = {name: site.name, location: site.locality || site.province || site.city || '',
-      motif: stamp.motif, title: stamp.title, seed: stamp.seed, reveal: stamp.reveal, time: Date.now()};
+    const record = {id:site.id, name: site.name, location: site.locality || site.province || site.city || '',
+      motif: stamp.motif, title: stamp.title, seed: stamp.seed, reveal: stamp.reveal,
+      coordinates:stamp.coordinates, time: Date.now()};
     records.set(site.id, record);
     try { localStorage.setItem(prefix + site.id, JSON.stringify(record)); }
     catch { persistent = false; }
@@ -132,9 +135,9 @@ function createSightSecrets(getView, playChime) {
     el('secretTitle').textContent = stamp.title;
     el('secretStory').textContent = stamp.reveal;
     el('secretSaved').textContent = persistent ? (prior ? 'Dấu trong sổ tay' : 'Đã đóng vào sổ tay') : 'Đã giữ trong phiên chơi';
-    el('secretPrint').replaceChildren(window.createSightSecretArt(stamp.motif, stamp.seed));
+    el('secretPrint').replaceChildren(window.createSightSecretArt(stamp.motif, stamp.seed, site.id, stamp.coordinates));
     el('secretApparition').dataset.motif = stamp.motif;
-    el('secretApparition').replaceChildren(window.createSightSecretGlyph(stamp.motif, stamp.seed));
+    el('secretApparition').replaceChildren(window.createSightSecretGlyph(stamp.motif, stamp.seed, site.id));
     apparitionAngle = getView().angle;
     changeMode('found');
     playChime(stamp.motif);
@@ -197,8 +200,14 @@ function createSightSecrets(getView, playChime) {
       place.textContent = record.name + (record.location && record.name !== record.location ? ' · ' + record.location : '');
       note.textContent = record.reveal;
       text.append(title, place);
-      summary.append(window.createSightSecretArt(record.motif, record.seed), text);
-      details.append(summary, note); item.append(details); list.append(item);
+      summary.append(window.createSightSecretArt(record.motif, record.seed, record.id, record.coordinates), text);
+      details.append(summary, note);
+      if (record.coordinates) {
+        const coordinates = document.createElement('small');
+        coordinates.textContent = record.coordinates;
+        details.append(coordinates);
+      }
+      item.append(details); list.append(item);
     }
     el('stampPages').hidden = count <= size;
     el('stampPrev').disabled = !page;

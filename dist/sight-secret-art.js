@@ -140,6 +140,123 @@
       line('M9 81q14-4 28-1t33-5m-43 11q11-1 18 0m31-13 11-2',ink,1.6)
   };
 
+  // Shape the bridge deck between the far fingers and the near thumb of each hand.
+  const stoneHand =
+    shape('M17 56c0-5-2-8-6-11C6 41 3 36 2 29L0 18q0-4 3-3l4 13L4 9q0-4 3-4 2 0 3 4l4 16-1-21q0-4 3-4 3 0 3 4l2 20 2-17q1-4 4-3 2 1 1 5l-1 19c0 5 0 8 3 9 4 0 6-6 7-12 1-4 5-3 5 1l-1 9c-1 8-7 15-15 20z') +
+    cut('M6 30q2 6 7 9m-2-13 2 3m6-6 1 6m5-3v4m-11 6q4 5 10 6m-6 2q4 5 8 5',1.25);
+  const thumb =
+    shape('M25 43c4-1 8-5 10-12l2-8q1-3 4-2 2 1 1 5l-2 10q-2 6-9 10z') +
+    cut('M37 28q1-4 2-4m-9 18 4-3',1.15);
+  const nearHand = 'translate(6 29) rotate(-6 21 32)';
+  const farHand = 'translate(60 16) scale(.72)';
+  const groupAt = (transform, art) => '<g transform="' + transform + '">' + art + '</g>';
+
+  function basalt(x, y, width, height) {
+    const a = width/2, b = width*.22;
+    return groupAt('translate('+x+' '+y+')',
+      shape('M-'+a+' 0 -'+b+' -4 '+b+' -4 '+a+' 0 '+b+' 4 -'+b+' 4z',accent) +
+      shape('M-'+a+' 0 -'+b+' 4 '+b+' 4 '+a+' 0 '+a+' '+height+' '+b+' '+(height+4)+' -'+b+' '+(height+4)+' -'+a+' '+height+'z') +
+      cut('M'+b+' 5v'+(height-2),1));
+  }
+
+  const sitePrints = {
+    'cau-vang-ba-na':
+      line('M3 65q12-5 19-14m12-9q10-7 19-8m24-6 15-4',accent,1.35) +
+      groupAt(farHand,stoneHand) + groupAt(nearHand,stoneHand) +
+      shape('M3 60Q57 25 96 33v4Q56 31 3 69z',paper) +
+      shape('M3 61Q57 27 96 33v4Q58 33 3 69z',accent) +
+      line('M3 59Q56 25 96 31m-93 38Q57 32 96 37',ink,1.4) +
+      line('m12 54v4m9-10v5m11-11v5m12-10v4m12-8v4m14-6v3m12-3v3m9-3v3',ink,1) +
+      groupAt(farHand,thumb) + groupAt(nearHand,thumb) +
+      line('M3 80q5-4 10-4m35-6q6-6 13-5m-4 8q7-6 13-5m10-11q6-4 12-4',ink,1.4),
+
+    turtle:
+      dot(72,19,5.5,accent) +
+      shape('M9 58q7-4 16-4h9V41h-3v-3h8V27h-3v-2l8-4 4-6 3-5 3 5 5 6 8 4v2h-3v11h7v3h-4v13q10-1 17 4-27 5-75 0z') +
+      shape('M39 25q11-1 12-10 3 8 13 10z',accent) +
+      shape('M37 54v-7q3-6 6 0v7zm10 0v-8q3-7 6 0v8zm11 0v-7q3-6 6 0v7zm-16-17v-5q2-5 4 0v5zm8 0v-6q2-4 4 0v6zm8 0v-5q2-4 4 0v5z',paper) +
+      cut('M34 40h34m-28-12h23m-29 28h34',1.15) +
+      shape('M21 73q8-2 11-6 6-8 16-7 8 0 14 7 4 1 7-4 4-6 7-3 3 4-2 8-6 5-15 5z') +
+      shape('M34 68q11-14 23-1-11 5-23 1z',accent) +
+      line('M13 75q23 6 55 0m-43 6q23 3 45-2m-1-7q10-1 17-5',ink,1.5),
+
+    'nha-co-tan-ky':
+      shape('M12 40 25 22l49-3 14 18-3 3v37l-10 3H15V42z') +
+      shape('M13 37 26 23l46-2 9 13z',accent) +
+      cut('M19 35 28 25m-3 9 6-8m4 7 6-8m7 7 5-7m6 6 5-7m-48 17 60-4m-56 22v15m10-18v18m9-18v17m14-18v18m9-18v16',1.2) +
+      shape('M22 47h8v7h-8zm13-1h8v7h-8zm13-1h8v7h-8z',paper) +
+      line('M4 83 93 75m-82 12 31-3',ink,1.5) +
+      groupAt('translate(50 16) scale(.49 .63)',prints.lantern),
+
+    'ben-thuyen-trang-an':
+      shape('M4 58q2-11 8-14l6-20 6-6 4 4 4 18 7 5 4-4 8-24 6-5 4 3 3 17 5 8 5-11 6-4 5 5 4 17 6 7v5z') +
+      shape('m6 56 11-12 4-15 2 13 8 9-6 5zm33 0 12-24 5-14 2 19 6 12-5 6z',accent) +
+      cut('m21 30 3-6m29 6 4-12m22 17 3-5',1.4) +
+      shape('M19 65q21 7 51 0-5 9-20 10l-19-1q-6-2-12-9z') +
+      shape('m44 59 4-7 7 7z',accent) + dot(49,60,2) +
+      shape('m46 61 6-1 4 7H42z') +
+      line('m48 64-21 13m27-15 23 11',ink,2) +
+      line('M16 77q9 4 17 3m36-5q11 2 18-2m-49 9q15 2 25-1',ink,1.45),
+
+    'tam-chuc':
+      shape('M4 60q1-10 8-16l7-14 5 1 5 10 4 3 7-12 9-17 5-3 7 4 5 13 8 10 5-5 7 6 8 18z') +
+      shape('M10 57q12-8 15-18l3 8 6 4-6 6zm22 1 18-34 6-6-2 14-8 12 4-2-8 15z',accent) +
+      shape('M46 17q4-2 5-5h2v-2l2-4 2 4v2h2l3 4-3 1v4H49v-4z') +
+      cut('M51 17h7m-5 3v-2m3 2v-2',1) +
+      shape('M6 63q31 2 84-3l-10 6-8-1-9 5-9 10-6-5-4 1-9-10-7 4-8-4z',accent) +
+      line('M5 61q34 3 89-2m-75 14h16m19 7 18-1m-35 5 12 1',ink,1.35),
+
+    'hon-trong-mai':
+      shape('M8 62q3-10 11-18l7-11-1-6 4-4 4 2 4-4 6 5 4 6 5 6-6 2-4 11-1 9 2 5-12 3-21-1z') +
+      shape('M53 40l3-7 2-8 4-4 6 4 6 12 7 7 10 11 4 7-9 5-21-1-6-3 2-7-4-11z',accent) +
+      line('M54 41q4 2 7 8l4 13m-2-32 8 15 12 12',ink,1.6) +
+      cut('M17 57q8-12 13-23m4-5 3-2m-9 32q5-5 8-17',1.6) +
+      shape('M9 70q14 3 33-1l-4 7-9-2-8 5zm52 0q17 3 31-2l-11 9-8-3-6 3z',accent) +
+      line('M4 68q9-3 19 0m20 1q7 2 13-1m19 13q8 1 14-3m-61 5q10 2 19-1',ink,1.5),
+
+    'ganh-da-dia':
+      line('M53 26q9-4 14-2m4 4q11-2 20 0m-15 6q10-1 17 0',ink,1.5) +
+      basalt(20,34,16,12) + basalt(38,32,18,17) + basalt(55,37,16,13) +
+      basalt(11,45,14,13) + basalt(29,43,18,17) + basalt(47,44,17,18) + basalt(63,47,15,14) +
+      basalt(15,56,16,13) + basalt(34,55,19,18) + basalt(53,56,17,16) + basalt(70,57,16,12) +
+      line('M6 74q10-2 17 1m24 4q15 2 28-4m0-7q11 1 18-3m-29 17 14-2',ink,1.5) +
+      dot(49,51,1.9,paper) + dot(54,20,1.8,accent) + dot(58,16,1.2,accent),
+
+    'ban-gioc':
+      shape('M4 42q7-6 11-19l7-7 6 4 5 15 9-3 7-15 6-5 6 4 5 13 6-4 8-10 7 4 4 14 5 5v20H4z') +
+      shape('M5 39q12-4 25 1l-1 13-6 9-18-1zm27-2q25-9 57-2l-3 16-7 10-47 2 4-12z',paper) +
+      shape('M4 59q11-4 24-4l9 1-6 6q27-7 54-9l-4 6-14 4-29 2-11 6-19 3z',accent) +
+      line('m11 43-1 9m9-9-3 11m24-15-2 10m9-11-3 16m12-19-5 19m15-20-3 14m10-14-3 15m11-13-3 13',accent,1.9) +
+      shape('M11 72q11-7 22-7l-3 5q15-7 24-6l-4 5 26-7-8 6-33 8z') +
+      line('M6 77q9-4 21-3m4 5q12-4 22-4m6-2q12-1 22-6m-59 15 15-1',ink,1.5),
+
+    'khue-van-cac':
+      shape('M9 34q14-4 24-12h10l7-8 7 8h10q10 9 24 12l-8 3-8 1v21h5l-1 6H22l-2-6h5V38z') +
+      shape('M17 34q14-4 19-9h11l3-5 4 5h10q8 6 18 9z',accent) +
+      shape('M23 64h7v16h3v3H19v-3h4zm47 0h7v16h3v3H66v-3h4z') +
+      dot(50,47,10,paper) + dot(50,47,6,accent) +
+      line('M50 37v4m0 12v4m-10-10h4m12 0h4m-17-7 3 3m8 8 3 3m-14 0 3-3m8-8 3-3',ink,1.25) +
+      cut('M28 39h8v15h-8zm36 0h8v15h-8zM24 61h52',1.4) +
+      line('M13 85h72m-59 3h47',ink,1.5),
+
+    'cau-rong':
+      shape('M5 54q15-21 25-6 10-26 23-10 8-14 17-13l4-4-2-6 6 3 1-8 4 7 5-4-1 8 7 5-1 5-8 3-7-2q-11 0-19 14l-6 4q-10-17-19 6l-6 2q-9-13-21 0z',accent) +
+      line('M7 54q15-17 23-5 10-23 22-8 11-16 21-15m5 5 8 1 7-3',ink,1.8) + dot(83,24,1.55) +
+      shape('M5 62q38-14 88-15l-1 5q-46 1-86 16zm15 3 5-1-1 9-5 1zm38-9 6-1-1 11-5 1zm25-3 4-1v11h-4z') +
+      line('M8 74q15 1 29-4m9-1q12 1 29-4m-51 16q17 0 34-5m9-4 14-3',ink,1.4),
+
+    'nha-hat-cao-van-lau':
+      shape('M7 50 26 29l22 20q-22 8-41 1zm42-6 20-24 23 22q-20 8-43 2z') +
+      shape('M22 54 48 23l28 29q-29 9-54 2z',accent) +
+      line('M22 54q27 10 54-2m-28-28-15 27m16-24 8 25m10-27-8 13m-33-4-7 12',ink,1.5) +
+      shape('M12 55h4v7h14v-5l5 1v5h25v-5l4-1v6h14V49l4-1v15h6v3H9v-3h3z') +
+      line('M8 70q13 3 25 0m7 4q20 2 42-4m-60 9q14 2 24 0',ink,1.4) +
+      dot(62,76,2.7,accent) + line('M64 75v-7l4-2',accent,1.5)
+  };
+  sitePrints['quan-the-trang-an'] = sitePrints['ben-thuyen-trang-an'];
+  sitePrints['pho-co-hoi-an'] = sitePrints['nha-co-tan-ky'];
+  const artwork = (key, siteId) => Object.hasOwn(sitePrints, siteId) ? sitePrints[siteId] : prints[key];
+
   // Dark ink, second ink, and unprinted paper. Each subject keeps its own colour family.
   const palettes = [
     ['#163f47','#d1803d','#f6e8c8'], ['#15394c','#d4964f','#f8edce'],
@@ -173,7 +290,7 @@
       route + '</g></g>';
   }
 
-  function plate(key, code, size, className) {
+  function plate(key, code, size, className, siteId) {
     const [dark, second, stock] = palettes[paletteFamilies[key] + (code >>> 11 & 1)];
     const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
     svg.setAttribute('viewBox', '0 0 '+size+' '+size);
@@ -183,29 +300,47 @@
     svg.setAttribute('focusable', 'false');
     svg.setAttribute('class', className);
     svg.style.color = dark;
-    svg.style.setProperty('--stamp-accent',second);
+    svg.style.setProperty('--stamp-accent',siteId === 'cau-vang-ba-na' ? '#ce9634' : second);
     svg.style.setProperty('--stamp-paper',stock);
     return svg;
   }
 
-  window.createSightSecretGlyph = (motif, seed) => {
+  window.createSightSecretGlyph = (motif, seed, siteId) => {
     const key = Object.hasOwn(prints, motif) ? motif : 'ridge';
-    const svg = plate(key, hashSeed(seed), 100, 'sight-secret-glyph');
-    svg.innerHTML = '<g stroke-linejoin="round" stroke-linecap="round">' + prints[key] + '</g>';
+    const svg = plate(key, hashSeed(seed), 100, 'sight-secret-glyph', siteId);
+    svg.innerHTML = '<g stroke-linejoin="round" stroke-linecap="round">' + artwork(key,siteId) + '</g>';
     return svg;
   };
 
-  window.createSightSecretArt = (motif, seed) => {
+  window.createSightSecretArt = (motif, seed, siteId, localityMark) => {
     const key = Object.hasOwn(prints, motif) ? motif : 'ridge';
-    const code = hashSeed(seed), svg = plate(key, code, 120, 'sight-secret-art');
+    const code = hashSeed(seed), svg = plate(key, code, 120, 'sight-secret-art', siteId);
+    const mark = typeof localityMark === 'string' ? localityMark.trim() : '';
     svg.innerHTML = shape(edge,paper) +
       '<g stroke-linejoin="round" stroke-linecap="round">' +
       '<path d="M12 12h96v96H12z" fill="none" stroke="currentColor" stroke-width=".95"/>' +
       line('M15 17v-2h6m78 0h6v5m-90 65v4h6m76 0h8v-5', ink, 1.4) +
-      '<g transform="translate(15 8) scale(.91)"><g class="sight-stamp-print">' + prints[key] + '</g></g>' +
-      line('M18 92h58m-58 2h23', ink, .8) +
+      '<g transform="translate(15 8) scale(.91)"><g class="sight-stamp-print">' + artwork(key,siteId) + '</g></g>' +
+      (mark ? '' : line('M18 92h58m-58 2h23', ink, .8)) +
       '<text x="18" y="103" fill="currentColor" font-family="Georgia,serif" font-size="7.4" font-weight="bold" letter-spacing="1.4">VIỆT NAM</text>' +
       postmark(code) + '</g>';
+    if (mark) {
+      const country = svg.querySelector('text'), origin = document.createElementNS(svg.namespaceURI,'text');
+      country.setAttribute('y','95');
+      country.setAttribute('font-size','5.6');
+      origin.setAttribute('x','18');
+      origin.setAttribute('y','104');
+      origin.setAttribute('fill',ink);
+      origin.setAttribute('font-family','monospace');
+      origin.setAttribute('font-size','6.8');
+      // Reserve the right-hand quarter for the cancellation. Keep every coordinate digit.
+      if (Array.from(mark).length * 4.1 > 58) {
+        origin.setAttribute('textLength','58');
+        origin.setAttribute('lengthAdjust','spacingAndGlyphs');
+      }
+      origin.textContent = mark;
+      country.after(origin);
+    }
     return svg;
   };
 })();
