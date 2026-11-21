@@ -58,8 +58,12 @@ function createTourDistrict(T,scene,plaster,structures,osmBuildings,nightLights)
   const roofs=[0x9f6757,0xa09a8e,0x798d92,0xaca69c].map(v=>new T.Color(v));
   const concrete=new T.Color(0x989186);
   const doorway=new T.Color(0x354647);
+  // Each material has one draw. Reuse its CPU buffer as the view moves, and
+  // hand WebGL only the populated vertices when the new district is complete.
+  const batches=[wall,roof].map(mat=>({mat,stride:mat===wall?14:12,data:new Float32Array(0),used:0}));
   let indexPromise,available,grid,scale=100000,loadedGraph,signature,loaded=[],cells=new Map(),serial=0;
   const cache=new Map(),blocks=new Map(),cell=32,streetFronts=[];
+  const footprints=new WeakMap();
   async function load(graph,x,z){
     const seq=++serial;
     try{
@@ -86,6 +90,18 @@ function createTourDistrict(T,scene,plaster,structures,osmBuildings,nightLights)
     const ring=[];
     for(let i=0;i<raw.length;i+=2){lon+=raw[i];lat+=raw[i+1];const p=graph.point(lon/scale,lat/scale);ring.push(new T.Vector2(p.x,p.z));}
     return ring;
+  }
+  function projectFootprint(raw,graph,projected){
+    const known=projected.get(raw);if(known)return known;
+    const rings=raw.map(r=>decode(r,graph)).filter(r=>r.length>=3);
+    if(!rings.length)return null;
+    let minX=Infinity,minZ=Infinity,maxX=-Infinity,maxZ=-Infinity;
+    for(const p of rings[0]){minX=Math.min(minX,p.x);minZ=Math.min(minZ,p.y);maxX=Math.max(maxX,p.x);maxZ=Math.max(maxZ,p.y);}
+    const shape={rings,box:{minX,minZ,maxX,maxZ},flat:rings.flat()};
+    // Three removes an explicit closing vertex during triangulation. Leave
+    // those outlines rebuild-local so their original vertex order is restored.
+    if(!rings.some(r=>r[0].equals(r.at(-1))))projected.set(raw,shape);
+    return shape;
   }
   function contact(x,z,r){
     let hit;
@@ -118,7 +134,9 @@ function createTourDistrict(T,scene,plaster,structures,osmBuildings,nightLights)
     return inside;
   }
   function insideBuilding(x,z,rings){
-    return insideRing(x,z,rings[0])&&!rings.slice(1).some(hole=>insideRing(x,z,hole));
+    if(!insideRing(x,z,rings[0]))return false;
+    for(let i=1;i<rings.length;i++)if(insideRing(x,z,rings[i]))return false;
+    return true;
   }
   function overlapsModel(landmarks,rings,box){
     if(!landmarks)return false;
@@ -212,17 +230,36 @@ function createTourDistrict(T,scene,plaster,structures,osmBuildings,nightLights)
       }
       return false;
     }
-    const batches=[wall,roof].map(mat=>({mat,pos:[],uv:[],cols:[],bays:[],styles:[]}));
+    for(const b of batches){
+      if(b.used < b.data.length/4)b.data=new Float32Array(b.used);
+      b.used=0;
+    }
     let baseY=0,opening=0,facadeSeed=0;
-    function vertex(b,x,y,z,u,v,tint,finish=0){
-      b.pos.push(x-cx,baseY+y,z-cz);b.uv.push(u,v);b.cols.push(tint.r,tint.g,tint.b);
-      b.styles.push(b.mat===wall?opening+facadeSeed:finish);
+    function vertex(b,x,y,z,u,v,tint,finish=0,bay=-1,floor=0){
+      const i=b.used;
+      if(i+b.stride>b.data.length){
+        const next=new Float32Array(Math.max(b.stride*256,b.data.length*2));
+        next.set(b.data);b.data=next;
+      }
+      const data=b.data;
+      data[i]=x-cx;data[i+1]=baseY+y;data[i+2]=z-cz;
+      // Slots 3–5 receive the face normal once the triangle is complete.
+      data[i+6]=u;data[i+7]=v;
+      data[i+8]=tint.r;data[i+9]=tint.g;data[i+10]=tint.b;
+      if(b.mat===wall){
+        data[i+11]=opening+facadeSeed;data[i+12]=bay;data[i+13]=floor;
+      }else data[i+11]=finish;
+      b.used+=b.stride;
     }
     function quad(b,a,c,lo,hi,tint,count,floors){
-      const span=a.distanceTo(c);
-      for(const [p,y,u] of [[a,lo,0],[c,lo,span],[a,hi,0],[c,lo,span],[c,hi,span],[a,hi,0]]){
-        vertex(b,p.x,y,p.y,u/5,y/4,tint);b.bays.push(count?u/span*count:-1,Math.max(0,y)/hi*floors);
-      }
+      const u=a.distanceTo(c)/5,lowFloor=Math.max(0,lo)/hi*floors;
+      const left=count?0:-1,right=count||-1;
+      vertex(b,a.x,lo,a.y,0,lo/4,tint,0,left,lowFloor);
+      vertex(b,c.x,lo,c.y,u,lo/4,tint,0,right,lowFloor);
+      vertex(b,a.x,hi,a.y,0,hi/4,tint,0,left,floors);
+      vertex(b,c.x,lo,c.y,u,lo/4,tint,0,right,lowFloor);
+      vertex(b,c.x,hi,c.y,u,hi/4,tint,0,right,floors);
+      vertex(b,a.x,hi,a.y,0,hi/4,tint,0,left,floors);
     }
     // Fit a shaded doorway to the street-facing wall of a narrow low-rise.
     // The outline and height are mapped; the shutter and canopy are scenery.
@@ -266,6 +303,8 @@ function createTourDistrict(T,scene,plaster,structures,osmBuildings,nightLights)
       if(zone)streetFronts.push({x:x-cx,y:baseY,z:z-cz,nx,nz,ux,uz,half,top,h,seed,zone});
     }
     const ids=new Set(),surveyedIds=new Set(surveyed.map(row=>row[0]));
+    if(!footprints.has(graph))footprints.set(graph,new WeakMap());
+    const projected=footprints.get(graph);
     const [lon,lat]=graph.geo(cx,cz);
     const pins=VietnamTourism.nearby(lon,lat,720/graph.mx,720/graph.my)
       .filter(p=>p.id.startsWith('osm-node-')&&p.kind==='Công trình tín ngưỡng')
@@ -274,13 +313,11 @@ function createTourDistrict(T,scene,plaster,structures,osmBuildings,nightLights)
       if(ids.has(id)||landmarks?.modeledBuildings.has(id))continue;
       const first=graph.point(raw[0][0]/scale,raw[0][1]/scale);
       if(Math.abs(first.x-cx)>850||Math.abs(first.z-cz)>850)continue;
-      const rings=raw.map(r=>decode(r,graph)).filter(r=>r.length>=3);
-      if(!rings.length)continue;
-      const outer=rings[0];let minX=Infinity,minZ=Infinity,maxX=-Infinity,maxZ=-Infinity;
-      for(const p of outer){minX=Math.min(minX,p.x);minZ=Math.min(minZ,p.y);maxX=Math.max(maxX,p.x);maxZ=Math.max(maxZ,p.y);}
+      const outline=projectFootprint(raw,graph,projected);if(!outline)continue;
+      const {rings,box,flat}=outline,outer=rings[0],{minX,minZ,maxX,maxZ}=box;
       const x=(minX+maxX)/2,z=(minZ+maxZ)/2;
       if(Math.hypot(x-cx,z-cz)>620+Math.hypot(maxX-minX,maxZ-minZ)/2)continue;
-      const original=surveyedIds.has(id),box={minX,minZ,maxX,maxZ};
+      const original=surveyedIds.has(id);
       if(overlapsModel(landmarks,rings,box))continue;
       const visitorArea=overlapsGarden(landmarks,rings,box);
       if(!original){
@@ -325,7 +362,7 @@ function createTourDistrict(T,scene,plaster,structures,osmBuildings,nightLights)
       }
       const [bLon,bLat]=graph.geo(x,z),zone=window.CentralStreetscapes?.zoneAt(bLon,bLat);
       const zWalls=zone?zone.walls:null,zRoofs=zone?zone.roofs:null;
-      const flat=rings.flat(),roofColor=detail?.['roof:colour']?new T.Color(detail['roof:colour']):zRoofs?new T.Color(zRoofs[opening===1?0:seed%zRoofs.length]):roofs[opening===1?0:seed%roofs.length];
+      const roofColor=detail?.['roof:colour']?new T.Color(detail['roof:colour']):zRoofs?new T.Color(zRoofs[opening===1?0:seed%zRoofs.length]):roofs[opening===1?0:seed%roofs.length];
       const base=detail?.['building:colour']?new T.Color(detail['building:colour']):detail?.['building:material']==='wood'?new T.Color(0x99765a):zWalls?new T.Color(zWalls[seed%zWalls.length]):palette[seed%palette.length];
       if(!part&&!opening&&!unclassified&&Math.hypot(x-cx,z-cz)<185&&h>=3&&h<17&&maxX-minX<32&&maxZ-minZ<32&&
         /^(yes|residential|house|terrace|apartments|retail|commercial|building)$/.test(kind))streetFront(outer,h,roofColor,seed,zone);
@@ -351,12 +388,16 @@ function createTourDistrict(T,scene,plaster,structures,osmBuildings,nightLights)
           for(const p of tri)vertex(batches[1],p.x,p===highL||p===highR?h:eave,p.y,0,0,roofColor);
         }
       }else{
-        for(const tri of T.ShapeUtils.triangulateShape(outer,rings.slice(1)))for(const index of [tri[0],tri[2],tri[1]]){
+        outline.triangles??=T.ShapeUtils.triangulateShape(outer,rings.slice(1));
+        for(const tri of outline.triangles)for(const index of [tri[0],tri[2],tri[1]]){
           const p=flat[index];vertex(batches[1],p.x,h,p.y,0,0,roofColor);
         }
       }
-      if(bottom>0)for(const tri of T.ShapeUtils.triangulateShape(outer,rings.slice(1)))for(const k of tri){
-        const p=flat[k];vertex(batches[1],p.x,bottom,p.y,0,0,concrete);
+      if(bottom>0){
+        outline.triangles??=T.ShapeUtils.triangulateShape(outer,rings.slice(1));
+        for(const tri of outline.triangles)for(const k of tri){
+          const p=flat[k];vertex(batches[1],p.x,bottom,p.y,0,0,concrete);
+        }
       }
       for(let ri=0;ri<rings.length;ri++)for(let j=0;j<rings[ri].length;j++){
         const ring=rings[ri],profile=profiles[ri];
@@ -376,16 +417,20 @@ function createTourDistrict(T,scene,plaster,structures,osmBuildings,nightLights)
           const lowL=l.h-baseY-.22,lowR=r.h-baseY-.22;
           for(const [p,y] of [[l,lowL],[r,lowR],[l,0],[r,lowR],[r,0],[l,0]]){
             vertex(wallBatch,p.x,y,p.z,Math.hypot(p.x-a.x,p.z-a.y)/5,y/4,concrete);
-            wallBatch.bays.push(-1,0);
           }
         }
       }
     }
     for(const b of batches){
-      if(!b.pos.length)continue;
-      const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(b.pos,3));
-      g.setAttribute(b.mat===wall?'openingStyle':'roofFinish',new T.Float32BufferAttribute(b.styles,1));
-      g.setAttribute('uv',new T.Float32BufferAttribute(b.uv,2));g.setAttribute('color',new T.Float32BufferAttribute(b.cols,3));if(b.bays.length)g.setAttribute('bays',new T.Float32BufferAttribute(b.bays,2));g.computeVertexNormals();
+      if(!b.used)continue;
+      const data=b.data.subarray(0,b.used);
+      writeFlatNormals(data,data,b.stride,3);
+      const buffer=new T.InterleavedBuffer(data,b.stride),g=new T.BufferGeometry();
+      const attribute=(size,offset)=>new T.InterleavedBufferAttribute(buffer,size,offset);
+      g.setAttribute('position',attribute(3,0));g.setAttribute('normal',attribute(3,3));
+      g.setAttribute('uv',attribute(2,6));g.setAttribute('color',attribute(3,8));
+      g.setAttribute(b.mat===wall?'openingStyle':'roofFinish',attribute(1,11));
+      if(b.mat===wall)g.setAttribute('bays',attribute(2,12));
       const mesh=new T.Mesh(g,b.mat);mesh.receiveShadow=true;mesh.castShadow=true;group.add(mesh);
     }
   }

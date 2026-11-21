@@ -85,7 +85,7 @@ function createGroundedWalkways(T,{cx,cz,step,height,ground,wet,needsDetail}){
     tops.length=coping.length=frontages.length=0;
     if(!faces.length)return;
     const geometry=new T.BufferGeometry();
-    geometry.setAttribute('position',new T.Float32BufferAttribute(faces,3));geometry.computeVertexNormals();
+    geometry.setAttribute('position',new T.Float32BufferAttribute(faces,3));setFlatNormals(T,geometry);
     faces.length=0;
     const mesh=new T.Mesh(geometry,stone);mesh.name='Curb and pavement edges';mesh.receiveShadow=true;group.add(mesh);
   }

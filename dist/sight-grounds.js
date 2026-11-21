@@ -10,7 +10,7 @@ function createSightGrounds(T,small){
   texture.generateMipmaps=false;texture.minFilter=T.LinearFilter;
   const uniforms={visitorMap:{value:texture},visitorOrigin:{value:new T.Vector2()},visitorActive:{value:0}};
   const codes={sand:1,rock:2,lawn:3,orchard:3,tea:3,court:4,trail:5,walk:6,steps:6,drive:7};
-  const cache=new Map(),states=new WeakMap();
+  const cache=new Map(),states=new WeakMap(),projections=new WeakMap();
   let manifest,mask,fixtures=[],originX=0,originZ=0;
   async function load(graph,x,z){
     const [lon,lat]=graph.geo(x,z),reach=span*.5+180;
@@ -73,26 +73,39 @@ function createSightGrounds(T,small){
     const rows=states.get(graph)?.rows;
     if(!rows?.length)return;
     const ratio=canvas.width/span,half=span/2;
-    pen.setTransform(ratio,0,0,ratio,canvas.width/2,canvas.height/2);
-    pen.clearRect(-half,-half,span,span);pen.lineCap=pen.lineJoin='round';
+    if(!projections.has(graph))projections.set(graph,new WeakMap());
+    const projected=projections.get(graph);
     const layers=[];
     for(const [kind,size,raw] of rows){
-      const rings=raw.map(ring=>{
-        let lon=0,lat=0;
-        const points=[];
-        for(let i=0;i<ring.length;i+=2){
-          lon+=ring[i];lat+=ring[i+1];
-          const p=graph.point(lon/1e6,lat/1e6);
-          points.push([p.x-cx,p.z-cz]);
-        }
-        return points;
-      });
+      let feature=projected.get(raw);
+      if(!feature){
+        let minX=Infinity,maxX=-Infinity,minZ=Infinity,maxZ=-Infinity;
+        const rings=raw.map((ring,index)=>{
+          let lon=0,lat=0;
+          const points=[];
+          for(let i=0;i<ring.length;i+=2){
+            lon+=ring[i];lat+=ring[i+1];
+            const p=graph.point(lon/1e6,lat/1e6);
+            points.push(p);
+            if(!index){
+              minX=Math.min(minX,p.x);maxX=Math.max(maxX,p.x);
+              minZ=Math.min(minZ,p.z);maxZ=Math.max(maxZ,p.z);
+            }
+          }
+          return points;
+        });
+        feature={rings,minX,maxX,minZ,maxZ};projected.set(raw,feature);
+      }
+      if(feature.maxX<cx-half-12||feature.minX>cx+half+12||feature.maxZ<cz-half-12||feature.minZ>cz+half+12)continue;
+      const rings=feature.rings.map(r=>r.map(p=>[p.x-cx,p.z-cz]));
       const ring=rings[0];
-      if([0,1].some(axis=>ring.every(p=>p[axis]<-half-12)||ring.every(p=>p[axis]>half+12)))continue;
       const code=codes[kind];
       if(code)layers.push({kind,code,rings,size});
       if(!code||['steps','orchard','tea'].includes(kind))fixtures.push({kind,size,ring,rings});
     }
+    if(!layers.length)return;
+    pen.setTransform(ratio,0,0,ratio,canvas.width/2,canvas.height/2);
+    pen.clearRect(-half,-half,span,span);pen.lineCap=pen.lineJoin='round';
     layers.sort((a,b)=>a.code-b.code);
     function trace(points,closed){
       pen.moveTo(...points[0]);
@@ -275,7 +288,7 @@ function createSightGrounds(T,small){
     const geo=new T.BufferGeometry();
     for(const [name,array,size] of [['position',pos,3],['color',rgb,3],['uv',uv,2],['finish',finish,1]])
       geo.setAttribute(name,new T.Float32BufferAttribute(array,size));
-    geo.computeVertexNormals();
+    setFlatNormals(T,geo);
     const mesh=new T.Mesh(geo,material);mesh.name='Mapped visitor grounds';mesh.castShadow=mesh.receiveShadow=true;group.add(mesh);
   }
   return {load,prepare,shade,mapped:(x,z)=>groundCode(x,z)>0,accessLane:(x,z)=>groundCode(x,z)===codes.drive,build};

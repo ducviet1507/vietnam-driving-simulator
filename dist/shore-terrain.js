@@ -40,13 +40,18 @@ function buildMappedShore(T, options){
   }
   function cell(x,z){return x>=0&&z>=0&&x<size&&z<size?z*size+x:-1;}
   function distance(i){return i<0?-32:signed[i];}
-  const heights=new Map(),key=(x,z)=>Math.round((x-left)/metres)+Math.round((z-top)/metres)*1024;
+  // Only cells near water need samples. Rows share boundary vertices between
+  // neighbouring cells and serve the physics queries on the same metre grid.
+  const gridSide=32*steps+1,heights=new Array(gridSide);
   function node(x,z){
-    const index=key(x,z),known=heights.get(index);if(known)return known;
+    const ix=Math.round((x-left)/metres),iz=Math.round((z-top)/metres);
+    const line=heights[iz]??=new Array(gridSide);
+    if(line[ix])return line[ix];
     const col=Math.round((x-maskX)*scale),row=Math.round((z-maskZ)*scale);
-    const samples=[cell(col-1,row-1),cell(col,row-1),cell(col-1,row),cell(col,row)];
-    let nearest=samples[0],d=0;
-    for(const s of samples){d+=distance(s)*.25;if(distance(s)>distance(nearest))nearest=s;}
+    const a=cell(col-1,row-1),b=cell(col,row-1),c=cell(col-1,row),e=cell(col,row);
+    const da=distance(a),db=distance(b),dc=distance(c),de=distance(e);
+    const d=(da+db+dc+de)*.25,closest=Math.max(da,db,dc,de);
+    const nearest=da===closest?a:db===closest?b:dc===closest?c:e;
     const natural=ground(x,z)-.17,id=nearest<0?0:ids[nearest];
     // The DEM records embankments as land. Keep the surface below surrounding roads
     // while a named lake shares a level across its OSM islands and polygon cuts.
@@ -54,7 +59,7 @@ function buildMappedShore(T, options){
     const depth=Math.min(5.6,Math.max(0,d)*.33),dryWidth=Math.min(1,Math.max(0,-d/8));
     const blend=dryWidth*dryWidth*(3-2*dryWidth);
     const bed=d>0?level-depth:level+(natural-level)*blend;
-    const n={x,z,bed,level,d,sediment:1-blend};heights.set(index,n);return n;
+    return line[ix]={x,z,bed,level,d,sediment:1-blend,waterIndex:-1};
   }
   const verts=[],uv=[],silt=[],indices=[],remaining=[],water=[],waterIndices=[];
   const waterVertex=(x,y,z)=>{const i=water.length/3;water.push(x,y,z);return i;};
@@ -84,7 +89,8 @@ function buildMappedShore(T, options){
       const x=left+i*coarse+u*spacing,z=top+j*coarse+v*spacing,n=node(x,z);ns.push(n);
       const px=x+cx-gx,pz=z+cz-gz;
       verts.push(px,-pz,n.bed+.17);uv.push(px/landWidth+.5,.5-pz/landWidth);silt.push(n.sediment);
-      ws.push(n.d>=0?waterVertex(x,n.level,z):-1);
+      if(n.d>=0&&n.waterIndex<0)n.waterIndex=waterVertex(x,n.level,z);
+      ws.push(n.waterIndex);
       if(!v||!u)continue;
       const d=v*(divisions+1)+u,a=d-divisions-2,b=d-divisions-1,k=d-1;
       indices.push(first+a,first+k,first+b,first+k,first+d,first+b);
@@ -129,8 +135,9 @@ function buildMappedShore(T, options){
     const tx=Math.floor((x-left)/coarse),tz=Math.floor((z-top)/coarse);
     if(tx<0||tx>=32||tz<0||tz>=32||!active[tz*32+tx])return null;
     const stride=active[tz*32+tx]===2?steps/2:1,u=(x-left)/(metres*stride),v=(z-top)/(metres*stride);
-    const i=Math.floor(u),j=Math.floor(v),f=u-i,h=v-j,k=(i+j*1024)*stride;
-    const a=heights.get(k),b=heights.get(k+stride),c=heights.get(k+stride*1024),d=heights.get(k+stride*1025);
+    const i=Math.floor(u),j=Math.floor(v),f=u-i,h=v-j,col=i*stride,row=j*stride;
+    const topRow=heights[row],bottomRow=heights[row+stride];
+    const a=topRow?.[col],b=topRow?.[col+stride],c=bottomRow?.[col],d=bottomRow?.[col+stride];
     if(!a||!b||!c||!d)return null;
     const height=k=>f+h<=1?a[k]+f*(b[k]-a[k])+h*(c[k]-a[k]):d[k]+(1-f)*(c[k]-d[k])+(1-h)*(b[k]-d[k]);
     if(!includeBank&&height('d')<=0)return null;

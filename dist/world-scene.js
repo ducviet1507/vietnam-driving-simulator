@@ -981,7 +981,7 @@
             if(fitRoad)triangle([ax,az],[bx,bz],[dx,dz]);else{vertex(ax,az);vertex(bx,bz);vertex(dx,dz);}
           }else split([[ax,az],[bx,bz],[dx,dz]],0);
         }
-        const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(verts,3));g.setAttribute('uv',new T.Float32BufferAttribute(uv,2));g.computeVertexNormals();
+        const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(verts,3));g.setAttribute('uv',new T.Float32BufferAttribute(uv,2));setFlatNormals(T,g);
         if(asphalt)g.setAttribute('carriageway',new T.Float32BufferAttribute(crossSection,2));
         const mesh=new T.Mesh(g,mat);mesh.receiveShadow=true;
         if(mat!==material.white&&mat!==material.yellow)shorePatch?.addCover(g);

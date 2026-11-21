@@ -1,4 +1,25 @@
 'use strict';
+// Streamed surfaces have independent vertices per triangle. Compute their
+// flat normal once per face, including when positions and normals are interleaved.
+function writeFlatNormals(positions,normals,stride=3,offset=0){
+  for(let a=0;a<positions.length;a+=stride*3){
+    const b=a+stride,c=b+stride;
+    const ux=positions[b]-positions[a],uy=positions[b+1]-positions[a+1],uz=positions[b+2]-positions[a+2];
+    const vx=positions[c]-positions[a],vy=positions[c+1]-positions[a+1],vz=positions[c+2]-positions[a+2];
+    const x=uy*vz-uz*vy,y=uz*vx-ux*vz,z=ux*vy-uy*vx;
+    const length=Math.sqrt(x*x+y*y+z*z)||1;
+    const nx=x/length,ny=y/length,nz=z/length;
+    for(let i=a+offset;i<=c+offset;i+=stride){
+      normals[i]=nx;normals[i+1]=ny;normals[i+2]=nz;
+    }
+  }
+}
+function setFlatNormals(T,geometry){
+  const positions=geometry.attributes.position.array,normals=new Float32Array(positions.length);
+  writeFlatNormals(positions,normals);
+  geometry.setAttribute('normal',new T.BufferAttribute(normals,3));
+}
+
 // Scanned material channels share a UV transform, including after an origin rebase.
 function createRoadSurfaces(T,renderer){
   const loader=new T.TextureLoader(),anisotropy=Math.min(8,renderer.capabilities.getMaxAnisotropy());

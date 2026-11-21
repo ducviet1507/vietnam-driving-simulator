@@ -6,7 +6,7 @@ import {runInNewContext} from 'node:vm';
 const T=createRequire(import.meta.url)('../../dist/three.min.js');
 const context={createSightFinishes:()=>({}),createVietnamOsmBuildings:()=>({rows:()=>[]})};
 context.window=context;
-for(const file of ['tourism-catalog','sight-details','visitor-atlas','vietnam-landmarks','tour-district']){
+for(const file of ['tourism-catalog','sight-details','visitor-atlas','vietnam-landmarks','surface-materials','tour-district']){
   runInNewContext(readFileSync(new URL('../../dist/'+file+'.js',import.meta.url),'utf8'),context);
 }
 const scene=new T.Scene(),landmarks=context.VietnamLandmarks.create(T,scene);
@@ -55,6 +55,26 @@ function hasWindowBays(x){
 }
 assert.equal(hasWindowBays(30),false,'unclassified mapped structure keeps a plain facade');
 assert.ok(hasWindowBays(50),'explicitly mapped home keeps its residential facade');
+
+// Crossing a streaming boundary reuses the district buffers. Hidden buildings
+// must disappear, and returning to the same road must reproduce its geometry.
+const meshes=scene.getObjectByName('OSM building footprints');
+function snapshot(){
+  return meshes.children.map(({geometry})=>Object.fromEntries(Object.entries(geometry.attributes).map(([name,a])=>{
+    const values=[];
+    for(let i=0;i<a.count;i++){
+      values.push(a.getX(i));
+      if(a.itemSize>=2)values.push(a.getY(i));
+      if(a.itemSize>=3)values.push(a.getZ(i));
+    }
+    return [name,values];
+  })));
+}
+const original=snapshot();
+district.build(graph,2000,0,landmarks,()=>0);
+assert.equal(meshes.children.length,0);
+district.build(graph,0,0,landmarks,()=>0,[],(x,z)=>x>201&&z>1);
+assert.deepEqual(snapshot(),original);
 
 const fort=context.VietnamTourism.byId.get('osm-way-921987266'); // Thành cổ Sơn Tây
 landmarks.setOrigin(project(fort),0,0);
