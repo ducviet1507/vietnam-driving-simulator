@@ -5,7 +5,7 @@
  .controls [data-act]{grid-column:span 2}
  .controls button,.actions button,#camera,select{min-height:44px}
 }
-@media (orientation:landscape) and (max-height:540px) and (min-width:600px) {
+@media (orientation:landscape) and (max-height:540px) and (min-width:520px) {
  main{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(245px,1fr);gap:6px 12px;padding:8px}
  header{grid-column:1/-1;margin:0}
  #view{grid-column:1;grid-row:2/4;position:sticky;top:6px;height:calc(100dvh - 66px);min-height:185px}

@@ -15,7 +15,7 @@
  position:fixed; top:calc(48% + 30px); right:max(var(--right),calc(clamp(55px,16vw,180px) - 54px));
  z-index:2; display:none; gap:8px; pointer-events:none;
 }
-.journey[data-phase=drive] #hud:not([hidden]) + #viewTools {display:flex}
+.journey[data-phase=drive]:has(#hud:not([hidden])) #viewTools {display:flex}
 .journey[data-phase=tour]:has(#tourCamera:not([hidden])[aria-busy=false]) #viewTools {
  display:flex; top:calc(var(--top) + 54px); right:var(--right);
 }

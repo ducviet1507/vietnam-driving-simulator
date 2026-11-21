@@ -41,6 +41,7 @@ function createDriveInput() {
   }
   window.addEventListener('blur', clear);
   window.addEventListener('pagehide', clear);
+  matchMedia('(orientation: landscape)').addEventListener('change', clear);
   document.addEventListener('visibilitychange', () => { if (document.hidden) clear(); });
   return {has: key => keyboard.has(key) || active.has(key), add: key => keyboard.add(key), delete: key => keyboard.delete(key), clear};
 }

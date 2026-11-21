@@ -53,6 +53,42 @@ async function check(disabled, run) {
   } finally { await browser.close(); }
 }
 
+async function checkPhoneRotation(page, driving) {
+  const client = await page.context().newCDPSession(page);
+  const original = page.viewportSize();
+  const saved = await page.evaluate(() => ({...document.body.dataset}));
+  try {
+    await client.send('Emulation.setTouchEmulationEnabled', {enabled:true, maxTouchPoints:2});
+    const sizes = [[320,568], [568,320], [390,844], [844,390]];
+    for (const [width,height] of sizes) {
+      await page.setViewportSize({width,height});
+      await page.waitForFunction(([w,h]) => window.innerWidth === w && window.innerHeight === h, [width,height]);
+      for (const hand of driving ? ['left','right'] : ['left']) {
+        const collisions = await page.evaluate(({driving,hand}) => {
+          if (driving) Object.assign(document.body.dataset, {steering:hand,buttonSize:'large',mapSize:'large'});
+          const selectors = driving
+            ? ['#viewTools button','.tools button','.navigationDock','.routeInfo','.telemetry','#touch button']
+            : ['header nav','.departureRibbon','.openingCopy','.atlasTicket'];
+          const boxes = [...document.querySelectorAll(selectors.join(','))]
+            .map(el => [el.id || el.className || el.dataset.key, el.getBoundingClientRect()])
+            .filter(([,r]) => r.width && r.height);
+          return boxes.flatMap(([id,r],i) => boxes.slice(i+1).filter(([,s]) =>
+            r.left < s.right && s.left < r.right && r.top < s.bottom && s.top < r.bottom
+          ).map(([other]) => [id,other]));
+        }, {driving,hand});
+        assert.deepEqual(collisions, [], `Controls overlap at ${width}×${height} (${hand}): ${JSON.stringify(collisions)}`);
+      }
+    }
+  } finally {
+    await page.evaluate(saved => {
+      for (const key of ['steering','buttonSize','mapSize']) document.body.dataset[key] = saved[key];
+    }, saved);
+    await page.setViewportSize(original);
+    await client.send('Emulation.setTouchEmulationEnabled', {enabled:false});
+    await client.detach();
+  }
+}
+
 async function checkTouchPedals(page) {
   const client = await page.context().newCDPSession(page);
   await client.send('Emulation.setTouchEmulationEnabled',{enabled:true,maxTouchPoints:2});
@@ -132,9 +168,11 @@ try {
     const go = p=>page.goto(new URL(p,base).href,{waitUntil:'domcontentloaded'});
     await go('/?intro=turtle');
     await page.getByRole('button',{name:'Cầm lái',exact:true}).waitFor();
+    await checkPhoneRotation(page,false);
     assert.equal(await page.evaluate(()=>Boolean(VietnamTourism.complete || window.driveBank)),false);
     await page.getByRole('button',{name:'Cầm lái',exact:true}).click();
     await page.locator('body[data-phase="drive"]').waitFor();
+    await checkPhoneRotation(page,true);
     await page.setViewportSize({width:390,height:844});
     await page.locator('#tourView').click();
     const [photo]=await Promise.all([page.waitForEvent('download'),page.getByRole('button',{name:'Chụp ảnh cảnh'}).click()]);

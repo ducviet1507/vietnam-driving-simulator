@@ -37,12 +37,24 @@ body[data-button-size=large] {--pedal-height: 57px}
   .lessonYard footer, .lessonRoad :is(.controls,details) {order: 5}
   .lessonYard #view #map, .lessonRoad .view #map, .lessonStreet .screen .map canvas {max-width: 29vw}
 }
-@media (orientation: landscape) and (max-height: 540px) and (min-width: 600px) {
+@media (orientation: landscape) and (max-height: 540px) and (min-width: 520px) {
   .lessonYard .controls {display: contents}
   .lessonYard .lessonPedals, .lessonYard .lessonSwitches {display: grid; grid-template-columns: repeat(2,minmax(0,1fr))}
   .lessonYard .lessonPedals {grid-template-columns: repeat(4,minmax(0,1fr))}
-  .lessonYard #view {grid-row: 2 / 5}
+  .lessonYard #view {grid-row: 2 / 5; height: calc(100dvh - 80px)}
+  .lessonRoad .view {height: calc(100dvh - 96px)}
   .lessonYard .lessonPedals {grid-column: 2; grid-row: 2}
   .lessonYard .panel {grid-column: 2; grid-row: 3}
   .lessonYard .lessonSwitches {grid-column: 2; grid-row: 4}
+  .lessonRoad .pedals {grid-row: 2}
+  .lessonRoad .dash {grid-row: 3}
+}
+@media (any-pointer: coarse) and (orientation: landscape) and (max-height: 540px) {
+  .lessonStreet header {height: 44px}
+  .lessonStreet main {padding-block: 6px}
+  .lessonStreet #courseSelect:disabled {display: none}
+  .lessonStreet .grid {grid-template-columns: minmax(0,1fr)}
+  .lessonStreet .screen:not(:fullscreen) {height: calc(100dvh - 56px); min-height: 0}
+  .lessonStreet .cover {padding: 12px 20px}
+  .lessonStreet .cover h1 {font-size: clamp(32px,12dvh,52px)}
 }
