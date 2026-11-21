@@ -141,21 +141,43 @@ function createMappedTrafficLights(T,scene,small){
     pose.position.set(x,y,z);pose.scale.set(1,height,1);pose.rotation.set(0,-yaw,0);
     pose.updateMatrix();mesh.setMatrixAt(i,pose.matrix);
   }
-  function rebuild(graph,edges,cx,cz,ground){
+  function rebuild(graph,edges,cx,cz,ground,roadsAt,siteClear){
     const candidates=[];
     for(const edge of edges)for(const point of edge.controls||[]){
       for(const dir of edge.oneway?[1]:[1,-1]){
         if(!signalApplies(point,edge,dir))continue;
         const p=graph.sample({edge,dir,s:point.s},worldRoadHalfWidth(edge)+.65);
         const x=p.x-cx,z=p.z-cz,distance=Math.hypot(x,z);
-        if(distance<450)candidates.push({x,z,yaw:p.yaw,distance,node:point.node,edge,s:point.s});
+        if(distance<450)candidates.push({yaw:p.yaw,distance,node:point.node,edge,dir,s:point.s});
+      }
+    }
+    function roadside(p){
+      const half=worldRoadHalfWidth(p.edge);
+      // Prefer the far right corner so the signal stays visible from the stop line.
+      // A mapped approach often ends at the centre; project its last tangent across the junction.
+      for(const extra of [0,2,5])for(const lead of [0,3,6,10,15,22,32,-3,-6,-10,-15,-22,-32]){
+        const station=p.s+lead*p.dir,s=Math.max(0,Math.min(p.edge.length,station));
+        if(lead<0&&s!==station)continue;
+        const at=graph.sample({edge:p.edge,dir:p.dir,s},half+.75+extra);
+        const beyond=(station-s)*p.dir;
+        at.x+=Math.sin(at.yaw)*beyond;at.z-=Math.cos(at.yaw)*beyond;
+        const x=at.x-cx,z=at.z-cz,y=ground(at.x,at.z,p.edge,s);
+        const overlaps=roadsAt(x,z).some(road=>{
+          const along=Math.max(0,Math.min(road.len,(x-road.ax)*road.fx+(z-road.az)*road.fz));
+          if(Math.hypot(x-road.ax-road.fx*along,z-road.az-road.fz*along)>=road.w+.45)return false;
+          const roadY=ground(at.x,at.z,road.source,road.station+along);
+          return Math.abs(y-roadY)<4.5;
+        });
+        if(!overlaps&&siteClear(at.x,at.z,y,p.edge))return {x,y,z,yaw:at.yaw};
       }
     }
     active=[];
     for(const p of candidates.sort((a,b)=>a.distance-b.distance)){
       if(active.length===capacity)break;
       if(active.some(q=>p.node===q.node&&Math.cos(p.yaw-q.yaw)>.86))continue;
-      const {x,z,yaw}=p,i=active.length,y=ground(x+cx,z+cz,p.edge,p.s);
+      const site=roadside(p);
+      if(!site)continue;
+      const {x,y,z,yaw}=site,i=active.length;
       active.push(p);place(poles,i,x,y+1.65,z,3.3,yaw);place(heads,i,x,y+3.65,z,1,yaw);
       for(let j=0;j<3;j++)place(bulbs,3*i+j,x-.19*Math.sin(yaw),y+4.03-j*.38,z+.19*Math.cos(yaw),1,yaw);
     }

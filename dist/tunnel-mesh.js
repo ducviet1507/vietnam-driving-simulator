@@ -23,12 +23,12 @@
   window.buildTunnelMeshes=function(T,{graph,edges,cx,cz,radius,group,height,ground,material,registerObstacle}){
     const ways=edges.filter(e=>graph.tunnels.info(e));
     if(!ways.length)return;
-    if(!finishes.has(material))finishes.set(material,{
+    if(!finishes.has(material)){
       // Tunnels stay legible at night. The vertex tones bake the variation
       // between lamps without a point light and shadow pass for every fixture.
-      lining:new T.MeshLambertMaterial({vertexColors:true,side:T.DoubleSide,emissive:0x35342f,emissiveIntensity:.43}),
-      light:new T.MeshBasicMaterial({vertexColors:true,side:T.DoubleSide,toneMapped:false})
-    });
+      const lining=new T.MeshLambertMaterial({vertexColors:true,side:T.DoubleSide,emissive:0x35342f,emissiveIntensity:.43});
+      finishes.set(material,{lining,exterior:lining.clone(),light:new T.MeshBasicMaterial({vertexColors:true,side:T.DoubleSide,toneMapped:false})});
+    }
     const materials=finishes.get(material),batches=new Map(),color=new T.Color();
     const portals=new Set(),partitions=new Map(),sections=new Map();
     const mix=(a,b,f)=>a+(b-a)*f;
@@ -54,6 +54,7 @@
       }
     }
     const face=(a,b,c,d,shade)=>put(materials.lining,shade,a,b,c,d);
+    const exteriorFace=(a,b,c,d,shade)=>put(materials.exterior,shade,a,b,c,d);
     const light=(a,b,c,d,shade)=>put(materials.light,shade,a,b,c,d);
     const point=(r,o,h=0)=>({x:r.x+r.nx*o,y:r.y+h,z:r.z+r.nz*o,o,s:r.s,lit:r.lit});
     function band(draw,a,b,offset1,y1,offset2,y2,tint){
@@ -136,16 +137,16 @@
         for(let k=shared?2:0;k<shape.length-1;k++){
           const [o,h]=shape[k],[oo,hh]=shape[k+1];
           const exterior=(offset,y)=>point(out,offset+(shared?0:sign*.52*Math.abs(offset)/r.sides[i].w),y+(y/q.crown)*.54);
-          face(point(out,o,h),point(out,oo,hh),exterior(oo,hh),exterior(o,h),0xc3c1b5);
-          face(exterior(o,h),exterior(oo,hh),point(inner,oo+(shared?0:sign*.52*Math.abs(oo)/r.sides[i].w),hh+(hh/q.crown)*.54),
+          exteriorFace(point(out,o,h),point(out,oo,hh),exterior(oo,hh),exterior(o,h),0xc3c1b5);
+          exteriorFace(exterior(o,h),exterior(oo,hh),point(inner,oo+(shared?0:sign*.52*Math.abs(oo)/r.sides[i].w),hh+(hh/q.crown)*.54),
             point(inner,o+(shared?0:sign*.52*Math.abs(o)/r.sides[i].w),h+(h/q.crown)*.54),0xa3a49a);
-          face(point(out,o,h),point(out,oo,hh),point(inner,oo,hh),point(inner,o,h),0x9b9d93);
+          exteriorFace(point(out,o,h),point(out,oo,hh),point(inner,oo,hh),point(inner,o,h),0x9b9d93);
         }
         if(shared)continue;
         const x=r.sides[i].w*sign;
         for(let j=0;j<6;j++){
           const h=.22+j*.22,faceRow=move(out,-dir*.016);
-          face(point(faceRow,x,h),point(faceRow,x+sign*.43,h+.16),point(faceRow,x+sign*.43,h+.36),
+          exteriorFace(point(faceRow,x,h),point(faceRow,x+sign*.43,h+.16),point(faceRow,x+sign*.43,h+.36),
             point(faceRow,x,h+.20),j%2?0x494b44:0xe0bd61);
         }
       }
@@ -179,23 +180,17 @@
           if(bore&&lo<.001)portal(edge,a,q,1);
           for(const s of stations.slice(1)){
             const c=row(s);
-            const floorSide=(r,i)=>r.sides[i].shared?r.sides[i].w:Math.min(half,r.sides[i].w-.12);
-            put(floorMaterial,0,point(a,-floorSide(a,0),.004),point(a,floorSide(a,1),.004),
-              point(c,floorSide(c,1),.004),point(c,-floorSide(c,0),.004),half);
+            put(floorMaterial,0,point(a,-a.sides[0].w,.004),point(a,a.sides[1].w,.004),
+              point(c,c.sides[1].w,.004),point(c,-c.sides[0].w,.004),half);
             for(const [idx,sign] of [[0,-1],[1,1]]){
               const side=a.sides[idx],next=c.sides[idx],oa=side.w*sign,ob=next.w*sign;
               const branch=[edge.start,edge.end].some((n,j)=>openings(n).length>2&&(j?edge.length-a.s:s)<q.innerHalfWidth*1.75);
               const open=side.shared&&next.shared||branch;
-              if(!open){
-                const fa=sign*floorSide(a,idx),fb=sign*floorSide(c,idx);
-                face(point(a,fa,.004),point(c,fb,.004),point(c,fb,.15),point(a,fa,.15),0x979a8e);
-                face(point(a,fa,.15),point(c,fb,.15),point(c,ob,.15),point(a,oa,.15),0xaaa99e);
-              }
               if(!bore){
                 const pa=point(a,oa),pc=point(c,ob);
                 const hA=Math.max(0,ground(pa.x,pa.z)-a.y+.08),hC=Math.max(0,ground(pc.x,pc.z)-c.y+.08);
                 if(!open&&Math.max(hA,hC)>.15){
-                  face(pa,pc,point(c,ob,hC),point(a,oa,hA),0xafb0a2);
+                  exteriorFace(pa,pc,point(c,ob,hC),point(a,oa,hA),0xafb0a2);
                   obstacle(a,c,oa,ob,'trench:'+edge.id+':'+idx+':'+s,Math.min(hA,hC));
                 }
                 continue;
@@ -213,9 +208,9 @@
               obstacle(a,c,oa,ob,'tunnel:'+edge.id+':'+idx+':'+s,q.spring);
             }
             const paint=(from,to,l,r,col)=>{
-              const x=row(from),z=row(to),left=Math.max(l,-Math.min(floorSide(x,0),floorSide(z,0))),
-                right=Math.min(r,Math.min(floorSide(x,1),floorSide(z,1)));
-              if(right>left)band(face,x,z,left,.025,right,.025,col==='yellow'?0xe9c369:0xe4e4d4);
+              const x=row(from),z=row(to),left=Math.max(l,-x.sides[0].w,-z.sides[0].w),
+                right=Math.min(r,x.sides[1].w,z.sides[1].w);
+              if(right>left)band(bore?face:exteriorFace,x,z,left,.025,right,.025,col==='yellow'?0xe9c369:0xe4e4d4);
             };
             roadPaint(edge,layout,half,a.s,s,paint);
             if(bore&&(motorRoad(edge)||edge.length>40)){
@@ -240,8 +235,12 @@
       if(batch.painted)g.setAttribute('color',new T.Float32BufferAttribute(batch.col,3));
       else{g.setAttribute('uv',new T.Float32BufferAttribute(batch.uv,2));g.setAttribute('carriageway',new T.Float32BufferAttribute(batch.road,2));}
       g.computeVertexNormals();
-      const mesh=new T.Mesh(g,mat);mesh.name=mat===materials.lining?'Tunnel linings and portals':mat===materials.light?'Tunnel luminaires':'Tunnel carriageways';
-      mesh.castShadow=mat===materials.lining;mesh.receiveShadow=mat!==materials.light;group.add(mesh);
+      const mesh=new T.Mesh(g,mat);
+      mesh.name=mat===materials.lining?'Tunnel inner lining':mat===materials.exterior?'Tunnel portals and approaches':
+        mat===materials.light?'Tunnel luminaires':'Tunnel carriageways';
+      // The roof still shades the road. Coarse outdoor shadow maps leave sawtooth edges on the inside wall.
+      mesh.castShadow=mat===materials.lining||mat===materials.exterior;
+      mesh.receiveShadow=mat!==materials.lining&&mat!==materials.light;group.add(mesh);
     }
     return portals;
   };

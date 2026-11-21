@@ -36,9 +36,17 @@ approach.profile.ranges=[[20,50]];exit.profile.ranges=[[0,30]];
 const result=render([approach,inbound,outbound,exit]);
 assert.deepEqual(result.portals,[2,4]);
 assert.deepEqual(render([outbound]).portals,[4],'streaming an adjacent tunnel edge out of view creates no portal');
-assert.equal(result.group.children.length,3,'dedicated batches for lining, pavement and lights');
 const floor=result.group.children.find(o=>o.name==='Tunnel carriageways');
+const lining=result.group.getObjectByName('Tunnel inner lining'),outside=result.group.getObjectByName('Tunnel portals and approaches');
+assert.ok(lining.castShadow&&!lining.receiveShadow&&outside.receiveShadow&&floor.receiveShadow);
 floor.geometry.computeBoundingBox();
+const wall=world.tunnelSection(inbound,graph).innerHalfWidth;
+assert.ok(Math.abs(floor.geometry.boundingBox.max.z-wall)<.00001&&Math.abs(floor.geometry.boundingBox.min.z+wall)<.00001);
+assert.ok(Math.abs(floor.geometry.boundingBox.max.y-(-5+.004))<.00001);
+const vertices=lining.geometry.attributes.position;
+for(let i=0;i<vertices.count;i++){
+  assert.ok(Math.abs(vertices.getY(i)-(-5+.15))>.00001,'no raised curb inside the tunnel');
+}
 assert.equal(floor.geometry.boundingBox.min.x,-80,'only the mapped depressed part of the first approach is rebuilt');
 assert.equal(floor.geometry.boundingBox.max.x,90,'the ramp terminates at the undisturbed street');
 assert.ok(result.hits.some(h=>h.id.startsWith('trench:1:')&&h.baseY===-5));

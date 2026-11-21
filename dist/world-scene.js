@@ -571,7 +571,7 @@
           if(hi<=lo)continue;
           const a=graph.sample({edge,s:lo,dir:1}),b=graph.sample({edge,s:hi,dir:1});
           const ax=a.x-cx,az=a.z-cz,bx=b.x-cx,bz=b.z-cz,len=hi-lo;
-          const seg={ax,az,bx,bz,len,w,fx:(bx-ax)/len,fz:(bz-az)/len,elevated:true};
+          const seg={ax,az,bx,bz,len,w,fx:(bx-ax)/len,fz:(bz-az)/len,elevated:true,source:edge,station:lo};
           bounds(seg,w+9,key=>{if(!cells.has(key))cells.set(key,[]);cells.get(key).push(seg);});
         }
       }
@@ -1063,7 +1063,8 @@
       streetLife.rebuild(graph,cx,cz,segments,(x,z,r)=>!blocked(x-cx,z-cz,r)&&!contact(x,z,r));
       const signGround=(x,z,e,s)=>graph?.tunnels.info(e)?tunnels.height(e,s):bridges?.bridgeInfo(e)?bridges.height(e,s):driveGround(x,z);
       rebuildSigns(graph,edges,cx,cz,(x,z,r)=>!blocked(x-cx,z-cz,r)&&!contact(x,z,r),signGround,registerObstacle);
-      mappedLights.rebuild(graph,edges,cx,cz,signGround);
+      mappedLights.rebuild(graph,edges,cx,cz,signGround,(x,z)=>cells.get(nearbyCell(x,z))||[],
+        (x,z,y,edge)=>!contact(x,z,.45,y,edge));
       breakfast.place(graph,cx,cz,segments,(x,z,r)=>!blocked(x,z,r)&&!contact(x+cx,z+cz,r),driveGround);
       centralStreetscapes?.place(graph,cx,cz,segments,(x,z,r)=>!blocked(x,z,r)&&!contact(x+cx,z+cz,r),driveGround,district.streetFronts,streetLife.places);
       shadowStamp=-1000;

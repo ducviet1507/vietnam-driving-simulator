@@ -4,7 +4,7 @@ import {runInNewContext} from 'node:vm';
 import {createRequire} from 'node:module';
 
 const T=createRequire(import.meta.url)('../../dist/three.min.js');
-const world={};world.window=world;
+const world={performance};world.window=world;
 for(const name of ['world-scene','world-road-traffic','bridge-mesh']){
   runInNewContext(readFileSync(new URL('../../dist/'+name+'.js',import.meta.url),'utf8'),world);
 }
@@ -38,6 +38,20 @@ const signal=world.roadControlAhead({sample:()=>({yaw:0})},{edge,s:10,dir:1},0,t
 assert.equal(signal.stopLineOffset,2.5);
 assert.equal(world.roadSignalPhase(Math.PI/4,0),world.roadSignalPhase(5*Math.PI/4,0));
 assert.notEqual(world.roadSignalPhase(Math.PI/4,0),world.roadSignalPhase(3*Math.PI/4,0));
+
+const signalScene=new T.Scene(),lights=world.createMappedTrafficLights(T,signalScene,true);
+const roadGraph={sample:({s,dir},offset)=>({x:dir*offset,z:-s,yaw:dir>0?0:Math.PI})};
+const crossRoad={ax:-20,az:-20,fx:1,fz:0,len:40,w:6,source:{},station:0};
+function poleAt(crossHeight){
+  lights.rebuild(roadGraph,[edge],0,0,(_x,_z,source)=>source===edge?0:crossHeight,()=>[crossRoad],()=>true);
+  const poles=signalScene.children[0],matrix=new T.Matrix4();
+  assert.equal(poles.count,1);
+  poles.getMatrixAt(0,matrix);
+  return new T.Vector3().setFromMatrixPosition(matrix);
+}
+const corner=poleAt(0);
+assert.ok(corner.x>half&&corner.z<crossRoad.az-crossRoad.w-.45,'signal is visible beyond the far right corner');
+assert.equal(poleAt(8).z,-20,'a road on a separate deck does not displace the pole');
 
 const material={};
 for(const finish of ['asphalt','earth','pavers','roadConcrete','roadSlabs','roadWood','roadMetal'])
