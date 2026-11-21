@@ -38,14 +38,16 @@ function save(){
  try{localStorage.setItem('taylai.world.trip',JSON.stringify({lon,lat,navigation,label:source[0],destination:source[3]?.id,distance,passes,dir:player.dir,edge:player.edge.id,yaw:car.yaw,origin:[roads.lon,roads.lat]}));}catch{}
 }
 function parkOnRoad(){
- const p=roads.sample(player,stance());car.flood=null;car.wading=null;car.accessLane=false;DriveBody.reset(car);Object.assign(car,p);cooldown=1;
+ const p=roads.sample(player,stance());car.flood=null;car.wading=null;car.accessLane=false;car.offroad=false;car.edge=player.edge;car.deckLift=roads.bridges.lift(player.edge,player.s);DriveBody.reset(car);Object.assign(car,p);cooldown=1;
 }
 function trackRoad(){
  const around=roads.nearby(car.x,car.z,22);
- const nearest=roads.nearest(car.x,car.z,around);
+ const nearest=roads.nearest(car.x,car.z,around,car.deckLift||0);
  const onNetwork=nearest&&nearest.error<=worldRoadHalfWidth(nearest.edge)**2;
  car.accessLane=!onNetwork&&districtView?.graph===roads&&gfx.accessLane(car.x,car.z);
  car.offroad=!onNetwork&&!car.accessLane;
+ car.edge=onNetwork?nearest.edge:null;
+ car.deckLift=onNetwork?roads.bridges.lift(nearest.edge,nearest.s):0;
  if(!nearest){player.error=Infinity;return;}
  const bearing=roads.sample(nearest).yaw;
  nearest.dir=Math.cos(car.yaw-bearing)>=0?1:-1;player=nearest;
@@ -141,12 +143,18 @@ async function startAt(place,restore=null,guided=null){
    const accessEdge=atEntrance&&graph.edges.get(site.accessRoad);
    if(atEntrance&&!accessEdge)throw Error('Chưa tải được đường vào địa danh. Hãy thử lại.');
    let nearest=accessEdge?graph.nearest(start.x,start.z,[accessEdge]):graph.nearest(start.x,start.z);
+   const savedEdge=restore&&graph.edges.get(restore.edge);
+   if(savedEdge){
+     const saved=graph.nearest(start.x,start.z,[savedEdge]);
+     if(saved&&saved.error<=(worldRoadHalfWidth(savedEdge)+2)**2)nearest=saved;
+   }
    if(!nearest||nearest.error>4000**2){await graph.load(start.x,start.z,true);nearest=graph.nearest(start.x,start.z);}
    if(token!==loadToken)return;
    if(!nearest||nearest.error>28000**2)throw Error('Chưa có đường ô tô gần điểm này. Hãy chọn điểm khác trên bản đồ.');
    const sight=site||VietnamLandmarks.entries.find(v=>place[0]===v.name+' · '+v.city);
    if(sight)place=[place[0],place[1],place[2],sight];
    car.tourStop=Boolean(sight?.custom||sight&&VietnamLandmarks.entries.includes(sight));
+   car.tourStopId=sight?.id;
    const view=departure?.view||(atEntrance&&site.departureView);
    car.departureView=view?{...view,...graph.point(site.lon,site.lat),yaw:site.yaw}:null;
    const bearing=firstDrive?104:samePlace(place,baSaoDrive)?12:sight?.bearing;
@@ -205,7 +213,7 @@ function branchAhead(){
 function branchText(a){return a<-.38?'Trái':a>.38?'Phải':'Thẳng';}
 function recover(){
  if(!player)return;
- const nearest=roads.nearest(car.x,car.z);if(nearest)player=nearest;
+ const nearest=roads.nearest(car.x,car.z,roads.nearby(car.x,car.z,60),car.deckLift||0);if(nearest)player=nearest;
  parkOnRoad();inform('Đã đặt xe trở lại mặt đường.');
 }
 function spawnAhead(ahead,index){
@@ -222,7 +230,7 @@ function addNpc(c,i){
  const p=roads.sample(c,offset);
  if(Math.hypot(car.x-p.x,car.z-p.z)<16||npcs.some(n=>Math.hypot(p.x-n.x,p.z-n.z)<13))return;
  const pace=(kind==='scooter'?6:kind==='rival'?21:9)+Math.random()*4;
- npcs.push({...c,...p,kind,id:nextNpc++,speed:Math.min(pace,(roadSpeedLimit(c)??160)/3.6),pace,stopped:0});
+ npcs.push({...c,...p,deckLift:roads.bridges.lift(c.edge,c.s),kind,id:nextNpc++,speed:Math.min(pace,(roadSpeedLimit(c)??160)/3.6),pace,stopped:0});
 }
 function seedTraffic(){
  const target=gfx.streetLife.activity(roads,car.x,car.z,player.edge.kind).vehicles;
@@ -253,11 +261,11 @@ function trafficStep(dt){
    const stopAt=wait?Math.max(0,control.distance-3.5):Infinity;
    if(wait)target=Math.min(target,Math.sqrt(7*stopAt));
    for(const other of npcs){
-     if(other===n)continue;const ox=other.x-n.x,oz=other.z-n.z,long=ox*fx+oz*fz;
+     if(other===n||Math.abs(other.deckLift-n.deckLift)>2.5)continue;const ox=other.x-n.x,oz=other.z-n.z,long=ox*fx+oz*fz;
      if(long>0&&long<15&&Math.abs(ox*fz-oz*fx)<1.65)target=Math.min(target,Math.max(0,(long-4)*1.3));
    }
    const ahead=dx*fx+dz*fz;
-   if(ahead>0&&ahead<17&&Math.abs(dx*fz-dz*fx)<1.75)target=Math.min(target,Math.max(0,(ahead-5)*1.2));
+   if(Math.abs(car.deckLift-n.deckLift)<=2.5&&ahead>0&&ahead<17&&Math.abs(dx*fz-dz*fx)<1.75)target=Math.min(target,Math.max(0,(ahead-5)*1.2));
    n.speed=fallen?0:n.speed+clamp(target-n.speed,-9*dt,2.8*dt);
    const moved=roads.advance(n,Math.min(stopAt,n.speed*dt),options=>{
      const opts=n.kind==='scooter'?options.filter(o=>!o.edge.kind.startsWith('motorway')):options;
@@ -266,9 +274,10 @@ function trafficStep(dt){
    if(moved<.001&&!fallen&&!wait&&target>0)n.stopped+=dt;else n.stopped=0;
    const pos=roads.sample(n,roadLaneOffset(n,n.kind==='scooter'));
    const landing=DriveBody.advanceRecoil(n,dt);Object.assign(n,pos);
+   n.deckLift=roads.bridges.lift(n.edge,n.s);
    if(n.recoil){n.x+=n.recoil.x;n.z+=n.recoil.z;n.yaw+=n.recoil.angle;}
    if(n.recoil){
-     const wet=gfx.waterAt(n.x,n.z);
+     const wet=gfx.waterAt(n.x,n.z,n.edge);
      if(wet&&wet.level-wet.bed>.55&&n.recoil.y<.6){
        startFlood(n,wet,n.recoil.vx,n.recoil.vz);continue;
      }
@@ -276,7 +285,7 @@ function trafficStep(dt){
    if(fallen)wreckContact(n);
    landingFx(n,landing);
    const along=(car.x-n.x)*fx+(car.z-n.z)*fz,across=(car.x-n.x)*fz-(car.z-n.z)*fx;
-   const parallel=Math.cos(car.yaw-n.yaw)>.88&&Math.abs(across)<9;
+   const parallel=Math.abs(car.deckLift-n.deckLift)<=2.5&&Math.cos(car.yaw-n.yaw)>.88&&Math.abs(across)<9;
    if(parallel&&along< -4&&along> -18)n.armed=true;
    if(!parallel||Math.abs(along)>32)n.armed=false;
    if(n.armed&&parallel&&along>4&&car.speed>n.speed&&cooldown<=0&&!n.passed){
@@ -286,7 +295,7 @@ function trafficStep(dt){
  }
 }
 function hitVehicle(n){
- if(n.recoil?.y>1.35)return;
+ if(n.recoil?.y>1.35||Math.abs(car.deckLift-n.deckLift)>2.5)return;
  const bike=n.kind==='scooter',hit=DriveBody.contact(car,n,bike?.38:.91,bike?.95:1.98);
  if(!hit)return;
  const impact=DriveBody.resolve(car,hit,Math.sin(n.yaw)*n.speed+(n.recoil?.vx||0),-Math.cos(n.yaw)*n.speed+(n.recoil?.vz||0),n);
@@ -305,7 +314,7 @@ const pit=createPitQuiz($('pit'),()=>'Chú Tư lắc đầu. Chọn lại đáp 
 function wreckContact(n){
  const r=n.recoil;
  if(Math.hypot(r.vx,r.vz)<.08)return;
- const hit=gfx.contact(n.x,n.z,.59);
+ const hit=gfx.contact(n.x,n.z,.59,gfx.ground(n.x,n.z,n.edge)+r.y);
  if(!hit||r.y>(hit.height??(hit.kind==='water'?.15:7)))return;
  r.kind='scooter';r.yaw=n.yaw;
  const x=r.x,z=r.z,event=DriveBody.resolve(r,hit);
@@ -357,7 +366,7 @@ function advanceFlood(actor,dt){
  f.pitch+=(Math.min(.21,(f.level-f.y)*.16)-f.pitch)*(1-Math.exp(-dt*2.6));
 }
 function waterStep(dt){
- const wet=gfx.waterAt(car.x,car.z);
+ const wet=gfx.waterAt(car.x,car.z,car.edge);
  if(!wet){car.wading=null;return;}
  const depth=wet.level-wet.bed;
  if(depth>.6){startFlood(car,wet,car.vx,car.vz);return;}
@@ -371,17 +380,18 @@ function tick(dt){
  const gas=held('w','arrowup'),reverse=held('s','arrowdown'),brake=held(' '),boost=!car.wading&&held('shift')&&nitro>1&&!reverse&&!brake;
  nitro=clamp(nitro+(boost?-27:held('shift')?0:6)*dt,0,100);
  const x=car.x,z=car.z;
- DriveBody.step(car,{grade:gfx.grade(car.x,car.z,car.yaw),gas,reverse,brake,boost,steer:Number(held('d','arrowright'))-Number(held('a','arrowleft')),power:car.spec.power,top:car.spec.top},dt);
+ DriveBody.step(car,{grade:gfx.grade(car.x,car.z,car.yaw,car.edge),gas,reverse,brake,boost,steer:Number(held('d','arrowright'))-Number(held('a','arrowleft')),power:car.spec.power,top:car.spec.top},dt);
  const radius=car.spec.width?car.spec.width/2:.88;
  const probeOffset=car.spec.width?car.spec.length/2-radius:1.2;
  for(const axle of [probeOffset,-probeOffset]){
-   const cx=car.x+Math.sin(car.yaw)*axle,cz=car.z-Math.cos(car.yaw)*axle,hit=gfx.contact(cx,cz,radius);
+   const cx=car.x+Math.sin(car.yaw)*axle,cz=car.z-Math.cos(car.yaw)*axle,hit=gfx.contact(cx,cz,radius,gfx.ground(car.x,car.z,car.edge));
    if(!hit)continue;
    hit.axle=axle;const impact=DriveBody.resolve(car,hit);
    if(impact.closing>.7)hurt(hit.kind||'shoulder',impact,hit);
  }
+ trackRoad();
  if(mode==='drive')waterStep(dt);
- trackRoad();const moved=Math.hypot(car.x-x,car.z-z);distance+=moved;
+ const moved=Math.hypot(car.x-x,car.z-z);distance+=moved;
  if(mode!=='drive')return;
  if(guide && guide.timeMs===null && guide.update(player,!car.offroad&&!car.accessLane&&!car.flood)){
    guide.timeMs=Math.max(1,Math.round(performance.now()-guideStarted));
@@ -433,12 +443,15 @@ function updateHud(){
    if(distance<5000&&(!landmark||landmark.distance>distance))landmark={...p,distance,data:site};}
  $('landmark').hidden=!landmark;
  if(landmark)$('landmark').textContent=landmark.data.name+' · cách xe '+atlasDistance(landmark.distance/1000);
- const grade=Math.round(100*gfx.grade(car.x,car.z,car.yaw));
+ const grade=Math.round(100*gfx.grade(car.x,car.z,car.yaw,car.edge));
  const info=[],traffic=player.edge.traffic,limit=roadSpeedLimit(player);
  const onNetwork=!car.offroad&&!car.accessLane;
  if(onNetwork&&player.edge.visitorRoad)info.push('Đường tham quan mô phỏng');
  if(onNetwork&&traffic){
-   if(traffic.bridge)info.push('Cầu');
+   if(traffic.bridge){
+     const bridge=roads.bridges.profiles.get(player.edge.id);
+     info.push(bridge?.name||(/cầu vượt/i.test(player.edge.name)?'Cầu vượt':'Cầu'));
+   }
    if(traffic.tunnel)info.push('Hầm');
    if(traffic.lanes)info.push(traffic.lanes+' làn');
    if(limit)info.push('Giới hạn '+limit+' km/h');
@@ -1213,9 +1226,13 @@ async function fetchJSON(path){const r=await fetch(path);if(!r.ok)throw Error('C
 (async()=>{
  $('openMap').disabled=true;
  try{
-   const [roadIndex,trafficIndex]=await Promise.all([fetchJSON('vn-roads/index.json'),fetchJSON('vn-traffic/index.json').catch(()=>null)]);
+   const [roadIndex,trafficIndex,bridges,footbridges]=await Promise.all([
+     fetchJSON('vn-roads/index.json'),fetchJSON('vn-traffic/index.json').catch(()=>null),
+     fetchJSON('vn-bridges/details.json').catch(()=>null),fetchJSON('vn-bridges/footbridges.json').catch(()=>null)]);
    indexData=roadIndex;
    if(trafficIndex?.graphSourceSha256===roadIndex.sourceSha256&&trafficIndex.osmTimestamp===roadIndex.osmTimestamp)indexData.trafficTiles=trafficIndex.tiles;
+   if(bridges?.graphSourceSha256===roadIndex.sourceSha256)indexData.bridgeDetails=bridges.edges;
+   if(footbridges?.graphSourceSha256===roadIndex.sourceSha256)indexData.footbridgeTiles=footbridges.tiles;
    $('coverage').textContent=indexData.roadKm.toLocaleString('vi-VN')+' km đường · Dữ liệu '+new Date(indexData.osmTimestamp).toLocaleDateString('vi-VN');
    $('openingAtlas').disabled=false;$('openMap').disabled=false;$('travel').disabled=false;
    const params=new URLSearchParams(location.search),stage=mountainPlaces.find(p=>p.id===params.get('pass'));

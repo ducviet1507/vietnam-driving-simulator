@@ -87,14 +87,14 @@ function createMappedTrafficLights(T,scene,small){
         if(!signalApplies(point,edge,dir))continue;
         const p=graph.sample({edge,dir,s:point.s},worldRoadHalfWidth(edge)+.65);
         const x=p.x-cx,z=p.z-cz,distance=Math.hypot(x,z);
-        if(distance<450)candidates.push({x,z,yaw:p.yaw,distance,node:point.node});
+        if(distance<450)candidates.push({x,z,yaw:p.yaw,distance,node:point.node,edge,s:point.s});
       }
     }
     active=[];
     for(const p of candidates.sort((a,b)=>a.distance-b.distance)){
       if(active.length===capacity)break;
       if(active.some(q=>p.node===q.node&&Math.cos(p.yaw-q.yaw)>.86))continue;
-      const {x,z,yaw}=p,i=active.length,y=ground(x+cx,z+cz);
+      const {x,z,yaw}=p,i=active.length,y=ground(x+cx,z+cz,p.edge,p.s);
       active.push(p);place(poles,i,x,y+1.65,z,3.3,yaw);place(heads,i,x,y+3.65,z,1,yaw);
       for(let j=0;j<3;j++)place(bulbs,3*i+j,x-.19*Math.sin(yaw),y+4.03-j*.38,z+.19*Math.cos(yaw),1,yaw);
     }

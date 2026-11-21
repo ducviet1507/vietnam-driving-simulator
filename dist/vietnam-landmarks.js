@@ -1063,7 +1063,7 @@ window.VietnamLandmarks=(()=>{
         for(const resource of resources)resource.dispose();
       }
     }
-    function setOrigin(graph,cx,cz,ground=()=>0){
+    function setOrigin(graph,cx,cz,ground=()=>0,deckHeight=null){
       for(const {mesh} of active)mesh.visible=false;
       active=[];
       if(!graph){prepareBuildingSites(null,cx,cz);return;}
@@ -1071,11 +1071,12 @@ window.VietnamLandmarks=(()=>{
         if(additions.has(data.id)&&!data.build)continue;
         const {x,z}=graph.point(data.lon,data.lat);if(Math.hypot(x-cx,z-cz)>(data.viewDistance??1050))continue;
         if(!cached.has(data.id)){const mesh=model(T,data.id);finishes.apply(mesh);mesh.userData.height=new T.Box3().setFromObject(mesh).max.y*(data.scale?.[1]||1);scene.add(mesh);cached.set(data.id,mesh);}
-        const mesh=cached.get(data.id);mesh.position.set(x-cx,ground(x,z),z-cz);mesh.rotation.y=data.yaw;mesh.visible=true;
+        const foundation=deckHeight&&modeledBridgeLengths[data.id]?(px,pz)=>deckHeight(px,pz)??ground(px,pz):ground;
+        const mesh=cached.get(data.id);mesh.position.set(x-cx,foundation(x,z),z-cz);mesh.rotation.y=data.yaw;mesh.visible=true;
         if(data.scale)mesh.scale.fromArray(data.scale);
         mesh.userData.placeLights?.();
         const c=Math.cos(data.yaw),s=Math.sin(data.yaw);
-        mesh.userData.fitGround?.((u,v)=>ground(x+u*c+v*s,z-u*s+v*c)-mesh.position.y);
+        mesh.userData.fitGround?.((u,v)=>foundation(x+u*c+v*s,z-u*s+v*c)-mesh.position.y);
         active.push({data,x,z,mesh,c,s});
       }
       trim();
@@ -1098,8 +1099,9 @@ window.VietnamLandmarks=(()=>{
         return Math.abs(u)<a.data.width/2+extra+padding&&Math.abs(v)<a.data.depth/2+extra+padding;
       });
     }
-    function contact(x,z,r=.95){
+    function contact(x,z,r=.95,y=null){
       for(const a of active){
+        if(y!==null&&modeledBridgeLengths[a.data.id]&&y+1.35<a.mesh.position.y)continue;
         const dx=x-a.x,dz=z-a.z,u=dx*a.c-dz*a.s,v=dx*a.s+dz*a.c;
         function solid(cx,cz,w,d){
           const lx=u-cx,lz=v-cz;

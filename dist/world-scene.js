@@ -161,16 +161,25 @@
     const temp=new T.Object3D(),tone=new T.Color();
     const roadsideImpact=createRoadsideImpact(T,scene,relief.ground);
     let roadway=relief.ground,shoreBed=()=>null,wooded=false;
-    let pavementLift=()=>0;
-    const driveGround=(x,z)=>{
+    let pavementLift=()=>0,bridges=null;
+    const driveGround=(x,z,edge)=>{
+      const deck=bridges?.at(x,z,edge);
+      if(deck!=null)return deck;
       const lift=pavementLift(x-originX,z-originZ);
       return lift?roadway(x,z)+lift:(shoreBed(x,z)??roadway(x,z));
     };
-    function driveGrade(x,z,yaw){
+    function driveGrade(x,z,yaw,edge){
       const dx=2.2*Math.sin(yaw),dz=-2.2*Math.cos(yaw);
+      // Sample the slope along the road's tangent so the edge of a raised deck
+      // doesn't induce a near-vertical roll when a tyre gets near the rail.
+      if(edge&&bridges?.at(x,z,edge)!=null){
+        const c=sceneGraph.nearest(x,z,[edge]),p=sceneGraph.sample(c);
+        const a=Math.max(0,c.s-2.2),b=Math.min(edge.length,c.s+2.2);
+        return (bridges.height(edge,b)-bridges.height(edge,a))/(b-a)*Math.cos(yaw-p.yaw);
+      }
       return (driveGround(x+dx,z+dz)-driveGround(x-dx,z-dz))/4.4;
     }
-    let roadGroup=null,originX=0,originZ=0,shadowStamp=-1000;
+    let roadGroup=null,sceneGraph=null,originX=0,originZ=0,shadowStamp=-1000;
     const streetBulbs=[],streetLights=Array.from({length:3},()=>{
       const light=new T.PointLight(0xffc88a,0,32,2);
       light.visible=false;scene.add(light);return light;
@@ -192,10 +201,14 @@
         }
       return o;
     }
-    function contact(x,z,r=.95){
+    function contact(x,z,r=.95,y=null){
       const px=x-originX,pz=z-originZ;
       let hit=null;
       for(const o of obstacleCells.get(obstacleKey(px,pz))||[]){
+        if(y!==null){
+          const base=o.baseY??relief.ground(x,z);
+          if(y+1.35<base||y>base+(o.height??7)+.12)continue;
+        }
         const dx=px-o.x,dz=pz-o.z;
         let nx,nz,depth;
         if(o.radius){
@@ -212,7 +225,7 @@
         }
         if(depth>0&&(!hit||depth>hit.depth))hit={nx,nz,depth,kind:o.kind,id:o.id,height:o.height,pointX:x+nx*(depth-r),pointZ:z+nz*(depth-r)};
       }
-      return hit||landmarks?.contact(x,z,r)||district.contact(x,z,r);
+      return hit||landmarks?.contact(x,z,r,y)||(y===null||y<relief.ground(x,z)+3?district.contact(x,z,r):null);
     }
     function discardRoads(){
       if(!roadGroup)return;scene.remove(roadGroup);
@@ -224,8 +237,10 @@
       if(graph)atmosphere.setLocation(...graph.geo(cx,cz));
       landscapes.setOrigin(graph);
       relief.setOrigin(graph,cx,cz);
+      sceneGraph=graph;
+      bridges=graph?createBridgeDistrict(graph,edges,cx,cz,relief.ground):null;
       const localGround=(x,z)=>relief.ground(cx+x,cz+z);
-      landmarks?.setOrigin(graph,cx,cz,relief.ground);
+      landmarks?.setOrigin(graph,cx,cz,relief.ground,bridges?.signatureHeight);
       grounds.prepare(graph,cx,cz,landmarks);
       const vistas=[];
       if(graph)for(const site of VietnamLandmarks.entries){
@@ -442,7 +457,8 @@
           quad(target,ax+s.nx*l,az+s.nz*l,ax+s.nx*r,az+s.nz*r,bx+s.nx*l,bz+s.nz*l,bx+s.nx*r,bz+s.nz*r);
         }
       }
-      for(const e of edges){
+      const groundEdges=graph?bridgeGroundEdges(graph,edges):edges;
+      for(const e of groundEdges){
         const width=window.worldRoadHalfWidth(e);
         const finish=e.traffic?.surface;
         const loose=/^(unpaved|gravel|fine_gravel|compacted|dirt|earth|ground|sand|mud)$/.test(finish);
@@ -450,7 +466,7 @@
         const cityStreet=e.kind==='residential'||e.kind==='living_street'||/^phố\s/i.test(e.name);
         for(const point of e.controls||[]){
           if(!(point.flags&2)||crossings.has(point.node))continue;
-          const p=graph.sample({edge:e,dir:1,s:point.s}),x=p.x-cx,z=p.z-cz;
+          const p=graph.sample({edge:e.sourceEdge||e,dir:1,s:point.s}),x=p.x-cx,z=p.z-cz;
           if(Math.hypot(x,z)>cutoff)continue;
           crossings.add(point.node);
           const fx=Math.sin(p.yaw),fz=-Math.cos(p.yaw),nx=-fz,nz=fx;
@@ -500,6 +516,19 @@
         }
       }
       // Share the formation height at every OSM node to keep joined ribbons continuous.
+      // Keep generated trees, shop plots and street furniture out of the bridge
+      // footprint. Upper decks never enter the ground-level sidewalk contours.
+      if(bridges)for(const edge of bridges.edges){
+        const w=worldRoadHalfWidth(edge);
+        for(const [start,end] of bridges.bridgeInfo(edge).ranges)for(let i=1;i<edge.dist.length;i++){
+          const lo=Math.max(start,edge.dist[i-1]),hi=Math.min(end,edge.dist[i]);
+          if(hi<=lo)continue;
+          const a=graph.sample({edge,s:lo,dir:1}),b=graph.sample({edge,s:hi,dir:1});
+          const ax=a.x-cx,az=a.z-cz,bx=b.x-cx,bz=b.z-cz,len=hi-lo;
+          const seg={ax,az,bx,bz,len,w,fx:(bx-ax)/len,fz:(bz-az)/len,elevated:true};
+          bounds(seg,w+9,key=>{if(!cells.has(key))cells.set(key,[]);cells.get(key).push(seg);});
+        }
+      }
       const crestNodes=new Map(),nodeKey=(x,z)=>Math.round((cx+x)*10)+','+Math.round((cz+z)*10);
       for(const s of segments)if(s.graded){
         for(const [x,z,h] of [[s.ax,s.az,s.crown[0]],[s.bx,s.bz,s.crown.at(-1)]]){
@@ -615,7 +644,7 @@
         const start=openNearEnd(s,s.ax,s.az),end=s.len-openNearEnd(s,s.bx,s.bz);
         if(s.authoredPavement)continue;
         if(s.walkWidth)bounds(s,s.w+5,key=>{
-          for(const neighbour of cells.get(key)||[])walkRoads.add(neighbour);
+          for(const neighbour of cells.get(key)||[])if(!neighbour.elevated)walkRoads.add(neighbour);
         });
         if(end<=start)continue;
         const mid=(start+end)/2,mx=s.ax+s.fx*mid,mz=s.az+s.fz*mid;
@@ -705,7 +734,7 @@
           }
         }
       }
-      traceSidewalks(walkRoads,(x,z)=>cells.get(nearbyCell(x,z))||[],walks.sidewalk,(s,a,b,c)=>{
+      traceSidewalks(walkRoads,(x,z)=>(cells.get(nearbyCell(x,z))||[]).filter(s=>!s.elevated),walks.sidewalk,(s,a,b,c)=>{
         if(Math.abs((b[0]-a[0])*(c[1]-a[1])-(b[1]-a[1])*(c[0]-a[0]))<.00001)return;
         const mat=s.roadMaterial;
         if(!aprons.has(mat))aprons.set(mat,[]);
@@ -984,9 +1013,10 @@
         b.poses.forEach((pose,i)=>{m.setMatrixAt(i,pose);if(tinted)m.setColorAt(i,tone.set(b.colors[i]??0xffffff));});
         m.castShadow=b.mat!=='vergeGrass';m.receiveShadow=true;roadGroup.add(m);
       }
+      if(bridges)buildBridgeMeshes(T,{...bridges,graph,cx,cz,radius:cutoff,group:roadGroup,material,ground:relief.ground,registerObstacle});
       streetLife.rebuild(graph,cx,cz,segments,(x,z,r)=>!blocked(x-cx,z-cz,r)&&!contact(x,z,r));
       rebuildSigns(graph,edges,cx,cz,(x,z,r)=>!blocked(x-cx,z-cz,r)&&!contact(x,z,r),driveGround,registerObstacle);
-      mappedLights.rebuild(graph,edges,cx,cz,driveGround);
+      mappedLights.rebuild(graph,edges,cx,cz,(x,z,e,s)=>bridges?.bridgeInfo(e)?bridges.height(e,s):driveGround(x,z));
       breakfast.place(graph,cx,cz,segments,(x,z,r)=>!blocked(x,z,r)&&!contact(x+cx,z+cz,r),driveGround);
       centralStreetscapes?.place(graph,cx,cz,segments,(x,z,r)=>!blocked(x,z,r)&&!contact(x+cx,z+cz,r),driveGround,district.streetFronts,streetLife.places);
       shadowStamp=-1000;
@@ -1120,8 +1150,8 @@
     let player=null,version=0;
     const players=new Map(),trafficItems=new Map(),pools=new Map();
     function pose(item,car,dt,near){
-      const pitch=Math.atan(driveGrade(car.x,car.z,car.yaw)),bank=Math.atan(driveGrade(car.x,car.z,car.yaw+Math.PI/2));
-      item.root.position.set(car.x-originX,(car.flood?.y??car.wading?.bed??driveGround(car.x,car.z))+.011,car.z-originZ);
+      const pitch=Math.atan(driveGrade(car.x,car.z,car.yaw,car.edge)),bank=Math.atan(driveGrade(car.x,car.z,car.yaw+Math.PI/2,car.edge));
+      item.root.position.set(car.x-originX,(car.flood?.y??car.wading?.bed??driveGround(car.x,car.z,car.edge))+.011,car.z-originZ);
       item.root.rotation.set(car.flood?car.flood.pitch:-pitch,Math.PI-car.yaw,car.flood?0:-bank,'YXZ');
       if(near)item.request();
       const detailed=near&&!!item.detail;item.low.visible=!detailed;
@@ -1205,7 +1235,7 @@
       if(car.showroom&&car.departureView&&!inside){
         const v=car.departureView,offset=v.offset||0;
         const px=v.x+Math.sin(v.yaw)*offset,pz=v.z+Math.cos(v.yaw)*offset;
-        const ground=relief.ground(v.x,v.z),radius=v.radius/Math.min(1,camera.aspect*1.32);
+        const ground=(modeledBridgeLengths[car.tourStopId]?bridges?.signatureHeight(v.x,v.z):null)??relief.ground(v.x,v.z),radius=v.radius/Math.min(1,camera.aspect*1.32);
         look.set(px-originX,ground+v.focus,pz-originZ);
         eye.set(look.x+Math.sin(v.angle)*radius,ground+v.eye,look.z+Math.cos(v.angle)*radius);
         eye.y=Math.max(eye.y,relief.ground(eye.x+originX,eye.z+originZ)+1.5);
@@ -1225,7 +1255,8 @@
         const span=Math.abs(Math.cos(angle))*v.data.width+Math.abs(Math.sin(angle))*v.data.depth;
         const front=Math.abs(Math.sin(angle))*v.data.width+Math.abs(Math.cos(angle))*v.data.depth;
         const radius=(v.data.viewRadius??(Math.max(span/Math.max(.35,camera.aspect),v.height)*1.10+front*.40))*v.zoom;
-        const focus=relief.ground(v.x,v.z)+v.height*.46;
+        const base=(modeledBridgeLengths[v.data.id]?bridges?.signatureHeight(v.x,v.z):null)??relief.ground(v.x,v.z);
+        const focus=base+v.height*.46;
         look.set(v.x-originX,focus,v.z-originZ);
         camera.position.set(look.x+Math.sin(v.angle)*radius*Math.cos(v.elevation),focus+radius*Math.sin(v.elevation),
           look.z+Math.cos(v.angle)*radius*Math.cos(v.elevation));
@@ -1289,6 +1320,6 @@
       markerPoint.project(camera);
       return markerPoint.z>0 && markerPoint.z<1 && Math.abs(markerPoint.x)<.92 && Math.abs(markerPoint.y)<.9 ? markerPoint : null;
     }
-    return {hitDashboardMap,refreshMap:cabin.refreshMap,projectSummit,weather,streetLife,accessLane:grounds.accessLane,loadStructures:structures.load,preloadVehicle:loadModel,waterAt:(x,z)=>waterAt(x,z),terrainReady:relief.ready,grade:driveGrade,ground:driveGround,setRoads,render,resize:graphics.resize,contact,loadDistrict:async(g,x,z)=>(await Promise.all([district.load(g,x,z),osmBuildings.load(g,x,z),relief.loadLocal(g,x,z),landscapes.load(g,x,z),grounds.load(g,x,z),environment.load(g,x,z),amenities.load(g,x,z)])).some(Boolean),splash:(x,z,nx,nz,strength,level)=>driveFx.impact(x,z,nx,nz,strength,'water',level,.3),sightFootprint:district.footprint,nearLandmark:(x,z)=>landmarks?.nearest(x,z),reactToContact:roadsideImpact.react,impact:(x,z,nx,nz,s,k,h=0,g)=>driveFx.impact(x,z,nx,nz,s,k,driveGround(x,z)+h,g),scrape:(x,y,z,vx,vz)=>driveFx.scrape(x,driveGround(x,z)+y,z,vx,vz),resetFx(){driveFx.reset();roadsideImpact.reset();sightings.reset();}};
+    return {hitDashboardMap,refreshMap:cabin.refreshMap,projectSummit,weather,streetLife,accessLane:grounds.accessLane,loadStructures:structures.load,preloadVehicle:loadModel,waterAt:(x,z,edge)=>{const wet=waterAt(x,z),deck=wet&&bridges?.at(x,z,edge);return wet&&deck!=null&&deck>=wet.level?null:wet;},terrainReady:relief.ready,grade:driveGrade,ground:driveGround,setRoads,render,resize:graphics.resize,contact,loadDistrict:async(g,x,z)=>(await Promise.all([district.load(g,x,z),osmBuildings.load(g,x,z),relief.loadLocal(g,x,z),landscapes.load(g,x,z),grounds.load(g,x,z),environment.load(g,x,z),amenities.load(g,x,z)])).some(Boolean),splash:(x,z,nx,nz,strength,level)=>driveFx.impact(x,z,nx,nz,strength,'water',level,.3),sightFootprint:district.footprint,nearLandmark:(x,z)=>landmarks?.nearest(x,z),reactToContact:roadsideImpact.react,impact:(x,z,nx,nz,s,k,h=0,g)=>driveFx.impact(x,z,nx,nz,s,k,driveGround(x,z)+h,g),scrape:(x,y,z,vx,vz)=>driveFx.scrape(x,driveGround(x,z)+y,z,vx,vz),resetFx(){driveFx.reset();roadsideImpact.reset();sightings.reset();}};
   };
 })();

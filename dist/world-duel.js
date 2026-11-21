@@ -38,7 +38,7 @@ class RollingDuel {
  }
  pose(){
    const c=this.at(this.opponent),lane=Math.min(worldRoadHalfWidth(c.edge)*.48,2.2);
-   Object.assign(this.actor,this.graph.sample(c,lane),{speed:this.speed});
+   Object.assign(this.actor,this.graph.sample(c,lane),{edge:c.edge,deckLift:this.graph.bridges.lift(c.edge,c.s),speed:this.speed});
  }
  move(cursor,traveled,dt,traffic){
    this.ensure(Math.max(this.player,this.opponent)+150);
@@ -57,6 +57,7 @@ class RollingDuel {
    const gap=this.opponent-this.player;let target=clamp(21-gap*.075,13,29)*Math.max(.43,1-bend*.39);
    const fx=Math.sin(this.actor.yaw),fz=-Math.cos(this.actor.yaw);
    for(const n of traffic){
+     if(Math.abs(n.deckLift-this.actor.deckLift)>2.5)continue;
      const x=n.x-this.actor.x,z=n.z-this.actor.z,front=x*fx+z*fz;
      if(front>0&&front<12&&Math.abs(x*fz-z*fx)<1.7)target=Math.min(target,Math.max(2,n.speed+(front-6)*.6));
    }

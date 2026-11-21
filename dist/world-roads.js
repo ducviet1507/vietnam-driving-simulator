@@ -14,6 +14,8 @@ class VietnamRoads {
    this.visitorEdges=new Set(Object.values(index.sightAccess?.stops||{}).map(stop=>stop[0]));
    this.remote=index.tileBase;this.local=new Set(index.localTiles||[]);this.lon=lon;this.lat=lat;
    this.trafficTiles=new Set(index.trafficTiles||[]);
+   this.bridgeDetails=index.bridgeDetails||{};
+   this.footbridgeTiles=index.footbridgeTiles||{};
    this.mx=111320*Math.cos(lat*Math.PI/180);this.my=110900;
    this.cache=new Map();this.edges=new Map();this.nodes=new Map();this.buckets=new Map();
    this.stamp=0;
@@ -85,6 +87,7 @@ class VietnamRoads {
      for(const k of cells){if(!buckets.has(k))buckets.set(k,[]);buckets.get(k).push(edge);}
    }
    this.edges=fresh;this.nodes=nodes;this.buckets=buckets;
+   this.bridges=buildBridgeProfiles(this,this.bridgeDetails);
    this.signature=tiles.some(tile=>tile.details===null)?null:signature;
    for(const k of this.cache.keys())if(!keys.includes(k))this.cache.delete(k);
  }
@@ -95,14 +98,19 @@ class VietnamRoads {
        for(const e of this.buckets.get(a+','+b)||[])unique.add(e);
    return [...unique];
  }
- nearest(x,z,candidates=this.edges.values()){
-   let best=null;
+ nearest(x,z,candidates=this.edges.values(),level=null){
+   let best=null,bestScore=Infinity;
    for(const edge of candidates){
      for(let i=1;i<edge.points.length;i++){
        const a=edge.points[i-1],b=edge.points[i],vx=b.x-a.x,vz=b.z-a.z;
        const f=Math.max(0,Math.min(1,((x-a.x)*vx+(z-a.z)*vz)/(vx*vx+vz*vz)));
        const error=(a.x+vx*f-x)**2+(a.z+vz*f-z)**2;
-       if(!best||error<best.error)best={edge,s:edge.dist[i-1]+f*(edge.dist[i]-edge.dist[i-1]),dir:1,error};
+       if(error>=bestScore)continue;
+       const s=edge.dist[i-1]+f*(edge.dist[i]-edge.dist[i-1]);
+       const vertical=level===null?0:this.bridges.lift(edge,s)-level;
+       if(level!==null&&Math.abs(vertical)>2.5)continue;
+       const score=error+vertical*vertical*4;
+       if(score<bestScore){bestScore=score;best={edge,s,dir:1,error};}
      }
    }return best;
  }
