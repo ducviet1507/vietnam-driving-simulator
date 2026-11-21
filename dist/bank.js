@@ -1,5 +1,14 @@
 // Nguồn: Cục CSGT, Bộ 600 câu hỏi, Hà Nội 2025. Đáp án theo phần gạch chân trong PDF.
 // https://csgt.bocongan.gov.vn/index.php/van-ban/bo-600-cau-hoi-dung-cho-sat-hach-lai-xe-co-gioi-duong-bo
+window.driveBankSource = 'https://csgt.bocongan.gov.vn/index.php/van-ban/bo-600-cau-hoi-dung-cho-sat-hach-lai-xe-co-gioi-duong-bo';
+window.driveChapters = [
+  [1, 180, 'Quy định và quy tắc giao thông', 'quy-tac-giao-thong', 'Ôn khái niệm đường bộ, hiệu lệnh, quyền ưu tiên và cách nhường đường khi tham gia giao thông.'],
+  [181, 205, 'Văn hóa, đạo đức và cứu hộ', 'van-hoa-dao-duc-cuu-ho', 'Ôn cách ứng xử của người lái xe, trách nhiệm khi xảy ra tai nạn và các tình huống cứu giúp người gặp nạn.'],
+  [206, 263, 'Kỹ thuật lái xe', 'ky-thuat-lai-xe', 'Ôn thao tác điều khiển xe, cách xử lý khi lên xuống dốc và lựa chọn kỹ thuật lái trong từng tình huống.'],
+  [264, 300, 'Cấu tạo và sửa chữa', 'cau-tao-sua-chua', 'Nhận biết các bộ phận của ô tô, công dụng của hệ thống trên xe và ý nghĩa của đèn báo trên bảng đồng hồ.'],
+  [301, 485, 'Báo hiệu đường bộ', 'bao-hieu-duong-bo', 'Đọc biển báo, vạch kẻ đường và đối chiếu các hình minh họa để xác định hiệu lệnh dành cho người lái.'],
+  [486, 600, 'Sa hình và xử lý tình huống', 'sa-hinh-xu-ly-tinh-huong', 'Quan sát sơ đồ giao thông, hướng di chuyển của từng xe và chọn thứ tự qua giao lộ trong từng tình huống.']
+];
 window.driveBank = [
 {"id":1,"prompt":"Phần của đường bộ được sử dụng cho phương tiện giao thông đường bộ đi lại là gì?","choices":["Phần mặt đường và lề đường.","Phần đường xe chạy.","Phần đường xe cơ giới."],"correct":1,"page":5},
 {"id":2,"prompt":"Làn đường là gì?","choices":["Là một phần của phần đường xe chạy được chia theo chiều dọc của đường, sử dụng cho xe chạy.","Là một phần của phần đường xe chạy được chia theo chiều dọc của đường, có đủ chiều rộng cho xe chạy an toàn.","Là đường cho xe ô tô chạy, dừng, đỗ an toàn."],"correct":1,"page":5},

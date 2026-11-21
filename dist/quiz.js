@@ -2,21 +2,14 @@
   'use strict';
   const dialog = document.getElementById('quiz');
   const key = 'taylai.csgt2025.study.v1';
-  const source = 'https://csgt.bocongan.gov.vn/index.php/van-ban/bo-600-cau-hoi-dung-cho-sat-hach-lai-xe-co-gioi-duong-bo';
+  const source = window.driveBankSource;
   // Phụ lục III, Công văn 2262/CSGT-P5 ngày 07/05/2025.
   const critical = new Set([
     19,20,21,22,23,24,25,26,27,28,30,32,34,35,47,48,52,53,55,58,
     63,64,65,66,67,68,70,71,72,73,74,85,86,87,88,89,90,91,92,93,
     97,98,102,117,163,165,167,197,198,206,215,226,234,245,246,252,253,254,255,260
   ]);
-  const chapters = [
-    [1, 180, 'Quy định và quy tắc giao thông'],
-    [181, 205, 'Văn hóa, đạo đức và cứu hộ'],
-    [206, 263, 'Kỹ thuật lái xe'],
-    [264, 300, 'Cấu tạo và sửa chữa'],
-    [301, 485, 'Báo hiệu đường bộ'],
-    [486, 600, 'Sa hình và xử lý tình huống']
-  ];
+  const chapters = window.driveChapters;
   let state;
   try { state = JSON.parse(localStorage.getItem(key)); } catch {}
   if (!state || typeof state.results !== 'object' || !state.results) state = {results: {}, run: null};
@@ -160,9 +153,15 @@
     if(road || !ids.length)return;
     begin(ids.slice());mount(false);
   };
-  window.openQuiz = () => {
+  window.openQuiz = chapterNumber => {
     if (road) return;
-    library(); mount(false);
+    if (Number.isInteger(chapterNumber) && chapterNumber >= 1 && chapterNumber <= chapters.length) {
+      chapterIndex = chapterNumber - 1;
+      chapter();
+    } else {
+      library();
+    }
+    mount(false);
   };
   window.openRoadQuestion = (id, coachingText, onContinue) => {
     const q = lookup(id);

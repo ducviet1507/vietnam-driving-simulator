@@ -8,7 +8,7 @@
     link.hash = link.hash.replace('#guide-', '#');
   }
   function select(){
-    const key=location.hash.slice(1),id=scenicPasses.has(key)?key:scenicPasses.keys().next().value;
+    const key=location.hash.slice(1).replace(/^guide-/,''),id=scenicPasses.has(key)?key:scenicPasses.keys().next().value;
     const pass=scenicPasses.get(id),stage=stages.get(id),heights=smoothRoadProfile(stage);
     for(const a of byId('passChoices').children){
       if(a.hash==='#'+id)a.setAttribute('aria-current','true');else a.removeAttribute('aria-current');
@@ -16,6 +16,8 @@
     byId('region').textContent=pass.region;
     byId('passTitle').textContent=stage.name;
     byId('description').textContent=pass.description;
+    byId('passGuideLink').href=byId('guide-'+id).querySelector('a').href;
+    byId('passGuideLink').textContent='Bản đồ và thông số chặng '+stage.name;
     byId('plate').src='pass-plates/'+id+'.webp';
     byId('plate').alt='Chặng '+stage.name+' qua vùng '+pass.landscape.toLocaleLowerCase('vi')+'. Vòng tròn đánh dấu điểm đầu, hình thoi đánh dấu đích.';
     byId('length').textContent=(stage.angles.length*stage.step/1000).toLocaleString('vi-VN')+' km';
