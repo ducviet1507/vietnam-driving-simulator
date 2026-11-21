@@ -16,6 +16,8 @@ ViVu3D là game lái xe 3D trên trình duyệt. Bạn có thể khám phá Vi�
 
 ## Khám phá địa danh
 
+Mỗi điểm ngắm có một con dấu bí mật. Ở Tháp Rùa, hãy để ý ánh lóe trên mặt hồ. Mở **Ngắm địa danh 3D**, chọn **Tìm dấu ẩn**, rồi kéo cảnh hoặc dùng hai phím mũi tên để đưa ánh lóe vào khung. Một số nét khắc chỉ hiện khi lấy nét gần. Xe đang dừng cạnh địa danh cũng có thể **Dò đài FM** để nghe manh mối. Mở **Tùy chọn → Sổ dấu hành trình** để xem lại các dấu đã tìm thấy trên trình duyệt này. [Ghé Tháp Rùa](https://vivu3d.com/?landmark=turtle).
+
 Từ Ba Sao, theo quốc lộ 21 đến con đường ven hồ Tam Chúc dưới chân núi đá vôi. Chặng này dài 5,4 km. Tới nơi, bạn có thể dừng xe, mở **Ngắm Tam Chúc** và chọn một trong tám công trình để nhìn gần hơn. [Lái từ Ba Sao đến Tam Chúc](https://vivu3d.com/?drive=ba-sao-tam-chuc).
 
 Ở Bà Nà, bạn nhận xe cạnh lối đi bộ phía ga Marseille. Từ đây có thể lái xuống núi hoặc xoay góc nhìn để ngắm hai bàn tay nâng Cầu Vàng. Nếu thích phố xá, thử khởi hành ở Chợ Vinh. [Ngắm Cầu Vàng](https://vivu3d.com/?landmark=cau-vang-ba-na) · [Ghé Chợ Vinh](https://vivu3d.com/?landmark=cho-vinh).

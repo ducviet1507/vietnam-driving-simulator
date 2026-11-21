@@ -234,6 +234,17 @@
       tone(330, 294, .18, .072);
     }
   }
+  function souvenir(motif) {
+    if (['echo','shell','ridge'].includes(motif)) {
+      for (const [delay,volume] of [[0,.1],[.25,.05],[.51,.025]]) tone(392,388,.38,volume,delay);
+    } else if (['drop','sail','turtle','lotus'].includes(motif)) {
+      tone(370,660,.13,.07); tone(490,780,.18,.06,.15); tone(660,880,.3,.05,.36);
+    } else if (['ink','gear','arch'].includes(motif)) {
+      tone(146,82,.09,.09,0,'triangle'); tone(440,440,.21,.045,.12,'triangle');
+    } else {
+      tone(523,523,.3,.065); tone(659,659,.37,.055,.15); tone(784,784,.5,.045,.29);
+    }
+  }
   async function ignition(electric=false) {
     unlock();
     if (!enabled || !sound) return;
@@ -264,5 +275,5 @@
     gain.gain.value=.4+strength*.45;source.connect(filter).connect(gain).connect(output);source.start();
     source.onended=()=>{source.disconnect();filter.disconnect();gain.disconnect();};
   }
-  window.driveAudio = { toggle, update, cue, ignition, impact, broadcast, get enabled(){return enabled;}, get engineRpm(){return engineRpm;} };
+  window.driveAudio = { toggle, update, cue, ignition, impact, broadcast, souvenir, get enabled(){return enabled;}, get engineRpm(){return engineRpm;} };
 })();

@@ -95,6 +95,24 @@ try {
     await page.getByRole('button',{name:'Cầm lái',exact:true}).click();
     await page.locator('body[data-phase="drive"]').waitFor();
     await page.setViewportSize({width:390,height:844});
+    await page.locator('#tourView').click();
+    await page.locator('#secretOpen').click();
+    for(let i=0;i<20 && !await page.locator('#secretCapture').isEnabled();i++){
+      const hint=await page.locator('#secretDirection').innerText();
+      if(hint.includes('Đổi ánh sáng'))await page.locator('#secretDusk').click();
+      else if(hint.includes('lấy nét')){
+        await page.locator('#secretFocus').focus();await page.keyboard.press('Home');
+      }else await page.locator(hint.includes('trái')?'#secretLeft':'#secretRight').click();
+    }
+    await page.locator('#secretCapture').click();
+    const title=await page.locator('#secretTitle').innerText();
+    await page.locator('#secretResult [data-stamp-book]').click();
+    assert.equal(await page.locator('#stampList strong').innerText(),title);
+    await page.keyboard.press('Escape');
+    await page.locator('#secretDone').click();
+    assert.equal(await page.locator('#secretOpen').innerText(),'Xem lại dấu ẩn');
+    await page.locator('#backToCar').click();
+    console.log('PASS landmark discovery, journal and return to driving');
     await checkTouchPedals(page);
     await page.setViewportSize({width:640,height:480});
     console.log('PASS Xuyên Việt touch throttle, steering and nitro');

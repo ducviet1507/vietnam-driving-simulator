@@ -80,6 +80,7 @@ function drawDistrict(graph,lakes,x,z,edges){
 function refreshView(){
  const [lon,lat]=roads.geo(car.x,car.z);
  tourPins=VietnamTourism.nearby(lon,lat,.018,.018).map(s=>catalogById.get(s.id)).filter(Boolean)
+   .concat(mountainPlaces.filter(site=>Math.abs(site.lon-lon)<.018&&Math.abs(site.lat-lat)<.018))
    .map(data=>({...roads.point(data.lon,data.lat),data}));
  nearby=roads.nearby(car.x,car.z,560);drawDistrict(roads,water,car.x,car.z,nearby);viewX=car.x;viewZ=car.z;
 }
@@ -439,7 +440,7 @@ function visitTarget(){
    if(site && !site.km)return {data:site,...guide.finish,distance:Math.hypot(car.x-guide.finish.x,car.z-guide.finish.z)};
  }
  const site=source[3];
- if(site&&!site.km){
+ if(site){
    const p=roads.point(site.lon,site.lat),distance=Math.hypot(car.x-p.x,car.z-p.z);
    if(distance<=Math.max(165,(site.approachMeters||0)+85))return {data:site,...p,distance};
  }
@@ -496,11 +497,14 @@ function traceMapLine(g,points){
  g.beginPath();
  points.forEach((p,i)=>i?g.lineTo(p.x-car.x,p.z-car.z):g.moveTo(p.x-car.x,p.z-car.z));
 }
-$('scenicRadio').onclick=()=>{
+$('scenicRadio').onclick=async()=>{
  if(mode!=='drive'||Math.abs(car.speed)>.28)return;
  const stop=visitTarget();if(!stop)return;
- const line=stop.data.id==='tam-chuc'?'Từ ven hồ Tam Chúc, xin gửi một lời chào tới những tay lái vừa dừng chân.':
-   'Bạn đang nghe Sóng Ven Đường. Ai vừa dừng chân ở '+stop.data.name+' ơi, chúc bạn một chuyến đi đẹp trời!';
+ let clue;
+ try{clue=await sightSecrets.clue(stop.data);}
+ catch{clue='Chúc bạn một chuyến đi đẹp trời!';}
+ if(mode!=='drive'||Math.abs(car.speed)>.28||visitTarget()?.data.id!==stop.data.id)return;
+ const line='Sóng Ven Đường, từ '+stop.data.name+'. '+clue;
  inform('♫ '+line,8);driveAudio.broadcast(line,true);
 };
 function drawDepartureMap(){
@@ -616,6 +620,7 @@ function frame(now){
      }
      if(mode==='drive')stream();
      const ready=gfx.render(car,duel?[duel.actor,...npcs]:npcs,mode==='drive'||mode==='crash'||mode==='sinking'?dt:0,inside,now);
+     if(mode==='tour')sightSecrets.update();
      if(mode==='tour'&&car.sightView?.data.id==='tam-chuc'){
        const point=gfx.projectSummit();
        summitMarker.hidden=!point;
@@ -731,17 +736,19 @@ function pause(){
 }
 $('launch').onclick=begin;$('pause').onclick=pause;
 const sightPhotos=createSightPhotos();
+const sightSecrets=createSightSecrets(()=>car.sightView,driveAudio.souvenir);
 function frameAboveTourControls(){
  if(!car.sightView)return;
  const canvas=$('world'),panel=$('tourCamera');
  const width=canvas.clientWidth,height=canvas.clientHeight;
+ $('secretField').style.setProperty('--secret-dock',Math.max(0,height-panel.getBoundingClientRect().top)+'px');
  car.sightView.viewport=width<=720&&height>width&&!panel.hidden?{
    width,height,shift:Math.round(Math.min(height*.17,panel.offsetHeight*.44))
  }:null;
 }
 const tourLayout=new ResizeObserver(frameAboveTourControls);
 tourLayout.observe($('tourCamera'));tourLayout.observe($('world'));
-function showMonument(monument,viewIndex=0){
+function showMonument(monument,viewIndex=0,collection=null){
  const views=monument.data.views,view=views?.[viewIndex];
  const data=view?{...monument.data,...view}:monument.data;
  const portraitOverview=monument.data.id==='tam-chuc'&&innerWidth<innerHeight;
@@ -753,6 +760,7 @@ function showMonument(monument,viewIndex=0){
  const description=[data.description,data.arrivalNote].filter(Boolean).join(' ');
  $('tourDescription').textContent=description;$('tourDescription').hidden=!description;
  $('tourTitle').textContent=monument.data.name;$('tourCamera').hidden=false;
+ sightSecrets.select(collection||monument.data);
  const visit=visitsByStop.get(monument.data.id);
  $('complexStopLabel').hidden=!(views||data.complex||visit);
  const select=$('complexStop');
@@ -763,12 +771,16 @@ function showMonument(monument,viewIndex=0){
  }else select.replaceChildren();
  if(visit){
    const group=document.createElement('optgroup');group.label=visit.name;
+   group.append(new Option('Toàn quần thể · '+visit.name,'visit/'+visit.id));
    for(const stop of visit.stops)group.append(new Option(stop.name,'stop/'+stop.id));
-   select.append(group);if(!views)select.value='stop/'+monument.data.id;
+   select.append(group);
+   if(collection)select.value='visit/'+collection.id;
+   else if(!views)select.value='stop/'+monument.data.id;
  }
  frameAboveTourControls();
 }
 async function frameStop(stop){
+ const collection=stop.stops?stop:null;
  if(stop.stops)stop=stop.stops[0];
  await VietnamTourism.loadRegion(stop.lon,stop.lat);
  const {x,z}=roads.point(stop.lon,stop.lat);
@@ -782,9 +794,9 @@ async function frameStop(stop){
  }
  if(stop===tamChucOverview)return showMonument({data:stop,x,z,height:75});
  const authored=gfx.nearLandmark(x,z);
- if(authored?.data.id===stop.id)return showMonument(authored);
+ if(authored?.data.id===stop.id)return showMonument(authored,0,collection);
  const footprint=gfx.sightFootprint(stop,x,z);
- const wide=['Hồ','Vịnh','Khu bảo tồn','Vườn quốc gia','Đỉnh núi','Bãi biển','Điểm ngắm cảnh'].includes(stop.kind);
+ const wide=stop.km||['Hồ','Vịnh','Khu bảo tồn','Vườn quốc gia','Đỉnh núi','Bãi biển','Điểm ngắm cảnh'].includes(stop.kind);
  const tags=window.VietnamSightDetails?.[stop.id]||{};
  const extent=footprint?[footprint.maxX-footprint.minX,footprint.maxZ-footprint.minZ]:tags.extent;
  const [ew,ns]=extent||[wide?165:68,wide?165:68];
@@ -800,7 +812,7 @@ async function frameStop(stop){
    data.views=[{name:'Toàn cảnh địa điểm'},{name:'Từ phía đường ô tô',viewAngle:yaw,
      viewRadius:distance,viewElevation:.065,height:Math.min(8,height)}];
  }
- showMonument({data,x,z,height});
+ showMonument({data,x,z,height},0,collection);
 }
 $('tourView').onclick=()=>{
  if(mode!=='drive')return;
@@ -826,15 +838,16 @@ $('tourZoom').oninput=e=>{if(car.sightView)car.sightView.zoom=Number(e.target.va
 $('tourLight').onchange=e=>{if(car.sightView)car.sightView.hour=e.target.value===''?null:Number(e.target.value);};
 let tourPointer=null,tourGraph=null,tourWater=null,tourCenter=null;
 function loadingStop(busy){
- $('complexStop').disabled=$('backToCar').disabled=busy;
+ $('secretOpen').disabled=$('complexStop').disabled=$('backToCar').disabled=busy;
  $('tourCamera').setAttribute('aria-busy',String(busy));
 }
 $('complexStop').onchange=async e=>{
+ const collection=e.target.value.startsWith('visit/')?regionalVisits.find(v=>'visit/'+v.id===e.target.value):null;
  const stopId=e.target.value.startsWith('stop/')?e.target.value.slice(5):null;
- if(!stopId&&mode==='tour'&&car.sightView?.monument.data.views){
+ if(!collection&&!stopId&&mode==='tour'&&car.sightView?.monument.data.views){
    showMonument(car.sightView.monument,Number(e.target.value));return;
  }
- const stop=stopId?destinations.find(s=>s.id===stopId):e.target.value==='tam-chuc'?tamChucOverview:tamChucParts.find(s=>s.id===e.target.value);
+ const stop=collection||(stopId?destinations.find(s=>s.id===stopId):e.target.value==='tam-chuc'?tamChucOverview:tamChucParts.find(s=>s.id===e.target.value));
  if(mode!=='tour'||!stop)return;
  loadingStop(true);
  try{
@@ -855,6 +868,7 @@ async function closeTour(){
    refreshView();
  }
  mode=activeTrip?'drive':'grid';document.body.dataset.phase=mode;
+ sightSecrets.close();
  car.sightView=null;tourPointer=null;keySet.clear();$('tourCamera').hidden=true;$('grid').hidden=activeTrip;
  for(const id of ['hud','touch','camera','pause'])$(id).hidden=!activeTrip;
  if(activeTrip)updateHud();
@@ -896,7 +910,8 @@ window.addEventListener('keydown',e=>{
    return;
  }
  if(mode==='tour'){
-   if(k==='escape')closeTour();
+   if(document.querySelector('dialog[open]'))return;
+   if(k==='escape'&&!sightSecrets.escape())closeTour();
    if(car.sightView&&!['SELECT','INPUT'].includes(e.target.tagName)&&(k==='arrowleft'||k==='arrowright')){car.sightView.angle+=(k==='arrowleft'?-1:1)*.09;e.preventDefault();}
    return;
  }
