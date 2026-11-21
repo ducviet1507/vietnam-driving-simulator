@@ -222,9 +222,9 @@ async function serveGameAsset(request, env, url) {
   } else {
     response = legacyTile ? await legacyRoadTile(request, env, url) : await env.ASSETS.fetch(new Request(url,request));
   }
-  if (isPage && response.ok) {
+  if (response.ok && (isPage || pathname.endsWith(".txt"))) {
     const headers = new Headers(response.headers);
-    headers.set("Content-Type", "text/html; charset=utf-8");
+    headers.set("Content-Type", isPage ? "text/html; charset=utf-8" : "text/plain; charset=utf-8");
     headers.delete("Content-Disposition");
     response = new Response(response.body, {status:response.status, headers});
   }
