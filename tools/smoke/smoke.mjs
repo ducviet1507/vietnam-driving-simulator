@@ -53,6 +53,39 @@ async function check(disabled, run) {
   } finally { await browser.close(); }
 }
 
+async function checkTouchPedals(page) {
+  const client = await page.context().newCDPSession(page);
+  await client.send('Emulation.setTouchEmulationEnabled',{enabled:true,maxTouchPoints:2});
+  const point = async (selector,id) => {
+    const box = await page.locator('#touch ' + selector).boundingBox();
+    assert.ok(box, selector);
+    return {id,x:box.x+box.width/2,y:box.y+box.height/2};
+  };
+  const steer = await point('[data-key=a]',1);
+  const gas = await point('[data-key=w]',2);
+  const nitro = await point('[data-key~=shift]',2);
+  const touch = (type,...touchPoints) => client.send('Input.dispatchTouchEvent',{type,touchPoints});
+  const expectInputs = (...keys) => page.waitForFunction(
+    expected=>['a','w','shift'].every(key=>held(key)===expected.includes(key)),keys,{timeout:10000});
+  // Slide straight up and back with one thumb while the other thumb steers.
+  const aboveGas = {...nitro,x:gas.x};
+  await touch('touchStart',steer,gas);
+  await expectInputs('a','w');
+  await touch('touchMove',steer,aboveGas);
+  await expectInputs('a','w','shift');
+  await touch('touchMove',steer,gas);
+  await expectInputs('a','w');
+  await touch('touchEnd');
+  await expectInputs();
+  await touch('touchStart',nitro);
+  await expectInputs('w','shift');
+  await page.waitForFunction(()=>document.getElementById('nitro').value<99 && Number(document.getElementById('speed').textContent)>0);
+  await touch('touchCancel');
+  await expectInputs();
+  await client.send('Emulation.setTouchEmulationEnabled',{enabled:false});
+  await client.detach();
+}
+
 try {
   await check(false, async page=>{
     const go = p=>page.goto(new URL(p,base).href,{waitUntil:'domcontentloaded'});
@@ -61,6 +94,10 @@ try {
     assert.equal(await page.evaluate(()=>Boolean(VietnamTourism.complete || window.driveBank)),false);
     await page.getByRole('button',{name:'Cầm lái',exact:true}).click();
     await page.locator('body[data-phase="drive"]').waitFor();
+    await page.setViewportSize({width:390,height:844});
+    await checkTouchPedals(page);
+    await page.setViewportSize({width:640,height:480});
+    console.log('PASS Xuyên Việt touch throttle, steering and nitro');
     await page.locator('#pause').click();
     await page.locator('#rest[open] #resume').click();
     assert.equal(await page.locator('#rest').isVisible(),false);
@@ -82,6 +119,11 @@ try {
     await go('/cup');
     await page.locator('#launch').click();
     await page.locator('body[data-phase="drive"]').waitFor();
+    await page.setViewportSize({width:844,height:390});
+    await page.evaluate(()=>{document.body.dataset.steering='right';});
+    await checkTouchPedals(page);
+    await page.setViewportSize({width:640,height:480});
+    console.log('PASS Cúp Bánh Mì mirrored touch throttle, steering and nitro');
     console.log('PASS Cúp Bánh Mì reaches the track');
 
     await go('/theory-exam');

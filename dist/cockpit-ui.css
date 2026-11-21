@@ -147,14 +147,15 @@
   .arcade .touch > div {gap: 6px}
   .arcade .touch > div:last-child {display: grid; grid-template-columns: repeat(2, var(--button-width))}
   .arcade .touch button {width: var(--button-width); min-width: 0; min-height: var(--button-width); padding: 3px 0; border-radius: 14px; background: #132521e8; color: #f6faed; border: 1px solid #c4d6c480; font-size: 14px}
-  .arcade .touch [data-key=shift] {grid-column: 1 / -1; justify-self: end; min-height: 44px; width: max(75%, 78px); color: var(--lime); border-color: #b3ca876b}
+  .arcade .touch [data-key~=shift] {grid-column: 1 / -1; justify-self: end; min-height: 44px; width: max(75%, 78px); color: var(--lime); border-color: #b3ca876b}
   .arcade .touch [data-key=w] {min-height: calc(var(--button-width) + 7px); background: var(--lime); color: #14241b; border-color: var(--lime)}
   .arcade .touch [data-key=a], .arcade .touch [data-key=d] {font-size: 0}
   .arcade .touch :is([data-key=a], [data-key=d])::before {content: ""; width: 10px; height: 10px; border: solid currentColor; border-width: 0 0 2px 2px; display: inline-block; transform: rotate(45deg)}
   .arcade .touch [data-key=d]::before {transform: rotate(225deg)}
   .arcade .touch button.active {background: #edffcf; color: #172821; border-color: #fff; transform: translateY(2px)}
   .arcade[data-steering=right] .touch {flex-direction: row-reverse}
-  .arcade[data-steering=right] .touch [data-key=shift] {justify-self: start}
+  .arcade[data-steering=right] .touch [data-key~=shift] {justify-self: start}
+  .arcade[data-steering=right] .touch [data-key=w] {grid-area: 2 / 1}
   .arcade :is(#tourView, #scenicRadio), .arcade header .tools button {min-height: 44px}
   .arcade:not([data-phase=grid]) .tools button {width: 44px; padding: 0; font-size: 0; gap: 0}
   .arcade:not([data-phase=grid]) .tools #sound::before {width: 19px; height: 19px}

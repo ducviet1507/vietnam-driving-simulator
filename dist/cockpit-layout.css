@@ -27,7 +27,7 @@
   box-shadow:0 3px 10px #0005; font-size:14px;
 }
 .arcade .touch [data-key="w"] {min-height:61px;min-width:54px;background:var(--fire);border-color:var(--fire);color:#101916}
-.arcade .touch [data-key="shift"] {color:var(--yellow);border-color:color-mix(in srgb,var(--yellow) 65%,transparent)}
+.arcade .touch [data-key~="shift"] {color:var(--yellow);border-color:color-mix(in srgb,var(--yellow) 65%,transparent)}
 .arcade .touch button.active {transform:translateY(2px);background:var(--yellow);color:#122019;border-color:#fff}
 .arcade .osm-credit {right:var(--right);bottom:max(0px,env(safe-area-inset-bottom))}
 .journey #landmark {color:#ffe2a5;font-size:13px}
