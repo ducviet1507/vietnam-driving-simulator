@@ -128,7 +128,8 @@ window.createDrivingWater = function(T, mapped) {
     `);
   };
   function setField(pixels,size,x,z,scale,cx,cz) {
-    if(!field.value){
+    if(!field.value||field.value.image.width!==size){
+      field.value?.dispose();
       field.value=new T.DataTexture(pixels,size,size);
       field.value.minFilter=field.value.magFilter=T.LinearFilter;
     }else field.value.image.data=pixels;
@@ -136,14 +137,25 @@ window.createDrivingWater = function(T, mapped) {
     bounds.value.set(x,z,scale/size);
     origin.value.set(cx,cz);lastReflection=-Infinity;
   }
-  function reflect(renderer,scene,camera,level,now,near,profile){
-    if(!profile.waterWidth||!near||camera.position.y<=level){mirrorStrength.value=0;lastReflection=-Infinity;return;}
-    if(now-lastReflection<profile.waterMs)return;
-    lastReflection=now;
+  function sizeTarget(profile){
     if(!target){
       target=new T.WebGLRenderTarget(profile.waterWidth,profile.waterWidth*9/16);
       mirrorMap.value=target.texture;
     }else if(target.width!==profile.waterWidth)target.setSize(profile.waterWidth,profile.waterWidth*9/16);
+  }
+  function prepare(renderer,scene,camera,profile,object){
+    sizeTarget(profile);
+    const previous=renderer.getRenderTarget();
+    try{
+      renderer.setRenderTarget(target);
+      return renderer.compileAsync(object,camera,scene);
+    }finally{renderer.setRenderTarget(previous);}
+  }
+  function reflect(renderer,scene,camera,level,now,near,profile){
+    if(!profile.waterWidth||!near||camera.position.y<=level){mirrorStrength.value=0;lastReflection=-Infinity;return;}
+    if(now-lastReflection<profile.waterMs)return;
+    lastReflection=now;
+    sizeTarget(profile);
     camera.updateMatrixWorld();
     camera.getWorldDirection(direction);direction.y*=-1;
     up.set(0,1,0).applyQuaternion(camera.quaternion);up.y*=-1;
@@ -167,7 +179,7 @@ window.createDrivingWater = function(T, mapped) {
     finally{renderer.setRenderTarget(previous);mirrorMap.value=target.texture;material.visible=true;renderer.shadowMap.needsUpdate=shadow;}
     mirrorStrength.value=1;
   }
-  return {material,setField,reflect,reflection:{mirrorMap,mirrorMatrix,mirrorStrength,mirrorLevel},setWake(x,z,yaw,strength,age){wake.value.set(x,z,yaw,strength);wakeAge.value=age;},update(seconds,rain=0){time.value=seconds;rainfall.value=rain;}};
+  return {material,setField,prepare,reflect,reflection:{mirrorMap,mirrorMatrix,mirrorStrength,mirrorLevel},setWake(x,z,yaw,strength,age){wake.value.set(x,z,yaw,strength);wakeAge.value=age;},update(seconds,rain=0){time.value=seconds;rainfall.value=rain;}};
 };
 
 // Two chamfer passes estimate the distance to the dry bank on the merged mask.

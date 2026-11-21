@@ -406,7 +406,7 @@ window.buildDriverCabin = function(T, rig, mapCanvas) {
     cluster.tex.needsUpdate=true;
   }
   return {
-    mapScreen,
+    mapScreen,interior:cabin,
     refreshMap(){mapDirty=true;},
     // On narrow screens, sit a little farther back to keep the wheel and console in view.
     seatInset(aspect){return T.MathUtils.clamp((1-aspect)*.40,0,.24);},

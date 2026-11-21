@@ -86,6 +86,7 @@ function createTourDistrict(T,scene,plaster,structures,osmBuildings,nightLights)
     let lon=0,lat=0;
     const ring=[];
     for(let i=0;i<raw.length;i+=2){lon+=raw[i];lat+=raw[i+1];const p=graph.point(lon/scale,lat/scale);ring.push(new T.Vector2(p.x,p.z));}
+    if(ring.length>1&&ring[0].equals(ring.at(-1)))ring.pop();
     return ring;
   }
   function projectFootprint(raw,graph,projected){
@@ -95,9 +96,7 @@ function createTourDistrict(T,scene,plaster,structures,osmBuildings,nightLights)
     let minX=Infinity,minZ=Infinity,maxX=-Infinity,maxZ=-Infinity;
     for(const p of rings[0]){minX=Math.min(minX,p.x);minZ=Math.min(minZ,p.y);maxX=Math.max(maxX,p.x);maxZ=Math.max(maxZ,p.y);}
     const shape={rings,box:{minX,minZ,maxX,maxZ},flat:rings.flat()};
-    // Three removes an explicit closing vertex during triangulation. Leave
-    // those outlines rebuild-local so their original vertex order is restored.
-    if(!rings.some(r=>r[0].equals(r.at(-1))))projected.set(raw,shape);
+    projected.set(raw,shape);
     return shape;
   }
   function createView(parent){
@@ -195,7 +194,7 @@ function createTourDistrict(T,scene,plaster,structures,osmBuildings,nightLights)
     for(const mesh of [...group.children]){group.remove(mesh);mesh.geometry.dispose();}
     cells.clear();blocks.clear();streetFronts.length=0;
   }
-  function* buildSteps(graph,cx,cz,landmarks,ground=()=>0,edges=[],openGround=()=>false){
+  function* buildSteps(graph,cx,cz,landmarks,ground=()=>0,edges=[],openGround=()=>false,radius=620,terrainRevision){
     clear();if(!graph)return;
     const pieces=parts.rows(graph,cx,cz);
     const replaced=new Set(pieces.flatMap(row=>[row[6]?.parent,row[6]?.sourceId]).filter(Boolean));
@@ -322,7 +321,7 @@ function createTourDistrict(T,scene,plaster,structures,osmBuildings,nightLights)
       const outline=projectFootprint(raw,graph,projected);if(!outline)continue;
       const {rings,box,flat}=outline,outer=rings[0],{minX,minZ,maxX,maxZ}=box;
       const x=(minX+maxX)/2,z=(minZ+maxZ)/2;
-      if(Math.hypot(x-cx,z-cz)>620+Math.hypot(maxX-minX,maxZ-minZ)/2)continue;
+      if(Math.hypot(x-cx,z-cz)>radius+Math.hypot(maxX-minX,maxZ-minZ)/2)continue;
       const original=surveyedIds.has(id);
       if(overlapsModel(landmarks,rings,box))continue;
       const visitorArea=overlapsGarden(landmarks,rings,box);
@@ -333,15 +332,20 @@ function createTourDistrict(T,scene,plaster,structures,osmBuildings,nightLights)
       ids.add(id);
       // Keep floors level, and seat the plinth against the terrain around the
       // entire footprint, including courtyard edges and long downhill walls.
-      baseY=ground(x,z);
-      const profiles=rings.map(ring=>ring.map((a,j)=>{
-        const c=ring[(j+1)%ring.length],steps=Math.max(1,Math.ceil(a.distanceTo(c)/12)),samples=[];
-        for(let k=0;k<steps;k++){
-          const t=k/steps,px=a.x+(c.x-a.x)*t,pz=a.y+(c.y-a.y)*t,h=ground(px,pz);
-          baseY=Math.max(baseY,h);samples.push({x:px,z:pz,h});
-        }
-        return samples;
-      }));
+      if(terrainRevision===undefined||outline.terrainRevision!==terrainRevision){
+        let foundation=ground(x,z);
+        outline.profiles=rings.map(ring=>ring.map((a,j)=>{
+          const c=ring[(j+1)%ring.length],steps=Math.max(1,Math.ceil(a.distanceTo(c)/12)),samples=[];
+          for(let k=0;k<steps;k++){
+            const t=k/steps,px=a.x+(c.x-a.x)*t,pz=a.y+(c.y-a.y)*t,h=ground(px,pz);
+            foundation=Math.max(foundation,h);samples.push({x:px,z:pz,h});
+          }
+          return samples;
+        }));
+        outline.foundation=foundation;outline.terrainRevision=terrainRevision;
+      }
+      baseY=outline.foundation;
+      const profiles=outline.profiles;
       let seed=0;for(let i=0;i<id.length;i++)seed=(Math.imul(seed,31)+id.charCodeAt(i))>>>0;
       const warehouse=/warehouse|industrial|shed|garage|roof|barn/.test(kind);
       facadeSeed=(seed%997)/2493;

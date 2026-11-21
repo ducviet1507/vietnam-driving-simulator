@@ -46,7 +46,9 @@
       if(tile)t.wrapS=t.wrapT=T.RepeatWrapping;
       return t;
     }
-    skyLoader.load('streetscape/river-reflection.jpg',t=>{t.colorSpace=T.SRGBColorSpace;t.mapping=T.EquirectangularReflectionMapping;scene.environment=t;});
+    const environmentReady=skyLoader.loadAsync('streetscape/river-reflection.jpg').then(t=>{
+      t.colorSpace=T.SRGBColorSpace;t.mapping=T.EquirectangularReflectionMapping;scene.environment=t;
+    }).catch(()=>{});
     const sun=new T.DirectionalLight(0xffefcf,2.30);
     const atmosphere=createWorldAtmosphere(T,scene,sun,skyLoader);
     const graphics=createDrivingGraphics(renderer,camera,sun);
@@ -153,7 +155,7 @@
     const environment=createVietnamEnvironment(),amenities=createVietnamAmenities(),structures=createVietnamStructures();
     const osmBuildings=createVietnamOsmBuildings();
     const coverMap=createWorldLandCover(T,environment);
-    const streetLife=createWorldStreetLife(T,scene,small,environment,amenities);
+    const streetLife=createWorldStreetLife(T,scene,small,environment,amenities,prepareActor);
     const signs=createWorldSigns(T,scene,small);
     const mappedLights=createMappedTrafficLights(T,scene,small);
     const landWidth=2048;
@@ -224,11 +226,11 @@
       }
       return (driveGround(x+dx,z+dz)-driveGround(x-dx,z-dz))/4.4;
     }
-    let roadGroup=null,sceneGraph=null,originX=0,originZ=0,shadowStamp=-1000;
+    let roadGroup=null,sceneGraph=null,originX=0,originZ=0,shadowStamp=-1000,districtRadius=0;
     let streetBulbs=[];
     const streetLights=Array.from({length:3},()=>{
       const light=new T.PointLight(0xffc88a,0,32,2);
-      light.visible=false;scene.add(light);return light;
+      scene.add(light);return light;
     });
     let nextLightCheck=0;
     const landmarkSource=window.VietnamLandmarks?.create(T,scene,atmosphere.lamps);
@@ -358,9 +360,9 @@
       const segments=[],cells=new Map(),roadData=[],landData=[],bankData=[],railVerts=[],railIndices=[],cutVerts=[],cutUv=[],cutIndices=[],yellow=[],white=[],wires=[],junctions=new Map(),batches=new Map(),candidates=[],rivals=new Map();
       const roadSurfaces={asphalt:roadData,earth:[],pavers:[],roadConcrete:[],roadSlabs:[],roadWood:[],roadMetal:[]};
 
-      const cellSize=32,cutoff=650,detailRadius=graphics.profile.scenery;
+      const cellSize=32,cutoff=graphics.profile.districtRadius,detailRadius=graphics.profile.scenery;
       // A small occupancy mask lets each generated building test its footprint in constant time.
-      const maskSize=336,maskScale=.25;
+      const maskScale=.25,maskSize=Math.ceil((2*cutoff*maskScale+8)/16)*16;
       // Raster cells are aligned in world metres across render-origin shifts.
       const maskX=Math.floor((cx-cutoff)/4)*4-cx,maskZ=Math.floor((cz-cutoff)/4)*4-cz;
       let wetMask=null;
@@ -472,7 +474,7 @@
       function openGround(x,z){
         return grounds.mapped(x,z)||Boolean(wetMask&&wet(x-cx,z-cz));
       }
-      yield* district.buildSteps(graph,cx,cz,landmarks,terrain.ground,edges,openGround);
+      yield* district.buildSteps(graph,cx,cz,landmarks,terrain.ground,edges,openGround,Math.min(620,cutoff),terrain.revision);
       const contact=(...args)=>regionContact(obstacleCells,cx,cz,graph,tunnels,landmarks,district,...args);
       function nearbyCell(x,z){return Math.floor(x/cellSize)+','+Math.floor(z/cellSize);}
       function bounds(seg,pad,fn){
@@ -1114,7 +1116,7 @@
       // Publish geometry and its complete contact index in the same frame.
       activate({land,district,grounds,landmarks,roadGroup,shorePatch,groundAt,bridges,tunnels,obstacleCells,waterAt,
         nearbyWaterLevel,sceneGraph:graph,originX:cx,originZ:cz,treeBatches,streetBulbs});
-      committed=true;nextLightCheck=0;asphaltOrigin.set(cx,cz);landOrigin.set(gx,gz);
+      committed=true;districtRadius=cutoff;nextLightCheck=0;asphaltOrigin.set(cx,cz);landOrigin.set(gx,gz);
       if(graph)atmosphere.setLocation(...graph.geo(cx,cz));
       landscapeSource.activate(landscapes);relief.activate(terrain,cx,cz);tunnelCut.update(graph,tunnels,cx,cz);showCover();
       if(fieldPixels)waterSurface.setField(fieldPixels,maskSize,maskX,maskZ,maskScale,cx,cz);
@@ -1284,9 +1286,8 @@
       const item={root,outside,low,shadow,axleShadows:[],kind,idx,wheels:[],front:[],light:null,detail:null,loading:false};
       item.request=()=>{
         if(item.loading)return;item.loading=true;
-        loadModel(kind).then(base=>{
-          item.modelReady=true;
-          if(!base)return;
+        item.ready=loadModel(kind).then(async base=>{
+          if(!base){item.modelReady=true;return;}
           const model=base.clone(true),tints=new Map();
           model.traverse(n=>{
             if(!n.isMesh)return;
@@ -1308,13 +1309,15 @@
           });
           item.wheels=['FL','FR','RL','RR','F','R'].map(id=>({n:model.getObjectByName('wheel_'+id),id})).filter(i=>i.n);
           item.front=['FL','FR'].map(id=>model.getObjectByName('steer_'+id)).filter(Boolean);
-          item.detail=new T.Group();item.detail.add(model);if(kind==='scooter')scooterRider(item.detail);
-          outside.add(item.detail);item.detail.visible=false;
+          const detail=new T.Group();detail.add(model);if(kind==='scooter')scooterRider(detail);
+          outside.add(detail);detail.visible=false;
           for(const {n} of item.wheels){
             const axle=root.worldToLocal(n.getWorldPosition(new T.Vector3()));
             const patch=new T.Mesh(unitPlane,contactMat);patch.rotation.x=-Math.PI/2;
-            patch.position.set(axle.x,.014,axle.z);patch.scale.set(kind==='scooter'?.24:.48,.62,1);item.detail.add(patch);item.axleShadows.push(patch);
+            patch.position.set(axle.x,.014,axle.z);patch.scale.set(kind==='scooter'?.24:.48,.62,1);detail.add(patch);item.axleShadows.push(patch);
           }
+          await prepareActor(kind,detail);
+          item.detail=detail;item.modelReady=true;
         });
       };
       return item;
@@ -1401,7 +1404,8 @@
         item.outside.rotation.set(-(recoil?.pitch||0),0,-(recoil?.roll||0));
         for(const shadow of item.axleShadows)shadow.visible=!a.flood&&!recoil?.fallen;
         item.shadow.visible=!a.flood&&(recoil?.y||0)<3.2;
-        pose(item,a,dt,(index<graphics.profile.cars||kind==='scooter'||!!recoil)&&d<140*140);
+        // Keep nearby riders legible without loading every scooter on a busy street.
+        pose(item,a,dt,(index<graphics.profile.cars||kind==='scooter'&&d<35*35||!!recoil)&&d<140*140);
       }
       for(const [id,item] of trafficItems)if(item.tick!==version){
         trafficItems.delete(id);item.root.visible=false;
@@ -1497,7 +1501,6 @@
       atmosphere.eclipse.value=sightings.update(dt,car,originX,originZ,camera.aspect,sheltered);
       weather.render(camera,now,car.dawn||0,atmosphere.update,sheltered);
       headlight.intensity=car.flood?0:(sheltered?1:atmosphere.lamps.value)*2600;
-      headlight.visible=headlight.intensity>3;
       material.glass.emissiveIntensity=atmosphere.lamps.value*.37;
       material.lantern.emissiveIntensity=atmosphere.lamps.value*3.2;
       centralStreetscapes?.update(atmosphere.lamps.value);
@@ -1507,18 +1510,17 @@
         if(level>.04)streetBulbs.sort((a,b)=>a.distanceToSquared(camera.position)-b.distanceToSquared(camera.position));
         streetLights.forEach((light,i)=>{
           const bulb=streetBulbs[i],distance=bulb?.distanceTo(camera.position)??Infinity;
-          // Keep the light count stable between poles to reuse the same shaders.
-          light.visible=level>.04&&i<(graphics.profile.id==='low'?1:3);
-          if(light.visible&&distance<78){
+          // Changing the number of visible lights recompiles every lit material.
+          if(level>.04&&i<(graphics.profile.id==='low'?1:3)&&distance<78){
             light.position.copy(bulb);
             light.intensity=230*level*(1-T.MathUtils.smoothstep(distance,48,78));
           }else light.intensity=0;
         });
       }
       updateTreeDetail(camera.position.x,camera.position.z,graphics.profile);
-      if(prepareOnly)return renderer.compileAsync(scene,camera);
+      if(prepareOnly)return warmScene();
       if(car.showroom&&player.modelReady)cabin?.prepare(renderer,scene,camera);
-      if(inside&&cabin)cabin.reflect(mirrorAdapter,scene,playerRig,0,0,graphics.profile.mirrorMs);
+      if(inside&&cabin)cabin.reflect(mirrorAdapter,scene,cabin.interior,0,0,graphics.profile.mirrorMs);
       roadsideImpact.update(dt);driveFx.update(car,dt,originX,originZ,inside,camera,atmosphere.wetness.value);
       landmarkSource?.weather(weather.rainfall);
       const waterLevel=graphics.profile.waterWidth?nearbyWaterLevel(viewpoint.x-originX,viewpoint.z-originZ):null;
@@ -1527,6 +1529,27 @@
       waterSurface.reflect(renderer,scene,camera,reflectionLevel,now,reflectionLevel!==null,graphics.profile);
       renderer.render(scene,camera);
       return player.modelReady;
+    }
+    let driveWarmed=false;
+    const actorPrograms=new Map();
+    async function warmMaterials(object){
+      if(graphics.profile.waterWidth)await waterSurface.prepare(renderer,scene,camera,graphics.profile,object);
+      await renderer.compileAsync(object,camera,scene);
+    }
+    function prepareActor(kind,object){
+      if(!driveWarmed)return;
+      const key=kind+'|'+graphics.profile.id;
+      if(!actorPrograms.has(key))actorPrograms.set(key,warmMaterials(object).catch(()=>actorPrograms.delete(key)));
+      return actorPrograms.get(key);
+    }
+    async function warmScene(){
+      // The first pose starts loading the actual meshes. Compiling the placeholder
+      // cars would leave their paint, glass and skinned riders for the first drive.
+      await Promise.all([environmentReady,player.ready,streetLife.ready(),
+        ...Array.from(trafficItems.values(),item=>item.ready)]);
+      driveFx.mountExhaust(player.detail?.children[0],player.kind);
+      await warmMaterials(scene);
+      driveWarmed=true;
     }
     function prepareShaders(car,traffic){
       return render(car,traffic,0,false,performance.now(),true);
@@ -1546,6 +1569,7 @@
       markerPoint.project(camera);
       return markerPoint.z>0 && markerPoint.z<1 && Math.abs(markerPoint.x)<.92 && Math.abs(markerPoint.y)<.9 ? markerPoint : null;
     }
-    return {capturePhoto,hitDashboardMap,refreshMap,prepareShaders,projectSummit,weather,streetLife,accessLane:(x,z)=>grounds.accessLane(x,z),loadStructures:structures.load,preloadVehicle:loadModel,waterAt:(x,z,edge)=>{if(edge&&sceneGraph.tunnels.info(edge)?.bore&&tunnels.at(x,z,edge)!=null)return null;const wet=waterAt(x,z),deck=wet&&bridges?.at(x,z,edge);return wet&&deck!=null&&deck>=wet.level?null:wet;},terrainReady:relief.ready,grade:driveGrade,ground:driveGround,setRoads,queueRoads,loadRoads,advanceRoads,cancelRoads,districtDistance:(x,z)=>Math.hypot(x-originX,z-originZ),render,resize:graphics.resize,contact,loadDistrict:async(g,x,z)=>(await Promise.all([buildingSource.load(g,x,z),osmBuildings.load(g,x,z),relief.loadLocal(g,x,z),landscapeSource.load(g,x,z),groundSource.load(g,x,z),environment.load(g,x,z),amenities.load(g,x,z)])).some(Boolean),splash:(x,z,nx,nz,strength,level)=>driveFx.impact(x,z,nx,nz,strength,'water',level,.3),sightFootprint:(...args)=>district.footprint(...args),nearLandmark:(x,z)=>landmarks?.nearest(x,z),reactToContact:roadsideImpact.react,impact:(x,z,nx,nz,s,k,h=0,g,edge)=>driveFx.impact(x,z,nx,nz,s,k,driveGround(x,z,edge)+h,g),scrape:(x,y,z,vx,vz,edge)=>driveFx.scrape(x,driveGround(x,z,edge)+y,z,vx,vz),resetFx(){driveFx.reset();roadsideImpact.reset();sightings.reset();}};
+    return {get sceneryChanged(){return districtRadius!==graphics.profile.districtRadius;},
+      capturePhoto,hitDashboardMap,refreshMap,prepareShaders,projectSummit,weather,streetLife,accessLane:(x,z)=>grounds.accessLane(x,z),loadStructures:structures.load,preloadVehicle:loadModel,waterAt:(x,z,edge)=>{if(edge&&sceneGraph.tunnels.info(edge)?.bore&&tunnels.at(x,z,edge)!=null)return null;const wet=waterAt(x,z),deck=wet&&bridges?.at(x,z,edge);return wet&&deck!=null&&deck>=wet.level?null:wet;},terrainReady:relief.ready,grade:driveGrade,ground:driveGround,setRoads,queueRoads,loadRoads,advanceRoads,cancelRoads,districtDistance:(x,z)=>Math.hypot(x-originX,z-originZ),render,resize:graphics.resize,contact,loadDistrict:async(g,x,z)=>(await Promise.all([buildingSource.load(g,x,z),osmBuildings.load(g,x,z),relief.loadLocal(g,x,z),landscapeSource.load(g,x,z),groundSource.load(g,x,z),environment.load(g,x,z),amenities.load(g,x,z)])).some(Boolean),splash:(x,z,nx,nz,strength,level)=>driveFx.impact(x,z,nx,nz,strength,'water',level,.3),sightFootprint:(...args)=>district.footprint(...args),nearLandmark:(x,z)=>landmarks?.nearest(x,z),reactToContact:roadsideImpact.react,impact:(x,z,nx,nz,s,k,h=0,g,edge)=>driveFx.impact(x,z,nx,nz,s,k,driveGround(x,z,edge)+h,g),scrape:(x,y,z,vx,vz,edge)=>driveFx.scrape(x,driveGround(x,z,edge)+y,z,vx,vz),resetFx(){driveFx.reset();roadsideImpact.reset();sightings.reset();}};
   };
 })();

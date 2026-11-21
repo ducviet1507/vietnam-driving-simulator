@@ -3,9 +3,9 @@
 // Rendering budgets are independent of the simulation clock and CSS layout.
 function createDrivingGraphics(renderer, camera, sun) {
   const profiles = [
-    {id:'low', dpr:.9, pixels:900000, shadow:512, shadowMs:180, mirrorMs:170, waterWidth:0, waterMs:0, scenery:360, cars:2, treeDetail:25, treeCanopy:85},
-    {id:'medium', dpr:1.25, pixels:1800000, shadow:1024, shadowMs:100, mirrorMs:120, waterWidth:256, waterMs:260, scenery:480, cars:3, treeDetail:55, treeCanopy:150},
-    {id:'high', dpr:1.65, pixels:3600000, shadow:2048, shadowMs:60, mirrorMs:90, waterWidth:480, waterMs:130, scenery:620, cars:5, treeDetail:90, treeCanopy:240}
+    {id:'low', dpr:.9, pixels:900000, shadow:512, shadowMs:180, mirrorMs:170, waterWidth:0, waterMs:0, districtRadius:420, scenery:270, cars:2, treeDetail:25, treeCanopy:85},
+    {id:'medium', dpr:1.25, pixels:1800000, shadow:1024, shadowMs:100, mirrorMs:120, waterWidth:256, waterMs:260, districtRadius:540, scenery:440, cars:3, treeDetail:55, treeCanopy:150},
+    {id:'high', dpr:1.65, pixels:3600000, shadow:2048, shadowMs:60, mirrorMs:90, waterWidth:480, waterMs:130, districtRadius:650, scenery:620, cars:5, treeDetail:90, treeCanopy:240}
   ];
   const cores = navigator.hardwareConcurrency, memory = navigator.deviceMemory;
   const initial = cores <= 4 || memory <= 4 ? 0 : cores >= 8 && memory >= 8 ? 2 : 1;
@@ -69,8 +69,9 @@ function createDrivingGraphics(renderer, camera, sun) {
     const profile = profiles[level], w = canvas.clientWidth, h = canvas.clientHeight;
     if (!w || !h) return;
     const scale = Math.min(window.devicePixelRatio || 1, profile.dpr, Math.sqrt(profile.pixels / (w * h))) * (reduced ? .64 : 1);
-    if (renderer.shadowMap.enabled !== (shadows && !reduced)) {
-      renderer.shadowMap.enabled = shadows && !reduced;
+    const shadowMap = shadows && level > 0;
+    if (renderer.shadowMap.enabled !== shadowMap) {
+      renderer.shadowMap.enabled = shadowMap;
       renderer.shadowMap.needsUpdate = true;
     }
     if (w !== width || h !== height || scale !== ratio) {

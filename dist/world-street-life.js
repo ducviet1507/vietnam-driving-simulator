@@ -5,7 +5,7 @@ const vietnamPlaceTypes={
   hospital:{label:'Bệnh viện',colour:'#307168'}
 };
 
-function createWorldStreetLife(T,scene,small,environment,amenities){
+function createWorldStreetLife(T,scene,small,environment,amenities,prepareActor){
   const walkGroup=new T.Group();
   walkGroup.name='Người đi bộ';scene.add(walkGroup);
   const walkers=new Map(),models=new Map();
@@ -105,7 +105,8 @@ function createWorldStreetLife(T,scene,small,environment,amenities){
     const item={group};walkers.set(p.key,item);
     const asset=p.model;
     if(!models.has(asset))models.set(asset,TrafficModels.load.loadAsync('traffic/'+asset+'.glb'));
-    models.get(asset).then(data=>{
+    item.ready=models.get(asset).then(async data=>{
+      await prepareActor(asset,data.scene);
       if(walkers.get(p.key)!==item)return;
       const rig=TrafficModels.clone(data.scene);group.add(rig);
       rig.traverse(part=>{if(part.isMesh){part.castShadow=true;part.receiveShadow=true;}});
@@ -127,5 +128,5 @@ function createWorldStreetLife(T,scene,small,environment,amenities){
       actor.mixer?.update(dt);
     }
   }
-  return {activity,prepare,render,get places(){return places;}};
+  return {activity,prepare,render,ready:()=>Promise.all(Array.from(walkers.values(),item=>item.ready)),get places(){return places;}};
 }

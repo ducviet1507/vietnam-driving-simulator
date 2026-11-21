@@ -77,12 +77,12 @@ function drawDistrict(graph,lakes,x,z,edges,build=gfx.setRoads){
  pendingDistrict=null;districtView={graph,x,z,edges,waterways};
  loadStructuresNear(graph,x,z);return build(edges,x,z,waterways,graph);
 }
-function refreshView(build){
- const [lon,lat]=roads.geo(car.x,car.z);
+function refreshView(build,x=car.x,z=car.z){
+ const [lon,lat]=roads.geo(x,z);
  tourPins=VietnamTourism.nearby(lon,lat,.018,.018).map(s=>catalogById.get(s.id)).filter(Boolean)
    .concat(mountainPlaces.filter(site=>Math.abs(site.lon-lon)<.018&&Math.abs(site.lat-lat)<.018))
    .map(data=>({...roads.point(data.lon,data.lat),data}));
- nearby=roads.nearby(car.x,car.z,560);viewX=car.x;viewZ=car.z;
+ nearby=roads.nearby(x,z,560);viewX=x;viewZ=z;
  return drawDistrict(roads,water,viewX,viewZ,nearby,build);
 }
 function fetchWaterIndex(){
@@ -105,11 +105,9 @@ async function prepareWorld(graph,token){
  if(token!==loadToken)return false;
  if(!await refreshView(gfx.loadRoads)||token!==loadToken)return false;
  seedTraffic();
- if(!framesStarted){
-   await gfx.prepareShaders(car,npcs);
-   if(token!==loadToken)return false;
-   framesStarted=true;requestAnimationFrame(frame);
- }
+ await gfx.prepareShaders(car,npcs);
+ if(token!==loadToken)return false;
+ if(!framesStarted){framesStarted=true;requestAnimationFrame(frame);}
  return true;
 }
 async function startAt(place,restore=null,guided=null){
@@ -547,6 +545,17 @@ $('drivingMap').addEventListener('close',()=>{
  mode='drive';keySet.clear();updateHud();
  if(document.hidden||!document.hasFocus())pause();
 });
+let miniEdges,miniRoads;
+const edgePaths=new WeakMap();
+function mapPath(edge){
+ if(!edgePaths.has(edge)){
+   const line=new Path2D(),points=edge.points;
+   line.moveTo(points[0].x,points[0].z);
+   for(let i=1;i<points.length;i++)line.lineTo(points[i].x,points[i].z);
+   edgePaths.set(edge,line);
+ }
+ return edgePaths.get(edge);
+}
 function drawMini(landmark){
  const c=$('map'),g=c.getContext('2d'),scale=.43;
  // The dashboard has room to show more road on either side of the car.
@@ -554,10 +563,14 @@ function drawMini(landmark){
  if(c.width!==width)c.width=width;
  g.clearRect(0,0,c.width,c.height);g.save();g.translate(c.width/2,c.height*.56);
  g.scale(scale,scale);g.rotate(-car.yaw);
- for(const e of nearby){
-   g.strokeStyle=e.id===player.edge.id?'#d8f791':'#93aba2';g.lineWidth=e.id===player.edge.id?7:3;
-   traceMapLine(g,e.points);g.stroke();
+ if(miniEdges!==nearby){
+   miniEdges=nearby;miniRoads=new Path2D();
+   for(const edge of nearby)miniRoads.addPath(mapPath(edge));
  }
+ g.save();g.translate(-car.x,-car.z);
+ g.strokeStyle='#93aba2';g.lineWidth=3;g.stroke(miniRoads);
+ g.strokeStyle='#d8f791';g.lineWidth=7;g.stroke(mapPath(player.edge));
+ g.restore();
  const trace=guide||(!duel&&scenicTrace);
  if(trace){
    g.lineWidth=6;g.strokeStyle='#8af5ae';
@@ -620,8 +633,11 @@ function frame(now){
      const gap=gfx.districtDistance(car.x,car.z);
      const readyToRefresh=gfx.advanceRoads(mode==='drive'&&gap>245?12:5);
      if(readyToRefresh){
+       if(gfx.sceneryChanged)pendingDistrict=districtView;
        if((mode==='drive'&&Math.hypot(car.x-viewX,car.z-viewZ)>125)||(pendingDistrict&&mode!=='tour')){
-         refreshView(gfx.queueRoads);
+         // Centre the next district farther along the actual velocity vector.
+         const lead=mode==='drive'?Math.min(2,85/(Math.hypot(car.vx,car.vz)||1)):0;
+         refreshView(gfx.queueRoads,car.x+(car.vx||0)*lead,car.z+(car.vz||0)*lead);
        }else if(pendingDistrict){
          const {edges,x,z,waterways,graph}=pendingDistrict;
          pendingDistrict=null;gfx.queueRoads(edges,x,z,waterways,graph);

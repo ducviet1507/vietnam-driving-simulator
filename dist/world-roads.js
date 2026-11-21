@@ -24,14 +24,15 @@ class VietnamRoads {
  point(lon,lat){return {x:(lon-this.lon)*this.mx,z:(this.lat-lat)*this.my};}
  geo(x,z){return [this.lon+x/this.mx,this.lat-z/this.my];}
  decodeEdge([id,start,end,name,kind,oneway,coords]){
-   const points=[],dist=[];let length=0;
+   const points=[],dist=[];let length=0,minX=Infinity,minZ=Infinity,maxX=-Infinity,maxZ=-Infinity;
    for(let i=0;i<coords.length;i+=2){
      const p=this.point(coords[i]/100000,coords[i+1]/100000),last=points.at(-1);
      if(last){const d=Math.hypot(last.x-p.x,last.z-p.z);if(d<.1)continue;length+=d;}
      points.push(p);dist.push(length);
+     minX=Math.min(minX,p.x);minZ=Math.min(minZ,p.z);maxX=Math.max(maxX,p.x);maxZ=Math.max(maxZ,p.z);
    }
    if(length<.5)return null;
-   const edge={id,start,end,name,kind,oneway:Boolean(oneway),points,dist,length,visitorRoad:this.visitorEdges.has(id)};
+   const edge={id,start,end,name,kind,oneway:Boolean(oneway),points,dist,length,minX,minZ,maxX,maxZ,visitorRoad:this.visitorEdges.has(id)};
    if(kind==='service')edge.authoredHalfWidth=window.VietnamRoadWidths?.get(Math.min(start,end)+':'+Math.max(start,end));
    return edge;
  }
@@ -96,9 +97,11 @@ class VietnamRoads {
    for(const k of this.cache.keys())if(!keys.includes(k))this.cache.delete(k);
  }
  nearby(x,z,r){
+   const left=Math.floor((x-r)/300),right=Math.floor((x+r)/300),top=Math.floor((z-r)/300),bottom=Math.floor((z+r)/300);
+   if(left===right&&top===bottom)return this.buckets.get(left+','+top)||[];
    const unique=new Set();
-   for(let a=Math.floor((x-r)/300);a<=Math.floor((x+r)/300);a++)
-     for(let b=Math.floor((z-r)/300);b<=Math.floor((z+r)/300);b++)
+   for(let a=left;a<=right;a++)
+     for(let b=top;b<=bottom;b++)
        for(const e of this.buckets.get(a+','+b)||[])unique.add(e);
    return [...unique];
  }
@@ -108,6 +111,8 @@ class VietnamRoads {
  nearest(x,z,candidates=this.edges.values(),level=null){
    let best=null,bestScore=Infinity;
    for(const edge of candidates){
+     const dx=Math.max(0,edge.minX-x,x-edge.maxX),dz=Math.max(0,edge.minZ-z,z-edge.maxZ);
+     if(dx*dx+dz*dz>=bestScore)continue;
      for(let i=1;i<edge.points.length;i++){
        const a=edge.points[i-1],b=edge.points[i],vx=b.x-a.x,vz=b.z-a.z;
        const f=Math.max(0,Math.min(1,((x-a.x)*vx+(z-a.z)*vz)/(vx*vx+vz*vz)));

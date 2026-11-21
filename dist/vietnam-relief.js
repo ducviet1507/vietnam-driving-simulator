@@ -121,7 +121,7 @@ function createVietnamRelief(T,scene,compact,landscapes,tunnelCut){
     const dx=2*Math.sin(yaw),dz=-2*Math.cos(yaw);
     return (ground(x+dx,z+dz)-ground(x-dx,z-dz))/4;
   }
-  return {graph,pass:activePass,landscapes,base,ground,grade,measured,step,
+  return {graph,pass:activePass,landscapes,base,ground,grade,measured,step,revision:Symbol(),
     altitude:(x,z)=>graph&&pixels?base+ground(x,z)/.43:0};
   }
   const byGraph=new WeakMap(),passCache=new Map();
