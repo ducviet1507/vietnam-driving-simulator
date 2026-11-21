@@ -32,8 +32,13 @@ window.createPitQuiz=function(dialog,onWrong,onReady){
     if(q.image)img.src=q.image;else img.removeAttribute('src');
     $('#reply').textContent='Chú Tư đang mở nắp ca-pô. Trả lời câu này để chú ráp xe.';
     q.choices.forEach((text,i)=>{
-      const b=document.createElement('button');b.textContent=text;b.onclick=()=>{
-        if(i!==q.correct){b.disabled=true;$('#reply').textContent=onWrong();return;}
+      const b=document.createElement('button');b.textContent=String.fromCharCode(65+i)+'. '+text;b.onclick=()=>{
+        markQuizAnswer(choices.children[q.correct],true);
+        if(i!==q.correct){
+          markQuizAnswer(b,false);b.disabled=true;
+          $('#reply').textContent=onWrong()+' Đáp án đúng là '+String.fromCharCode(65+q.correct)+'.';
+          choices.children[q.correct].focus();return;
+        }
         for(const item of choices.children)item.disabled=true;
         $('#reply').textContent='Chuẩn bài! Cản trước đã về với chính chủ.';$('#repair').hidden=false;$('#repair').focus();
       };choices.append(b);

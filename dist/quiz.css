@@ -29,8 +29,6 @@
 #quiz .q-option{display:flex;align-items:baseline;gap:10px;text-align:left;width:100%;padding:9px 12px;min-height:41px;line-height:1.42}
 #quiz .q-option b{font-size:13px;color:#bfc9cb}
 #quiz .q-option:enabled:hover,#quiz .q-chapter:hover,#quiz .q-secondary:enabled:hover{background:#374348}
-#quiz .q-option.right{border-color:#68bc8a;background:#234436}
-#quiz .q-option.wrong{border-color:#d7846d;background:#46322e}
 #quiz .q-option:disabled{color:#e9eded;opacity:1;cursor:default}
 #quiz .q-primary{display:block;width:100%;min-height:43px;border:0;border-radius:8px;padding:9px 14px;font-weight:700;background:#ffa265;color:#191c1f;margin-top:12px}
 #quiz .q-image{display:block;background:white;width:100%;max-height:33dvh;object-fit:contain;border-radius:5px;margin:10px auto 14px}

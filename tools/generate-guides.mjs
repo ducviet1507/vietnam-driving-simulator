@@ -73,14 +73,14 @@ function chapterSlug(slug) {
 const chapterLinks = driveChapters.map(([first, last, title, slug]) =>
   `<li><a href="${chapterSlug(slug)}.html"><strong>${escape(title)}</strong><span>Câu ${first}–${last}</span></a></li>`).join('\n');
 page({...library, title:'Ngân hàng 600 câu hỏi lý thuyết lái xe', description:'Tra cứu 600 câu hỏi lý thuyết lái xe của Cục CSGT theo sáu chương, xem hình và đáp án từng câu hoặc tự làm bài trên ViVu3D.',
-  extraHead:'<link rel="stylesheet" href="quiz.css">',
+  extraHead:'<link rel="stylesheet" href="quiz.css"><link rel="stylesheet" href="answer-feedback.css">',
   body:`<h1>Ngân hàng 600 câu hỏi lý thuyết lái xe</h1>
   <p class="intro">Chọn một chương để đọc câu hỏi, xem hình minh họa và đối chiếu đáp án. Khi tự luyện, bạn có thể làm lại các câu đã trả lời sai.</p>
   <div class="actions"><button id="practice" class="primary" hidden>Luyện câu hỏi</button><a href="theory-exam.html">Thi thử lý thuyết hạng B</a></div>
   <h2>Tra cứu theo chương</h2><ol class="chapters">${chapterLinks}</ol>
   <footer>Nguồn câu hỏi và đáp án · ${bankCredit}</footer>`,
   scripts:`<dialog id="quiz" aria-labelledby="quiz-title"></dialog>
-<script src="bank.js" defer></script><script src="quiz.js" defer></script><script src="library.js" defer></script>`
+<script src="bank.js" defer></script><script src="answer-feedback.js" defer></script><script src="quiz.js" defer></script><script src="library.js" defer></script>`
 });
 
 function questionMarkup(q) {

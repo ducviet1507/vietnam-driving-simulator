@@ -64,6 +64,7 @@
   }
   function display() {
     const done = state.status === 'done', q = bank.get(state.ids[state.index]), choice = state.answers[state.index];
+    const reveal = done || (!exam && choice !== null);
     $('welcome').hidden = true; $('workspace').hidden = false;
     $('heading').textContent= done ? 'Kết quả lý thuyết' : 'Lý thuyết hạng B';
     $('clock').hidden=done;
@@ -82,11 +83,12 @@
       const button=document.createElement('button'),letter=document.createElement('b'),body=document.createElement('span');
       letter.textContent=String.fromCharCode(65+i);body.textContent=text;button.append(letter,body);
       button.disabled=done;button.setAttribute('aria-pressed', String(i===choice));
-      if(done && i===q.correct)button.className='correct';else if(done && i===choice)button.className='wrong';else if(i===choice)button.className='selected';
+      if(reveal && (i===q.correct || i===choice))markQuizAnswer(button,i===q.correct);
+      else if(i===choice)button.className='selected';
       button.onclick=()=>{if(Date.now()>=state.deadline)return finish(true);state.answers[state.index]=i;save();display();$('choices').children[i].focus({preventScroll:true});};
       return button;
     }));
-    $('answerNote').textContent=done?(choice===null?'Đã bỏ trống. ':choice===q.correct?'Bạn đã chọn đúng. ':'Bạn đã chọn sai. ')+'Đáp án '+String.fromCharCode(65+q.correct)+'.':'';
+    $('answerNote').textContent=reveal?(choice===null?'Đã bỏ trống. ':choice===q.correct?'Bạn đã chọn đúng. ':'Bạn đã chọn sai. ')+'Đáp án '+String.fromCharCode(65+q.correct)+'.':'';
     $('grid').replaceChildren(...state.ids.map((id,i)=>{
       const button=document.createElement('button');button.textContent=String(i+1);
       const answered=state.answers[i]!==null,correct=state.answers[i]===bank.get(id).correct;
