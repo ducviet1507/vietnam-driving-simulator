@@ -371,18 +371,18 @@
     }
     const fern=new T.TextureLoader().load('streetscape/surfaces/bank-fern.webp');fern.colorSpace=T.SRGBColorSpace;
     const understory=instances(shrubs,new T.PlaneGeometry(),new T.MeshLambertMaterial({map:fern,alphaTest:.42,side:T.DoubleSide,emissive:0x1a2115}),group);
-    const treeMap=new T.TextureLoader().load('streetscape/roadside-tree.webp');treeMap.colorSpace=T.SRGBColorSpace;
-    const treeRows=[],groves=[];
+    const models=createTreeModels(T),treeRows=[[],[],[],[]],groves=[];
     for(let i=0;i<94;i++){
       const t=.05+rand()*.90,f=frame(t),k=rand(),u=k<.4?-5.5+rand()*8:7+rand()*17;
       const near=Math.abs(t-.345)<.048||Math.abs(t-.725)<.048;
       if(near&&u<13)continue;
-      const [x,,z]=point(f,u,0),height=(k<.4?2.6:3.5)+rand()*4.1,spin=rand()*Math.PI,first=treeRows.length;
+      const [x,,z]=point(f,u,0),height=(k<.4?2.6:3.5)+rand()*4.1,spin=rand()*Math.PI;
       if(inForecourt(x,z))continue;
-      for(let j=0;j<2;j++)item(treeRows,x,0,z,height*(.80+rand()*.22),height,1,spin+j*Math.PI/2,0xc0c7a7);
-      groves.push({x,z,height,first});
+      const variant=models.variantAt(x,z),rows=treeRows[variant],index=rows.length,w=height*(.80+rand()*.22);
+      item(rows,x,0,z,w,height,w,spin);
+      groves.push({x,z,height,variant,index});
     }
-    const grove=instances(treeRows,new T.PlaneGeometry(),new T.MeshLambertMaterial({map:treeMap,alphaTest:.40,side:T.DoubleSide,emissive:0x1e251b}),group);
+    const groveMeshes=treeRows.map((rows,i)=>instances(rows,models.geometry('tree',false,i),models.material,group));
     const samples=Array.from({length:25},(_,i)=>frame(i/24)),eye=frame(.59),look=frame(.685);
     views[1].offset=[look.x,look.z];views[1].viewAngle=Math.atan2(eye.x-look.x,eye.z-look.z);
     views[1].viewRadius=Math.hypot(eye.x-look.x,eye.z-look.z);
@@ -417,13 +417,12 @@
         for(let j=offset;j<offset+2;j++){shrubs[j][0].elements[13]=y;understory.setMatrixAt(j,shrubs[j][0]);}
       }
       understory.instanceMatrix.needsUpdate=true;understory.computeBoundingSphere();
-      for(const {x,z,height,first} of groves){
-        const earth=h(x,z),localHeight=Math.max(.7,Math.min(height,level-earth-1.0));
-        for(let j=first;j<first+2;j++){
-          const m=treeRows[j][0];m.elements[5]=localHeight;m.elements[13]=earth+localHeight*.49;grove.setMatrixAt(j,m);
-        }
+      for(const {x,z,height,variant,index} of groves){
+        const earth=h(x,z),matrix=treeRows[variant][index][0];
+        matrix.elements[5]=Math.max(.7,Math.min(height,level-earth-1.0));matrix.elements[13]=earth;
+        groveMeshes[variant].setMatrixAt(index,matrix);
       }
-      grove.instanceMatrix.needsUpdate=true;grove.computeBoundingSphere();
+      for(const grove of groveMeshes)if(grove){grove.instanceMatrix.needsUpdate=true;grove.computeBoundingSphere();}
       const targetHeights=[level+1.0,level+1.46,level+1.0];
       views.forEach((v,i)=>{const [x,z]=v.offset;v.height=(targetHeights[i]-h(x,z))/.46;});
       group.userData.height=level+top;

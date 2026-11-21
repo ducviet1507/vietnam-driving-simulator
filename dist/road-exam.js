@@ -100,8 +100,8 @@ const camera=new T.PerspectiveCamera(62,1,.08,3300);
 const graphics=createDrivingGraphics(renderer,camera,sun);
 const geom={box:new T.BoxGeometry(1,1,1),leaf:new T.PlaneGeometry(1,1),houseRoof:new T.ConeGeometry(Math.SQRT1_2,1,4).rotateY(Math.PI/4),pole:new T.CylinderGeometry(.5,.5,1,8)};
 const batches=new Map(),temp=new T.Object3D();
-function scatter(kind,color,x,y,z,w,h,l,angle=0,pitch=0){
-  const key=kind+color;let batch=batches.get(key);
+function scatter(kind,color,x,y,z,w,h,l,angle=0,pitch=0,cell=''){
+  const key=kind+color+cell;let batch=batches.get(key);
   if(!batch){batch={kind,color,matrices:[]};batches.set(key,batch);}
   temp.position.set(x,y,z);temp.rotation.set(pitch,angle,0,'YXZ');temp.scale.set(w,h,l);temp.updateMatrix();batch.matrices.push(temp.matrix.clone());
 }
@@ -378,11 +378,17 @@ function terrain(){
 terrain();
 const hills=mountainField?mountainHorizon(nearTerrain,mountainField):distantHills();
 const foliage={};
-for(const kind of ['tree','palm']){
- const texture=new T.TextureLoader().load('streetscape/roadside-'+kind+'.webp');texture.colorSpace=T.SRGBColorSpace;
- texture.anisotropy=4;
- foliage[kind]=new T.MeshLambertMaterial({map:texture,side:T.DoubleSide,alphaTest:.5,color:0xc6d0bd,emissive:0x292f25});
- geom[kind]=new T.PlaneGeometry(1,1);
+const courseTrees=createTreeModels(T);
+const distantTrees=new Map();
+function scatterTree(kind,x,y,z,w,h,angle,compact=false){
+ const variant=courseTrees.variantAt(x,z),key=kind+variant+(compact?'Grove':'');
+ if(!geom[key]){
+   geom[key]=courseTrees.geometry(kind,compact,variant);
+   foliage[key]=kind==='palm'?courseTrees.palmMaterial:courseTrees.material;
+   if(!compact)distantTrees.set(key,courseTrees.geometry(kind,true,variant));
+ }
+ const cell=':'+Math.floor(x/220)+','+Math.floor(z/220);
+ scatter(key,0xffffff,x,y,z,w,h,w,angle,0,cell);
 }
 function tree(d,l){
  const p=at(d,l),n=nearest(p.x,p.z),y=renderedGround(p.x,p.z);
@@ -390,10 +396,7 @@ function tree(d,l){
  const palm=river&&random()<.42,kind=palm?'palm':'tree';
  const h=(palm?8:6.8)+random()*(palm?7:5.8),w=h*(palm?.588:.923)*(.9+random()*.2);
  const angle=random()*Math.PI;
- for(let k=0;k<2;k++){
-   const a=angle+k*Math.PI/2,off=w*(palm?.07:.12);
-   scatter(kind,0xffffff,p.x+off*Math.cos(a),y+h*.49,p.z-off*Math.sin(a),w,h,1,a);
- }
+ scatterTree(kind,p.x,y,p.z,w,h,angle);
 }
 function teaRows(d0,end,side){
   const verts=[],indices=[],colors=[],uv=[],col=new T.Color();
@@ -534,7 +537,20 @@ if(arcade){
 buildRoadside();
 if(!river)buildMountainVerges();
 for(const b of batches.values()){
- const m=new T.InstancedMesh(geom[b.kind],foliage[b.kind]||new T.MeshLambertMaterial({color:b.color}),b.matrices.length);b.matrices.forEach((mat,i)=>m.setMatrixAt(i,mat));m.castShadow=b.kind!=='undergrowth';m.receiveShadow=!foliage[b.kind];scene.add(m);
+ const m=new T.InstancedMesh(geom[b.kind],foliage[b.kind]||new T.MeshLambertMaterial({color:b.color}),b.matrices.length);
+ b.matrices.forEach((mat,i)=>m.setMatrixAt(i,mat));
+ m.castShadow=m.receiveShadow=b.kind!=='undergrowth';
+ const distant=distantTrees.get(b.kind);
+ if(distant){
+   // A whole grove switches detail together. Its bounding radius keeps any
+   // tree beside the driver in the detailed level, even at the cell edge.
+   m.computeBoundingSphere();
+   const lod=new T.LOD(),far=new T.InstancedMesh(distant,m.material,m.count);
+   lod.position.copy(m.boundingSphere.center);m.position.copy(lod.position).negate();
+   far.position.copy(m.position);far.instanceMatrix=m.instanceMatrix;
+   far.castShadow=far.receiveShadow=true;
+   lod.addLevel(m,0);lod.addLevel(far,85+m.boundingSphere.radius,.08);scene.add(lod);
+ }else scene.add(m);
 }
 const rig=new T.Group();scene.add(rig);
 const passHeadlights=featuredPass?new T.SpotLight(0xffe8c1,0,85,.5,.55,2):null;

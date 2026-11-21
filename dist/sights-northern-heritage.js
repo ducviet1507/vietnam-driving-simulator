@@ -250,19 +250,19 @@
     const trees=[[-20,.02,18.8,6.3,9.1,.3],[20,.02,18,6.5,9.6,.81],[-16,.01,25.4,4.3,7.7,.66],
       [16,.02,25.3,4.5,8.1,.22],[-22,.1,-13.3,5.8,8.6,.16],[22.1,.05,6.2,5.2,7.7,.64],
       [-18.2,.1,-22.2,6.8,9.3,.24],[20.5,.15,-23,6.8,9.2,1.34]];
-    forestCards(T,group,trees,'roadside-tree.webp');
+    createTreeModels(T).grove(group,trees);
     for(let i=0;i<6;i++)box(0xa09985,0,.49-i*.09,26.9+i*.4,3.8,.2,.45);
     roofs.finish(group,new T.MeshStandardMaterial({vertexColors:true,map:roofTiles(T,random),roughness:.91,side:T.DoubleSide}));
   }
 
-  function forestCards(T,group,stems,file) {
+  function fernCards(T,group,stems) {
     const cards=panels(T);
     for(const [x,y,z,w,h,a] of stems)for(let i=0;i<2;i++){
       const angle=a+i*Math.PI/2,dx=Math.cos(angle)*w/2,dz=Math.sin(angle)*w/2;
       const uv=([X,Y,Z])=>[((X-x)*Math.cos(angle)+(Z-z)*Math.sin(angle))/w+.5,(Y-y)/h];
       cards.face([x-dx,y,z-dz],[x+dx,y,z+dz],[x+dx,y+h,z+dz],[x-dx,y+h,z-dz],0xbfc4a8,uv);
     }
-    cards.finish(group,new T.MeshLambertMaterial({map:texture(T,file,true),vertexColors:true,alphaTest:.47,side:T.DoubleSide}));
+    cards.finish(group,new T.MeshLambertMaterial({map:texture(T,'surfaces/bank-fern.webp',true),vertexColors:true,alphaTest:.47,side:T.DoubleSide}));
   }
   function cocBoCave(T,{group,stamp,box,outline,random}) {
     const crag=panels(T),trees=[],ferns=[];
@@ -376,8 +376,8 @@
       return [Math.cos(a)*r,Math.sin(a)*r];
     });
     outline(star,0xbc9554,-1.67,3.46,1.986,.03);
-    forestCards(T,group,trees,'roadside-tree.webp');
-    forestCards(T,group,ferns,'surfaces/bank-fern.webp');
+    createTreeModels(T).grove(group,trees);
+    fernCards(T,group,ferns);
   }
 
   register('osm-node-3294335517',{

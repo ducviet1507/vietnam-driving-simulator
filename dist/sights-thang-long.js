@@ -70,19 +70,11 @@
   }
   const treeAssets=new WeakMap();
   function tree(T,{group},x,z,h,spread,y=0){
-    let asset=treeAssets.get(group);
-    if(!asset){
-      const map=new T.TextureLoader().load('streetscape/roadside-tree.webp');map.colorSpace=T.SRGBColorSpace;
-      const material=new T.MeshLambertMaterial({map,alphaTest:.47,color:0xc3cab5,side:T.DoubleSide});
-      asset={geometry:new T.PlaneGeometry(1,1),material};treeAssets.set(group,asset);
-    }
-    const mesh=new T.Mesh(asset.geometry,asset.material),position=new T.Vector3();
-    mesh.position.set(x,y+h*.5,z);mesh.scale.set(spread*2,h,1);mesh.receiveShadow=true;
-    mesh.onBeforeRender=(_renderer,_scene,camera)=>{
-      mesh.getWorldPosition(position);
-      mesh.rotation.y=Math.atan2(camera.position.x-position.x,camera.position.z-position.z)-group.rotation.y;
-      mesh.updateMatrixWorld();
-    };
+    let models=treeAssets.get(group);
+    if(!models){models=createTreeModels(T);treeAssets.set(group,models);}
+    const mesh=new T.Mesh(models.geometry('tree',false,models.variantAt(x,z)),models.material);
+    mesh.position.set(x,y,z);mesh.scale.set(spread*2,h,spread*2);mesh.rotation.y=x*.83+z*.65;
+    mesh.castShadow=mesh.receiveShadow=true;
     group.add(mesh);
   }
   const gateBays=[[-16,2.95,1.50,1.40],[-6.6,2.85,2.16,1.30],[0,4.00,2.56,1.74],[6.6,2.85,2.16,1.30],[16,2.95,1.50,1.40]];

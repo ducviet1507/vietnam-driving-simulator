@@ -163,29 +163,11 @@
   }
   const facades=shopNames.map((_,i)=>facade(i,2+i%3));
   const panel=new T.PlaneGeometry();
-  const canopyMap=texture(256,256,(c)=>{
-    const shades=['#335839','#436b39','#618442','#82994e','#9aaf60'];
-    for(let i=0;i<3600;i++){
-      const a=random()*Math.PI*2,r=Math.sqrt(random()),x=128+Math.cos(a)*r*113,y=128+Math.sin(a)*r*105;
-      if (r>.7 && Math.sin(a*9)+Math.cos(a*13)<(r-.7)*3) continue;
-      const tone=Math.max(0,Math.min(4,Math.floor(random()*3.5+(1-y/128)*1.3)));
-      c.fillStyle=shades[tone];c.beginPath();c.ellipse(x,y,2+random()*5,1+random()*2,random()*3,0,Math.PI*2);c.fill();
-    }
-  });
-  const foliage=new T.MeshLambertMaterial({map:canopyMap,side:T.DoubleSide,alphaTest:.45});
-  const trunk=new T.CylinderGeometry(.11,.24,1,7);
+  const streetTrees=createTreeModels(T);
   function tree(x,z){
-    const h=4+random()*1.5;
-    part(trunk,0x65574a,x,h*.43,z,1,h*.86,1);
-    for(let j=0;j<4;j++){
-      const angle=j*1.58+random()*.3;
-      part(trunk,0x756859,x+Math.cos(angle)*.26,h*.79,z+Math.sin(angle)*.26,.55,h*.48,.55,angle,.45);
-    }
-    for(let j=0;j<7;j++){
-      const a=j*2.4, r=j===6?0:1.2;
-      const cx=x+Math.cos(a)*r, cz=z+Math.sin(a)*r, cy=h+(j===6?1.45:random()*.8);
-      for(let k=0;k<2;k++)part(panel,foliage,cx,cy,cz,4.3,3.7,1,a+k*Math.PI/2);
-    }
+    const h=6.3+random()*1.8,w=h*(.85+random()*.15);
+    const geo=streetTrees.geometry('tree',false,streetTrees.variantAt(x,z));
+    part(geo,streetTrees.material,x,.30,z,w,h,w,random()*Math.PI*2);
     block(0x99927f,x,.24,z,1.45,.2,1.5);
   }
   const shadeCloth=boards.map(color=>new T.MeshLambertMaterial({map:texture(128,64,c=>{

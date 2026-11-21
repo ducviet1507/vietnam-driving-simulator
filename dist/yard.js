@@ -162,12 +162,14 @@ for(const st of [4,total-3]){
 const pts=route.map(p=>[p.x,p.y]);
 const left=Math.min(...pts.map(p=>p[0]))-12,right=Math.max(...pts.map(p=>p[0]))+12;
 const bottom=Math.min(...pts.map(p=>p[1]))-12,topY=Math.max(...pts.map(p=>p[1]))+12;
+const yardTrees=[];
 for(let x=left-20;x<right+30;x+=13){
  for(const y of [bottom-10,topY+14]){
-  block(x,y,2,.42,4,.4,0x685647);
-  const tree=new Y.Mesh(new Y.IcosahedronGeometry(2.9,1),mat(0x467048));tree.position.set(x,4.6,-y);scene.add(tree);
+  const angle=x*.47+y*.71,h=6.8+1.2*Math.sin(angle);
+  yardTrees.push([x,0,-y,h*.84,h,angle]);
  }
 }
+createTreeModels(Y).grove(scene,yardTrees,false);
 // Bring the control building and fence close to the pavement.
 for(const boundary of [left,right]){
  for(let y=bottom;y<=topY;y+=6){

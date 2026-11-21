@@ -117,23 +117,15 @@ function buildMountainVerges(){
   }
   const fern=loader.load('streetscape/surfaces/bank-fern.webp');fern.colorSpace=T.SRGBColorSpace;
   foliage.undergrowth=new T.MeshLambertMaterial({map:fern,side:T.DoubleSide,alphaTest:.34,color:0xd4d8be,emissive:0x89906c,emissiveMap:fern,emissiveIntensity:.8});
-  geom.undergrowth=geom.tree;
-  const pine=loader.load('streetscape/surfaces/mountain-pine.webp');pine.colorSpace=T.SRGBColorSpace;
-  foliage.pine=new T.MeshLambertMaterial({map:pine,side:T.DoubleSide,alphaTest:.31,
-    color:0xf1f2e8,emissive:0x858b7a,emissiveMap:pine,emissiveIntensity:.5});
-  geom.pine=geom.tree;
+  geom.undergrowth=geom.leaf;
   if(featuredPass){
-    // One canopy spans two crossed planes. Give both faces a crown normal so
-    // raking sunlight doesn't turn one half of a tree black and the other gold.
-    for(const crown of [foliage.tree,foliage.pine,foliage.undergrowth]){
-      crown.emissive.set(0x060a07);
-      crown.onBeforeCompile=shader=>{
-        shader.vertexShader=shader.vertexShader.replace('#include <beginnormal_vertex>',
-          '#include <beginnormal_vertex>\n objectNormal=normalize(vec3((uv.x-.5)*.3,1.,.12));');
-        shader.fragmentShader=shader.fragmentShader.replace('#include <normal_fragment_begin>',
-          '#include <normal_fragment_begin>\n normal*=faceDirection;');
-      };
-    }
+    foliage.undergrowth.emissive.set(0x060a07);
+    foliage.undergrowth.onBeforeCompile=shader=>{
+      shader.vertexShader=shader.vertexShader.replace('#include <beginnormal_vertex>',
+        '#include <beginnormal_vertex>\n objectNormal=normalize(vec3((uv.x-.5)*.3,1.,.12));');
+      shader.fragmentShader=shader.fragmentShader.replace('#include <normal_fragment_begin>',
+        '#include <normal_fragment_begin>\n normal*=faceDirection;');
+    };
     // Weathered outcrops emerge from the cut side, especially in the limestone
     // gorge. Sample the ground under each rock and exclude adjacent switchbacks.
     const limestone=route.id==='deo-ma-pi-leng',rockColour=limestone?0xb3b5a7:0x969287;
@@ -162,7 +154,7 @@ function buildMountainVerges(){
       if(n.dist<12||besideWater(n.d)&&y<waterLevel+.7)continue;
       const kind=pineStand&&random()<.84?'pine':'tree';
       const h=(kind==='pine'?10:6.2)+random()**.8*12,w=h*(kind==='pine'?.5:.56+random()*.38),yaw=random()*Math.PI;
-      for(let v=0;v<2;v++)scatter(kind,0xffffff,x,y+h*.49,z,w,h,1,yaw+v*Math.PI/2);
+      scatterTree(kind,x,y,z,w,h,yaw,n.dist>48);
     }
     for(let j=0;j<(compact?3:7);j++){
       const p=at(d+random()*22,side*(9+random()*15)),y=renderedGround(p.x,p.z);

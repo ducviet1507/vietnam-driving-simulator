@@ -26,20 +26,7 @@
     return m;
   }
   function trees(T,group,stems){
-    const p=[],uv=[],colour=[],c=new T.Color();
-    for(const [x,y,z,h,angle] of stems)for(let k=0;k<2;k++){
-      const dx=Math.cos(angle+k*Math.PI/2)*h*.50,dz=Math.sin(angle+k*Math.PI/2)*h*.50;
-      c.setHSL(.23+Math.sin(x)*.025,.12,.80+Math.sin(z*4)*.12);
-      for(const [u,v] of [[0,0],[1,0],[0,1],[1,0],[1,1],[0,1]]){
-        p.push(x+(u*2-1)*dx,y+v*h,z+(u*2-1)*dz);uv.push(u,v);colour.push(c.r,c.g,c.b);
-      }
-    }
-    const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(p,3));g.setAttribute('uv',new T.Float32BufferAttribute(uv,2));
-    g.setAttribute('color',new T.Float32BufferAttribute(colour,3));g.computeVertexNormals();
-    const mat=new T.MeshLambertMaterial({map:texture(T,'roadside-tree.webp',true),side:T.DoubleSide,alphaTest:.48,vertexColors:true});
-    mat.onBeforeCompile=s=>{s.vertexShader=s.vertexShader.replace('#include <beginnormal_vertex>','#include <beginnormal_vertex>\n objectNormal=vec3(0.,1.,0.);');
-      s.fragmentShader=s.fragmentShader.replace('#include <normal_fragment_begin>','#include <normal_fragment_begin>\n normal*=faceDirection;');};
-    const m=new T.Mesh(g,mat);m.castShadow=m.receiveShadow=true;group.add(m);
+    createTreeModels(T).grove(group,stems.map(([x,y,z,h,a])=>[x,y,z,h,h,a]));
   }
   // Stratified limestone or volcanic banks, with trees rooted in the surface samples.
   function outcrop(T,{group,random},cx,cz,w,d,h,forested,stems,base=-3){

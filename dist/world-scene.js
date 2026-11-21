@@ -55,14 +55,14 @@
     sun.shadow.camera.updateProjectionMatrix();sun.shadow.normalBias=.025;sun.shadow.bias=-.00025;scene.add(sun,sun.target);
     const basic=c=>new T.MeshLambertMaterial({color:c});
     const surfaces=createRoadSurfaces(T,renderer);
+    const treeModels=createTreeModels(T);
     const material={
       asphalt:surfaces.scanned('asphalt',0xaeb2b3,.41),
       earth:surfaces.scanned('verge',0xd7d1bc,.65),
       white:basic(0xe8e8d7),yellow:basic(0xf0ca63),wall:surfaces.scanned('plaster',0xfff9e9,.6),roof:basic(0x748585),
       gable:new T.MeshStandardMaterial({color:0xf6e2c6,roughness:.84}),
       pavement:basic(0xc2b8a3),steel:basic(0x687877),concrete:basic(0xb0afa3),glass:new T.MeshStandardMaterial({color:0x5c7979,roughness:.19,metalness:.53,envMapIntensity:.86}),
-      awning:basic(0x9c9f92),tree:new T.MeshLambertMaterial({map:texture('roadside-tree.webp'),alphaTest:.46,side:T.DoubleSide,color:0xd4dbcc,emissive:0x262b23}),
-      palm:new T.MeshLambertMaterial({map:texture('roadside-palm.webp'),alphaTest:.46,side:T.DoubleSide,color:0xd6dccb,emissive:0x262b23})
+      awning:basic(0x9c9f92),tree:treeModels.material,pine:treeModels.material,palm:treeModels.palmMaterial
     };
     material.lantern=new T.MeshStandardMaterial({color:0xd0cbb9,roughness:.43,emissive:0xffc786,emissiveIntensity:0});
     const asphaltOrigin=new T.Vector2();
@@ -72,30 +72,18 @@
     stoneNormal.wrapS=stoneNormal.wrapT=T.RepeatWrapping;
     material.cut=new T.MeshStandardMaterial({map:texture('surfaces/cut-rock-color.webp',true),normalMap:stoneNormal,
       normalScale:new T.Vector2(.62,.62),roughness:.96,side:T.DoubleSide,color:0xbcb5a6});
-    material.pine=new T.MeshLambertMaterial({map:texture('surfaces/mountain-pine.webp'),alphaTest:.34,side:T.DoubleSide,color:0xe7ede4});
     material.fern=new T.MeshLambertMaterial({map:texture('surfaces/bank-fern.webp'),alphaTest:.38,side:T.DoubleSide,color:0xd6dfd1});
-    // A photographed crown already contains branch and leaf shading. Shared
-    // upward normals avoid black panels when a crossed sheet faces away from the sun.
-    const foliageEye=new T.Vector3(),canopyFade=new T.Vector2(325,425);
-    for(const canopy of [material.tree,material.pine,material.palm,material.fern]){
-      canopy.customProgramCacheKey=()=>canopy===material.fern?'fern':canopy===material.pine?'pine':'canopy';
-      canopy.onBeforeCompile=shader=>{
-        // Finish the transition inside the area shared by successive 155 m rebuilds.
-        const range=canopy===material.fern?'120.,185.':'canopyFade.x,canopyFade.y';
-        shader.uniforms.foliageEye={value:foliageEye};
-        shader.uniforms.canopyFade={value:canopyFade};
-        shader.vertexShader='uniform vec3 foliageEye; uniform vec2 canopyFade; varying float foliageFade;\n'+shader.vertexShader.replace('#include <project_vertex>',
-          '#include <project_vertex>\n foliageFade=0.;\n#ifdef USE_INSTANCING\n foliageFade=foliageEye.z*smoothstep('+range+',distance(instanceMatrix[3].xz,foliageEye.xy));\n#endif');
-        shader.fragmentShader='varying float foliageFade;\n'+shader.fragmentShader.replace('#include <alphatest_fragment>',
-          '#include <alphatest_fragment>\n if(foliageFade>0. && foliageFade>=fract(52.9829189*fract(dot(gl_FragCoord.xy,vec2(.06711056,.00583715)))))discard;');
-        shader.vertexShader=shader.vertexShader.replace('#include <beginnormal_vertex>',
-          '#include <beginnormal_vertex>\n objectNormal=vec3(0.,1.,0.);');
-        shader.fragmentShader=shader.fragmentShader.replace('#include <normal_fragment_begin>',
-          '#include <normal_fragment_begin>\n normal*=faceDirection;');
-        if(canopy===material.pine||canopy===material.fern)shader.fragmentShader=shader.fragmentShader.replace(
-          '#include <map_fragment>','#include <map_fragment>\n diffuseColor.rgb*=2.25;');
-      };
-    }
+    const foliageEye=new T.Vector3();
+    material.fern.onBeforeCompile=shader=>{
+      shader.uniforms.foliageEye={value:foliageEye};
+      shader.vertexShader='uniform vec3 foliageEye; varying float foliageFade;\n'+shader.vertexShader
+        .replace('#include <beginnormal_vertex>','#include <beginnormal_vertex>\n objectNormal=vec3(0.,1.,0.);')
+        .replace('#include <project_vertex>','#include <project_vertex>\n foliageFade=foliageEye.z*smoothstep(120.,185.,distance(instanceMatrix[3].xz,foliageEye.xy));');
+      shader.fragmentShader='varying float foliageFade;\n'+shader.fragmentShader
+        .replace('#include <normal_fragment_begin>','#include <normal_fragment_begin>\n normal*=faceDirection;')
+        .replace('#include <map_fragment>','#include <map_fragment>\n diffuseColor.rgb*=2.25;')
+        .replace('#include <alphatest_fragment>','#include <alphatest_fragment>\n if(foliageFade>0. && foliageFade>=fract(52.9829189*fract(dot(gl_FragCoord.xy,vec2(.06711056,.00583715)))))discard;');
+    };
     material.rail=new T.MeshStandardMaterial({color:0xaab2af,metalness:.55,roughness:.49,side:T.DoubleSide});
     material.asphalt.side=material.earth.side=T.DoubleSide;
     material.pavers=new T.MeshStandardMaterial({color:0xb5ada4,roughness:.91,side:T.DoubleSide});
@@ -291,8 +279,6 @@
       obstacleCells=new Map();
       roadsideImpact.rebase(cx,cz);
       const cellSize=32,cutoff=650,detailRadius=graphics.profile.scenery;
-      const fadeEnd=Math.min(425,detailRadius-165);
-      canopyFade.set(fadeEnd-100,fadeEnd);
       // A small occupancy mask lets each generated building test its footprint in constant time.
       const maskSize=336,maskScale=.25;
       // Raster cells are aligned in world metres across render-origin shifts.
@@ -428,8 +414,8 @@
       waterAt=(x,z)=>sampleShore(x-cx,z-cz);
       shoreBed=(x,z)=>shorePatch?.sample(x-cx,z-cz,true)?.bed;
       let buildingBase=null;
-      function instance(mat,geo,x,y,z,sx,sy,sz,yaw=0,color=null,owner=null){
-        const key=mat+':'+geo.id;
+      function instance(mat,geo,x,y,z,sx,sy,sz,yaw=0,color=null,owner=null,cell=''){
+        const key=mat+':'+geo.id+cell;
         if(!batches.has(key))batches.set(key,{mat,geo,poses:[],colors:[],moving:[]});
         const b=batches.get(key);temp.position.set(x,y+(buildingBase??localGround(x,z)),z);temp.rotation.set(0,yaw,0,'YXZ');
         if(sz>2&&sy<.16&&buildingBase===null){
@@ -438,6 +424,12 @@
         }temp.scale.set(sx,sy,sz);temp.updateMatrix();
         if(owner)b.moving.push([b.poses.length,owner]);
         b.poses.push(temp.matrix.clone());b.colors.push(color);
+      }
+      function plantTree(kind,x,z,h,w,angle,color,owner,compact=false){
+        const variant=treeModels.variantAt(cx+x,cz+z);
+        const geo=treeModels.geometry(kind,compact,kind==='tea'?0:variant);
+        const cell=':'+Math.floor(x/160)+','+Math.floor(z/160);
+        instance(kind==='tea'?'tree':kind,geo,x,0,z,w,h,w,angle,color,owner,cell);
       }
       function quad(points,ax,az,bx,bz,cx,cz,dx,dz){points.push(ax,az,bx,bz,cx,cz,cx,cz,bx,bz,dx,dz);}
       const roadSections=[];
@@ -767,7 +759,7 @@
               const uplands=lat>21.3&&lon<106.4||lat>11.6&&lat<15&&lon>107&&lon<108.6;
               const palm=random()<(uplands?.015:lat<11?.48:lat<18?.32:.11),height=(palm?7.5:5)+random()*5,w=height*(palm?.59:.92),r=random()*Math.PI;
               const tree=registerObstacle({id:c.key,kind:'tree',x:hx,z:hz,radius:.27,height,parts:[]});
-              for(let k=0;k<2;k++){const angle=r+k*Math.PI/2,off=w*(palm?.07:.12);instance(palm?'palm':'tree',unitPlane,hx+off*Math.cos(angle),height*.49,hz-off*Math.sin(angle),w,height,1,angle,null,tree);}
+              plantTree(palm?'palm':'tree',hx,hz,height,w,r,null,tree);
             }
       }
       if(innerPrecinct){
@@ -777,7 +769,7 @@
           const p=graph.point(lon,lat),x=p.x-cx,z=p.z-cz;
           if(Math.hypot(x,z)>540||blocked(x,z,1.5))continue;
           const tree=registerObstacle({id:'tam-chuc-verge:'+lon,kind:'tree',x,z,radius:.25,height:h,parts:[]});
-          for(const angle of [.35,1.92])instance('tree',unitPlane,x,h*.49,z,h*.94,h,1,angle,0xe0d5b4,tree);
+          plantTree('tree',x,z,h,h*.94,.35,0xfff4d8,tree);
         }
       }
       if(graph){
@@ -807,8 +799,7 @@
             const angle=rand()*Math.PI,tint=tone.setHSL(.24+rand()*.10,.08+rand()*.14,.66+rand()*.18).getHex();
             const id='stand:'+ix+':'+iz;
             const tree=registerObstacle({id,kind:'tree',x:lx,z:lz,radius:Math.max(.16,h*.02),height:h,parts:[]});
-            const planes=2;
-            for(let k=0;k<planes;k++)instance(pine?'pine':'tree',unitPlane,lx,h*.485,lz,w,h,1,angle+k*Math.PI/2,tint,tree);
+            plantTree(pine?'pine':'tree',lx,lz,h,w,angle,tint,tree,dist>160);
             if(dist>365||rand()>.76)return;
             for(let k=0;k<3;k++){
               const fx=lx+(rand()-.5)*12,fz=lz+(rand()-.5)*12,fh=.6+rand()*1.0;
@@ -933,12 +924,11 @@
       material.white.side=material.yellow.side=T.DoubleSide;
       grounds.build(roadGroup,localGround,obstruction,registerObstacle,sampleShore,(kind,x,z,h,w,angle)=>{
         if(kind==='tea'){
-          instance('tree',unitPlane,x,h*.48,z,w,h,1,angle,0x96af73);
-          instance('tree',unitPlane,x,h*.48,z,w,h,1,angle+Math.PI/2,0x9ab977);return;
+          plantTree('tea',x,z,h,w,angle,0xebf2cd,null,true);return;
         }
         const tree=registerObstacle({id:'mapped-tree:'+Math.round(cx+x)+':'+Math.round(cz+z),
           kind:'tree',x,z,radius:Math.max(.12,h*.022),height:h,parts:[]});
-        for(const turn of [angle,angle+Math.PI/2])instance(kind,unitPlane,x,h*.49,z,w,h,1,turn,null,tree);
+        plantTree(kind,x,z,h,w,angle,null,tree);
       });
       surface(bankData,material.earth,-.065,.60);
       if(cover.length){
