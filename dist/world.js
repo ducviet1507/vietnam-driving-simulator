@@ -91,16 +91,20 @@ async function streamWater(graph){
    return await water.load(car.x,car.z);
  }catch{/* Road navigation stays available when this scenery layer is offline. */}
 }
-let framesStarted=false;
+let framesStarted=false,departureWaterReady=null;
 async function prepareWorld(graph,token){
  gfx??=createWorldScene($('world'),breakfastCall);
  gfx.preloadVehicle(car.model);gfx.resetFx();
  loadStructuresNear(graph,car.x,car.z);
- await Promise.all([gfx.terrainReady,streamWater(graph),gfx.loadDistrict(graph,car.x,car.z),
+ await Promise.all([gfx.terrainReady,Promise.resolve(departureWaterReady).then(()=>streamWater(graph)),gfx.loadDistrict(graph,car.x,car.z),
    VietnamTourism.loadRegion(...graph.geo(car.x,car.z))]);
  if(token!==loadToken)return false;
  refreshView();seedTraffic();
- if(!framesStarted){framesStarted=true;requestAnimationFrame(frame);}
+ if(!framesStarted){
+   await gfx.prepareShaders(car,npcs);
+   if(token!==loadToken)return false;
+   framesStarted=true;requestAnimationFrame(frame);
+ }
  return true;
 }
 async function startAt(place,restore=null,guided=null){
@@ -139,7 +143,12 @@ async function startAt(place,restore=null,guided=null){
  $('placeTitle').textContent=place[0];
  try{
    const origin=Array.isArray(restore?.origin)&&restore.origin.length===2&&restore.origin.every(Number.isFinite)?restore.origin:place.slice(1);
-   const graph=new VietnamRoads(indexData,...origin),start=graph.point(place[1],place[2]);await graph.load(start.x,start.z);
+   const graph=new VietnamRoads(indexData,...origin),start=graph.point(place[1],place[2]);
+   // The departure map and the road graph can load from the same coordinates.
+   const previewWater=!gfx&&departure&&!guided?fetchWaterIndex().then(async index=>{
+     const lakes=new VietnamWater(index,graph);await lakes.load(start.x,start.z);return lakes;
+   }).catch(()=>null):null;
+   await graph.load(start.x,start.z);
    const atEntrance=!restore&&!guided&&site?.accessRoad&&place[1]===site.start[0]&&place[2]===site.start[1];
    const accessEdge=atEntrance&&graph.edges.get(site.accessRoad);
    if(atEntrance&&!accessEdge)throw Error('Chưa tải được đường vào địa danh. Hãy thử lại.');
@@ -179,11 +188,16 @@ async function startAt(place,restore=null,guided=null){
    duel=null;passes=restore?.passes||0;inside=false;busy=false;npcs=[];parkOnRoad();
    if(Number.isFinite(restore?.yaw)){car.x=start.x;car.z=start.z;car.yaw=restore.yaw;trackRoad();}
    loadX=car.x;loadZ=car.z;streamRetry=0;
+   departureWaterReady=null;
    if(!gfx&&departure&&!guided){
      // These departures have a responsive scene photograph. Their real road
      // map, atlas and planner are ready before we need a WebGL context.
-     await streamWater(graph);if(token!==loadToken)return;
      nearby=graph.nearby(car.x,car.z,560);
+     departureWaterReady=previewWater.then(lakes=>{
+       if(token!==loadToken||roads!==graph||!lakes)return;
+       water=lakes;
+       if(mode==='grid')drawDepartureMap();
+     });
    }else if(!await prepareWorld(graph,token))return;
    drawDepartureMap();mode='grid';
    $('challenge').disabled=guided;$('startGuided').disabled=false;$('launch').disabled=false;$('launch').textContent=restore?'Lái tiếp':'Cầm lái';
@@ -489,6 +503,7 @@ $('scenicRadio').onclick=()=>{
 };
 function drawDepartureMap(){
  const c=$('departureMap'),g=c.getContext('2d');
+ g.clearRect(0,0,c.width,c.height);
  // North-up overview of the actual starting roads. The driving map follows the car.
  g.save();g.translate(c.width/2,c.height/2);g.scale(.39,.39);
  for(const feature of water?.nearby(car.x,car.z)||[]){

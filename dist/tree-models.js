@@ -5,6 +5,7 @@
 let roadsideTreeAtlas;
 function createTreeModels(T){
   const cache=new Map();
+  let distantMaterial;
   const atlas=roadsideTreeAtlas??=new T.TextureLoader().load('streetscape/tree-canopies.webp');
   atlas.colorSpace=T.SRGBColorSpace;
   atlas.userData.sightShared=true;
@@ -22,6 +23,53 @@ function createTreeModels(T){
     return (Math.imul(hash^(hash>>>16),0x45d9f3b)>>>16)%4;
   }
   const bytes=text=>Uint8Array.from(atob(text),c=>c.charCodeAt(0));
+  function scanFor(kind,variant){return kind==='pine'?3:kind==='tea'?0:[1,2,0,1][variant];}
+  // Use the same rooted silhouette at every detail level.
+  function scanPosition(kind,variant,root,x,y,z){
+    x-=root[0];z-=root[1];y-=.009;
+    const f=Math.max(0,y);
+    if(kind==='tea')return [x,Math.max(-.02,(y-.14)/.86),z];
+    if(kind==='pine')return [x*(.82+variant*.07)+.038*Math.sin(f*2+variant)*f,y,z*(1.03-.07*variant)];
+    if(variant===3)return [-x*(.79+.20*f)+.065*f*f,Math.sign(y)*Math.abs(y)**.82,z*(.88+.20*f)];
+    return [x,y,z];
+  }
+  function distantGeometry(kind,variant){
+    const key=kind+' distant '+variant;
+    if(cache.has(key))return cache.get(key);
+    const slot=scanFor(kind,variant),root=window.treeScanData[slot].root;
+    const positions=[],normals=[],uv=[],indices=[];
+    // Two upright views intersect at the trunk. The third covers elevated cameras.
+    for(const [view,[right,up]] of [[0,1],[2,1],[0,2]].entries()){
+      const start=positions.length/3;
+      for(const v of [0,.5,1])for(const u of [0,.5,1]){
+        const p=[root[0],.63,root[1]];p[right]=u;p[up]=v;
+        positions.push(...scanPosition(kind,variant,root,...p));
+        const normal=new T.Vector3(p[0]-.5,.65,p[2]-.5).normalize();
+        normals.push(normal.x,normal.y,normal.z);
+        uv.push((slot+(2+u*124)/128)/4,(3-view+(2+v*124)/128)/4);
+      }
+      for(const i of [0,1,3,4]){
+        const a=start+i;indices.push(a,a+1,a+3,a+1,a+4,a+3);
+      }
+    }
+    const g=new T.BufferGeometry();g.name='Tree model: '+key;
+    g.setAttribute('position',new T.Float32BufferAttribute(positions,3));
+    g.setAttribute('normal',new T.Float32BufferAttribute(normals,3));
+    g.setAttribute('uv',new T.Float32BufferAttribute(uv,2));g.setIndex(indices);
+    cache.set(key,g);return g;
+  }
+  function billboardMaterial(){
+    if(!distantMaterial){
+      const map=new T.TextureLoader().load('streetscape/tree-billboards.webp');
+      map.colorSpace=T.SRGBColorSpace;
+      distantMaterial=new T.MeshLambertMaterial({map,side:T.DoubleSide,alphaTest:.28});
+      distantMaterial.onBeforeCompile=shader=>{
+        shader.fragmentShader=shader.fragmentShader.replace('#include <normal_fragment_begin>',
+          '#include <normal_fragment_begin>\n normal*=faceDirection;');
+      };
+    }
+    return distantMaterial;
+  }
   function geometry(kind,compact=false,variant=0){
     const key=kind+(compact?' grove ':' roadside ')+variant;
     if(cache.has(key))return cache.get(key);
@@ -87,18 +135,9 @@ function createTreeModels(T){
         }
       }
     }else{
-      const slot=kind==='pine'?3:kind==='tea'?0:[1,2,0,1][variant];
+      const slot=scanFor(kind,variant);
       const scan=window.treeScanData[slot],wood=scan.wood[compact?1:0],root=scan.root;
-      function position(x,y,z){
-        // Vary the growth habit around the same rooted skeleton. Warp bark
-        // and foliage together so the ends of branches stay seated in the leaves.
-        x-=root[0];z-=root[1];y-=.009;
-        const f=Math.max(0,y);
-        if(kind==='tea')return [x,Math.max(-.02,(y-.14)/.86),z];
-        if(kind==='pine')return [x*(.82+variant*.07)+.038*Math.sin(f*2+variant)*f,y,z*(1.03-.07*variant)];
-        if(variant===3)return [-x*(.79+.20*f)+.065*f*f,Math.sign(y)*Math.abs(y)**.82,z*(.88+.20*f)];
-        return [x,y,z];
-      }
+      const position=(x,y,z)=>scanPosition(kind,variant,root,x,y,z);
       const xyz=new Int16Array(bytes(wood[0]).buffer),faces=new Uint16Array(bytes(wood[1]).buffer);
       const trunk=new T.BufferGeometry(),points=[];
       for(let i=0;i<xyz.length;i+=3)points.push(...position(xyz[i]/16000,xyz[i+1]/16000,xyz[i+2]/16000));
@@ -155,5 +194,5 @@ function createTreeModels(T){
       mesh.castShadow=mesh.receiveShadow=true;group.add(mesh);
     });
   }
-  return {geometry,material,palmMaterial,variantAt,grove};
+  return {geometry,material,palmMaterial,variantAt,grove,distantGeometry,billboardMaterial};
 }
