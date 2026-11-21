@@ -2,7 +2,7 @@
 // Metre-scale ground finishes follow the mapped rings (including holes) and
 // pedestrian ways. The relief mesh supplies their elevation and doesn't need
 // another layer of nearly coplanar triangles.
-function createSightGrounds(T,small){
+function createSightGrounds(T,small,source){
   const base='sight-grounds/',canvas=document.createElement('canvas'),span=1120;
   canvas.width=canvas.height=small?768:1280;
   const pen=canvas.getContext('2d',{willReadFrequently:true});
@@ -10,7 +10,7 @@ function createSightGrounds(T,small){
   texture.generateMipmaps=false;texture.minFilter=T.LinearFilter;
   const uniforms={visitorMap:{value:texture},visitorOrigin:{value:new T.Vector2()},visitorActive:{value:0}};
   const codes={sand:1,rock:2,lawn:3,orchard:3,tea:3,court:4,trail:5,walk:6,steps:6,drive:7};
-  const cache=new Map(),states=new WeakMap(),projections=new WeakMap();
+  const cache=new Map(),states=source?.states||new WeakMap(),projections=source?.projections||new WeakMap();
   let manifest,mask,fixtures=[],originX=0,originZ=0;
   async function load(graph,x,z){
     const [lon,lat]=graph.geo(x,z),reach=span*.5+180;
@@ -41,8 +41,9 @@ function createSightGrounds(T,small){
     })();
     return state.job;
   }
+  const displayed={visitorMap:{value:texture},visitorOrigin:{value:new T.Vector2()},visitorActive:{value:0}};
   function shade(shader){
-    Object.assign(shader.uniforms,uniforms);
+    Object.assign(shader.uniforms,displayed);
     shader.fragmentShader='uniform sampler2D visitorMap; uniform vec2 visitorOrigin; uniform float visitorActive;\n'+
       shader.fragmentShader.replace('#include <roughnessmap_fragment>',`#include <roughnessmap_fragment>
       vec2 vu=(groundMetres-visitorOrigin)/1120.+.5;
@@ -291,5 +292,7 @@ function createSightGrounds(T,small){
     setFlatNormals(T,geo);
     const mesh=new T.Mesh(geo,material);mesh.name='Mapped visitor grounds';mesh.castShadow=mesh.receiveShadow=true;group.add(mesh);
   }
-  return {load,prepare,shade,mapped:(x,z)=>groundCode(x,z)>0,accessLane:(x,z)=>groundCode(x,z)===codes.drive,build};
+  return {load,prepare,shade,createView:()=>createSightGrounds(T,small,{states,projections}),uniforms,
+    display(view){displayed.visitorMap.value=view.uniforms.visitorMap.value;displayed.visitorOrigin.value.copy(view.uniforms.visitorOrigin.value);displayed.visitorActive.value=view.uniforms.visitorActive.value;},
+    mapped:(x,z)=>groundCode(x,z)>0,accessLane:(x,z)=>groundCode(x,z)===codes.drive,build};
 }

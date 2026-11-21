@@ -86,6 +86,47 @@ async function checkTouchPedals(page) {
   await client.detach();
 }
 
+async function checkDistrictStreaming(page) {
+  const result = await page.evaluate(async () => {
+    await structureRequest?.ready;
+    const current = districtView;
+    const args = view => [view.edges, view.x, view.z, view.waterways, view.graph];
+    gfx.setRoads(...args(current));
+    pendingDistrict = null;
+    const cursor = {...player};
+    roads.advance(cursor, 160, exits => exits[0]);
+    const p = roads.sample(cursor);
+    const next = [roads.nearby(p.x, p.z, 560), p.x, p.z, water?.nearby(p.x, p.z) || [], roads];
+    const sample = () => [0, 8, 40].map(offset => {
+      const x = p.x + offset, z = p.z - offset;
+      return [gfx.ground(x, z), gfx.grade(x, z, p.yaw), gfx.waterAt(x, z)?.level, gfx.contact(x, z)?.id];
+    });
+    const before = sample(), oldDistance = gfx.districtDistance(p.x, p.z);
+    gfx.queueRoads(...next);
+    const partial = gfx.advanceRoads(0);
+    gfx.cancelRoads();
+    const canceled = sample(), canceledDistance = gfx.districtDistance(p.x, p.z);
+    gfx.queueRoads(...next);
+    let frames = 0;
+    while (!gfx.advanceRoads(5)) {
+      await new Promise(requestAnimationFrame);
+      frames++;
+    }
+    const streamed = sample(), distance = gfx.districtDistance(p.x, p.z);
+    gfx.setRoads(...next);
+    const immediate = sample();
+    gfx.setRoads(...args(current));
+    return {partial, before, canceled, oldDistance, canceledDistance, streamed, immediate, frames, distance};
+  });
+  assert.equal(result.partial, false);
+  assert.ok(result.oldDistance > 0);
+  assert.equal(result.canceledDistance, result.oldDistance);
+  assert.deepEqual(result.before, result.canceled);
+  assert.ok(result.frames > 0);
+  assert.equal(result.distance, 0);
+  assert.deepEqual(result.streamed, result.immediate);
+}
+
 try {
   await check(false, async page=>{
     const go = p=>page.goto(new URL(p,base).href,{waitUntil:'domcontentloaded'});
@@ -118,6 +159,8 @@ try {
     assert.equal(await page.locator('#secretOpen').innerText(),'Xem lại dấu ẩn');
     await page.locator('#backToCar').click();
     console.log('PASS landmark discovery, journal and return to driving');
+    await checkDistrictStreaming(page);
+    console.log('PASS streamed district swap, cancellation, road height and contacts');
     await checkTouchPedals(page);
     await page.setViewportSize({width:640,height:480});
     console.log('PASS Xuyên Việt touch throttle, steering and nitro');

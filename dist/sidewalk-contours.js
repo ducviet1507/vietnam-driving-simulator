@@ -3,7 +3,7 @@
 // Trace the outside of the whole carriageway with a disc. Its contacts with
 // straight streets are straight, and at an inside corner it rolls from one
 // tangent to the next. Both sides of a T junction follow the same outline.
-function traceSidewalks(segments,nearby,emit,fill){
+function sidewalkRings(segments){
   const radius=2.4,full=Math.PI*2,polygons=[],nodes=new Map();
   const scale=1000,point=(x,z)=>({X:Math.round(x*scale),Y:Math.round(z*scale)});
   for(const s of segments){
@@ -34,7 +34,21 @@ function traceSidewalks(segments,nearby,emit,fill){
     }
     polygons.push(cap);
   }
-  if(!polygons.length)return;
+  if(!polygons.length)return [];
+  // Each ring has the roadway on its left, including rings around city blocks.
+  const clipper=new ClipperLib.Clipper(),rings=[];
+  clipper.AddPaths(polygons,ClipperLib.PolyType.ptSubject,true);
+  clipper.Execute(ClipperLib.ClipType.ctUnion,rings,ClipperLib.PolyFillType.pftNonZero,ClipperLib.PolyFillType.pftNonZero);
+  return rings;
+}
+function* traceSidewalkSteps(segments,nearby,emit,fill,worker){
+  const radius=2.4,full=Math.PI*2,scale=1000;
+  let rings;
+  if(worker&&segments.size){
+    const task=worker(segments);yield task;
+    rings=task.rings;
+  }
+  rings??=sidewalkRings(segments);
   function owner(x,z){
     let nearest=null,gap=Infinity;
     for(const s of nearby(x,z)){
@@ -44,11 +58,8 @@ function traceSidewalks(segments,nearby,emit,fill){
     }
     return nearest;
   }
-  // Each ring has the roadway on its left, including rings around city blocks.
-  const clipper=new ClipperLib.Clipper(),rings=[];
-  clipper.AddPaths(polygons,ClipperLib.PolyType.ptSubject,true);
-  clipper.Execute(ClipperLib.ClipType.ctUnion,rings,ClipperLib.PolyFillType.pftNonZero,ClipperLib.PolyFillType.pftNonZero);
   for(const outline of rings){
+    yield;
     const ring=ClipperLib.Clipper.CleanPolygon(outline,2);
     const edges=[];
     for(let i=0;i<ring.length;i++){
@@ -94,6 +105,7 @@ function traceSidewalks(segments,nearby,emit,fill){
       return [s.ax+t*s.fx,s.az+t*s.fz];
     }
     for(let i=0;i<sections.length;i++){
+      if((i & 31)===0)yield;
       const a=sections[i],b=sections[(i+1)%sections.length];
       if(!a.s?.walkWidth)continue;
       const prev=sections[(i+sections.length-1)%sections.length];
@@ -110,3 +122,5 @@ function traceSidewalks(segments,nearby,emit,fill){
     }
   }
 }
+
+function traceSidewalks(...args){for(const step of traceSidewalkSteps(...args)){}}

@@ -67,7 +67,7 @@ function loadStructuresNear(graph,x,z){
      pendingDistrict=view;
  }).catch(()=>{if(request===structureRequest)structureRequest=null;});
 }
-function drawDistrict(graph,lakes,x,z,edges){
+function drawDistrict(graph,lakes,x,z,edges,build=gfx.setRoads){
  const [lon,lat]=graph.geo(x,z),waterways=lakes?.nearby(x,z)||[];
  for(const coast of window.VietnamSightCoasts||[]){
    if(Math.abs(lon-coast.lon)>.02||Math.abs(lat-coast.lat)>.02)continue;
@@ -75,14 +75,15 @@ function drawDistrict(graph,lakes,x,z,edges){
    waterways.push({kind:'lake',points:project(coast.ring),holes:coast.holes.map(project)});
  }
  pendingDistrict=null;districtView={graph,x,z,edges,waterways};
- gfx.setRoads(edges,x,z,waterways,graph);loadStructuresNear(graph,x,z);
+ loadStructuresNear(graph,x,z);return build(edges,x,z,waterways,graph);
 }
-function refreshView(){
+function refreshView(build){
  const [lon,lat]=roads.geo(car.x,car.z);
  tourPins=VietnamTourism.nearby(lon,lat,.018,.018).map(s=>catalogById.get(s.id)).filter(Boolean)
    .concat(mountainPlaces.filter(site=>Math.abs(site.lon-lon)<.018&&Math.abs(site.lat-lat)<.018))
    .map(data=>({...roads.point(data.lon,data.lat),data}));
- nearby=roads.nearby(car.x,car.z,560);drawDistrict(roads,water,car.x,car.z,nearby);viewX=car.x;viewZ=car.z;
+ nearby=roads.nearby(car.x,car.z,560);viewX=car.x;viewZ=car.z;
+ return drawDistrict(roads,water,viewX,viewZ,nearby,build);
 }
 function fetchWaterIndex(){
  return waterIndex??=fetchJSON('vn-water/index.json').catch(e=>{waterIndex=null;throw e;});
@@ -102,7 +103,8 @@ async function prepareWorld(graph,token){
  await Promise.all([gfx.terrainReady,Promise.resolve(departureWaterReady).then(()=>streamWater(graph)),gfx.loadDistrict(graph,car.x,car.z),
    VietnamTourism.loadRegion(...graph.geo(car.x,car.z))]);
  if(token!==loadToken)return false;
- refreshView();seedTraffic();
+ if(!await refreshView(gfx.loadRoads)||token!==loadToken)return false;
+ seedTraffic();
  if(!framesStarted){
    await gfx.prepareShaders(car,npcs);
    if(token!==loadToken)return false;
@@ -140,6 +142,7 @@ async function startAt(place,restore=null,guided=null){
  document.querySelector('.openingMode span').textContent=guided?(guided.id?'Tuyến xếp hạng':'Lộ trình tự chọn'):'Lái tự do';
  $('departureCoords').textContent=place[2].toFixed(4)+'° N  /  '+place[1].toFixed(4)+'° E';
  $('departureMap').getContext('2d').clearRect(0,0,$('departureMap').width,$('departureMap').height);
+ gfx?.cancelRoads();
  const token=++loadToken;mode='loading';keySet.clear();$('grid').hidden=false;$('hud').hidden=true;$('touch').hidden=true;
  $('pause').hidden=true;$('camera').hidden=true;document.body.dataset.phase='grid';
  $('launch').disabled=true;$('challenge').disabled=true;$('launch').textContent='Đang tải đường…';$('loadStatus').textContent='';
@@ -612,11 +615,17 @@ function frame(now){
    car.driving=mode==='drive';car.showroom=mode==='grid';
    vehicleLook.update(dt);
    if(mode!=='loading'&&mode!=='error'&&mode!=='map'&&!document.hidden){
-     if((mode==='drive'&&Math.hypot(car.x-viewX,car.z-viewZ)>155)||(pendingDistrict&&mode!=='tour')){
-       refreshView();
-     }else if(pendingDistrict){
-       const {edges,x,z,waterways,graph}=pendingDistrict;
-       pendingDistrict=null;gfx.setRoads(edges,x,z,waterways,graph);
+     // Keep steering against the displayed road until the next district is complete.
+     // Start inside the overlap, and spend more time if a fast car approaches its edge.
+     const gap=gfx.districtDistance(car.x,car.z);
+     const readyToRefresh=gfx.advanceRoads(mode==='drive'&&gap>245?12:5);
+     if(readyToRefresh){
+       if((mode==='drive'&&Math.hypot(car.x-viewX,car.z-viewZ)>125)||(pendingDistrict&&mode!=='tour')){
+         refreshView(gfx.queueRoads);
+       }else if(pendingDistrict){
+         const {edges,x,z,waterways,graph}=pendingDistrict;
+         pendingDistrict=null;gfx.queueRoads(edges,x,z,waterways,graph);
+       }
      }
      if(mode==='drive')stream();
      const ready=gfx.render(car,duel?[duel.actor,...npcs]:npcs,mode==='drive'||mode==='crash'||mode==='sinking'?dt:0,inside,now);

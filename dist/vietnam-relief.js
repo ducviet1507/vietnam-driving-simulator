@@ -50,8 +50,8 @@ function createVietnamRelief(T,scene,compact,landscapes,tunnelCut){
   geometry.setAttribute('coarseElevation',new T.BufferAttribute(coarse,1));geometry.setAttribute('position',new T.BufferAttribute(pos,3));geometry.setAttribute('uv',new T.BufferAttribute(uv,2));geometry.setIndex(indices);
   const mesh=new T.Mesh(geometry,mat);mesh.name='Vietnam terrain horizon';mesh.visible=false;mesh.frustumCulled=false;scene.add(mesh);
   let graph=null,originX=0,originZ=0,anchorX=NaN,anchorZ=NaN,pixels=null,width=0,height=0;
-  function uvAt(x,z){
-    const [lon,lat]=graph.geo(x,z),r=lat*Math.PI/180;
+  function uvAt(x,z,g=graph){
+    const [lon,lat]=g.geo(x,z),r=lat*Math.PI/180;
     return [((lon+180)/360*256-200)/7,((1-Math.asinh(Math.tan(r))/Math.PI)*128-110)/13];
   }
   function elevation(u,v){
@@ -73,9 +73,10 @@ function createVietnamRelief(T,scene,compact,landscapes,tunnelCut){
   // Directly index nearby lattice vertices. The coordinate tags keep distant
   // locations distinct when they reuse a slot, including west/south of spawn.
   const step=64,cacheSide=64,cacheMask=cacheSide-1;
+  function sampleTerrain(graph,activePass,landscapes){
   const nodes=new Float64Array(cacheSide*cacheSide),nodeX=new Int32Array(nodes.length),nodeZ=new Int32Array(nodes.length);
   nodes.fill(NaN);
-  let base=0,sightRevision=-1;
+  const base=graph&&pixels?elevation(...uvAt(0,0,graph)):0;
   function measured(x,z,coarse){
     const h=landscapes.elevation(x,z);
     // A DSM includes roofs and crowns. Retain the street datum in lowlands
@@ -88,7 +89,7 @@ function createVietnamRelief(T,scene,compact,landscapes,tunnelCut){
     if(nodeX[key]===i&&nodeZ[key]===j&&!Number.isNaN(nodes[key]))return nodes[key];
     const x=i*step,z=j*step;
     // A low-pass reconstruction removes abrupt changes of grade at DEM texel edges.
-    const sample=(dx,dz)=>elevation(...uvAt(x+dx,z+dz));
+    const sample=(dx,dz)=>elevation(...uvAt(x+dx,z+dz,graph));
     const h=sample(0,0)*.5+(sample(-105,0)+sample(105,0)+sample(0,-105)+sample(0,105))*.125;
     let value=(measured(x,z,h)-base)*.43;
     if(activePass?.stage.id==='kim-bang'){
@@ -120,6 +121,9 @@ function createVietnamRelief(T,scene,compact,landscapes,tunnelCut){
     const dx=2*Math.sin(yaw),dz=-2*Math.cos(yaw);
     return (ground(x+dx,z+dz)-ground(x-dx,z-dz))/4;
   }
+  return {graph,pass:activePass,landscapes,base,ground,grade,measured,step,
+    altitude:(x,z)=>graph&&pixels?base+ground(x,z)/.43:0};
+  }
   const byGraph=new WeakMap(),passCache=new Map();
   let activePass=null;
   async function loadLocal(g,x,z){
@@ -150,17 +154,21 @@ function createVietnamRelief(T,scene,compact,landscapes,tunnelCut){
       eastScale:Math.cos(stage.start[1]*Math.PI/180)/Math.cos(g.lat*Math.PI/180)});
     return true;
   }
-  function setOrigin(g,x,z){
+  let terrain=sampleTerrain(null,null,null);
+  function prepare(g,view){
     const pass=g?byGraph.get(g):null;
-    if(sightRevision!==landscapes.revision||graph!==g||activePass!==pass){
-      anchorX=anchorZ=NaN;nodes.fill(NaN);
-      sightRevision=landscapes.revision;activePass=pass;
-      closeDetail.value=scenicPasses.has(pass?.stage.id)?1:0;
-      passSurface.select(pass?.stage.id,pass?.x,pass?.z,pass?.cos,pass?.sin,pass?.eastScale);
-      if(graph!==g){graph=g;base=graph&&pixels?elevation(...uvAt(0,0)):0;datum.value=base;}
+    if(terrain.graph===g&&terrain.pass===pass&&terrain.landscapes===view)return terrain;
+    return sampleTerrain(g,pass,view);
+  }
+  function activate(next,x,z){
+    if(next!==terrain){
+      terrain=next;graph=next.graph;activePass=next.pass;datum.value=next.base;
+      anchorX=anchorZ=NaN;closeDetail.value=scenicPasses.has(activePass?.stage.id)?1:0;
+      passSurface.select(activePass?.stage.id,activePass?.x,activePass?.z,activePass?.cos,activePass?.sin,activePass?.eastScale);
     }
     originX=x;originZ=z;
   }
+  const ground=(x,z)=>terrain.ground(x,z);
   function update(x,z){
     if(!graph||!pixels)return;
     const [u,v]=uvAt(x,z);mesh.visible=u>=0&&u<1&&v>=0&&v<1;if(!mesh.visible)return;
@@ -176,7 +184,7 @@ function createVietnamRelief(T,scene,compact,landscapes,tunnelCut){
         const blend=nearPeak?1-T.MathUtils.smoothstep(Math.hypot(ax+dx-peak.x,az+dz-peak.z),135,640):0;
         summitSurface.setXY(i,blend?ground(ax+dx,az+dz):0,blend);
         const [u,v]=uvAt(ax+dx,az+dz);
-        let h=elevation(u,v);h=measured(ax+dx,az+dz,h);coarse[i]=h;
+        let h=elevation(u,v);h=terrain.measured(ax+dx,az+dz,h);coarse[i]=h;
         if(activePass){
           const p=activePass,east=(ax+dx-p.x)*p.eastScale,south=az+dz-p.z;
           const tx=east*p.cos+south*p.sin,tz=-east*p.sin+south*p.cos;
@@ -190,5 +198,5 @@ function createVietnamRelief(T,scene,compact,landscapes,tunnelCut){
     passWeight.value=activePass?1-T.MathUtils.smoothstep(Math.hypot(x-activePass.x,z-activePass.z),8600,12000):0;
     mesh.position.set(anchorX-originX,0,anchorZ-originZ);eye.value.set(x-anchorX,z-anchorZ);
   }
-  return {setOrigin,update,loadLocal,ready,ground,grade,step,passSurface,altitude:(x,z)=>graph&&pixels?base+ground(x,z)/.43:0};
+  return {prepare,activate,update,loadLocal,ready,ground,step,passSurface};
 }

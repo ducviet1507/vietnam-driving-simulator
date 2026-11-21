@@ -47,6 +47,10 @@ function sightRasterPages(base,grid,extensions){
 }
 function createSightLandscapes(T){
   const grid=32,size=96,side=3*size;
+  const coarse=sightRasterPages('sight-landscapes/',grid,['.webp','.surface.webp','-water.png']);
+  const fine=sightRasterPages('sight-imagery/',grid*4,['.webp']);
+  let front,spare;
+  function createView(){
   const canvas=document.createElement('canvas');canvas.width=canvas.height=side;
   const colour=canvas.getContext('2d');
   const mask=canvas.cloneNode(),surface=mask.getContext('2d',{willReadFrequently:true});
@@ -56,16 +60,10 @@ function createSightLandscapes(T){
   const texture=new T.CanvasTexture(canvas);texture.colorSpace=T.SRGBColorSpace;
   const waterTexture=new T.CanvasTexture(water);
   const uniforms={sightImage:{value:texture},sightWater:{value:waterTexture},sightBounds:{value:new T.Vector4(0,0,1,1)},sightEnabled:{value:0}};
-  const coarse=sightRasterPages('sight-landscapes/',grid,['.webp','.surface.webp','-water.png']);
-  const fine=sightRasterPages('sight-imagery/',grid*4,['.webp']);
-  let active=null,activeFine=null,pixels=null,revision=0;
-  async function load(graph,x,z){
-    return (await Promise.all([coarse.load(graph,x,z),fine.load(graph,x,z)])).some(Boolean);
-  }
+  let active=null,activeFine=null,pixels=null;
   function setOrigin(graph){
     const next=coarse.current(graph),detail=fine.current(graph);
     if(active===next&&activeFine===detail)return;
-    if(active!==next)revision++;
     active=next;activeFine=detail;pixels=null;uniforms.sightEnabled.value=0;
     if(!next?.cells.length)return;
     colour.clearRect(0,0,canvas.width,canvas.height);surface.clearRect(0,0,side,side);waterPen.clearRect(0,0,water.width,water.height);
@@ -95,6 +93,20 @@ function createSightLandscapes(T){
     const elev=p=>pixels[p]*256+pixels[p+1]-128,fx=u-i,fy=v-j;
     return (elev(k)*(1-fx)+elev(east)*fx)*(1-fy)+(elev(south)*(1-fx)+elev(se)*fx)*fy;
   }
+  function paintWater(ctx,cx,cz){
+    if(!pixels)return;
+    const b=uniforms.sightBounds.value;
+    ctx.save();ctx.globalCompositeOperation='destination-over';
+    ctx.drawImage(water,b.x-cx,b.y-cz,1/b.z,1/b.w);ctx.restore();
+  }
+  return {uniforms,setOrigin,matches:graph=>active===coarse.current(graph)&&activeFine===fine.current(graph),
+    paintWater,cover:(x,z)=>sample(x,z,false),elevation:(x,z)=>sample(x,z,true),get visible(){return !!pixels;}};
+  }
+  front=createView();
+  const uniforms=Object.fromEntries(Object.entries(front.uniforms).map(([key,u])=>[key,{value:u.value}]));
+  async function load(graph,x,z){
+    return (await Promise.all([coarse.load(graph,x,z),fine.load(graph,x,z)])).some(Boolean);
+  }
   function shade(shader,position='groundMetres',exposure='1.-bankWet'){
     Object.assign(shader.uniforms,uniforms);
     shader.fragmentShader='uniform sampler2D sightImage; uniform sampler2D sightWater; uniform vec4 sightBounds; uniform float sightEnabled;\n'+
@@ -108,12 +120,14 @@ function createSightLandscapes(T){
         diffuseColor.rgb=mix(diffuseColor.rgb,vec3(.049,.13,.145)+observed.rgb*.10,.91*sea*(${exposure}));
       }`);
   }
-  function paintWater(ctx,cx,cz){
-    if(!pixels)return;
-    const b=uniforms.sightBounds.value;
-    ctx.save();ctx.globalCompositeOperation='destination-over';
-    ctx.drawImage(water,b.x-cx,b.y-cz,1/b.z,1/b.w);ctx.restore();
+  function prepare(graph){
+    if(front.matches(graph))return front;
+    spare??=createView();spare.setOrigin(graph);return spare;
   }
-  return {load,setOrigin,shade,paintWater,cover:(x,z)=>sample(x,z,false),elevation:(x,z)=>sample(x,z,true),
-    get revision(){return revision;},get visible(){return !!pixels;}};
+  function activate(view){
+    if(front===view)return;
+    spare=front;front=view;
+    for(const key of Object.keys(uniforms))uniforms[key].value=view.uniforms[key].value;
+  }
+  return {load,shade,prepare,activate};
 }

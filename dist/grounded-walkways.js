@@ -78,10 +78,10 @@ function createGroundedWalkways(T,{cx,cz,step,height,ground,wet,needsDetail}){
     band(frontages,.105,a,b,c,d);
     face(...a,...b,.105);face(...b,...d,.105);face(...d,...c,.105);face(...c,...a,.105);
   }
-  function build(group,surface,pavers,stone){
-    surface(tops,pavers,.108,1);
-    surface(coping,stone,.12,1);
-    surface(frontages,pavers,.105,1);
+  function* buildSteps(group,surface,pavers,stone){
+    yield* surface(tops,pavers,.108,1);
+    yield* surface(coping,stone,.12,1);
+    yield* surface(frontages,pavers,.105,1);
     tops.length=coping.length=frontages.length=0;
     if(!faces.length)return;
     const geometry=new T.BufferGeometry();
@@ -97,5 +97,9 @@ function createGroundedWalkways(T,{cx,cz,step,height,ground,wet,needsDetail}){
     }
     return lift;
   }
-  return {sidewalk,porch,build,liftAt};
+  function build(group,surface,pavers,stone){
+    function* immediate(...args){surface(...args);}
+    for(const step of buildSteps(group,immediate,pavers,stone)){}
+  }
+  return {sidewalk,porch,build,buildSteps,liftAt};
 }

@@ -8,7 +8,8 @@ const vietnamPlaceTypes={
 function createWorldStreetLife(T,scene,small,environment,amenities){
   const walkGroup=new T.Group();
   walkGroup.name='Người đi bộ';scene.add(walkGroup);
-  const walkers=new Map(),models=new Map(),bins=new Map();
+  const walkers=new Map(),models=new Map();
+  let bins=new Map();
   let graph,places=[],paths=[],originX=0,originZ=0,walkTime=0;
   function localHour(){return (new Date().getUTCHours()+7)%24;}
   function interest(kind,h){
@@ -18,13 +19,13 @@ function createWorldStreetLife(T,scene,small,environment,amenities){
     if(kind==='cafe')return (h>=6&&h<=21) ? .28 : .08;
     return .15;
   }
-  function activity(g,x,z,kind,h=localHour()){
+  function activity(g,x,z,kind,h=localHour(),nearPlaces=g===graph?bins:null){
     const {population,cover}=environment.sample(g,x,z),dark=h<5||h>=22;
     const fast=kind?.startsWith('motorway');
     let attraction=0;
-    if(graph===g)for(let i=Math.floor((x-115)/128);i<=Math.floor((x+115)/128);i++){
+    if(nearPlaces)for(let i=Math.floor((x-115)/128);i<=Math.floor((x+115)/128);i++){
       for(let j=Math.floor((z-115)/128);j<=Math.floor((z+115)/128);j++){
-        for(const p of bins.get(i+','+j)||[]){
+        for(const p of nearPlaces.get(i+','+j)||[]){
           const proximity=1-Math.hypot(p.x-x,p.z-z)/115;
           if(proximity>0)attraction=Math.max(attraction,proximity*interest(p.kind,h));
         }
@@ -38,9 +39,11 @@ function createWorldStreetLife(T,scene,small,environment,amenities){
     return {walkers,vehicles:Math.round((3+11*density+attraction*4+(main?3:0))*(dark ? .67 : 1)),
       scooter:fast?0:Math.min(.72,.18+density*.37+attraction*.22)};
   }
-  function updatePaths(g,segments,clear){
+  function* walkingPaths(g,originX,originZ,bins,segments,clear){
+    let rows=0;
     const candidates=[],hour=localHour();
     for(const s of segments){
+      if((++rows & 15)===0)yield;
       if(s.rank>310||s.len<10||s.graded||s.kind.startsWith('motorway'))continue;
       // Anchor each walking path to a station on the original road segment so
       // a rebase or a clipped long road cannot slide its pedestrians around.
@@ -53,7 +56,7 @@ function createWorldStreetLife(T,scene,small,environment,amenities){
         const x=originX+s.ax+s.fx*station+side*s.nx*(s.w+1);
         const z=originZ+s.az+s.fz*station+side*s.nz*(s.w+1);
         const distance=Math.hypot(x-originX,z-originZ);if(distance>310)continue;
-        const score=activity(g,x,z,s.kind,hour).walkers;
+        const score=activity(g,x,z,s.kind,hour,bins).walkers;
         const hash=(Math.imul(s.seed^k,2654435761)>>>0)/4294967296;
         if(hash>score*.88)continue;
         candidates.push({x,z,fx:s.fx,fz:s.fz,span,phase:hash*53,rank:distance/(.45+score),
@@ -61,7 +64,7 @@ function createWorldStreetLife(T,scene,small,environment,amenities){
       }
     }
     candidates.sort((a,b)=>a.rank-b.rank);
-    paths=[];
+    const paths=[];
     for(const p of candidates){
       if(paths.length>=(small?6:11))break;
       if(paths.some(q=>Math.hypot(q.x-p.x,q.z-p.z)<5))continue;
@@ -71,6 +74,9 @@ function createWorldStreetLife(T,scene,small,environment,amenities){
       }
       if(valid)paths.push(p);
     }
+    return paths;
+  }
+  function trimWalkers(){
     const active=new Set(paths.map(p=>p.key));
     for(const [key,item] of walkers){
       if(active.has(key))continue;
@@ -80,16 +86,18 @@ function createWorldStreetLife(T,scene,small,environment,amenities){
       walkers.delete(key);
     }
   }
-  function rebuild(g,x,z,segments,clear){
-    graph=g;originX=x;originZ=z;
-    places=amenities.nearby(g,x,z,500).filter(p=>vietnamPlaceTypes[p.kind]).sort((a,b)=>
+  function* prepare(g,x,z,segments,clear){
+    const nextPlaces=amenities.nearby(g,x,z,500).filter(p=>vietnamPlaceTypes[p.kind]).sort((a,b)=>
       Math.hypot(a.x-x,a.z-z)-Math.hypot(b.x-x,b.z-z));
-    bins.clear();
-    for(const p of places){
+    const nextBins=new Map();
+    for(const p of nextPlaces){
       const key=Math.floor(p.x/128)+','+Math.floor(p.z/128);
-      if(!bins.has(key))bins.set(key,[]);bins.get(key).push(p);
+      if(!nextBins.has(key))nextBins.set(key,[]);nextBins.get(key).push(p);
     }
-    updatePaths(g,segments,clear);
+    const nextPaths=yield* walkingPaths(g,x,z,nextBins,segments,clear);
+    return ()=>{
+      graph=g;originX=x;originZ=z;places=nextPlaces;bins=nextBins;paths=nextPaths;trimWalkers();
+    };
   }
   function walker(p){
     if(walkers.has(p.key))return walkers.get(p.key);
@@ -119,5 +127,5 @@ function createWorldStreetLife(T,scene,small,environment,amenities){
       actor.mixer?.update(dt);
     }
   }
-  return {activity,rebuild,render,get places(){return places;}};
+  return {activity,prepare,render,get places(){return places;}};
 }

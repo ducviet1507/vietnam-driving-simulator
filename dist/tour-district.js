@@ -1,7 +1,6 @@
 'use strict';
 function createTourDistrict(T,scene,plaster,structures,osmBuildings,nightLights){
   const parts=createVietnamOsmBuildings('sight-building-parts/',Infinity);
-  const group=new T.Group();group.name='OSM building footprints';scene.add(group);
   const wall=plaster.clone();wall.vertexColors=true;wall.side=T.DoubleSide;
   const roof=new T.MeshStandardMaterial({vertexColors:true,side:T.DoubleSide,roughness:.9});
   roof.onBeforeCompile=shader=>{
@@ -60,10 +59,8 @@ function createTourDistrict(T,scene,plaster,structures,osmBuildings,nightLights)
   const doorway=new T.Color(0x354647);
   // Each material has one draw. Reuse its CPU buffer as the view moves, and
   // hand WebGL only the populated vertices when the new district is complete.
-  const batches=[wall,roof].map(mat=>({mat,stride:mat===wall?14:12,data:new Float32Array(0),used:0}));
-  let indexPromise,available,grid,scale=100000,loadedGraph,signature,loaded=[],cells=new Map(),serial=0;
-  const cache=new Map(),blocks=new Map(),cell=32,streetFronts=[];
-  const footprints=new WeakMap();
+  let indexPromise,available,grid,scale=100000,loadedGraph,signature,loaded=[],serial=0;
+  const cache=new Map(),footprints=new WeakMap(),cell=32;
   async function load(graph,x,z){
     const seq=++serial;
     try{
@@ -103,6 +100,10 @@ function createTourDistrict(T,scene,plaster,structures,osmBuildings,nightLights)
     if(!rings.some(r=>r[0].equals(r.at(-1))))projected.set(raw,shape);
     return shape;
   }
+  function createView(parent){
+  const group=new T.Group();group.name='OSM building footprints';parent.add(group);
+  const batches=[wall,roof].map(mat=>({mat,stride:mat===wall?14:12,data:new Float32Array(0),used:0}));
+  const cells=new Map(),blocks=new Map(),streetFronts=[];
   function contact(x,z,r){
     let hit;
     for(const b of cells.get(Math.floor(x/cell)+','+Math.floor(z/cell))||[]){
@@ -190,9 +191,12 @@ function createTourDistrict(T,scene,plaster,structures,osmBuildings,nightLights)
     }
     return false;
   }
-  function build(graph,cx,cz,landmarks,ground=()=>0,edges=[],openGround=()=>false){
+  function clear(){
     for(const mesh of [...group.children]){group.remove(mesh);mesh.geometry.dispose();}
-    cells.clear();blocks.clear();streetFronts.length=0;if(!graph)return;
+    cells.clear();blocks.clear();streetFronts.length=0;
+  }
+  function* buildSteps(graph,cx,cz,landmarks,ground=()=>0,edges=[],openGround=()=>false){
+    clear();if(!graph)return;
     const pieces=parts.rows(graph,cx,cz);
     const replaced=new Set(pieces.flatMap(row=>[row[6]?.parent,row[6]?.sourceId]).filter(Boolean));
     const shells=[...(graph===loadedGraph?loaded:[]),...osmBuildings.rows(graph,cx,cz)];
@@ -309,7 +313,9 @@ function createTourDistrict(T,scene,plaster,structures,osmBuildings,nightLights)
     const pins=VietnamTourism.nearby(lon,lat,720/graph.mx,720/graph.my)
       .filter(p=>p.id.startsWith('osm-node-')&&p.kind==='Công trình tín ngưỡng')
       .map(site=>({...graph.point(site.lon,site.lat),site}));
+    let rowIndex=0;
     for(const [id,kind,tagH,levels,raw,shape,part] of [...surveyed,...extra]){
+      if((rowIndex++ & 15)===0)yield;
       if(ids.has(id)||landmarks?.modeledBuildings.has(id))continue;
       const first=graph.point(raw[0][0]/scale,raw[0][1]/scale);
       if(Math.abs(first.x-cx)>850||Math.abs(first.z-cz)>850)continue;
@@ -424,7 +430,10 @@ function createTourDistrict(T,scene,plaster,structures,osmBuildings,nightLights)
     for(const b of batches){
       if(!b.used)continue;
       const data=b.data.subarray(0,b.used);
-      writeFlatNormals(data,data,b.stride,3);
+      for(let start=0;start<data.length;start+=b.stride*1536){
+        const chunk=data.subarray(start,start+b.stride*1536);
+        writeFlatNormals(chunk,chunk,b.stride,3);yield;
+      }
       const buffer=new T.InterleavedBuffer(data,b.stride),g=new T.BufferGeometry();
       const attribute=(size,offset)=>new T.InterleavedBufferAttribute(buffer,size,offset);
       g.setAttribute('position',attribute(3,0));g.setAttribute('normal',attribute(3,3));
@@ -444,8 +453,9 @@ function createTourDistrict(T,scene,plaster,structures,osmBuildings,nightLights)
     if(!['Công trình tín ngưỡng','Bảo tàng','Kiến trúc','Phòng trưng bày'].includes(site.kind))return null;
     return near.find(b=>b.surveyed&&insideBuilding(x,z,b.rings));
   }
-  return {load:async(g,x,z)=>(await Promise.all([load(g,x,z),parts.load(g,x,z)])).some(Boolean),
-    build,contact,footprint,overlapsSight:(landmarks,rings,box)=>overlapsModel(landmarks,rings,box)||overlapsGarden(landmarks,rings,box),
+  return {group,clear,buildSteps,build(...args){for(const step of buildSteps(...args)){}},contact,footprint,overlapsSight:(landmarks,rings,box)=>overlapsModel(landmarks,rings,box)||overlapsGarden(landmarks,rings,box),
     streetFronts,builtUp:(x,z)=>cells.has(Math.floor(x/cell)+','+Math.floor(z/cell)),
     mappedBlock:(x,z)=>(blocks.get(Math.floor(x/70)+','+Math.floor(z/70))||0)>=3};
+  }
+  return {...createView(scene),createView,load:async(g,x,z)=>(await Promise.all([load(g,x,z),parts.load(g,x,z)])).some(Boolean)};
 }

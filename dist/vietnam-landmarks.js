@@ -1005,7 +1005,10 @@ window.VietnamLandmarks=(()=>{
     return group;
   }
   function create(T,scene,nightLights={value:0}){
-    const cached=new Map(),finishes=createSightFinishes(T,nightLights);let active=[];
+    const cached=new Map(),shoreCovers=new WeakMap(),finishes=createSightFinishes(T,nightLights);
+    let displayed;
+    function prepare(graph,cx,cz,ground=()=>0,deckHeight=null){
+    const active=[];
     const buildingAreas=[],gardens=[],modeledBuildings=new Set();
     const naturalSites=new Set(['Thác nước','Hang động','Đỉnh núi','Hồ','Vịnh','Bãi biển','Khu bảo tồn','Vườn quốc gia']);
     const visitorSites=new Set(['Vườn cảnh','Công viên','Khảo cổ','Thành cổ','Lăng mộ','Đền chùa','Công trình tín ngưỡng','Di tích']);
@@ -1045,42 +1048,25 @@ window.VietnamLandmarks=(()=>{
         gardens.push({...p,r:gardenRadius(site,window.VietnamSightDetails?.[site.id]?.extent)});
       }
     }
-    function trim(){
-      const limit=Math.max(12,active.length);
-      for(const [id,mesh] of cached){
-        if(cached.size<=limit)break;
-        if(mesh.visible)continue;
-        scene.remove(mesh);cached.delete(id);
-        const resources=new Set();
-        mesh.traverse(obj=>{
-          if(obj.geometry)resources.add(obj.geometry);
-          if(!obj.material)return;
-          for(const m of [].concat(obj.material)){
-            resources.add(m);
-            for(const v of Object.values(m))if(v?.isTexture&&!v.userData.sightShared)resources.add(v);
-          }
-        });
-        for(const resource of resources)resource.dispose();
-      }
-    }
-    function setOrigin(graph,cx,cz,ground=()=>0,deckHeight=null){
-      for(const {mesh} of active)mesh.visible=false;
-      active=[];
-      if(!graph){prepareBuildingSites(null,cx,cz);return;}
-      for(const data of entries){
+    if(graph)for(const data of entries){
         if(additions.has(data.id)&&!data.build)continue;
         const {x,z}=graph.point(data.lon,data.lat);if(Math.hypot(x-cx,z-cz)>(data.viewDistance??1050))continue;
-        if(!cached.has(data.id)){const mesh=model(T,data.id);finishes.apply(mesh);mesh.userData.height=new T.Box3().setFromObject(mesh).max.y*(data.scale?.[1]||1);scene.add(mesh);cached.set(data.id,mesh);}
+        if(!cached.has(data.id)){const mesh=model(T,data.id);finishes.apply(mesh);mesh.userData.height=new T.Box3().setFromObject(mesh).max.y*(data.scale?.[1]||1);mesh.visible=false;scene.add(mesh);cached.set(data.id,mesh);}
         const foundation=deckHeight&&modeledBridgeLengths[data.id]?(px,pz)=>deckHeight(px,pz)??ground(px,pz):ground;
-        const mesh=cached.get(data.id);mesh.position.set(x-cx,foundation(x,z),z-cz);mesh.rotation.y=data.yaw;mesh.visible=true;
-        if(data.scale)mesh.scale.fromArray(data.scale);
-        mesh.userData.placeLights?.();
-        const c=Math.cos(data.yaw),s=Math.sin(data.yaw);
-        mesh.userData.fitGround?.((u,v)=>foundation(x+u*c+v*s,z-u*s+v*c)-mesh.position.y);
-        active.push({data,x,z,mesh,c,s});
+        const mesh=cached.get(data.id),c=Math.cos(data.yaw),s=Math.sin(data.yaw);
+        const base=foundation(x,z);
+        active.push({data,x,z,mesh,c,s,base,place(){
+          mesh.position.set(x-cx,base,z-cz);mesh.rotation.y=data.yaw;
+          if(data.scale)mesh.scale.fromArray(data.scale);
+          mesh.userData.placeLights?.();
+          mesh.userData.fitGround?.((u,v)=>foundation(x+u*c+v*s,z-u*s+v*c)-base);
+        }});
       }
-      trim();
-      prepareBuildingSites(graph,cx,cz);
+    prepareBuildingSites(graph,cx,cz);
+    function activate(){
+      for(const site of displayed?.active||[])site.mesh.visible=false;
+      for(const site of active){site.place();site.mesh.visible=true;}
+      displayed=view;trim();
     }
     function nearest(x,z,maxMeters=650){
       let best=null;
@@ -1101,7 +1087,7 @@ window.VietnamLandmarks=(()=>{
     }
     function contact(x,z,r=.95,y=null){
       for(const a of active){
-        if(y!==null&&modeledBridgeLengths[a.data.id]&&y+1.35<a.mesh.position.y)continue;
+        if(y!==null&&modeledBridgeLengths[a.data.id]&&y+1.35<a.base)continue;
         const dx=x-a.x,dz=z-a.z,u=dx*a.c-dz*a.s,v=dx*a.s+dz*a.c;
         function solid(cx,cz,w,d){
           const lx=u-cx,lz=v-cz;
@@ -1123,16 +1109,55 @@ window.VietnamLandmarks=(()=>{
       return null;
     }
     function addShoreCover(patch){
-      for(const {mesh} of active){
-        mesh.updateMatrixWorld(true);
-        mesh.traverse(part=>{
-          const cover=part.userData.shoreCover;
-          if(cover===true)patch.addCover(part.geometry,part.matrixWorld);
-          else if(cover)for(const [start,end] of cover)patch.addCover(part.geometry,part.matrixWorld,start,end);
-        });
+      // A pending district may have another render origin. Transform only the
+      // cover meshes for this query and restore the visible landmark before yielding.
+      for(const site of active){
+        const {mesh}=site;
+        let covers=shoreCovers.get(mesh);
+        if(!covers){
+          covers=[];mesh.traverse(part=>{if(part.userData.shoreCover)covers.push(part);});
+          shoreCovers.set(mesh,covers);
+        }
+        if(!covers.length)continue;
+        const previous=displayed?.active.find(a=>a.mesh===mesh);
+        try{
+          site.place();mesh.updateMatrixWorld(true);
+          for(const part of covers){
+            const cover=part.userData.shoreCover;
+            if(cover===true)patch.addCover(part.geometry,part.matrixWorld);
+            else for(const [start,end] of cover)patch.addCover(part.geometry,part.matrixWorld,start,end);
+          }
+        }finally{if(previous){previous.place();mesh.updateMatrixWorld(true);}}
       }
     }
-    return {setOrigin,nearest,reserved,contact,addShoreCover,buildingAreas,gardens,modeledBuildings,weather:finishes.weather};
+    const view={active,activate,nearest,reserved,contact,addShoreCover,buildingAreas,gardens,modeledBuildings};
+    return view;
+    }
+    function trim(){
+      const limit=Math.max(12,displayed.active.length);
+      for(const [id,mesh] of cached){
+        if(cached.size<=limit)break;
+        if(mesh.visible)continue;
+        scene.remove(mesh);cached.delete(id);
+        const resources=new Set();
+        mesh.traverse(obj=>{
+          if(obj.geometry)resources.add(obj.geometry);
+          if(!obj.material)return;
+          for(const m of [].concat(obj.material)){
+            resources.add(m);
+            for(const v of Object.values(m))if(v?.isTexture&&!v.userData.sightShared)resources.add(v);
+          }
+        });
+        for(const resource of resources)resource.dispose();
+      }
+    }
+    displayed=prepare(null,0,0);
+    return {prepare,trim,setOrigin(...args){prepare(...args).activate();},weather:finishes.weather,
+      nearest:(...args)=>displayed.nearest(...args),reserved:(...args)=>displayed.reserved(...args),
+      contact:(...args)=>displayed.contact(...args),addShoreCover:patch=>displayed.addShoreCover(patch),
+      get buildingAreas(){return displayed.buildingAreas;},get gardens(){return displayed.gardens;},
+      get modeledBuildings(){return displayed.modeledBuildings;}};
+
   }
   return {entries,create};
 })();

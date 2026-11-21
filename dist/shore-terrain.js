@@ -2,12 +2,13 @@
 
 // The fixed four-metre lattice serves both the visible bed and the tyre immersion query.
 // Its outer land vertices keep the same height and diagonal as the large terrain mesh.
-function buildMappedShore(T, options){
+function* buildMappedShoreSteps(T, options){
   const {mask,field,size,scale,maskX,maskZ,cx,cz,gx,gz,landWidth,land,landIndex,ground,pools,group,waterMaterial}=options;
   const metres=1/scale,coarse=landWidth/32,steps=coarse/metres;
   const active=new Uint8Array(32*32),count=size*size,dry=new Float32Array(count),ids=new Uint8Array(count);
   const left=gx-cx-landWidth/2,top=gz-cz-landWidth/2;
   for(let j=0,i=0;j<size;j++)for(let k=0;k<size;k++,i++){
+    if((i & 8191)===0)yield;
     const a=mask[4*i+3]/255;
     dry[i]=a>0?(1-a)*metres:32;ids[i]=mask[4*i];
     if(a<=0)continue;
@@ -25,6 +26,7 @@ function buildMappedShore(T, options){
     if(d<dry[to]){dry[to]=d;ids[to]=ids[from];}
   }
   for(const dir of [1,-1])for(let k=0;k<count;k++){
+    if((k & 8191)===0)yield;
     const i=dir===1?k:count-1-k,x=i%size,prev=i-size*dir;
     if(x-dir>=0&&x-dir<size)spread(i,i-dir,metres);
     if(prev>=0&&prev<count){
@@ -80,6 +82,7 @@ function buildMappedShore(T, options){
   }
   for(let j=0;j<32;j++)for(let i=0;i<32;i++){
     const c=j*32+i;
+        if((c & 7)===0)yield;
     if(!active[c]){for(let k=c*6;k<c*6+6;k++)remaining.push(landIndex.array[k]);continue;}
     // Open water has a level surface and a saturated bed profile; shoreline
     // refinement there would produce many duplicate triangles on coastal maps.

@@ -18,7 +18,7 @@ function localDrivingPlaces(graph, x, z, radius) {
 
 // Work backwards from mapped vehicle entrances. Each entry stores the shortest
 // drivable distance from the start of a directed edge to a local destination.
-function signDestinations(graph, places) {
+function* signDestinations(graph, places) {
   const routes = new Map(), queue = [];
   function offer(edge, dir, distance, place) {
     const key = edge.id * dir;
@@ -28,6 +28,7 @@ function signDestinations(graph, places) {
     queue.push(entry);
   }
   for (const place of places.slice(0, 24)) {
+    yield;
     const p = place.start ? graph.point(...place.start) : place;
     const near = graph.nearest(p.x, p.z, graph.nearby(p.x, p.z, 60));
     if (!near || near.error > 60 ** 2) continue;
@@ -36,6 +37,7 @@ function signDestinations(graph, places) {
   }
   // A short local search. Re-enqueue improved distances and skip superseded ones.
   for (let i = 0; i < queue.length; i++) {
+    if ((i & 127) === 0) yield;
     const entry = queue[i], {edge, dir, distance, place} = entry;
     if (routes.get(edge.id * dir) !== entry) continue;
     const node = dir > 0 ? edge.start : edge.end;
@@ -70,9 +72,9 @@ function junctionRows(options, routes) {
 }
 
 function createWorldSigns(T, scene, small) {
-  const group = new T.Group(), faces = new Map();
-  group.name = 'Biển báo và chỉ hướng';
-  scene.add(group);
+  const displayed = new T.Group(), faces = new Map();
+  displayed.name = 'Biển báo và chỉ hướng';
+  scene.add(displayed);
   const plane = new T.PlaneGeometry(), mast = new T.CylinderGeometry(.065, .085, 1, 8);
   const postPaint = document.createElement('canvas');
   postPaint.width = 8; postPaint.height = 64;
@@ -145,17 +147,25 @@ function createWorldSigns(T, scene, small) {
     faces.set(key, mat); return mat;
   }
 
-  return function rebuild(graph, edges, cx, cz, clear, ground, register) {
-    group.clear();
+  let displayedFaces = new Set();
+  function trim(used) {
+    for (const [key, mat] of faces) if (!used.has(key)) {
+      mat.map.dispose(); mat.dispose(); faces.delete(key);
+    }
+  }
+  function* prepare(graph, edges, cx, cz, clear, ground, register) {
+    const group = new T.Group();
     const used = new Set(), candidates = [], placed = [];
-    if (!graph) return;
-    const routes = signDestinations(graph, localDrivingPlaces(graph, cx, cz, 1450));
+    if (!graph) return () => {displayed.clear();displayedFaces=used;trim(used);};
+    const routes = yield* signDestinations(graph, localDrivingPlaces(graph, cx, cz, 1450));
     function candidate(edge, dir, s, type, rows) {
       const at = {edge, dir, s}, p = graph.sample(at);
       const distance = Math.hypot(p.x - cx, p.z - cz);
       if (distance < 470) candidates.push({at, type, rows, distance});
     }
+    let scanned = 0;
     for (const edge of edges) {
+      if ((++scanned & 15) === 0) yield;
       if (edge.oneway && edge.length >= 10) {
         const inset = Math.min(12, edge.length * .35);
         for (const dir of [1, -1]) {
@@ -203,6 +213,7 @@ function createWorldSigns(T, scene, small) {
     const rank = sign => sign.distance + (sign.rows ? 40 : 0);
     candidates.sort((a, b) => rank(a) - rank(b) || a.at.edge.id - b.at.edge.id);
     for (const sign of candidates) {
+      if ((++scanned & 15) === 0) yield;
       if (placed.length >= (small ? 19 : 32)) break;
       const {at, rows} = sign, width = rows ? 4.45 : 1.22;
       const square = sign.type === 'one-way', round = sign.type === 'no-entry';
@@ -239,8 +250,9 @@ function createWorldSigns(T, scene, small) {
           kind:'pole', x:pole.position.x, z:pole.position.z, radius:.085, baseY:bottom,height:top-bottom, parts:[]});
       }
     }
-    for (const [key, mat] of faces) if (!used.has(key)) {
-      mat.map.dispose(); mat.dispose(); faces.delete(key);
-    }
-  };
+    return () => {
+      displayed.clear();displayed.add(group);displayedFaces=used;trim(used);
+    };
+  }
+  return {prepare, cancel:()=>trim(displayedFaces)};
 }
