@@ -81,13 +81,18 @@
       '<h2 id="quiz-title">' + escape(q.prompt) + '</h2>';
     if (q.image) html += '<img class="q-image" src="' + escape(q.image) + '" alt="' + escape(q.imageAlt) + '">';
     html += '<div class="q-options">' + q.choices.map((choice,i) =>
-      '<button type="button" class="q-option ' + (answered ? i === q.correct ? 'right' : i === chosen ? 'wrong' : '' : '') + '" data-choice="' + i + '" ' + (answered ? 'disabled' : '') + '><b>' + letter(i) + '</b><span>' + escape(choice) + '</span></button>').join('') + '</div>';
+      '<button type="button" class="q-option" data-choice="' + i + '" ' + (answered ? 'disabled' : '') + '><b>' + letter(i) + '</b><span>' + escape(choice) + '</span></button>').join('') + '</div>';
     if (answered) html += '<div class="q-feedback" role="status"><strong>' + (matched ? 'Chính xác' : 'Đáp án đúng là ' + letter(q.correct)) + '</strong>' +
       (road && road.coaching ? '<p>' + escape(road.coaching) + '</p>' : '') + '</div>' +
       '<button class="q-primary" data-action="next">' + (road ? 'Tiếp tục lái' : run.index + 1 === run.ids.length ? 'Xem kết quả' : 'Câu tiếp theo') + '</button>';
     if (!road) html += '<button class="q-secondary q-back" data-action="library">Về thư viện</button>';
     chrome(text,html);
-    if (answered) dialog.querySelector('[data-action="next"]').focus({preventScroll:false});
+    if (answered) {
+      const buttons = dialog.querySelectorAll('[data-choice]');
+      markQuizAnswer(buttons[q.correct],true);
+      if (!matched) markQuizAnswer(buttons[chosen],false);
+      dialog.querySelector('[data-action="next"]').focus({preventScroll:false});
+    }
     else {dialog.scrollTop=0;dialog.querySelector('.q-option')?.focus({preventScroll:true});}
   }
 
