@@ -8,7 +8,21 @@ function createSightFinishes(T,nightLights){
     'ngo-mon':{tint:0xffca90,bulbs:[[-19,2,20,23],[18,2,20,22],[0,7,7.8,16]]},
     rong:{tint:0xffbd75,bulbs:[[-3,2,6.7,9],[3,2,6.7,9],[0,5,-5.8,13]]},
     market:{tint:0xffdaab,bulbs:[[0,13,64,16],[-19,4,65,17],[20,4,65,17]]},
-    'cho-noi-cai-rang':{tint:0xffc173,bulbs:[[-6,3,-21,7],[1,2.8,-5,8],[8,3,12,8]]}
+    'cho-noi-cai-rang':{tint:0xffc173,bulbs:[[-6,3,-21,7],[1,2.8,-5,8],[8,3,12,8]]},
+    'thanh-co-vinh':{tint:0xffc982,bulbs:[[0,4.5,6,14],[-7,5,4.5,12],[7,5,4.5,12]]},
+    'den-cuong':{tint:0xffc985,bulbs:[[0,5,3.5,13],[-6,4,3,11],[6,4,3,11]]},
+    'quang-truong-hcm-vinh':{tint:0xffd89c,bulbs:[[0,10,12,24],[-14,5,10,18],[14,5,10,18]]},
+    'cau-rong':{tint:0xffb84d,bulbs:[[-22,10,0,28],[0,13,0,32],[24,10,0,28]]},
+    'cau-song-han':{tint:0x8ad8ff,bulbs:[[-16,12,0,26],[0,22,0,34],[16,12,0,26]]},
+    'cau-tran-thi-ly':{tint:0xffc278,bulbs:[[-18,12,0,28],[0,28,0,38],[18,12,0,28]]},
+    'hoi-quan-phuc-kien':{tint:0xffb562,bulbs:[[0,4,6,14],[-6,3.5,5,11],[6,3.5,5,11]]},
+    'cau-truong-tien':{tint:0xc8a4ff,bulbs:[[-28,8,0,24],[0,9,0,26],[28,8,0,24]]},
+    'phu-van-lau':{tint:0xffc985,bulbs:[[0,4,7,14],[-7,4,6,12],[7,4,6,12]]},
+    'dien-thai-hoa':{tint:0xffcf87,bulbs:[[0,5,12,20],[-14,5,10,16],[14,5,10,16]]},
+    'quang-binh-quan':{tint:0xffc988,bulbs:[[0,5,6,15],[-6,4,5,12],[6,4,5,12]]},
+    'thap-tram-huong':{tint:0xffb67a,bulbs:[[0,8,9,18],[0,18,7,20],[0,28,5,18]]},
+    'quang-truong-lam-vien':{tint:0xffe07d,bulbs:[[-14,8,8,20],[0,10,10,22],[14,8,8,20]]},
+    'bao-tang-ca-phe':{tint:0xffcc88,bulbs:[[-12,4,8,16],[0,5,10,18],[12,4,8,16]]}
   };
   const finishes={
     'ngo-mon':`
@@ -55,7 +69,9 @@ function createSightFinishes(T,nightLights){
     worker.postMessage({id,positions,normals,indices},buffers);
   }
   function apply(group){
-    const brick=['ponagar','thap-doi','thap-vinh-hung','my-son','pho-minh','phuoc-duyen'].includes(group.name);
+    const brick=['ponagar','thap-doi','thap-vinh-hung','my-son','pho-minh','phuoc-duyen',
+      'thap-bang-an','thap-khuong-my','thap-chien-dan','thap-banh-it','thap-duong-long',
+      'thap-canh-tien','thap-nhan-tuy-hoa','po-klong-garai','thap-po-rome','thap-po-sah-inu'].includes(group.name);
     const rig=fixtures[group.name];
     const surface=finishes[group.name]||'';
     const bulbs=rig?.bulbs.map(([x,y,z,r])=>new T.Vector4(x,y,z,r));

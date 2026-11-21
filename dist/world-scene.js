@@ -121,6 +121,7 @@
         name:'Shopfront '+name,map:texture('surfaces/front-'+name+'.webp'),roughness:.91,metalness:0
       });
     }
+    const centralStreetscapes=window.CentralStreetscapes?.create(T,scene,renderer,material);
     const meadow=surfaces.scanned('meadow',0xafbd9d,.56);
     const upland=surfaces.scanned('grass',0x8ea68d,.67);
     const landscapes=createSightLandscapes(T);
@@ -701,7 +702,10 @@
         if(obscured)continue;
         const {house,s,sign,hx,hz,width,depth,type,random}=c;
             if(house){
-              const h=(upstairs.has(shopTypes[type])?6.7:3.65)+random()*.62;
+              const regional=centralStreetscapes?.themeAt(graph,hx+cx,hz+cz);
+              const rZone=regional?.zone,rShop=rZone?.shops[type%rZone.shops.length];
+              const twoStory=rShop?rShop.upstairs:upstairs.has(shopTypes[type]);
+              const h=(twoStory?6.7:3.65)+random()*.62;
               registerObstacle({id:c.key,kind:'building',x:hx,z:hz,fx:s.fx,fz:s.fz,w:width/2,d:depth/2,height:h});
               // Local +Z faces the road, with the façade just outside the wall.
               const sx=-s.nx*sign,sz=-s.nz*sign,rot=Math.atan2(sx,sz);
@@ -709,8 +713,13 @@
               const foot=Math.abs(localGround(hx+width*.5,hz)-localGround(hx-width*.5,hz))+
                 Math.abs(localGround(hx,hz+depth*.5)-localGround(hx,hz-depth*.5));
               if(foot>.14)instance('concrete',unitBox,hx,-foot*.43,hz,width+.06,foot*.9+.10,depth+.06,rot);
-              instance('wall',unitBox,hx,h*.5,hz,width,h,depth,rot,[0xe9d4b5,0xc7d6bb,0xf3dfb0][type%3]);
-              instance('front'+type,unitPlane,hx+sx*(depth/2+.025),h/2,hz+sz*(depth/2+.025),width,h,1,rot);
+              const wallPal=rZone?rZone.walls:[0xe9d4b5,0xc7d6bb,0xf3dfb0];
+              const roofPal=rZone?rZone.roofs:[0x989d98,0xaf846d,0x99aeb0];
+              const gablePal=rZone?rZone.gables:[0xa26148,0x825947,0x7b8688];
+              const awningPal=rZone?rZone.awnings:[0xa2a692,0xbc8062,0x809b93];
+              const frontKey=regional?regional.frontKeys[type%regional.frontKeys.length]:'front'+type;
+              instance('wall',unitBox,hx,h*.5,hz,width,h,depth,rot,wallPal[type%wallPal.length]);
+              instance(frontKey,unitPlane,hx+sx*(depth/2+.025),h/2,hz+sz*(depth/2+.025),width,h,1,rot);
               for(const side of [-1,1]){
                 const wx=hx+s.fx*side*(width/2+.035),wz=hz+s.fz*side*(width/2+.035);
                 for(const floor of h>5?[1.7,4.5]:[1.7]){
@@ -718,12 +727,12 @@
                   instance('concrete',unitBox,wx+s.fx*side*.10,floor-.57,wz+s.fz*side*.10,.28,.09,1.75,rot);
                 }
               }
-              instance('roof',unitBox,hx,h+.07,hz,width+.46,.19,depth+.52,rot,[0x989d98,0xaf846d,0x99aeb0][type%3]);
-              const pitched=h<5&&c.priority<.7;
-              if(pitched)instance('gable',gable,hx,h+.14,hz,width+.5,width*.24,depth+.59,rot,[0xa26148,0x825947,0x7b8688][type%3]);
+              instance('roof',unitBox,hx,h+.07,hz,width+.46,.19,depth+.52,rot,roofPal[type%roofPal.length]);
+              const pitched=(rZone?.forcePitched?h<8:h<5)&&c.priority<(rZone?.forcePitched?.95:.7);
+              if(pitched)instance('gable',gable,hx,h+.14,hz,width+.5,width*(rZone?.forcePitched?.29:.24),depth+.59,rot,gablePal[type%gablePal.length]);
               walks.porch(s,hx+sx*depth/2,hz+sz*depth/2,width+.35);
               const porch=depth/2+.72;
-              instance('awning',unitBox,hx+sx*porch,2.65,hz+sz*porch,width+.4,.13,1.8,rot,[0xa2a692,0xbc8062,0x809b93][type%3]);
+              instance('awning',unitBox,hx+sx*porch,2.65,hz+sz*porch,width+.4,.13,1.8,rot,awningPal[type%awningPal.length]);
               instance('concrete',unitPole,hx+sx*porch+s.fx*width*.45,1.32,hz+sz*porch+s.fz*width*.45,.09,2.62,.09);
               if(type%3===0&&!pitched)instance('steel',unitPole,hx,h+.65,hz,1.2,1.0,1.2);
               buildingBase=null;
@@ -962,6 +971,7 @@
       rebuildSigns(graph,edges,cx,cz,(x,z,r)=>!blocked(x-cx,z-cz,r)&&!contact(x,z,r),driveGround,registerObstacle);
       mappedLights.rebuild(graph,edges,cx,cz,driveGround);
       breakfast.place(graph,cx,cz,segments,(x,z,r)=>!blocked(x,z,r)&&!contact(x+cx,z+cz,r),driveGround);
+      centralStreetscapes?.place(graph,cx,cz,segments,(x,z,r)=>!blocked(x,z,r)&&!contact(x+cx,z+cz,r),driveGround,district.streetFronts,streetLife.places);
       shadowStamp=-1000;
     }
     const trafficModels={
@@ -1221,6 +1231,7 @@
       headlight.visible=headlight.intensity>3;
       material.glass.emissiveIntensity=atmosphere.lamps.value*.37;
       material.lantern.emissiveIntensity=atmosphere.lamps.value*3.2;
+      centralStreetscapes?.update(atmosphere.lamps.value);
       if(now>=nextLightCheck){
         nextLightCheck=now+240;
         const level=atmosphere.lamps.value;

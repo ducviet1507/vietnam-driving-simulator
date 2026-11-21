@@ -59,7 +59,7 @@ function createTourDistrict(T,scene,plaster,structures,osmBuildings,nightLights)
   const concrete=new T.Color(0x989186);
   const doorway=new T.Color(0x354647);
   let indexPromise,available,grid,scale=100000,loadedGraph,signature,loaded=[],cells=new Map(),serial=0;
-  const cache=new Map(),blocks=new Map(),cell=32;
+  const cache=new Map(),blocks=new Map(),cell=32,streetFronts=[];
   async function load(graph,x,z){
     const seq=++serial;
     try{
@@ -171,7 +171,7 @@ function createTourDistrict(T,scene,plaster,structures,osmBuildings,nightLights)
   }
   function build(graph,cx,cz,landmarks,ground=()=>0,edges=[],visitorGround=()=>false){
     for(const mesh of [...group.children]){group.remove(mesh);mesh.geometry.dispose();}
-    cells.clear();blocks.clear();if(!graph)return;
+    cells.clear();blocks.clear();streetFronts.length=0;if(!graph)return;
     const pieces=parts.rows(graph,cx,cz);
     const replaced=new Set(pieces.flatMap(row=>[row[6]?.parent,row[6]?.sourceId]).filter(Boolean));
     const shells=[...(graph===loadedGraph?loaded:[]),...osmBuildings.rows(graph,cx,cz)];
@@ -223,7 +223,7 @@ function createTourDistrict(T,scene,plaster,structures,osmBuildings,nightLights)
     }
     // Fit a shaded doorway to the street-facing wall of a narrow low-rise.
     // The outline and height are mapped; the shutter and canopy are scenery.
-    function streetFront(outer,h,tint,seed){
+    function streetFront(outer,h,tint,seed,zone){
       let best=null,bestGap=18;
       for(let i=0;i<outer.length;i++){
         const a=outer[i],b=outer[(i+1)%outer.length],dx=b.x-a.x,dz=b.y-a.y,len=Math.hypot(dx,dz);
@@ -260,6 +260,7 @@ function createTourDistrict(T,scene,plaster,structures,osmBuildings,nightLights)
         panel(3.28,3.60,.87,.87,concrete);panel(4.09,4.15,.87,.87,tint);
         for(const u of [-half,0,half-.055])panel(3.55,4.12,.87,.87,tint,u,u+.055);
       }
+      if(zone)streetFronts.push({x:x-cx,y:baseY,z:z-cz,nx,nz,ux,uz,half,top,h,seed,zone});
     }
     const ids=new Set(),surveyedIds=new Set(surveyed.map(row=>row[0]));
     const [lon,lat]=graph.geo(cx,cz);
@@ -311,12 +312,14 @@ function createTourDistrict(T,scene,plaster,structures,osmBuildings,nightLights)
       for(let i=Math.floor((minX-12)/cell);i<=Math.floor((maxX+12)/cell);i++)for(let j=Math.floor((minZ-12)/cell);j<=Math.floor((maxZ+12)/cell);j++){
         const key=i+','+j;if(!cells.has(key))cells.set(key,[]);cells.get(key).push(b);
       }
-      const flat=rings.flat(),roofColor=detail?.['roof:colour']?new T.Color(detail['roof:colour']):roofs[opening===1?0:seed%roofs.length];
-      const base=detail?.['building:colour']?new T.Color(detail['building:colour']):detail?.['building:material']==='wood'?new T.Color(0x99765a):palette[seed%palette.length];
+      const [bLon,bLat]=graph.geo(x,z),zone=window.CentralStreetscapes?.zoneAt(bLon,bLat);
+      const zWalls=zone?zone.walls:null,zRoofs=zone?zone.roofs:null;
+      const flat=rings.flat(),roofColor=detail?.['roof:colour']?new T.Color(detail['roof:colour']):zRoofs?new T.Color(zRoofs[opening===1?0:seed%zRoofs.length]):roofs[opening===1?0:seed%roofs.length];
+      const base=detail?.['building:colour']?new T.Color(detail['building:colour']):detail?.['building:material']==='wood'?new T.Color(0x99765a):zWalls?new T.Color(zWalls[seed%zWalls.length]):palette[seed%palette.length];
       if(!part&&!opening&&Math.hypot(x-cx,z-cz)<185&&h>=3&&h<17&&maxX-minX<32&&maxZ-minZ<32&&
-        /^(yes|residential|house|terrace|apartments|retail|commercial|building)$/.test(kind))streetFront(outer,h,roofColor,seed);
+        /^(yes|residential|house|terrace|apartments|retail|commercial|building)$/.test(kind))streetFront(outer,h,roofColor,seed,zone);
       let eave=h;
-      const lowRiseRoof=!part&&h<7.2&&(warehouse||seed%5<2)?'gabled':null;
+      const lowRiseRoof=!part&&h<(zone?.forcePitched?10.5:7.2)&&(warehouse||zone?.forcePitched||seed%5<2)?'gabled':null;
       const roofShape=shape||detail?.['roof:shape']||(opening===1?'hipped':opening===2?'gabled':lowRiseRoof);
       const pitched=['hipped','gabled','pyramidal','hipped-and-gabled','side_hipped','round','skillion','onion','dome','saltbox','mansard'].includes(roofShape);
       const visitorRoof=original&&(site||opening||part||shape)&&pitched&&buildVisitorRoof(T,rings,roofShape,h,
@@ -386,6 +389,6 @@ function createTourDistrict(T,scene,plaster,structures,osmBuildings,nightLights)
     return near.find(b=>b.surveyed&&insideBuilding(x,z,b.rings));
   }
   return {load:async(g,x,z)=>(await Promise.all([load(g,x,z),parts.load(g,x,z)])).some(Boolean),
-    build,contact,footprint,overlapsSight,builtUp:(x,z)=>cells.has(Math.floor(x/cell)+','+Math.floor(z/cell)),
+    build,contact,footprint,overlapsSight,streetFronts,builtUp:(x,z)=>cells.has(Math.floor(x/cell)+','+Math.floor(z/cell)),
     mappedBlock:(x,z)=>(blocks.get(Math.floor(x/70)+','+Math.floor(z/70))||0)>=3};
 }
