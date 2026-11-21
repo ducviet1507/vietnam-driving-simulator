@@ -452,6 +452,7 @@
         const finish=e.traffic?.surface;
         const loose=/^(unpaved|gravel|fine_gravel|compacted|dirt|earth|ground|sand|mud)$/.test(finish);
         const pavement=loose?gravelData:/^(paving_stones|sett|cobblestone)$/.test(finish)?pavedData:roadData;
+        const cityStreet=e.kind==='residential'||e.kind==='living_street'||/^phố\s/i.test(e.name);
         for(const point of e.controls||[]){
           if(!(point.flags&2)||crossings.has(point.node))continue;
           const p=graph.sample({edge:e,dir:1,s:point.s}),x=p.x-cx,z=p.z-cz;
@@ -475,6 +476,7 @@
           const sourceLength=Math.hypot(dx*mx,dz);
           const s={ax,az,bx,bz,fx,fz,nx,nz,len:length,sourceLength,w:width,kind:e.kind,oneway:e.oneway,rank:perp,seed};
           s.traffic=e.traffic;s.loose=loose;
+          s.roadMaterial=loose?material.earth:pavement===pavedData?material.pavers:material.asphalt;
           s.graded=namedPass(e)||relief.altitude((a.x+b.x)*.5,(a.z+b.z)*.5)>280&&(e.visitorRoad||!district.builtUp(cx+(ax+bx)*.5,cz+(az+bz)*.5)&&!['residential','service','living_street'].includes(e.kind));
           if(s.graded){
             const n=Math.max(1,Math.ceil(length/12));s.interval=length/n;s.crown=[];
@@ -486,6 +488,11 @@
             }
           }
           s.authoredPavement=Boolean(e.authoredHalfWidth);
+          if(!s.authoredPavement&&perp<detailRadius+30&&!e.kind.startsWith('motorway')&&!e.kind.endsWith('_link')&&!e.traffic?.tunnel){
+            const x=(a.x+b.x)/2,z=(a.z+b.z)/2;
+            if(cityStreet||district.builtUp(x,z)||graph&&environment.sample(graph,x,z).cover===50)
+              s.walkWidth=width<4?1.2:1.85;
+          }
           segments.push(s);
           if(!s.authoredPavement)strip(landData,s,0,s.len,-width-.85,width+.85);
           if(s.graded){strip(pavement,s,0,s.len,-width,0);strip(pavement,s,0,s.len,0,width);}
@@ -601,10 +608,21 @@
       const walks=createGroundedWalkways(T,{cx,cz,step:relief.step,
         height:(x,z)=>roadway(cx+x,cz+z),ground:(x,z)=>Math.min(localGround(x,z),shoreBed(cx+x,cz+z)??Infinity),
         needsDetail:(x0,z0,x1,z1)=>wooded||shorePatch?.intersects(x0,z0,x1,z1),
-        wet:(x,z)=>wetMask&&wet(x,z)});
+        wet:(x,z)=>{
+          if(!wetMask||!wet(x,z))return false;
+          // The four-metre water mask can straddle a waterfront street. Carry
+          // the grounded kerb over its shallow bank up to the mapped bed.
+          const shore=sampleShore(x,z);
+          return shore&&shore.level-shore.bed>.65;
+        }});
+      const aprons=new Map(),walkRoads=new Set();
       for(const s of segments){
         const start=openNearEnd(s,s.ax,s.az),end=s.len-openNearEnd(s,s.bx,s.bz);
-        if(end<=start||s.authoredPavement)continue;
+        if(s.authoredPavement)continue;
+        if(s.walkWidth)bounds(s,s.w+5,key=>{
+          for(const neighbour of cells.get(key)||[])walkRoads.add(neighbour);
+        });
+        if(end<=start)continue;
         const mid=(start+end)/2,mx=s.ax+s.fx*mid,mz=s.az+s.fz*mid;
         const street=s.kind==='residential'||s.kind==='living_street'||district.builtUp(mx+cx,mz+cz);
         if(!street && !s.kind.startsWith('motorway') && s.rank<420 && s.len>12){
@@ -617,9 +635,6 @@
             instance('white',unitBox,x,y+.32,z,.17,.64,.17);
             instance('white',unitBox,x,y+.72,z,.18,.16,.18,0,0xc13f31);
           }
-        }
-        if(street&&s.w<=6.8&&end-start>2&&s.rank<detailRadius+30){
-          for(const side of [-1,1])walks.sidewalk(s,start,end,side,s.w<4?1.2:1.85);
         }
         if(!s.loose&&(s.traffic?.lanes||s.w>=4.2||s.graded)){
           for(const side of [-1,1])strip(white,s,start,end,side*s.w*.94-.055,side*s.w*.94+.055);
@@ -694,6 +709,12 @@
           }
         }
       }
+      traceSidewalks(walkRoads,(x,z)=>cells.get(nearbyCell(x,z))||[],walks.sidewalk,(s,a,b,c)=>{
+        if(Math.abs((b[0]-a[0])*(c[1]-a[1])-(b[1]-a[1])*(c[0]-a[0]))<.00001)return;
+        const mat=s.roadMaterial;
+        if(!aprons.has(mat))aprons.set(mat,[]);
+        aprons.get(mat).push(...a,...b,...c);
+      });
       for(const c of candidates){
         let obscured=false;
         visitPlots(c,k=>{
@@ -892,7 +913,7 @@
         }
         const same=(a,b,c,o)=>Math.floor((Math.min(a,b,c)+o)/step)===Math.floor((Math.max(a,b,c)+o)/step);
         for(let i=0;i<data.length;i+=6){
-          if(asphalt)section=roadSections[i/6];
+          if(asphalt)section=data===roadData?roadSections[i/6]:null;
           const ax=data[i],az=data[i+1],bx=data[i+2],bz=data[i+3],dx=data[i+4],dz=data[i+5];
           if(same(ax,bx,dx,cx)&&same(az,bz,dz,cz)&&same(ax+az,bx+bz,dx+dz,cx+cz)){
             if(fitRoad)triangle([ax,az],[bx,bz],[dx,dz]);else{vertex(ax,az);vertex(bx,bz);vertex(dx,dz);}
@@ -951,6 +972,7 @@
       }
       surface(landData,material.earth,-.032,.77);surface(roadData,material.asphalt,.002,.25);
       surface(gravelData,material.earth,.002,.48);surface(pavedData,material.pavers,.002,1);
+      for(const [mat,data] of aprons)surface(data,mat,.001,mat===material.earth ? .48 : mat===material.pavers ? 1 : .25);
       surface(yellow,material.yellow,.026,1);surface(white,material.white,.026,1);
       walks.build(roadGroup,surface,material.pavers,curbStone);pavementLift=walks.liftAt;
       scatterVergeGrass(segments,Math.min(320,detailRadius),
