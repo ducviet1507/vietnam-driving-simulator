@@ -114,7 +114,7 @@
 
   // 2. Nhà Bác Hồ ở Làng Sen (Kim Liên, Nam Đàn)
   function langSen(T, kit) {
-    const {box, stamp, outline, round, random} = kit;
+    const {box, stamp, outline, round} = kit;
     const thatch = [0xb39a6e, 0xa58b60, 0x9b8259, 0xbfaa7d];
     const bamboo = 0x87724d, timber = 0x563f2e, earth = 0xb99e77, hedge = 0x3f6632;
     kit.palette({timber: [bamboo, timber]});

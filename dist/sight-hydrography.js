@@ -356,11 +356,18 @@
     }
     bankFerns(T,group,parts,roots,phase);groundFit(group,parts,0,true);
   }
+  // Initial views through clearings in the local tree cover (yaw offset, elevation).
+  const clearingViews={
+    'osm-node-7790401185':[-.46,.64],
+    'osm-node-9811545028':[0,.46],
+    'osm-node-9789872321':[0,.46]
+  };
   for(const [id,p] of Object.entries(profiles)){
     const site=byId.get(id);
     if(!site)continue;
     const isCave=site.kind==='Hang động',seed=Number(id.slice(id.lastIndexOf('-')+1))||1;
     const span=isCave?Math.max(p.width*3.3,8.3):Math.max(10,p.width*2.25+p.height*.44);
+    const [viewOffset,viewElevation]=clearingViews[id]||(isCave?[.14,.18]:[.28,.25]);
     const widthText=p.widthSource==='tag'?' Bề rộng trên bản đồ là '+p.width+' m.':p.widthSource==='published'?' Bề rộng tham khảo khoảng '+p.width+' m.':'';
     const heightText=p.heightSource==='tag'?' Chiều cao được ghi trên bản đồ là '+p.height+' m.':p.heightSource==='published'?' Chiều cao tham khảo khoảng '+p.height+' m.':'';
     const axisText=isCave?(p.evidence==='direction'?'Hướng cửa hang lấy từ ký hiệu bản đồ.':
@@ -374,7 +381,7 @@
         const along=(isCave?1.5:Math.min(19,p.width*.34+p.height*.15+2))+pad;
         return (x/across)**2+(z/along)**2<1;
       },
-      viewAngle:p.yaw+(isCave?.14:.28),viewElevation:isCave?.18:.25,viewRadius:Math.max(isCave?7:13,span*.95,p.height*1.95),
+      viewAngle:p.yaw+viewOffset,viewElevation,viewRadius:Math.max(isCave?7:13,span*.95,p.height*1.95),
       description:axisText+heightText+widthText+seasonal+(isCave?' Hình dáng vách đá ở cửa hang được ước dựng.':' Các bậc đá và dòng nước được ước dựng theo địa hình.'),
       build(T,{group}){
         if(isCave)cave(T,group,p,seed);else waterfall(T,group,p,seed);

@@ -615,8 +615,14 @@
           const wy = 0.9 + fl * floorH + floorH * 0.52;
           for (const f of [-1, 1]) {
             box(0x283538, bx, wy, f * (d / 2 + 0.04), bayW * 0.52, floorH * 0.56, 0.10);
+            box(trim, bx, wy-floorH*.29, f*(d/2+.13), bayW*.86,.13,.33);
+            box(shutter, bx, wy, f*(d/2+.11), .064,floorH*.55,.075);
+            box(shutter, bx, wy+floorH*.12, f*(d/2+.11), bayW*.52,.075,.075);
             for (const s of [-1, 1]) {
-              box(shutter, bx + s * (bayW * 0.32), wy, f * (d / 2 + 0.10), bayW * 0.16, floorH * 0.56, 0.08);
+              const sx=bx+s*bayW*.33;
+              box(shutter,sx,wy,f*(d/2+.10),bayW*.17,floorH*.56,.08);
+              for(let j=-3;j<=3;j++)
+                box(shutter,sx,wy+j*floorH*.067,f*(d/2+.16),bayW*.144,.075,.09,0,f*.45);
             }
           }
         }
@@ -628,6 +634,14 @@
     // Central projecting classical pediment over main entry
     const pw = Math.min(8.5, w * 0.30);
     box(wall, 0, 0.9 + h * 0.52, d / 2 + 0.55, pw, h * 1.04, 1.1);
+    const doorway=Math.min(2.65,pw*.57), jamb=d/2+1.15;
+    box(0x283538,0,2.25,jamb,doorway,2.70,.12);
+    for(const edge of [-1,1]){
+      box(trim,edge*(doorway/2+.10),2.25,jamb+.08,.20,2.70,.24);
+      box(shutter,edge*doorway*.23,1.62,jamb+.085,doorway*.44,1.42,.09);
+    }
+    box(trim,0,3.63,jamb+.10,doorway+.52,.22,.38);
+    box(shutter,0,2.25,jamb+.085,.08,2.70,.09);
     outline([[-pw * 0.54, 0], [0, 2.25], [pw * 0.54, 0]], trim, 0, 0.9 + h + 0.15, d / 2 + 0.2, 0.95);
     if (opts.clock) {
       kit.stamp(kit.round, 0xf6f0dc, 0, 0.9 + h + 1.05, d / 2 + 1.18, 0.72, 0.14, 0.72, 0, Math.PI / 2);

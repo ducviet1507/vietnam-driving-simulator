@@ -87,6 +87,8 @@ export async function packJourneyData(client) {
   html = html.replace('<script src="central-arch.js"></script>', '$&<script src="' + registrations + '"></script>');
   await writeFile(index, html);
   for(const name of await readdir(directory)){
-    if(/-[0-9a-f]{16}\.(json(?:\.gz)?|m?js)$/.test(name)&&!generated.has(name))await unlink(path.join(directory,name));
+    const sourceName=name.replace(/(\.m?js)\.gz$/,'$1');
+    if(/-[0-9a-f]{16}\.(json(?:\.gz)?|m?js)$/.test(sourceName)&&!generated.has(sourceName))
+      await unlink(path.join(directory,name));
   }
 }
