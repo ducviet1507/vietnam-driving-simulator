@@ -457,3 +457,10 @@ https://dsvh.gov.vn/
 Mở rộng cụm địa danh Nam Trung Bộ & Tây Nguyên (17 công trình mới) — Khu chứng tích Sơn Mỹ, Nhà thờ Gỗ Kon Tum, Cầu treo Kon Klor, Tháp Bánh Ít, Tháp Dương Long, Bảo tàng Quang Trung, Quảng trường Đại Đoàn Kết (Pleiku), Tượng đài Chiến thắng Buôn Ma Thuột, Tháp Nhạn Tuy Hòa, Nhà thờ Mằng Lăng, Nhà thờ Núi Nha Trang, Chùa Long Sơn – Kim Thân Phật Tổ, Tháp Pô Sah Inư, Tháp Nước Phan Thiết, Quảng trường Lâm Viên Đà Lạt, Nhà thờ Con Gà Đà Lạt và Cao đẳng Sư phạm Đà Lạt. Tọa độ OpenStreetMap (ODbL 1.0); mô hình 3D dựng thủ tục bằng Three.js.
 https://www.openstreetmap.org/copyright
 https://dsvh.gov.vn/
+
+
+Mở rộng Nghệ An đợt 3: Chợ Vinh, Ga Vinh, Chùa Cần Linh, Đền Hồng Sơn, Quảng trường Bình Minh Cửa Lò, Đền Nguyễn Xí, Đền Vua Mai Hắc Đế, Khu lưu niệm Phan Bội Châu, Đền Quả Sơn, Đền Bạch Mã, Tượng đài Xô Viết Nghệ Tĩnh Thái Lão và Cầu Yên Xuân
+Đối chiếu vị trí OpenStreetMap và hình khối kiến trúc đặc trưng xứ Nghệ (tháp đồng hồ Chợ Vinh, mái đón Ga Vinh, Hoa Cúc Biển Cửa Lò, tứ đại đền thiêng xứ Nghệ, nhà tranh cụ Phan Bội Châu và cầu giàn thép Yên Xuân qua sông Lam).
+https://visitnghean.gov.vn/
+https://dsvh.gov.vn/
+https://vi.wikipedia.org/wiki/C%E1%BA%A7u_Y%C3%AAn_Xu%C3%A2n
