@@ -17,7 +17,7 @@ window.buildDriverCabin = function(T, rig, mapCanvas) {
       shape.quadraticCurveTo(a.x,a.y,mid.x,mid.y);
     }
     shape.closePath();
-    const mesh=new T.Mesh(new T.ExtrudeGeometry(shape,{depth,bevelEnabled:true,bevelSegments:3,bevelSize:radius,bevelThickness:radius}),material);
+    const mesh=new T.Mesh(new T.ExtrudeGeometry(shape,{depth,curveSegments:4,bevelEnabled:true,bevelSegments:3,bevelSize:radius,bevelThickness:radius}),material);
     parent.add(mesh);return mesh;
   }
   function rounded(parent,w,h,depth,material,radius=.012) {
@@ -33,93 +33,247 @@ window.buildDriverCabin = function(T, rig, mapCanvas) {
     const tex=new T.CanvasTexture(c);tex.colorSpace=T.SRGBColorSpace;
     return {ctx:c.getContext('2d'),tex};
   }
-  // Continuous molded upper dash. Its profile drops toward the windscreen and
-  // folds into the darker fascia toward the seats.
-  const hide=new T.MeshStandardMaterial({color:0x292d30,roughness:.85,metalness:.04,side:T.DoubleSide});
-  const grain=canvasTexture(128,128), noise=grain.ctx.createImageData(128,128);
+  // The dash is a continuous cross-section. Each material owns a band of
+  // that section so the veneer, shadow gaps and rolled edges meet exactly.
+  let seed=1949;
+  function random(){
+    seed=(Math.imul(seed,1664525)+1013904223)>>>0;
+    return seed/4294967296;
+  }
+  const grain=canvasTexture(128,128),noise=grain.ctx.createImageData(128,128);
   for(let i=0;i<noise.data.length;i+=4){
-    const value=155+Math.floor(Math.random()*70);
+    const value=Math.round(110+random()*130);
     noise.data.set([value,value,value,255],i);
   }
-  grain.ctx.putImageData(noise,0,0);grain.tex.needsUpdate=true;
-  grain.tex.wrapS=grain.tex.wrapT=T.RepeatWrapping;grain.tex.repeat.set(14,7);
-  hide.bumpMap=grain.tex;hide.bumpScale=.0008;
+  grain.ctx.putImageData(noise,0,0);grain.tex.colorSpace=T.NoColorSpace;
+  grain.tex.wrapS=grain.tex.wrapT=T.RepeatWrapping;grain.tex.repeat.set(12,5);
+  const hide=new T.MeshStandardMaterial({color:0x3a3533,roughness:.74,bumpMap:grain.tex,bumpScale:.00032});
+  const leather=hide.clone();leather.color.setHex(0x302c2b);leather.roughness=.58;
+  const saddle=hide.clone();saddle.color.setHex(0x604335);
+  const alloy=new T.MeshStandardMaterial({color:0xbca58b,metalness:.72,roughness:.32});
+  const threadMaterial=new T.LineBasicMaterial({color:0x7d6a5c});
+  const veneer=canvasTexture(768,96),pixels=veneer.ctx.createImageData(768,96);
+  for(let y=0;y<96;y++)for(let x=0;x<768;x++){
+    const t=x/768*Math.PI*2;
+    const cut=y+.9*Math.sin(t*3+y*.045)+3.6*Math.sin(t+y*.077)+1.7*Math.cos(t*2-y*.12);
+    const ray=cut+4*Math.sin(t*2+cut*.16);
+    const tone=5*Math.sin(cut*.37)+3*Math.sin(ray*1.75)-11*Math.max(0,Math.sin(ray*.91))**9+5*random();
+    pixels.data.set([94+tone,65+tone*.74,45+tone*.53,255],(y*768+x)*4);
+  }
+  veneer.ctx.putImageData(pixels,0,0);
+  veneer.tex.wrapS=T.RepeatWrapping;veneer.tex.anisotropy=4;
+  const walnut=new T.MeshStandardMaterial({map:veneer.tex,roughness:.42,metalness:.02});
+  const contour=x=>.032*(1-x*x);
+  const setback=x=>.038-.16*x*x;
   function swept(profile,material){
-    const position=[],uv=[],indices=[];
-    for(let i=0;i<=60;i++){
-      const x=-1.02+i*2.04/60;
-      const arch=.018*(1-x*x);
-      for(const [y,z] of profile){
-        position.push(x,y+arch,z+.10*x*x);uv.push(i/60,z);
-      }
+    const position=[],uv=[],colors=[],indices=[],count=profile.length;
+    for(let i=0;i<=48;i++){
+      const x=-1.04+2.08*i/48;
+      profile.forEach(([y,z],j)=>{
+        position.push(x,y+contour(x),z+setback(x));
+        uv.push(i/48,1-j/(count-1));
+        const shade=.99-.30*Math.exp(-((x-.37)**2/.05+(z-.31)**2/.03))-.22*Math.max(0,.9-y);
+        colors.push(shade,shade,shade);
+      });
     }
-    const n=profile.length;
-    for(let i=0;i<60;i++)for(let j=0;j<n-1;j++){
-      const a=i*n+j;indices.push(a,a+n,a+1,a+1,a+n,a+n+1);
+    for(let i=0;i<48;i++)for(let j=0;j<count-1;j++){
+      const a=i*count+j;indices.push(a,a+1,a+count,a+1,a+count+1,a+count);
     }
-    const geo=new T.BufferGeometry();geo.setAttribute('position',new T.Float32BufferAttribute(position,3));geo.setAttribute('uv',new T.Float32BufferAttribute(uv,2));geo.setIndex(indices);geo.computeVertexNormals();cabin.add(new T.Mesh(geo,material));
+    const geo=new T.BufferGeometry();
+    geo.setAttribute('position',new T.Float32BufferAttribute(position,3));
+    geo.setAttribute('uv',new T.Float32BufferAttribute(uv,2));
+    geo.setAttribute('color',new T.Float32BufferAttribute(colors,3));
+    geo.setIndex(indices);geo.computeVertexNormals();
+    const finish=material.clone();finish.vertexColors=true;cabin.add(new T.Mesh(geo,finish));
   }
-  swept([[.40,.14],[.68,.14],[.77,.20],[.82,.30],[.88,.31],[.93,.34],[.995,.42],[1.012,.49],[1.018,.58],[1.003,.70],[.977,.87],[.95,1.00]],hide);
-  swept([[.793,.250],[.806,.268],[.813,.286]],new T.MeshStandardMaterial({color:0x9b9d94,metalness:.58,roughness:.36,side:T.DoubleSide}));
-  swept([[.811,.288],[.825,.297],[.841,.308]],new T.MeshStandardMaterial({color:0x383c38,metalness:.3,roughness:.48,side:T.DoubleSide}));
-  function pipe(points,radius,material){
+  swept([[.10,-1.38],[.10,-.42],[.13,-.05],[.26,.16],[.46,.18],[.55,.17]],rubber);
+  swept([[.55,.17],[.68,.135],[.772,.161],[.791,.174]],saddle);
+  swept([[.791,.174],[.795,.169],[.802,.172]],alloy);
+  swept([[.802,.172],[.814,.166],[.843,.168],[.866,.181],[.871,.187]],walnut);
+  swept([[.871,.187],[.874,.187],[.878,.191]],alloy);
+  swept([[.878,.191],[.885,.213],[.905,.232],[.917,.226]],black);
+  swept([[.917,.226],[.922,.210],[.935,.208],[.957,.235],[.978,.30],[.987,.42],[.98,.61],[.949,.86],[.932,1.04]],hide);
+  function pipe(parent,points,radius,material){
     const curve=new T.CatmullRomCurve3(points.map(p=>new T.Vector3(...p)));
-    const mesh=new T.Mesh(new T.TubeGeometry(curve,18,radius,10,false),material);cabin.add(mesh);return mesh;
+    const mesh=new T.Mesh(new T.TubeGeometry(curve,20,radius,8,false),material);
+    parent.add(mesh);return mesh;
   }
-  const lining=new T.MeshStandardMaterial({color:0x777b75,roughness:.95});
+  function stitches(parent,count,point){
+    const vertices=[];
+    for(let i=0;i<count;i++)vertices.push(...point(i/count),...point((i+.58)/count));
+    const geo=new T.BufferGeometry();geo.setAttribute('position',new T.Float32BufferAttribute(vertices,3));
+    parent.add(new T.LineSegments(geo,threadMaterial));
+  }
+  stitches(cabin,222,f=>{
+    const x=(f-.5)*2.06;
+    return [x,.978+contour(x),.295+setback(x)];
+  });
+
+  // An oval section with a broad upholstered face on the cabin side and
+  // a dark rubber reveal on the glass side.
+  const lining=new T.MeshStandardMaterial({color:0x645c55,roughness:.96});
   for(const side of [-1,1]){
-    const points=[[side*.92,.92,.84],[side*.88,1.12,.60],[side*.795,1.36,.31],[side*.645,1.85,-.17]];
-    pipe(points,.040,lining);
-    // Padded door caps meet the dash fascia at the windscreen corners.
-    const door=new T.Group();door.position.set(side*.842,.72,-.04);door.rotation.y=side*Math.PI/2;cabin.add(door);
-    rounded(door,1.66,.43,.094,hide,.036);
-    rounded(door,1.65,.055,.108,black,.018).position.y=.205;
-    rounded(door,.58,.026,.120,steel,.012).position.set(-side*.12,.038,.003);
-    pipe([[side*.93,.963,.748],[side*.91,.953,.24],[side*.85,.938,-.46],[side*.82,.955,-.80]],.017,black);
-    pipe(points.map(([x,y,z])=>[x-side*.038,y,z+.014]),.013,black);
+    const pillar=new T.Group();cabin.add(pillar);
+    pillar.position.x=side*.88;
+    const path=[[side*.045,.91,.85],[0,1.11,.62],[-side*.082,1.36,.32],[-side*.23,1.83,-.19]];
+    const bolster=pipe(pillar,path,.045,lining);bolster.scale.z=1.065;
+    pipe(pillar,path.map(([x,y,z])=>[x-side*.040,y,z+.024]),.013,black);
+    const door=new T.Group();door.position.set(side*.975,.762,-.16);
+    door.rotation.y=-side*Math.PI/2;cabin.add(door);
+    rounded(door,1.78,.43,.042,saddle,.045);
+    rounded(door,1.78,.09,.065,hide,.034).position.y=.165;
+    // The front face has normalized UVs independent of the door's extrusion.
+    panel(door,1.70,.051,walnut,0,.074,.047);
+    rounded(door,1.71,.005,.003,alloy,.002).position.set(0,.106,.047);
+    const pull=bevel(door,[[-.12,.018],[.13,.027],[.093,-.019],[-.12,-.013]],.012,steel,.004);
+    pull.position.set(-side*.12,-.021,.054);
   }
-  const stitching=Array.from({length:21},(_,i)=>{const x=-1+i*.10;return [x,.998+.018*(1-x*x),.438+.10*x*x]});
-  pipe(stitching,.0014,steel);
-  const wheel=new T.Group();wheel.position.set(.37,.918,.002);cabin.add(wheel);
-  const controls=new T.Group();controls.rotation.y=Math.PI;controls.rotation.x=.30;wheel.add(controls);
-  const rim=new T.Mesh(new T.TorusGeometry(.181,.017,14,96),hide);
-  rim.position.z=.047;controls.add(rim);
-  const seam=new T.Mesh(new T.TorusGeometry(.170,.0014,5,96),steel);
-  seam.position.z=.059;controls.add(seam);
-  const stitch=[];
-  for(let i=0;i<75;i++){
-    for(const offset of [0,.047]){
-      const a=i*2*Math.PI/75+offset;
-      stitch.push(.179*Math.cos(a),.179*Math.sin(a),.064);
+  const header=new T.Group();header.position.set(0,1.81,-.23);header.rotation.x=-.36;cabin.add(header);
+  rounded(header,1.47,.078,.26,lining,.037);
+
+  const dash=new T.Group();dash.rotation.y=Math.PI;dash.position.set(.37,1.069,.287);cabin.add(dash);
+  // Loft a visor from the padded lip back down into the top of the dash.
+  const brow=[[-.256,-.071],[-.252,.019],[-.220,.077],[-.153,.099],[.153,.099],[.220,.077],[.252,.019],[.256,-.071]];
+  const browVertices=[],browIndices=[];
+  for(const [z,sx,sy,dy] of [[.044,1,1,0],[.029,1.015,1.045,0],[-.031,1.01,.99,0],[-.135,.95,.72,-.022],[-.27,.83,.30,-.052]]){
+    for(const [x,y] of brow)browVertices.push(x*sx,y*sy+dy,z);
+  }
+  for(let i=0;i<4;i++)for(let j=0;j<brow.length-1;j++){
+    const k=i*brow.length+j;browIndices.push(k,k+1,k+brow.length,k+1,k+1+brow.length,k+brow.length);
+  }
+  const browGeometry=new T.BufferGeometry();
+  browGeometry.setAttribute('position',new T.Float32BufferAttribute(browVertices,3));
+  browGeometry.setIndex(browIndices);browGeometry.computeVertexNormals();
+  const browSkin=hide.clone();browSkin.side=T.DoubleSide;browSkin.bumpMap=null;
+  dash.add(new T.Mesh(browGeometry,browSkin));
+  bevel(dash,[...brow,[.190,-.081],[-.190,-.081]],.013,black,.004).position.z=.001;
+  const cluster=canvasTexture(896,282);
+  panel(dash,.454,.143,new T.MeshBasicMaterial({map:cluster.tex,toneMapped:false}),0,.002,.024);
+
+  // The hub, grips and buttons share one pivot in the tilted wheel plane.
+  const wheel=new T.Group();wheel.position.set(.37,.880,.067);wheel.rotation.order='YXZ';
+  wheel.rotation.y=Math.PI;wheel.rotation.x=-.32;cabin.add(wheel);
+  const controls=new T.Group();wheel.add(controls);
+  function grip(angle,sectionAngle){
+    const x=Math.cos(angle),y=Math.sin(angle);
+    const thumb=Math.exp(-((y-.28)**2)/.035);
+    const radius=.177+(.020+.006*thumb)*Math.cos(sectionAngle)-.004*thumb;
+    return [x*radius,Math.max(y,-.935)*radius,.048+.022*Math.sin(sectionAngle)];
+  }
+  const gripVertices=[],gripUV=[],gripIndices=[];
+  for(let i=0;i<=112;i++)for(let j=0;j<=16;j++){
+    gripVertices.push(...grip(i/112*Math.PI*2,j/16*Math.PI*2));
+    gripUV.push(i/112,j/16);
+    if(i<112&&j<16){const a=i*17+j;gripIndices.push(a,a+17,a+1,a+1,a+17,a+18);}
+  }
+  const gripGeo=new T.BufferGeometry();
+  gripGeo.setAttribute('position',new T.Float32BufferAttribute(gripVertices,3));
+  gripGeo.setAttribute('uv',new T.Float32BufferAttribute(gripUV,2));
+  gripGeo.setIndex(gripIndices);gripGeo.computeVertexNormals();
+  // Perforations are baked into the grip wrap so they cost one draw call.
+  const wrap=canvasTexture(1024,128),wc=wrap.ctx;
+  wc.fillStyle='#bdb9b4';wc.fillRect(0,0,1024,128);
+  for(let row=0;row<22;row++)for(let col=0;col<172;col++){
+    const u=col*6+row%2*3,v=row*6;
+    if(Math.abs(Math.sin(u/1024*Math.PI*2))>.70)continue;
+    wc.fillStyle='#76706b';wc.beginPath();wc.ellipse(u,v,1.25,1.65,0,0,Math.PI*2);wc.fill();
+    wc.fillStyle='#d2cbc2';wc.fillRect(u,v+1.6,1.5,.6);
+  }
+  const gripFinish=leather.clone();gripFinish.color.setHex(0x514c48);gripFinish.map=wrap.tex;
+  controls.add(new T.Mesh(gripGeo,gripFinish));
+  stitches(controls,116,f=>grip(f*2*Math.PI,2.30));
+  const lower=bevel(controls,[[-.066,-.030],[-.040,-.109],[-.023,-.157],[.023,-.157],[.040,-.109],[.066,-.030],[.036,-.048],[.010,-.123],[-.010,-.123],[-.036,-.048]],.012,alloy,.003);
+  lower.position.z=.041;
+  for(const side of [-1,1]){
+    const spoke=bevel(controls,[[side*.052,.027],[side*.111,.029],[side*.169,.047],[side*.168,.006],[side*.123,-.018],[side*.060,-.043]],.018,steel,.004);
+    spoke.position.z=.036;
+    const keys=bevel(controls,[[side*.075,.021],[side*.148,.027],[side*.146,.004],[side*.114,-.009],[side*.075,-.015]],.006,black,.002);
+    keys.position.z=.055;
+    const dial=rounded(controls,.009,.016,.004,alloy,.003);
+    dial.position.set(side*.119,.009,.063);
+  }
+  // Rounded sections roll the airbag cover into the spokes and give its
+  // crown continuous normals across the windscreen reflection.
+  const padOutline=new T.Shape();
+  padOutline.moveTo(0,.064);
+  padOutline.bezierCurveTo(.087,.064,.105,.059,.089,-.004);
+  padOutline.bezierCurveTo(.077,-.058,.044,-.078,0,-.078);
+  padOutline.bezierCurveTo(-.044,-.078,-.077,-.058,-.089,-.004);
+  padOutline.bezierCurveTo(-.105,.059,-.087,.064,0,.064);
+  const rimPoints=padOutline.getSpacedPoints(48).slice(0,-1);
+  const padPositions=[],padUV=[],padFaces=[];
+  for(const [scale,z] of [[.77,.037],[.97,.047],[1,.058],[.98,.069],[.91,.079],[.73,.086],[.42,.090],[.01,.092]]){
+    for(const p of rimPoints){
+      const x=p.x*scale,y=p.y*scale;
+      padPositions.push(x,y,z);padUV.push(.5+x,.5+y);
     }
   }
-  const thread=new T.BufferGeometry();thread.setAttribute('position',new T.Float32BufferAttribute(stitch,3));
-  controls.add(new T.LineSegments(thread,new T.LineBasicMaterial({color:0x928c81})));
-  const lower=bevel(controls,[[-.061,-.043],[-.020,-.161],[.018,-.161],[.058,-.043],[.040,-.054],[.007,-.137],[-.009,-.137],[-.041,-.053]],.012,steel,.004);lower.position.z=.04;
-  const pad=bevel(controls,[[-.097,.04],[-.067,.064],[.067,.064],[.097,.04],[.075,-.064],[.043,-.085],[-.043,-.085],[-.075,-.064]],.027,black,.012);
-  pad.position.z=.038;
-  for(const side of [-1,1]){
-    const spoke=bevel(controls,[[side*.068,.02],[side*.17,.047],[side*.157,-.004],[side*.102,-.029],[side*.056,-.04]],.017,steel,.005);
-    spoke.position.z=.028;
-    const switchgear=rounded(controls,.047,.024,.005,rubber,.005);
-    switchgear.position.set(side*.118,.014,.05);
-    for(let i=-1;i<=1;i++){
-      const line=rounded(controls,.006,.002,.001,chrome,.001);line.position.set(side*.118+i*.01,.014,.058);
-    }
+  const count=rimPoints.length;
+  for(let i=count;i<padPositions.length/3;i++){
+    const next=i-i%count+(i+1)%count;
+    padFaces.push(i-count,i,next-count,i,next,next-count);
   }
-  const insignia=canvasTexture(256,128),ic=insignia.ctx;
-  ic.fillStyle='#242728';ic.fillRect(0,0,256,128);ic.textAlign='center';
-  ic.fillStyle='#bfc6c5';ic.font='italic 700 34px sans-serif';ic.fillText('V',128,58);
-  ic.font='12px sans-serif';ic.fillStyle='#979c99';ic.fillText('SRS AIRBAG',128,105);
-  panel(controls,.090,.045,new T.MeshBasicMaterial({map:insignia.tex}),0,-.003,.080);insignia.tex.needsUpdate=true;
-  const dash=new T.Group();dash.rotation.y=Math.PI;dash.position.set(.37,1.048,.35);cabin.add(dash);
-  const visor=bevel(dash,[[-.22,-.069],[-.213,.043],[-.179,.089],[.159,.09],[.214,.064],[.222,-.064]],.078,black,.008);visor.position.z=-.069;
-  const cluster=canvasTexture(768,230);
-  panel(dash,.398,.120,new T.MeshBasicMaterial({map:cluster.tex}),0,.008,.023);
-  const center=new T.Group();center.rotation.y=Math.PI;center.position.set(-.095,1.044,.345);cabin.add(center);
-  rounded(center,.303,.151,.012,black);
-  const nav=canvasTexture(480,224), n=nav.ctx;
-  const mapScreen=panel(center,.287,.134,new T.MeshBasicMaterial({map:nav.tex,toneMapped:false}),0,0,.016);
+  const padGeometry=new T.BufferGeometry();
+  padGeometry.setAttribute('position',new T.Float32BufferAttribute(padPositions,3));
+  padGeometry.setAttribute('uv',new T.Float32BufferAttribute(padUV,2));
+  padGeometry.setIndex(padFaces);padGeometry.computeVertexNormals();controls.add(new T.Mesh(padGeometry,leather));
+  const emblem=new T.BufferGeometry();
+  emblem.setAttribute('position',new T.Float32BufferAttribute([
+    -.028,.011,0, -.010,.007,.001, 0,-.009,.003, 0,-.016,0,
+    .028,.011,0, .010,.007,.001
+  ],3));
+  emblem.setIndex([0,3,2,0,2,1,2,3,4,5,2,4]);emblem.computeVertexNormals();
+  const badge=new T.Mesh(emblem,chrome);badge.position.set(0,.010,.093);controls.add(badge);
+  const lettering=canvasTexture(256,40);
+  lettering.ctx.textAlign='center';lettering.ctx.fillStyle='#a79e94';lettering.ctx.font='500 22px sans-serif';
+  lettering.ctx.fillText('S R S   A I R B A G',128,28);
+  panel(controls,.045,.007,new T.MeshBasicMaterial({map:lettering.tex,transparent:true,depthWrite:false}),0,-.044,.090);
+  // Stalks are fixed to the column behind the rotating rim.
+  for(const side of [-1,1]){
+    pipe(wheel,[[side*.055,-.017,-.026],[side*.12,-.009,-.033],[side*.171,.002,-.049]],.007,rubber);
+    rounded(wheel,.046,.015,.012,black,.006).position.set(side*.171,.002,-.049);
+  }
+  const center=new T.Group();center.rotation.order='YXZ';center.rotation.y=Math.PI-.11;
+  center.rotation.x=-.24;center.position.set(-.094,1.008,.220);cabin.add(center);
+  rounded(center,.361,.161,.030,steel,.014).position.z=-.028;
+  rounded(center,.357,.158,.013,black,.012);
+  const nav=canvasTexture(480,224),n=nav.ctx;
+  const mapScreen=panel(center,.333,.140,new T.MeshBasicMaterial({map:nav.tex,toneMapped:false}),0,0,.016);
+  const consoleFace=new T.Group();consoleFace.position.set(-.095,.732,.107);
+  consoleFace.rotation.order='YXZ';consoleFace.rotation.y=Math.PI;consoleFace.rotation.x=-.43;cabin.add(consoleFace);
+  const surround=[[-.18,.064],[.18,.064],[.177,.018],[.135,-.135],[.094,-.178],[-.094,-.178],[-.135,-.135],[-.177,.018]];
+  bevel(consoleFace,surround,.036,leather,.012);
+  rounded(consoleFace,.311,.072,.008,alloy,.017).position.set(0,.004,.044);
+  rounded(consoleFace,.305,.066,.009,black,.014).position.set(0,.004,.052);
+  // Lathed control faces with a machined, fluted circumference.
+  for(const x of [-.112,.112]){
+    const dial=new T.Group();dial.position.set(x,.004,.062);consoleFace.add(dial);
+    const knurl=new T.CylinderGeometry(.026,.026,.018,80,1);
+    const pos=knurl.attributes.position;
+    for(let i=0;i<pos.count;i++){
+      const a=Math.atan2(pos.getX(i),pos.getZ(i)),r=1-.045*(1-Math.cos(40*a));
+      pos.setX(i,pos.getX(i)*r);pos.setZ(i,pos.getZ(i)*r);
+    }
+    const knob=new T.Mesh(knurl,steel);knob.rotation.x=Math.PI/2;dial.add(knob);
+    const cap=new T.Mesh(new T.CircleGeometry(.022,40),rubber);cap.position.z=.0095;dial.add(cap);
+    panel(dial,.002,.007,alloy,0,.014,.010);
+  }
+  const switches=canvasTexture(384,96),sc=switches.ctx;
+  sc.strokeStyle='#aeb4b0';sc.fillStyle='#c2c6c5';sc.lineWidth=4;sc.lineJoin='round';sc.lineCap='round';
+  sc.beginPath();sc.moveTo(160,68);sc.lineTo(191,20);sc.lineTo(222,68);sc.closePath();sc.strokeStyle='#d4836a';sc.stroke();
+  sc.textAlign='center';sc.font='500 34px sans-serif';sc.fillText('A/C',66,60);
+  sc.strokeStyle='#b7bcb8';sc.beginPath();sc.moveTo(279,38);sc.quadraticCurveTo(306,22,339,38);sc.lineTo(330,63);sc.lineTo(289,63);sc.closePath();sc.stroke();
+  for(let x=299;x<=319;x+=10){sc.beginPath();sc.moveTo(x,56);sc.bezierCurveTo(x-6,50,x+5,46,x,40);sc.stroke();}
+  panel(consoleFace,.143,.035,new T.MeshBasicMaterial({map:switches.tex,transparent:true,depthWrite:false}),0,.005,.064);
+  rounded(consoleFace,.167,.017,.004,black,.008).position.set(0,-.068,.041);
+  const tunnel=new T.Group();tunnel.position.set(-.095,.40,-.24);tunnel.rotation.order='YXZ';
+  tunnel.rotation.y=Math.PI;tunnel.rotation.x=-1.25;cabin.add(tunnel);
+  rounded(tunnel,.305,.76,.060,leather,.048);
+  rounded(tunnel,.238,.57,.008,black,.027).position.z=.064;
+  const selector=new T.Mesh(new T.CylinderGeometry(.045,.049,.035,40),alloy);
+  selector.rotation.x=Math.PI/2;selector.position.set(0,.106,.083);tunnel.add(selector);
+  const selectorCap=new T.Mesh(new T.CircleGeometry(.041,40),rubber);
+  selectorCap.position.set(0,.106,.101);tunnel.add(selectorCap);
   let mapDirty=true;
   function navigation(distance,course){
     if(!mapDirty)return;
@@ -139,16 +293,29 @@ window.buildDriverCabin = function(T, rig, mapCanvas) {
     }
     nav.tex.needsUpdate=true;
   }
-  for(const vx of [-.45,.74]){
-    const vent=new T.Group();vent.position.set(vx,.884,.316);vent.rotation.y=Math.PI;cabin.add(vent);
-    const width=vx<0?.36:.18;
-    rounded(vent,width,.056,.008,black,.011);
-    for(let row=-1;row<=1;row++)
-      rounded(vent,width-.015,.003,.003,steel,.002).position.set(0,row*.011,.012);
+  const ventBlade=new T.MeshStandardMaterial({color:0x595652,roughness:.42,metalness:.46});
+  for(const [x,width] of [[.78,.19],[-.13,.30],[-.76,.27]]){
+    const vent=new T.Group();vent.position.set(x,.899+contour(x),.211+setback(x));
+    vent.rotation.y=Math.PI+Math.atan(.32*x);cabin.add(vent);
+    rounded(vent,width,.031,.007,black,.008);
+    for(const y of [-.006,.006])rounded(vent,width-.016,.0024,.003,ventBlade,.001).position.set(0,y,.009);
+    rounded(vent,.025,.007,.006,alloy,.002).position.set(width*.18,0,.010);
+  }
+  const grille=canvasTexture(256,48),gc=grille.ctx;
+  gc.fillStyle='#353332';gc.beginPath();gc.roundRect(1,1,254,46,22);gc.fill();
+  gc.clip();gc.fillStyle='#141519';
+  for(let row=0;row<8;row++)for(let col=0;col<43;col++){
+    gc.beginPath();gc.arc(col*6+row%2*3,row*6,1.8,0,Math.PI*2);gc.fill();
+  }
+  const speakerMaterial=new T.MeshStandardMaterial({map:grille.tex,transparent:true,roughness:.78,depthWrite:false});
+  for(const x of [-.71,.71]){
+    const speaker=panel(cabin,.29,.053,speakerMaterial,x,.975+contour(x),.668+setback(x));
+    speaker.rotation.x=-Math.PI/2+.12;speaker.rotation.z=x*.18;
   }
   // The mirror samples the actual rear roadway into a small target on a separate cadence.
-  const mirror=new T.Group();mirror.position.set(.035,1.56,.30);mirror.rotation.y=Math.PI-.12;cabin.add(mirror);
-  const post=rounded(mirror,.029,.37,.028,black);post.position.set(0,.196,-.045);
+  const mirror=new T.Group();mirror.position.set(.015,1.58,.30);mirror.rotation.y=Math.PI-.12;cabin.add(mirror);
+  pipe(mirror,[[0,.019,-.012],[0,.045,-.065],[0,.097,-.104]],.013,black);
+  const mountPad=rounded(mirror,.069,.061,.022,black,.020);mountPad.rotation.x=-.75;mountPad.position.set(0,.104,-.11);
   rounded(mirror,.270,.083,.012,rubber,.014);
   const target=new T.WebGLRenderTarget(256,80,{generateMipmaps:false,minFilter:T.LinearFilter});
   target.texture.repeat.x=-1;target.texture.offset.x=1;
@@ -162,24 +329,80 @@ window.buildDriverCabin = function(T, rig, mapCanvas) {
   panel(sideMirror,.194,.087,new T.MeshBasicMaterial({map:sideTarget.texture,toneMapped:false}),0,0,.032);
   const rearCamera=new T.PerspectiveCamera(27,256/80,.2,620);
   const wingCamera=new T.PerspectiveCamera(38,2,.2,620);
-  let lastMirror=-Infinity,previousSpeed=-1,renderWing=false,preparedEnvironment;
-  function instruments(speed){
-    const value=Math.round(speed);if(value===previousSpeed)return;
-    previousSpeed=value;const c=cluster.ctx;
-    c.fillStyle='#081219';c.fillRect(0,0,768,230);
-    for(const [cx,range,reading] of [[163,100,speed],[606,6,.9+speed%19/10]]){
-      const cy=121,r=91;
-      c.strokeStyle='#253e49';c.lineWidth=8;c.beginPath();c.arc(cx,cy,r,Math.PI*.77,Math.PI*2.23);c.stroke();
-      c.strokeStyle='#83cdc9';c.lineWidth=4;c.beginPath();c.arc(cx,cy,r,Math.PI*.77,Math.PI*(.77+1.46*reading/range));c.stroke();
-      for(let i=0;i<=30;i++){
-        const angle=Math.PI*(.77+1.46*i/30),major=i%5===0;
-        c.lineWidth=major?4:2;c.strokeStyle='#cfe2e0';c.beginPath();
-        c.moveTo(cx+(r-8)*Math.cos(angle),cy+(r-8)*Math.sin(angle));c.lineTo(cx+(r-(major?20:14))*Math.cos(angle),cy+(r-(major?20:14))*Math.sin(angle));c.stroke();
-      }
-      const angle=Math.PI*(.77+1.46*reading/range);
-      c.strokeStyle='#ff8755';c.lineWidth=4;c.beginPath();c.moveTo(cx,cy);c.lineTo(cx+(r-20)*Math.cos(angle),cy+(r-20)*Math.sin(angle));c.stroke();
+  // Cache the fixed dial faces. Changing a displayed reading only repaints
+  // the two hands and the speed and gear readouts.
+  const dialFace=document.createElement('canvas');
+  dialFace.width=cluster.ctx.canvas.width;dialFace.height=cluster.ctx.canvas.height;
+  const face=dialFace.getContext('2d'),cy=143,dialRadius=112;
+  const speedCenter=167,secondCenter=729,startAngle=Math.PI*.75,sweepAngle=Math.PI*1.5;
+  function circle(ctx,x,y,r,fill){
+    ctx.fillStyle=fill;ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.fill();
+  }
+  function dialPoint(x,angle,r){return [x+r*Math.cos(angle),cy+r*Math.sin(angle)];}
+  function tick(ctx,x,angle,length,color,width){
+    ctx.beginPath();ctx.moveTo(...dialPoint(x,angle,102));ctx.lineTo(...dialPoint(x,angle,102-length));
+    ctx.strokeStyle=color;ctx.lineWidth=width;ctx.stroke();
+  }
+  const glass=face.createLinearGradient(0,0,0,282);
+  glass.addColorStop(0,'#282c30');glass.addColorStop(.34,'#14191c');glass.addColorStop(1,'#090c0f');
+  face.fillStyle=glass;face.fillRect(0,0,896,282);
+  const bezel=face.createLinearGradient(0,30,0,252);
+  bezel.addColorStop(0,'#e1d3bd');bezel.addColorStop(.23,'#706a61');bezel.addColorStop(.64,'#24272a');bezel.addColorStop(1,'#aa9e89');
+  face.textAlign='center';face.textBaseline='middle';
+  for(const x of [speedCenter,secondCenter]){
+    circle(face,x,cy,dialRadius+4,'#050709');circle(face,x,cy,dialRadius,bezel);
+    const enamel=face.createRadialGradient(x,cy-22,4,x,cy,dialRadius);
+    enamel.addColorStop(0,'#343b3e');enamel.addColorStop(.78,'#1a2024');enamel.addColorStop(1,'#080c0f');
+    circle(face,x,cy,dialRadius-4,enamel);
+  }
+  for(let i=0;i<=44;i++){
+    const angle=startAngle+sweepAngle*i/44,major=i%4===0;
+    tick(face,speedCenter,angle,major?13:6,major?'#ebdfcb':'#837f77',major?3:2);
+    if(major){
+      face.font='600 18px sans-serif';face.fillStyle='#ece6db';
+      face.fillText(i*5,...dialPoint(speedCenter,angle,73));
     }
-    c.textAlign='center';c.fillStyle='#f5fcf8';c.font='500 86px sans-serif';c.fillText(value,380,131);c.font='22px sans-serif';c.fillStyle='#93b6b5';c.fillText('km/h',380,163);c.fillStyle='#b3e6aa';c.font='23px sans-serif';c.fillText('D',380,200);
+  }
+  face.font='16px sans-serif';face.fillStyle='#c5b69e';face.fillText('km/h',speedCenter,204);
+  const revFace=dialFace.cloneNode(),rev=revFace.getContext('2d');
+  rev.drawImage(dialFace,0,0);rev.textAlign='center';rev.textBaseline='middle';
+  for(let i=0;i<=28;i++){
+    const angle=startAngle+sweepAngle*i/28,major=i%4===0;
+    tick(rev,secondCenter,angle,major?13:6,i>=24?'#df876e':'#d6c8ae',major?3:2);
+    if(major){
+      rev.font='600 21px sans-serif';rev.fillStyle='#ece6db';
+      rev.fillText(i/4,...dialPoint(secondCenter,angle,73));
+    }
+  }
+  rev.font='16px sans-serif';rev.fillStyle='#c5b69e';rev.fillText('×1000 rpm',secondCenter,204);
+  for(let i=0;i<48;i++)tick(face,secondCenter,i*Math.PI/24,i%4===0?12:5,i%4===0?'#d6c8ae':'#767a78',2);
+  ['N','E','S','W'].forEach((label,i)=>{
+    face.font='600 23px sans-serif';face.fillStyle=i?'#dbd5cd':'#efbd83';
+    face.fillText(label,...dialPoint(secondCenter,(i-1)*Math.PI/2,73));
+  });
+  function hand(ctx,x,angle,length,color,width){
+    ctx.save();ctx.translate(x,cy);ctx.rotate(angle);
+    ctx.beginPath();ctx.moveTo(-12,-width*.6);ctx.lineTo(length,-1.2);ctx.lineTo(length,1.2);ctx.lineTo(-12,width);ctx.closePath();
+    ctx.fillStyle=color;ctx.fill();ctx.restore();
+    circle(ctx,x,cy,8,'#a59c8f');circle(ctx,x,cy,5,'#302f30');
+  }
+  let lastMirror=-Infinity,previousSpeed=-1,previousGear,previousAngle,previousFace,renderWing=false,preparedEnvironment;
+  function instruments(speed,selectedGear){
+    const value=Math.round(Math.abs(speed)),gear=selectedGear??(speed<-.35?'R':'D');
+    const rpm=window.driveAudio.engineRpm;
+    const background=rpm===null?dialFace:revFace;
+    const angle=rpm===null?T.MathUtils.degToRad(Math.round(-T.MathUtils.radToDeg(rig.rotation.y))-90)
+      :startAngle+sweepAngle*Math.min(1,Math.round(rpm/50)/140);
+    if(value===previousSpeed&&gear===previousGear&&angle===previousAngle&&background===previousFace)return;
+    previousSpeed=value;previousGear=gear;previousAngle=angle;previousFace=background;
+    const c=cluster.ctx;c.drawImage(background,0,0);
+    hand(c,speedCenter,startAngle+sweepAngle*Math.min(value/220,1),96,'#e9ae78',5);
+    if(rpm===null)hand(c,secondCenter,angle+Math.PI,62,'#707d85',6);
+    hand(c,secondCenter,angle,rpm===null?65:96,'#efbd83',5);
+    c.textAlign='center';c.fillStyle='#f6f2e9';c.font='500 92px sans-serif';c.fillText(value,432,132);
+    c.fillStyle='#c3beb2';c.font='23px sans-serif';c.fillText('km/h',432,163);
+    c.fillStyle='#303335';c.beginPath();c.roundRect(531,77,48,44,9);c.fill();
+    c.font='600 32px sans-serif';c.fillStyle='#ead8b6';c.fillText(gear,555,111);
     cluster.tex.needsUpdate=true;
   }
   return {
@@ -201,12 +424,15 @@ window.buildDriverCabin = function(T, rig, mapCanvas) {
         renderer.compile(scene,rearCamera);
       }finally{renderer.setRenderTarget(previous);}
     },
-    update(interior,speed,steering,distance,course){
+    update(interior,speed,steering,distance,course,selectedGear){
       if(cabin.visible!==interior)document.body.toggleAttribute('data-dashboard-map',interior);
       cabin.visible=interior;
 
-      wheel.rotation.z=interior?steering*.92:0;
-      if(interior){instruments(speed);navigation(distance,course);}
+      if(interior){
+        controls.rotation.z=-steering*1.25;
+        instruments(speed,selectedGear);
+        navigation(distance,course);
+      }
     },
     reflect(renderer,scene,player,distance,lateral,interval=90){
       const now=performance.now();if(now-lastMirror<interval)return;lastMirror=now;

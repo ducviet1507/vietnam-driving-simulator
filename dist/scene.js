@@ -661,8 +661,8 @@
       fov=47;
     }else if(view==='inside'){
       const sway=reducedMotion.matches?0:Math.min(speed/40,1)*.008*Math.sin(distance*1.25);
-      const inset=driverCabin.seatInset(camera.aspect),seatX=-.31+inset;
-      desiredOffset.set(seatX,1.095+sway,2.66+inset*1.7);
+      const inset=driverCabin.seatInset(camera.aspect),seatX=-.31+inset*.72;
+      desiredOffset.set(seatX,1.095+sway,2.71+inset*2.35);
       desiredAim.set(seatX,-.40,-12);
       const c=Math.cos(vehicleYaw),sn=Math.sin(vehicleYaw);
       for(const local of [desiredAim,desiredOffset]){

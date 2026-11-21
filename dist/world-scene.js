@@ -1191,7 +1191,7 @@
       playerRig.position.y+=car.spec.seatLift??0;
       playerRig.rotation.set(-player.root.rotation.x,-car.yaw,-player.root.rotation.z,'YXZ');
       mirrorRotation.copy(playerRig.quaternion);
-      cabin.update(inside,Math.abs(car.speed||0)*3.6,car.steer||0);
+      cabin.update(inside,(car.speed||0)*3.6,car.steer||0);
       const closest=(traffic||[]).map(a=>({a,d:(a.x-car.x)**2+(a.z-car.z)**2})).filter(v=>v.d<360*360).sort((a,b)=>a.d-b.d);
       for(const [index,{a,d}] of closest.entries()){
         const kind=Object.hasOwn(trafficModels,a.kind)?a.kind:'sedan';
@@ -1220,8 +1220,8 @@
         eye.set(portrait?-5.6:-4.3,portrait?1.9:1.6,portrait?8.0:5.5);
         look.set(portrait?0:-1.38,.72,-.38);
       }else if(inside){
-        const inset=cabin.seatInset(camera.aspect),seatX=-.31+inset;
-        eye.set(seatX,1.1,.53+inset*1.7);look.set(seatX,.6,-13);
+        const inset=cabin.seatInset(camera.aspect),seatX=-.31+inset*.72;
+        eye.set(seatX,1.1,.58+inset*2.35);look.set(seatX,.46,-13);
       }else{
         const back=(camera.aspect<.85?7.55:6.35)+speed*.018;
         eye.set(-(car.steer||0)*.32,2.08+speed*.007,back);look.set(0,.9,-10);

@@ -1,7 +1,7 @@
 /* Unlock the engine mix on a browser-authorized user gesture. */
 (() => {
   'use strict';
-  let sound;
+  let sound,engineRpm=760;
   const preference='taylai.audio.muted';
   let enabled = true;
   try { enabled=localStorage.getItem(preference)!=='1'; } catch {}
@@ -182,12 +182,14 @@
   function update({ speed, throttle, braking, signal, mode, boost=false, slip=0, offroad=false, electric=false }) {
     music?.setDriving(mode === 'driving');
     if(mode!=='driving'&&voiceLine)stopVoice();
-    if (!enabled || sound?.ctx.state !== 'running') return;
-    const { ctx, engine, engineGain, intake, roadGain, tire, rush, rushGain, scrub, scrubGain } = sound;
-    const now = ctx.currentTime;
     const driving = mode === 'driving';
     const velocity = Math.max(0, Math.min(190, speed || 0));
     const load = driving && throttle && !braking ? 1 : 0;
+    const kmhPerThousandRpm = velocity < 19 ? 8.4 : velocity < 37 ? 14 : velocity < 58 ? 22 : 30;
+    engineRpm = electric ? null : Math.max(760, velocity / kmhPerThousandRpm * 1000) + load * 260;
+    if (!enabled || sound?.ctx.state !== 'running') return;
+    const { ctx, engine, engineGain, intake, roadGain, tire, rush, rushGain, scrub, scrubGain } = sound;
+    const now = ctx.currentTime;
     const onBoost = Boolean(driving && boost);
     const speedFraction = velocity / 190;
     const skid = driving && !offroad ? Math.max(0, Math.min(1, slip)) * Math.min(1, velocity / 24) : 0;
@@ -208,10 +210,8 @@
       intake.frequency.setTargetAtTime(1100, now, .12);
       engineGain.gain.setTargetAtTime(driving ? .034 * load + .014 * speedFraction : 0, now, .14);
     } else {
-      const kmhPerThousandRpm = velocity < 19 ? 8.4 : velocity < 37 ? 14 : velocity < 58 ? 22 : 30;
-      const rpm = Math.max(760, velocity / kmhPerThousandRpm * 1000) + load * 260;
-      engine.frequency.setTargetAtTime(rpm / 30 + Math.sin(now * 6.8) * .26, now, .12);
-      intake.frequency.setTargetAtTime(145 + rpm * .067 + load * 145 + (onBoost ? 240 : 0), now, .12);
+      engine.frequency.setTargetAtTime(engineRpm / 30 + Math.sin(now * 6.8) * .26, now, .12);
+      intake.frequency.setTargetAtTime(145 + engineRpm * .067 + load * 145 + (onBoost ? 240 : 0), now, .12);
       engineGain.gain.setTargetAtTime(driving ? .068 + load * .038 : mode==='idling' ? .038 : 0, now, .14);
     }
     tire.frequency.setTargetAtTime(offroad ? 230 + velocity * 2 : 260 + velocity * 8, now, .16);
@@ -264,5 +264,5 @@
     gain.gain.value=.4+strength*.45;source.connect(filter).connect(gain).connect(output);source.start();
     source.onended=()=>{source.disconnect();filter.disconnect();gain.disconnect();};
   }
-  window.driveAudio = { toggle, update, cue, ignition, impact, broadcast, get enabled(){return enabled;} };
+  window.driveAudio = { toggle, update, cue, ignition, impact, broadcast, get enabled(){return enabled;}, get engineRpm(){return engineRpm;} };
 })();
