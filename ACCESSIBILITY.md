@@ -5,6 +5,9 @@ ViVu3D ưu tiên điều hướng bằng bàn phím, nhãn rõ ràng cho nút v�
 ## Thiết bị và cách điều khiển
 
 - Trên máy tính, các chế độ lái hỗ trợ bàn phím. Phần lý thuyết dùng các nút và biểu mẫu trên trang.
+- Trong ô tìm kiếm của Atlas, dùng **↑ / ↓** để chọn kết quả. Nhấn **Enter** để chuyển tới nút xác nhận, rồi nhấn **Enter** lần nữa để kích hoạt nút.
+- Khi đang lái Xuyên Việt, nhấn **M** để mở bản đồ khu vực. Dùng các phím mũi tên để di chuyển bản đồ, **+ / −** để đổi tỷ lệ và **M** hoặc **Esc** để lái tiếp.
+- Khi mở góc ngắm, tiêu điểm bàn phím nằm ở nút **Trở lại xe**. Dùng **← / →** để xoay cảnh hoặc **Esc** để rời góc ngắm.
 - Trên điện thoại, các chế độ lái có nút cảm ứng. Việc vừa giữ ga vừa đánh lái hoặc bật tín hiệu có thể khó trên màn hình nhỏ.
 
 ## Rào cản đã biết

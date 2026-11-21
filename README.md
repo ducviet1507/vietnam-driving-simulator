@@ -32,6 +32,8 @@ python -m http.server 8000 --bind 127.0.0.1 --directory dist
 - [Cúp Bánh Mì](http://127.0.0.1:8000/cup.html)
 - [Sân tập và thi thử](http://127.0.0.1:8000/hall.html)
 
+## Điều khiển và lộ trình
+
 Các chế độ lái 3D mặc định dùng đồ họa **Tự động**. Game chọn mức ban đầu theo thông tin phần cứng mà trình duyệt cung cấp, hạ chất lượng khi khung hình chậm kéo dài và tăng lại sau một khoảng chạy ổn định. Để tự chọn, mở **Bố trí buồng lái → Chất lượng đồ họa** ở Xuyên Việt, Cúp Bánh Mì hoặc Sân tập. Các mức **Thấp**, **Vừa** và **Cao** được lưu trên trình duyệt và áp dụng cho các chế độ lái.
 
 Ở Xuyên Việt, dùng **W/S** để ga, phanh và lùi, **A/D** để đánh lái, **Shift** để dùng nitro và **U** để đặt xe về đường. Ở ngã rẽ, bảng chỉ hướng ghi tên đường hoặc địa danh có lối ô tô tới. Nhấn **M** hoặc chạm bản đồ nhỏ để xem đường quanh xe, kéo để xem xung quanh và dùng **+ / −** để đổi tỷ lệ. Nhấn **M** hoặc **Esc** để lái tiếp. Trên điện thoại, dùng các nút cảm ứng của chế độ đang chơi.
@@ -40,15 +42,23 @@ Trong **Lộ trình → Tự chọn**, chọn điểm đi và điểm đến tro
 
 Trong **Lộ trình → Tuyến nổi bật**, mỗi tuyến có đường chạy cố định và bảng xếp hạng riêng. Chọn tuyến để xem quãng đường hoặc bảng hạng. Khi tới đích, gửi biệt danh để ghi kỷ lục. Máy chủ chốt thời gian từ lúc xuất phát đến khi tới đích, gồm cả lúc tạm dừng. Các lượt tự chọn chỉ hiển thị kết quả của chuyến đi đó. [Xem các tuyến nổi bật](https://vivu3d.com/?plan=featured) · [Mở tuyến Ba Sao → Tam Chúc](https://vivu3d.com/?drive=ba-sao-tam-chuc).
 
-Trong Xuyên Việt, mở **Danh lam 3D** ở mục điểm xuất phát để chọn địa danh qua hình xem trước. Khi tới gần, nhấn **Ngắm địa danh 3D** để xoay, chỉnh khoảng cách hoặc mở ảnh đối chiếu. Trong **Quần thể Tam Chúc**, chọn góc toàn cảnh hoặc một trong tám công trình để ngắm từ gần. Nút **Trở lại xe** đưa góc nhìn về nơi đã dừng. [Ảnh và tư liệu đối chiếu](dist/landmark-references.txt).
+## Khám phá địa danh
+
+Trong Xuyên Việt, mở **Tùy chọn → Danh lam 3D** để tìm mô hình theo tên. Chọn địa danh, bấm **Đặt điểm xuất phát** rồi **Cầm lái**. Khi tới gần, nhấn **Ngắm địa danh 3D** để xoay góc nhìn và chỉnh khoảng cách. Riêng ở Tam Chúc, nút **Ngắm Tam Chúc** cho phép chọn toàn cảnh hoặc một trong tám công trình. [Ảnh và tư liệu đối chiếu](dist/landmark-references.txt).
+
+Bạn có thể bắt đầu ở Chợ Vinh (Nghệ An), Nhà cổ Tấn Ký (Hội An) hoặc Thiền viện Trúc Lâm Đà Lạt. Khi lái quanh phố cổ Hội An, hãy để ý những dãy đèn lồng và biển quán cao lầu dọc phố. [Chợ Vinh](https://vivu3d.com/?landmark=cho-vinh) · [Nhà cổ Tấn Ký](https://vivu3d.com/?landmark=nha-co-tan-ky) · [Thiền viện Trúc Lâm Đà Lạt](https://vivu3d.com/?landmark=thien-vien-truc-lam-da-lat).
 
 Atlas có hơn 11.000 điểm tham quan trên 34 tỉnh, thành. Tìm tên địa danh để khởi hành ở đoạn đường ô tô gần đó. Với các điểm nằm ngoài khơi hoặc trong rừng sâu, game hiển thị khoảng cách đường chim bay từ chỗ dừng xe. Trong **Góc ngắm**, bạn có thể chuyển giữa các điểm thuộc cùng quần thể và chọn ánh sáng buổi sáng, cuối chiều hoặc ban đêm. Những địa điểm có ảnh đã đối chiếu sẽ hiện nút **Xem ảnh thực địa**, kèm tên tác giả và giấy phép ngay dưới ảnh.
 
-Các cảnh thác dùng hướng nước chảy của sông suối đã được lập bản đồ. Với cửa hang, góc nhìn dựa trên hướng cửa, đường mòn hoặc đoạn hang đã khảo sát. Hình dáng vách đá được ước dựng ở những nơi thiếu số đo. Ở Bà Nà, xe dừng trên đường ô tô còn góc ngắm đưa bạn lên cầu. Tại Hoàng thành Thăng Long, bạn có thể chuyển từ Đoan Môn tới thềm rồng điện Kính Thiên. [Cầu Vàng Bà Nà](https://vivu3d.com/?landmark=cau-vang-ba-na) · [Hoàng thành Thăng Long](https://vivu3d.com/?landmark=hoang-thanh-thang-long).
+Với **Cầu Vàng Bà Nà**, bấm **Ngắm Cầu Vàng Bà Nà** trong Atlas hoặc mở liên kết bên dưới để xem ngay góc **Hai bàn tay nâng cầu**. Trong **Góc ngắm**, bạn có thể chuyển xuống lối đi lát gỗ hoặc ngắm toàn cảnh từ sườn núi. Xe đỗ trên đường ô tô. Bấm **Trở lại xe** rồi **Cầm lái** để khởi hành. [Mở góc ngắm Cầu Vàng](https://vivu3d.com/?landmark=cau-vang-ba-na).
+
+Các cảnh thác dùng hướng nước chảy của sông suối đã được lập bản đồ. Với cửa hang, góc nhìn dựa trên hướng cửa, đường mòn hoặc đoạn hang đã khảo sát. Hình dáng vách đá được ước dựng ở những nơi thiếu số đo. Tại Hoàng thành Thăng Long, bạn có thể chuyển từ Đoan Môn tới thềm rồng điện Kính Thiên. [Hoàng thành Thăng Long](https://vivu3d.com/?landmark=hoang-thanh-thang-long).
 
 Trong bản đồ điểm xuất phát, gõ tên đường, số nhà hoặc địa danh, có dấu hoặc không dấu. Thêm tên tỉnh hoặc quận để phân biệt những nơi trùng tên. Thử **48 Hàng Ngang, Hà Nội**, **QL21** hoặc **cây xăng gần đây**. Khi chọn kết quả, bản đồ đánh dấu vị trí để bạn bắt đầu lái. [Tìm Ba Sao trên trang game](https://vivu3d.com/?search=Ba%20Sao) · [Nguồn dữ liệu tìm kiếm](dist/vn-search/CREDITS.txt).
 
 Chọn **Ba Sao · Quốc lộ 21** rồi lái theo đường Điện Biên Phủ về phía Khả Phong để đi từ khu dân cư ra chân núi. Khi chạy trên máy, có thể [mở ngay Ba Sao](http://127.0.0.1:8000/?drive=ba-sao). Biển giao thông báo trước khúc cua, giao lộ và cho biết chiều được phép đi. Chợ, trường học, trạm xăng, quán cà phê và bệnh viện có ký hiệu trên bản đồ.
+
+## Dữ liệu bản đồ và cảnh quan
 
 Game tải cảnh theo vị trí xe. Dữ liệu mặt bằng nhà OSM trên toàn quốc được đóng gói sẵn. Google Open Buildings bổ sung công trình từ ảnh vệ tinh qua mạng, với dữ liệu lưu sẵn quanh 10 thành phố, Tam Chúc và hành lang Ba Sao. Game ưu tiên chiều cao hoặc số tầng OSM, sau đó đến chiều cao vệ tinh ước tính. Mặt tiền và mái hiên được dựng trong game. [Nguồn nhà OSM](dist/vn-osm-buildings/CREDITS.txt) · [Nguồn nhà và chiều cao vệ tinh](dist/vn-structures/CREDITS.txt).
 
