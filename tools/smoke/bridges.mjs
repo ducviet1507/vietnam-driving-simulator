@@ -1,6 +1,8 @@
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {runInNewContext} from 'node:vm';
+import {createRequire} from 'node:module';
+import {gunzipSync} from 'node:zlib';
 
 const world={window:{},worldRoadHalfWidth:()=>4};
 for(const file of ['bridge-profiles','world-roads']){
@@ -46,4 +48,62 @@ graph.bridges=world.buildBridgeProfiles(graph);
 assert.equal(graph.bridges.lift(next,next.length),0);
 assert.equal(graph.bridges.lift(short,short.length),graph.bridges.lift(next,0));
 assert.ok(graph.bridges.lift(short,short.length)<=next.length*.095+.0001);
-console.log('Bridge decks, approaches, stacked crossings and road tracking passed.');
+
+// The two northbound decks at Nga Ba Hue split at a shallow angle. Their
+// running lanes still overlap well beyond the common node's painted apron.
+const T=createRequire(import.meta.url)('../../dist/three.min.js');
+const meshWorld={};meshWorld.window=meshWorld;
+for(const file of ['world-scene','world-road-traffic','guardrail-clearance','bridge-mesh']){
+  runInNewContext(readFileSync(new URL('../../dist/'+file+'.js',import.meta.url),'utf8'),meshWorld);
+}
+const tile=dir=>JSON.parse(gunzipSync(readFileSync(new URL('../../dist/'+dir+'/432_64_2_0.gz',import.meta.url))));
+const junction=Object.assign(Object.create(proto),{lon:108.17947,lat:16.06207,my:110900,
+  mx:111320*Math.cos(16.06207*Math.PI/180),visitorEdges:new Set(),nodes:new Map()});
+const ids=[347384,3658763,3658850],traffic=tile('vn-traffic');
+const roads=tile('vn-roads').filter(r=>ids.includes(r[0])).map(row=>{
+  const e=junction.decodeEdge(row);e.traffic=traffic[e.id];
+  for(const node of [e.start,e.end]){
+    if(!junction.nodes.has(node))junction.nodes.set(node,[]);
+    junction.nodes.get(node).push(e);
+  }
+  return e;
+});
+assert.equal(roads.length,3);
+junction.nearby=()=>roads;
+const ramp=roads.find(e=>e.id===347384),main=roads.find(e=>e.id===3658763);
+function renderRails(cx,cz,otherY){
+  const surfaces=roads.flatMap(source=>source.points.slice(1).map((b,i)=>{
+    const a=source.points[i],len=source.dist[i+1]-source.dist[i];
+    return {ax:a.x-cx,az:a.z-cz,bx:b.x-cx,bz:b.z-cz,fx:(b.x-a.x)/len,fz:(b.z-a.z)/len,
+      len,w:meshWorld.worldRoadHalfWidth(source),source,station:source.dist[i]};
+  }));
+  const group=new T.Group(),hits=[];
+  meshWorld.buildBridgeMeshes(T,{edges:[ramp],graph:junction,cx,cz,radius:240,group,
+    material:{asphalt:new T.MeshLambertMaterial()},ground:()=>0,height:()=>7,
+    bridgeInfo:()=>({ranges:[[0,ramp.length]],bridge:true}),railRoads:()=>surfaces,
+    roadHeight:s=>s.source===main?otherY:7,registerObstacle:o=>hits.push(o)});
+  group.updateMatrixWorld(true);
+  return {group,hits:hits.filter(o=>o.id.startsWith('bridge:'))};
+}
+function checkFork(cx,cz){
+  const joined=renderRails(cx,cz,7),stacked=renderRails(cx,cz,0);
+  const retained=new Set(joined.hits.map(o=>o.id));
+  const opened=stacked.hits.filter(o=>!retained.has(o.id));
+  assert.ok(opened.length>0,'open the overlapping slip road at driving height');
+  assert.ok(joined.hits.some(o=>o.id.startsWith('bridge:'+ramp.id+':1:'))&&
+    joined.hits.some(o=>o.id.startsWith('bridge:'+ramp.id+':-1:')),'resume both parapets beyond the junction');
+  for(const o of joined.hits)for(const t of [-1,0,1]){
+    const x=o.x+cx+t*o.w*o.fx,z=o.z+cz+t*o.w*o.fz;
+    const clearance=Math.sqrt(junction.nearest(x,z,[main]).error)-meshWorld.worldRoadHalfWidth(main);
+    assert.ok(clearance>=o.d-.001,'keep the full rail outside the joining carriageway');
+  }
+  const railAt=(group,x,z)=>new T.Raycaster(new T.Vector3(x,9,z),new T.Vector3(0,-1,0),0,1.8)
+    .intersectObject(group.getObjectByName('Bridge piers, rails and superstructures')).length>0;
+  for(const o of opened){
+    assert.ok(railAt(stacked.group,o.x,o.z),'retain the visible parapet above a lower road');
+    assert.ok(!railAt(joined.group,o.x,o.z),'remove the visible parapet with its collider');
+  }
+  return opened.map(o=>o.id);
+}
+assert.deepEqual(checkFork(0,0),checkFork(83,-41),'opening is stable across district origins');
+console.log('Bridge decks, approaches, stacked crossings, Nga Ba Hue slip-road clearance and road tracking passed.');

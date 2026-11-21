@@ -5,7 +5,7 @@ import {createRequire} from 'node:module';
 
 const T=createRequire(import.meta.url)('../../dist/three.min.js');
 const world={performance};world.window=world;
-for(const name of ['world-scene','world-road-traffic','bridge-mesh']){
+for(const name of ['world-scene','world-road-traffic','guardrail-clearance','bridge-mesh']){
   runInNewContext(readFileSync(new URL('../../dist/'+name+'.js',import.meta.url),'utf8'),world);
 }
 const edge={id:1,start:101,end:102,points:[{x:0,z:0},{x:0,z:-41}],length:41,dist:[0,41],
@@ -63,7 +63,7 @@ for(const [tag,finish] of [['concrete','roadConcrete'],['concrete:plates','roadS
   if(finish==='earth'||finish==='roadWood'||finish==='roadMetal')assert.equal(paint(road,0,41,{controls:false}).length,0);
   const group=new T.Group(),graph={nodes:new Map([[101,[road]],[102,[road]]]),nearby:()=>[road]};
   world.buildBridgeMeshes(T,{edges:[road],graph,cx:0,cz:0,radius:100,group,material,height:()=>9,ground:()=>0,
-    bridgeInfo:()=>({ranges:[[0,41]],bridge:true}),registerObstacle(){}});
+    bridgeInfo:()=>({ranges:[[0,41]],bridge:true}),railRoads:()=>[],registerObstacle(){}});
   const deck=group.getObjectByName('Mapped bridge decks');
   assert.equal(deck.material,material[finish]);
   assert.ok(Array.from(deck.geometry.attributes.uv.array).every(Number.isFinite));

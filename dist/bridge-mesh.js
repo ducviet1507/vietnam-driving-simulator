@@ -61,6 +61,16 @@
       const t=(s-a.s)/(b.s-a.s);
       return {s,x:mix(a.x,b.x,t),z:mix(a.z,b.z,t),y:mix(a.y,b.y,t),nx:mix(a.nx,b.nx,t),nz:mix(a.nz,b.nz,t)};
     }
+    function clearRail(edge,segment,a,b,offset){
+      const p=at(a,offset),q=at(b,offset);
+      const ax=p.x-cx,az=p.z-cz,bx=q.x-cx,bz=q.z-cz;
+      return guardrailFits(ax,az,bx,bz,options.railRoads(ax,az,bx,bz),.12,null,(r,u,t)=>{
+        if(r.source===edge&&r.station>=edge.dist[segment]-.001&&r.station<edge.dist[segment+1]-.001)return false;
+        const roadY=options.roadHeight(r,u),railY=mix(a.y,b.y,t);
+        // Match the vehicle clearance and parapet used by physical contact.
+        return roadY+1.35>=railY&&roadY<=railY+1.20;
+      });
+    }
     function barrier(edge,a,b,side,offset){
       const p=at(a,offset),q=at(b,offset),dx=q.x-p.x,dz=q.z-p.z,len=Math.hypot(dx,dz);
       if(len<.05)return;
@@ -360,7 +370,7 @@
                 if(prev.s>=railMin&&s<=railMax){
                   const o=side*(w+.16);
                   const raised=info.bridge||Math.max(prev.y-ground(prev.x,prev.z),next.y-ground(next.x,next.z))>.45;
-                  if(raised){
+                  if(raised&&clearRail(edge,i,prev,next,o)){
                     beam(at(prev,o,.14),at(next,o,.14),.35,.29,concrete);
                     if(heavy){
                       beam(at(prev,o,.49),at(next,o,.49),.23,.48,0xc8c7ba);

@@ -1082,7 +1082,19 @@
         }
         m.castShadow=b.mat!=='vergeGrass';m.receiveShadow=true;roadGroup.add(m);
       }
-      if(bridges)buildBridgeMeshes(T,{...bridges,graph,cx,cz,radius:cutoff,group:roadGroup,material,ground:terrain.ground,registerObstacle});
+      function railRoads(ax,az,bx,bz){
+        // Roads are indexed with nine metres of padding beyond the pavement.
+        if(Math.hypot(bx-ax,bz-az)<=16)return cells.get(nearbyCell((ax+bx)/2,(az+bz)/2))||[];
+        const roads=new Set();
+        bounds({ax,az,bx,bz},0,key=>{for(const s of cells.get(key)||[])roads.add(s);});
+        return roads;
+      }
+      function roadHeight(s,u){
+        if(!s.elevated)return roadway(cx+s.ax+s.fx*u,cz+s.az+s.fz*u);
+        const structure=bridges.bridgeInfo(s.source)?bridges:tunnels;
+        return structure.height(s.source,s.station+u);
+      }
+      if(bridges)buildBridgeMeshes(T,{...bridges,graph,cx,cz,radius:cutoff,group:roadGroup,material,ground:terrain.ground,registerObstacle,railRoads,roadHeight});
       if(tunnels?.edges.length)buildTunnelMeshes(T,{...tunnels,graph,cx,cz,radius:cutoff,group:roadGroup,material,ground:terrain.ground,registerObstacle});
       const groundAt=drivingSurface(bridges,tunnels,pavementLift,roadway,shoreBed,cx,cz);
       const showPeople=yield* streetLife.prepare(graph,cx,cz,segments,(x,z,r)=>!blocked(x-cx,z-cz,r)&&!contact(x,z,r));
