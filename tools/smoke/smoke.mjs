@@ -33,7 +33,8 @@ const base = process.env.SMOKE_URL || 'http://127.0.0.1:' + server.address().por
 async function check(disabled, run) {
   const browser = await chromium.launch({args:disabled?['--disable-webgl']:['--enable-unsafe-swiftshader']});
   try {
-    const page = await browser.newPage({viewport:{width:820,height:660}});
+    const page = await browser.newPage({viewport:{width:640,height:480}});
+    await page.addInitScript(()=>localStorage.setItem('taylai.cockpit.v1',JSON.stringify({graphics:'low'})));
     page.setDefaultTimeout(60000);
     const errors = [];
     page.on('pageerror', e=>errors.push(e.message));
@@ -56,6 +57,8 @@ try {
   await check(false, async page=>{
     const go = p=>page.goto(new URL(p,base).href,{waitUntil:'domcontentloaded'});
     await go('/?intro=turtle');
+    await page.getByRole('button',{name:'Cầm lái',exact:true}).waitFor();
+    assert.equal(await page.evaluate(()=>Boolean(VietnamTourism.complete || window.driveBank)),false);
     await page.getByRole('button',{name:'Cầm lái',exact:true}).click();
     await page.locator('body[data-phase="drive"]').waitFor();
     await page.locator('#pause').click();
@@ -64,6 +67,17 @@ try {
     await page.locator('#pause').click();
     assert.equal(await page.locator('#rest').isVisible(),true);
     console.log('PASS Xuyên Việt starts, pauses and resumes');
+    await page.locator('#relocate').click();
+    await page.waitForFunction(()=>VietnamTourism.complete&&destinations.length>11000);
+    await page.locator('#findPlace').fill('Chợ Vinh');
+    await page.locator('#places button').filter({hasText:'Chợ Vinh'}).first().waitFor();
+    const hasModel = await page.evaluate(async()=>{
+      const stop=VietnamLandmarks.entries.find(s=>s.id==='cho-vinh');
+      await VietnamTourism.loadRegion(stop.lon,stop.lat);
+      return typeof stop.build==='function';
+    });
+    assert.ok(hasModel);
+    console.log('PASS nationwide Atlas search and regional model loading');
 
     await go('/cup');
     await page.locator('#launch').click();
@@ -89,7 +103,8 @@ try {
       const theory = page.locator('#graphicsUnavailable[open]').getByRole('link',{name:'Ôn lý thuyết'});
       await theory.waitFor();
       await theory.click();
-      await page.locator('#begin').click();
+      await page.waitForURL('**/theory-exam');
+      if(await page.locator('#begin').isVisible())await page.locator('#begin').click();
       await page.locator('#choices button').first().waitFor();
     }
     console.log('PASS all five 3D modes reach an interactive exam without WebGL');

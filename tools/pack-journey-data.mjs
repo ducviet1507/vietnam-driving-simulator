@@ -1,5 +1,5 @@
 import {createHash} from 'node:crypto';
-import {mkdir, readFile, writeFile} from 'node:fs/promises';
+import {mkdir, readFile, readdir, unlink, writeFile} from 'node:fs/promises';
 import path from 'node:path';
 import {createContext, runInContext} from 'node:vm';
 
@@ -13,10 +13,12 @@ export async function packJourneyData(client) {
   context.window = context;
   const groups = [];
   const directory = path.join(client, 'journey-data');
+  const generated = new Set();
   await mkdir(directory, {recursive:true});
   async function asset(name, content, extension) {
     const hash = createHash('sha256').update(content).digest('hex').slice(0,16);
     const file = name + '-' + hash + '.' + extension;
+    generated.add(file);
     await writeFile(path.join(directory, file), content);
     return 'journey-data/' + file;
   }
@@ -54,14 +56,16 @@ export async function packJourneyData(client) {
   for (const match of world.matchAll(/osm-(?:way|node|relation)-\d+/g)) seed.add(match[0]);
   const entries = [], rest = [], tiles = new Map();
   const initialDetails = {};
-  for (const site of atlas.entries) {
+  const tileScale = 4;
+  for (const [order,site] of atlas.entries.entries()) {
+    site.atlasOrder=order;
     if (seed.has(site.id)) {
       entries.push(site);
       if (details[site.id]) initialDetails[site.id] = details[site.id];
       continue;
     }
     const row = [site, details[site.id] || null];
-    const tile = Math.floor(site.lon) + '_' + Math.floor(site.lat);
+    const tile = Math.floor(site.lon*tileScale) + '_' + Math.floor(site.lat*tileScale);
     if (!tiles.has(tile)) tiles.set(tile, []);
     tiles.get(tile).push(row);
     rest.push(row);
@@ -69,7 +73,7 @@ export async function packJourneyData(client) {
   const files = {};
   for (const [key, rows] of tiles) files[key] = await asset(key, JSON.stringify(rows), 'json');
   const all = await asset('atlas', JSON.stringify(rest), 'json');
-  const manifest = {metadata:atlas.metadata, aliases:atlas.aliases, entries, files, all,
+  const manifest = {metadata:atlas.metadata, aliases:atlas.aliases, entries, files, all, tileScale,
     provinces:[...new Set(atlas.entries.map(s => s.province))]};
   const origin = '// © OpenStreetMap contributors. ODbL 1.0. See VietnamTourism.metadata.\n';
   await writeFile(path.join(client, 'tourism-catalog.js'), origin + 'window.VietnamTourism=' + JSON.stringify(manifest) + ';\n');
@@ -79,4 +83,7 @@ export async function packJourneyData(client) {
   const registrations = await asset('regional-models', register, 'js');
   html = html.replace('<script src="central-arch.js"></script>', '$&<script src="' + registrations + '"></script>');
   await writeFile(index, html);
+  for(const name of await readdir(directory)){
+    if(/-[0-9a-f]{16}\.(json|m?js)$/.test(name)&&!generated.has(name))await unlink(path.join(directory,name));
+  }
 }

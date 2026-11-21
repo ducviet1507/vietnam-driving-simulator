@@ -90,12 +90,11 @@ async function streamWater(graph){
 }
 let framesStarted=false;
 async function prepareWorld(graph,token){
- await VietnamTourism.loadRegion(...graph.geo(car.x,car.z));
- if(token!==loadToken)return false;
  gfx??=createWorldScene($('world'),breakfastCall);
  gfx.preloadVehicle(car.model);gfx.resetFx();
  loadStructuresNear(graph,car.x,car.z);
- await Promise.all([gfx.terrainReady,streamWater(graph),gfx.loadDistrict(graph,car.x,car.z)]);
+ await Promise.all([gfx.terrainReady,streamWater(graph),gfx.loadDistrict(graph,car.x,car.z),
+   VietnamTourism.loadRegion(...graph.geo(car.x,car.z))]);
  if(token!==loadToken)return false;
  refreshView();seedTraffic();
  if(!framesStarted){framesStarted=true;requestAnimationFrame(frame);}
@@ -953,8 +952,12 @@ VietnamTourism.onEntries=sites=>{
  for(const site of sites){
    if(modeledStops.has(site.id))continue;
    const entry={...site,photo:window.VietnamSightDetails?.[site.id]?.photo};
-   catalogById.set(site.id,entry);destinations.push(entry);
+   catalogById.set(site.id,entry);catalog.push(entry);destinations.push(entry);
  }
+};
+VietnamTourism.onComplete=()=>{
+ catalog.sort((a,b)=>a.atlasOrder-b.atlasOrder);
+ destinations.splice(models.length+regionalVisits.length+mountainPlaces.length,catalog.length,...catalog);
 };
 function catalogStop(id){
  const key=VietnamTourism.aliases?.[id]||id;

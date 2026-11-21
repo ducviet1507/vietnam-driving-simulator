@@ -40,13 +40,17 @@
     });
   }
   atlas.loadAll=async()=>{
-    if(atlas.all&&!atlas.complete){await loadTile(atlas.all);atlas.complete=true;}
+    if(atlas.all&&!atlas.complete){
+      await loadTile(atlas.all);
+      if(!atlas.complete){atlas.complete=true;atlas.onComplete?.();}
+    }
   };
   atlas.loadRegion=async(lon,lat)=>{
     const jobs=[];
     if(atlas.files&&!atlas.complete){
-      for(let x=Math.floor(lon-.05);x<=Math.floor(lon+.05);x++)
-        for(let y=Math.floor(lat-.05);y<=Math.floor(lat+.05);y++){
+      const scale=atlas.tileScale;
+      for(let x=Math.floor((lon-.05)*scale);x<=Math.floor((lon+.05)*scale);x++)
+        for(let y=Math.floor((lat-.05)*scale);y<=Math.floor((lat+.05)*scale);y++){
           const file=atlas.files[x+'_'+y];if(file)jobs.push(loadTile(file));
         }
     }
