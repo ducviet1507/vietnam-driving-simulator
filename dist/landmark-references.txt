@@ -453,3 +453,7 @@ https://hueworldheritage.org.vn/
 Mở rộng cụm địa danh Hà Tĩnh & Quảng Trị / Quảng Bình cũ (8 công trình mới) — Chùa Hương Tích (Can Lộc), Đền Chợ Củi, Đền Võ Miếu Hà Tĩnh, Tượng đài Xô Viết Nghệ Tĩnh (Can Lộc), Cầu Nhật Lệ, Tượng đài Mẹ Suốt, Địa đạo Vịnh Mốc và Thánh địa La Vang. Tọa độ OpenStreetMap (ODbL 1.0); mô hình 3D dựng thủ tục bằng Three.js.
 https://www.openstreetmap.org/copyright
 https://dsvh.gov.vn/
+
+Mở rộng cụm địa danh Nam Trung Bộ & Tây Nguyên (17 công trình mới) — Khu chứng tích Sơn Mỹ, Nhà thờ Gỗ Kon Tum, Cầu treo Kon Klor, Tháp Bánh Ít, Tháp Dương Long, Bảo tàng Quang Trung, Quảng trường Đại Đoàn Kết (Pleiku), Tượng đài Chiến thắng Buôn Ma Thuột, Tháp Nhạn Tuy Hòa, Nhà thờ Mằng Lăng, Nhà thờ Núi Nha Trang, Chùa Long Sơn – Kim Thân Phật Tổ, Tháp Pô Sah Inư, Tháp Nước Phan Thiết, Quảng trường Lâm Viên Đà Lạt, Nhà thờ Con Gà Đà Lạt và Cao đẳng Sư phạm Đà Lạt. Tọa độ OpenStreetMap (ODbL 1.0); mô hình 3D dựng thủ tục bằng Three.js.
+https://www.openstreetmap.org/copyright
+https://dsvh.gov.vn/
