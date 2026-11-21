@@ -80,13 +80,25 @@
       const heights=new Map();
       function point(station,side,rise) {
         const cx=a.x+ux*station, cz=a.z+uz*station;
-        if (!heights.has(station)) heights.set(station,deckHeight(cx,cz));
+        if (!heights.has(station)) heights.set(station,deckHeight(cx,cz,ux,uz));
         const h=heights.get(station);
         if (!Number.isFinite(h)) return null;
         return {x:cx-uz*side, y:h+rise, z:cz+ux*side};
       }
       function bar(from,to,width,depth,color) {
         if (from && to) beam(from,to,width,depth,color);
+      }
+      // OSM draws one line per direction even on a single physical deck.
+      // Carry its slab beneath both asphalt ribbons, the median and shoulders.
+      // The two parallel arch structures keep their individual decks.
+      if(bridge.form!=='arch'&&bridge.form!=='parabolic'){
+        const {start,end}=shape,count=Math.ceil((end-start)/12);
+        let prev=point(start,0,-.78);
+        for(let i=1;i<=count;i++){
+          const next=point(start+(end-start)*i/count,0,-.78);
+          bar(prev,next,bridge.halfWidth*2,1.25,0xabaea7);
+          prev=next;
+        }
       }
       // Broad footings sit at the actual main piers, clear of river traffic
       // and the lower circular carriageway of the Đà Nẵng interchange.

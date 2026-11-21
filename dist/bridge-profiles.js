@@ -197,10 +197,19 @@ function createBridgeDistrict(graph,edges,cx,cz,ground){
       return Math.abs(dx*m.cos-dz*m.sin)<m.length/2&&Math.abs(dx*m.sin+dz*m.cos)<m.data.depth/2+2;
     });
   }
-  function signatureHeight(x,z){
-    const candidates=graph.nearby(x,z,50).filter(e=>info(e)?.bridge);
-    const c=graph.nearest(x,z,candidates);
-    return c&&c.error<(worldRoadHalfWidth(c.edge)+30)**2?height(c.edge,c.s):null;
+  function signatureHeight(x,z,ux,uz){
+    let best=null;
+    for(const e of graph.nearby(x,z,50)){
+      if(!info(e)?.bridge)continue;
+      const c=graph.nearest(x,z,[e]);
+      if(!c||c.error>=(worldRoadHalfWidth(e)+30)**2||best&&c.error>=best.error)continue;
+      if(ux!==undefined){
+        const {yaw}=graph.sample(c);
+        if(Math.abs(Math.sin(yaw)*ux-Math.cos(yaw)*uz)<.82)continue;
+      }
+      best=c;
+    }
+    return best?height(best.edge,best.s):null;
   }
   const footbridges=[],seen=new Set(),[west,north]=graph.geo(cx-900,cz-900),[east,south]=graph.geo(cx+900,cz+900);
   for(let i=Math.floor(west*4);i<=Math.floor(east*4);i++)for(let j=Math.floor(south*4);j<=Math.floor(north*4);j++){

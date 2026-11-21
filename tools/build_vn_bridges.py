@@ -126,11 +126,10 @@ def pedestrian_crossings(source, decks, classes):
     return [decks[i] for i in sorted(confirmed)]
 
 
-def independent_decks(decks, edges):
+def independent_decks(decks, road_lines, distance=18):
     # Sidewalks sharing a vehicular viaduct may also cross surface streets.
     # Identify the same longitudinal alignment across several samples so a
     # genuine short pedestrian overpass crossing at an angle still survives.
-    road_lines = [LineString(key[-1]) for key in edges]
     tree = STRtree(road_lines)
 
     def tangent(line, distance):
@@ -147,7 +146,7 @@ def independent_decks(decks, edges):
             pos = line.length * fraction
             point = line.interpolate(pos)
             x, y = tangent(line, pos)
-            for i in tree.query(point, predicate="dwithin", distance=18):
+            for i in tree.query(point, predicate="dwithin", distance=distance):
                 road = road_lines[i]
                 u, v = tangent(road, road.project(point))
                 if abs(x * u + y * v) > .92:
@@ -157,9 +156,22 @@ def independent_decks(decks, edges):
             yield deck
 
 
-def footbridge_tiles(source, decks, classes, edges):
+def separate_long_sidepaths(decks, alignments):
+    # A long shared road/rail span can have sidepaths outside the motorway
+    # median, or admit only trains and motorcycles. Match the rail alignment.
+    long = [d for d in decks if d.line.length > .0045]
+    keep = {d.way for d in independent_decks(long, alignments, distance=45)}
+    return [d for d in decks if d.line.length <= .0045 or d.way in keep]
+
+
+def footbridge_tiles(source, decks, classes, edges, railways):
     selected = pedestrian_crossings(source, decks, classes)
-    selected = list(independent_decks(selected, edges))
+    alignments = [LineString(key[-1]) for key in edges]
+    selected = list(independent_decks(selected, alignments))
+    return connected_access_tiles(source, separate_long_sidepaths(selected, alignments + railways))
+
+
+def connected_access_tiles(source, selected):
     levels = {node: w.layer for w in selected for node in w.nodes}
     selected_ids = {w.way for w in selected}
     walk_filter = osmium.filter.TagFilter(*[("highway", k) for k in sorted(WALKWAYS)])
@@ -218,7 +230,7 @@ def build(source, roads, traffic, output):
                     junctions.update((start, end))
                     names[edge] = name.split(" · ")[0]
 
-    enriched, decks, outlines = {}, [], []
+    enriched, decks, outlines, railways = {}, [], [], []
     classes = set(road_index["classes"])
     processor = osmium.FileProcessor(source).with_locations().with_filter(osmium.filter.KeyFilter("bridge", "man_made"))
     for way in processor:
@@ -236,6 +248,9 @@ def build(source, roads, traffic, output):
                     outlines.append((polygon, attrs))
         if tags.get("bridge", "no") in {"no", "construction"}:
             continue
+        if tags.get("railway") in {"rail", "light_rail", "subway", "tram"} and len(way.nodes) >= 2:
+            if all(n.location.valid() for n in way.nodes):
+                railways.append(LineString([(n.lon * 1e5, n.lat * 1e5) for n in way.nodes]))
         if tags.get("highway") in WALKWAYS - {"steps"} and tags.get("area") != "yes" and tags.get("footway") != "crossing":
             layer = tags.get("layer", "1")
             if re.fullmatch(r"\+?\d+", layer) and int(layer) > 0:
@@ -278,7 +293,7 @@ def build(source, roads, traffic, output):
     (output / "details.json").write_bytes(compact({**source_ref, "edges": dict(sorted(enriched.items()))}))
     fields = collections.Counter(k for attributes in enriched.values() for k in attributes)
     print(f"{len(enriched):,} bridge edges with additional mapped details: {dict(fields)}", flush=True)
-    tiles = footbridge_tiles(source, decks, classes, edges)
+    tiles = footbridge_tiles(source, decks, classes, edges, railways)
     (output / "footbridges.json").write_bytes(compact({**source_ref, "tiles": tiles}))
 
 
