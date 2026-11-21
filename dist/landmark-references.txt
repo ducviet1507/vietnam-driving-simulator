@@ -440,3 +440,8 @@ https://dulichnghean.gov.vn/
 Cụm địa danh Thanh Hóa (7 công trình mới) — Cầu Hàm Rồng, Chính điện Lam Kinh, Đền Bà Triệu, Đền Độc Cước Sầm Sơn, Hòn Trống Mái Sầm Sơn, Tượng đài Lê Lợi và Thái Miếu nhà Hậu Lê. Tọa độ OpenStreetMap (ODbL 1.0); mô hình 3D dựng thủ tục bằng Three.js.
 https://www.openstreetmap.org/copyright
 https://dsvh.gov.vn/
+
+Mở rộng cụm địa danh Đà Nẵng & Quảng Nam cũ (14 công trình mới) — Cầu Sông Hàn, Cầu Trần Thị Lý, Cầu Thuận Phước, Bảo tàng Điêu khắc Chăm Đà Nẵng, Thành Điện Hải, Nhà Trưng bày Hoàng Sa, Chùa Tam Thai – Ngũ Hành Sơn, Đình Túy Loan, Đình Bồ Bản, Hội quán Triều Châu, Chợ Hội An, Tháp Bằng An, Tháp Chăm Khương Mỹ và Tháp Chăm Chiên Đàn. Tọa độ OpenStreetMap (ODbL 1.0); mô hình 3D dựng thủ tục bằng Three.js.
+https://www.openstreetmap.org/copyright
+https://danangfantasticity.com/
+https://hoianheritage.net/
