@@ -115,6 +115,7 @@ async function startAt(place,restore=null,guided=null){
    departure?departure.caption:
    samePlace(place,baSaoDrive)?'Theo đường Điện Biên Phủ về phía Khả Phong, qua khu dân cư Ba Sao và chân núi.':
    scenicPasses.has(site?.id)?scenicPasses.get(site.id).description:
+   site?.visitOnArrival?'Xe đỗ trên đường ô tô, cách '+site.name+' khoảng '+atlasDistance(site.approachMeters/1000)+' theo đường chim bay.':
    site?.km?'Chinh phục '+fmt(site.km*1000)+' đường đèo.':[site?.kind,site?.city].filter(Boolean).join(' · ')||'Khám phá những con đường quanh điểm xuất phát.';
  if(guided){
    $('journeyTitle').textContent=guided.title;
@@ -168,6 +169,7 @@ async function startAt(place,restore=null,guided=null){
    }else if(!await prepareWorld(graph,token))return;
    drawDepartureMap();mode='grid';
    $('challenge').disabled=guided;$('startGuided').disabled=false;$('launch').disabled=false;$('launch').textContent=restore?'Lái tiếp':'Cầm lái';
+   if(site?.visitOnArrival&&!restore&&!guided)await openTour(site);
  }catch(e){if(token===loadToken){$('startGuided').disabled=false;$('loadStatus').textContent=e.message;$('launch').textContent='Thử tải lại';$('launch').disabled=false;mode='error';pendingPlace=place;}}
 }
 async function stream(){
@@ -421,7 +423,7 @@ function updateHud(){
  if(site){const p=roads.point(site.lon,site.lat),distance=Math.hypot(car.x-p.x,car.z-p.z);
    if(distance<5000&&(!landmark||landmark.distance>distance))landmark={...p,distance,data:site};}
  $('landmark').hidden=!landmark;
- if(landmark)$('landmark').textContent=landmark.data.name+' · '+Math.round(landmark.distance)+' m';
+ if(landmark)$('landmark').textContent=landmark.data.name+' · cách xe '+atlasDistance(landmark.distance/1000);
  const grade=Math.round(100*gfx.grade(car.x,car.z,car.yaw));
  const info=[],traffic=player.edge.traffic,limit=roadSpeedLimit(player);
  if(!car.offroad&&traffic){
@@ -748,17 +750,26 @@ async function frameStop(stop){
  }
  showMonument({data,x,z,height});
 }
-$('tourView').onclick=async()=>{
- const monument=visitTarget();if(mode!=='drive'||!monument)return;
+$('tourView').onclick=()=>{
+ if(mode!=='drive')return;
+ const monument=visitTarget();if(monument)return openTour(monument.data);
+};
+async function openTour(site){
  mode='tour';keySet.clear();
- const target=monument.data.id==='tam-chuc'?tamChucOverview:monument.data;
+ document.body.dataset.phase='tour';$('grid').hidden=true;
+ const target=site.id==='tam-chuc'?tamChucOverview:site;
  loadingStop(true);
  try{await frameStop(target);}
- catch{loadingStop(false);await closeTour();inform('Chưa tải được cảnh. Bạn có thể mở lại góc ngắm.');return;}
+ catch{
+   loadingStop(false);await closeTour();
+   const message='Chưa tải được cảnh. Bạn có thể mở lại góc ngắm.';
+   if(activeTrip)inform(message);else $('loadStatus').textContent=message;
+   return;
+ }
  loadingStop(false);
  for(const id of ['hud','touch','camera','pause'])$(id).hidden=true;
  $('backToCar').focus({preventScroll:true});
-};
+}
 $('tourZoom').oninput=e=>{if(car.sightView)car.sightView.zoom=Number(e.target.value);};
 $('tourLight').onchange=e=>{if(car.sightView)car.sightView.hour=e.target.value===''?null:Number(e.target.value);};
 let tourPointer=null,tourGraph=null,tourWater=null,tourCenter=null;
@@ -786,12 +797,16 @@ async function closeTour(){
  if(tourGraph){
    loadingStop(true);
    loadStructuresNear(roads,car.x,car.z);
-   try{await gfx.loadDistrict(roads,car.x,car.z);refreshView();}
+   try{await gfx.loadDistrict(roads,car.x,car.z);}
+   catch{inform('Chưa tải đủ cảnh quanh xe.');}
    finally{tourGraph=tourWater=tourCenter=null;loadingStop(false);}
+   refreshView();
  }
- mode='drive';car.sightView=null;tourPointer=null;keySet.clear();$('tourCamera').hidden=true;
- for(const id of ['hud','touch','camera','pause'])$(id).hidden=false;
- updateHud();$('tourView').focus({preventScroll:true});
+ mode=activeTrip?'drive':'grid';document.body.dataset.phase=mode;
+ car.sightView=null;tourPointer=null;keySet.clear();$('tourCamera').hidden=true;$('grid').hidden=activeTrip;
+ for(const id of ['hud','touch','camera','pause'])$(id).hidden=!activeTrip;
+ if(activeTrip)updateHud();
+ $(activeTrip?'tourView':'launch').focus({preventScroll:true});
 }
 $('backToCar').onclick=closeTour;
 $('world').addEventListener('pointerdown',e=>{
@@ -830,7 +845,7 @@ window.addEventListener('keydown',e=>{
  }
  if(mode==='tour'){
    if(k==='escape')closeTour();
-   if(!['SELECT','INPUT'].includes(e.target.tagName)&&(k==='arrowleft'||k==='arrowright')){car.sightView.angle+=(k==='arrowleft'?-1:1)*.09;e.preventDefault();}
+   if(car.sightView&&!['SELECT','INPUT'].includes(e.target.tagName)&&(k==='arrowleft'||k==='arrowright')){car.sightView.angle+=(k==='arrowleft'?-1:1)*.09;e.preventDefault();}
    return;
  }
  if(mode!=='drive')return;
@@ -965,6 +980,7 @@ function choosePlace(place,focus=false){
  pendingPlace=place;const site=place[3];
  if(focus)focusedPin=place;
  activeResult=matches.findIndex(p=>samePlace(p,place));$('travel').disabled=!indexData||!!site?.islands;
+ $('travel').textContent=atlasChoice?'Dùng làm '+atlasChoice.label:site?.visitOnArrival?'Ngắm '+site.name:'Đặt điểm xuất phát';
  const raceLink=$('racePass');raceLink.hidden=!site?.km;
  if(site?.km)raceLink.href='cup.html?route='+encodeURIComponent(site.id);
  const approach=site?.approachMeters>=20?' · điểm dừng xe cách địa danh khoảng '+atlasDistance(site.approachMeters/1000)+' theo đường thẳng':'';
@@ -1095,7 +1111,6 @@ $('atlasList').onclick=()=>setAtlasView(false);
 async function openAtlas(filter='all'){
  setAtlasView(false);
  $('atlasTitle').textContent=atlasChoice?'Chọn '+atlasChoice.label:'Chọn điểm xuất phát';
- $('travel').textContent=atlasChoice?'Dùng làm '+atlasChoice.label:'Đặt điểm xuất phát';
  originatedInPause=!atlasChoice && $('rest').open;if(originatedInPause)$('rest').close();
  $('atlas').showModal();$('findPlace').value='';$('tourFilter').value=filter;
  let preferred;
