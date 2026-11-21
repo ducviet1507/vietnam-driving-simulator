@@ -67,7 +67,7 @@ function parkBox(i){
  return {s,side:i===6?6:4.5,width:i===6?6.2:2.9,length:i===6?3.15:7.4,angle:point(s).h+(i===6?-Math.PI/2:0)};
 }
 const scene=new Y.Scene();scene.background=new Y.Color(0xa9c6d6);scene.fog=new Y.FogExp2(0xc2cfce,.0055);
-const renderer=new Y.WebGLRenderer({canvas:$('world'),antialias:true,powerPreference:'high-performance'});
+const renderer=DrivingRenderer.get($('world'));
 const camera=new Y.PerspectiveCamera(54,1,.1,550);
 const graphics=createDrivingGraphics(renderer,camera);
 new Y.TextureLoader().load('streetscape/sky.jpg',texture=>{

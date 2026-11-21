@@ -86,7 +86,7 @@
     const text = road ? 'Quyết định trên đường' : 'Ôn lý thuyết · ' + (run.index + 1) + '/' + run.ids.length;
     let html = '<div class="q-label">Câu ' + q.id + (critical.has(q.id) ? ' · Điểm liệt' : '') + ' · ' + chapters.find(([a,b]) => q.id >= a && q.id <= b)[2] + '</div>' +
       '<h2 id="quiz-title">' + escape(q.prompt) + '</h2>';
-    if (q.image) html += '<img class="q-image" src="' + escape(q.image) + '" alt="Hình minh họa của câu ' + q.id + '">';
+    if (q.image) html += '<img class="q-image" src="' + escape(q.image) + '" alt="' + escape(q.imageAlt) + '">';
     html += '<div class="q-options">' + q.choices.map((choice,i) =>
       '<button type="button" class="q-option ' + (answered ? i === q.correct ? 'right' : i === chosen ? 'wrong' : '' : '') + '" data-choice="' + i + '" ' + (answered ? 'disabled' : '') + '><b>' + letter(i) + '</b><span>' + escape(choice) + '</span></button>').join('') + '</div>';
     if (answered) html += '<div class="q-feedback" role="status"><strong>' + (matched ? 'Chính xác' : 'Đáp án đúng là ' + letter(q.correct)) + '</strong>' +

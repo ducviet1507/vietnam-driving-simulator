@@ -1061,6 +1061,7 @@ window.VietnamLandmarks=(()=>{
       active=[];
       if(!graph){prepareBuildingSites(null,cx,cz);return;}
       for(const data of entries){
+        if(additions.has(data.id)&&!data.build)continue;
         const {x,z}=graph.point(data.lon,data.lat);if(Math.hypot(x-cx,z-cz)>(data.viewDistance??1050))continue;
         if(!cached.has(data.id)){const mesh=model(T,data.id);finishes.apply(mesh);mesh.userData.height=new T.Box3().setFromObject(mesh).max.y*(data.scale?.[1]||1);scene.add(mesh);cached.set(data.id,mesh);}
         const mesh=cached.get(data.id);mesh.position.set(x-cx,ground(x,z),z-cz);mesh.rotation.y=data.yaw;mesh.visible=true;

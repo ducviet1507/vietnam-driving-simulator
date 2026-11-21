@@ -29,7 +29,8 @@
 
   window.createWorldScene=function(canvas,onBreakfastCall){
     const T=window.THREE,scene=new T.Scene();
-    const renderer=new T.WebGLRenderer({canvas,antialias:true,powerPreference:'high-performance'});
+    const renderer=DrivingRenderer.get(canvas,{powerPreference:'high-performance'});
+    if(!renderer)throw Error('Chưa mở được cảnh lái 3D.');
     const small=matchMedia('(pointer:coarse)').matches;
     renderer.toneMapping=T.ACESFilmicToneMapping;renderer.toneMappingExposure=.98;
     renderer.shadowMap.enabled=true;renderer.shadowMap.type=T.PCFShadowMap;renderer.shadowMap.autoUpdate=false;

@@ -1,0 +1,99 @@
+import assert from 'node:assert/strict';
+import {readFile} from 'node:fs/promises';
+import {createServer} from 'node:http';
+import path from 'node:path';
+import {fileURLToPath} from 'node:url';
+import {chromium} from 'playwright-core';
+
+const client = fileURLToPath(new URL('../../dist/client/', import.meta.url));
+const types = {'.js':'text/javascript', '.mjs':'text/javascript', '.css':'text/css', '.json':'application/json',
+  '.webp':'image/webp', '.jpg':'image/jpeg', '.png':'image/png', '.svg':'image/svg+xml', '.woff2':'font/woff2'};
+async function serveRelease() {
+  const {default:worker} = await import('../../dist/server/index.js');
+  const env = {ASSETS:{async fetch(request) {
+    const file = path.resolve(client, '.' + new URL(request.url).pathname);
+    if (!file.startsWith(path.resolve(client) + path.sep)) return new Response(null,{status:404});
+    try {
+      return new Response(await readFile(file),{headers:{'Content-Type':types[path.extname(file)] || 'application/octet-stream'}});
+    } catch { return new Response(null,{status:404}); }
+  }}};
+  const server = createServer(async (req,res) => {
+    try {
+      const response = await worker.fetch(new Request(new URL(req.url, 'http://localhost'), {headers:req.headers}),env);
+      res.writeHead(response.status,Object.fromEntries(response.headers));
+      res.end(Buffer.from(await response.arrayBuffer()));
+    } catch (error) { res.writeHead(500);res.end(String(error)); }
+  });
+  await new Promise((resolve,reject)=>server.once('error',reject).listen(0,'127.0.0.1',resolve));
+  return server;
+}
+
+const server = process.env.SMOKE_URL ? null : await serveRelease();
+const base = process.env.SMOKE_URL || 'http://127.0.0.1:' + server.address().port;
+async function check(disabled, run) {
+  const browser = await chromium.launch({args:disabled?['--disable-webgl']:['--enable-unsafe-swiftshader']});
+  try {
+    const page = await browser.newPage({viewport:{width:820,height:660}});
+    page.setDefaultTimeout(60000);
+    const errors = [];
+    page.on('pageerror', e=>errors.push(e.message));
+    await page.route('**/*', route=>{
+      const url=new URL(route.request().url());
+      if (url.pathname==='/api/leaderboard/start') return route.fulfill({status:201,json:{runId:'00000000-0000-4000-8000-000000000000'}});
+      if (url.origin!==new URL(base).origin && ['http:','https:'].includes(url.protocol)) return route.abort();
+      return route.continue();
+    });
+    try { await run(page); }
+    catch (error) {
+      console.error(page.url(),errors,await page.locator('#loadStatus').allTextContents());
+      throw error;
+    }
+    assert.deepEqual(errors, []);
+  } finally { await browser.close(); }
+}
+
+try {
+  await check(false, async page=>{
+    const go = p=>page.goto(new URL(p,base).href,{waitUntil:'domcontentloaded'});
+    await go('/?intro=turtle');
+    await page.getByRole('button',{name:'Cầm lái',exact:true}).click();
+    await page.locator('body[data-phase="drive"]').waitFor();
+    await page.locator('#pause').click();
+    await page.locator('#rest[open] #resume').click();
+    assert.equal(await page.locator('#rest').isVisible(),false);
+    await page.locator('#pause').click();
+    assert.equal(await page.locator('#rest').isVisible(),true);
+    console.log('PASS Xuyên Việt starts, pauses and resumes');
+
+    await go('/cup');
+    await page.locator('#launch').click();
+    await page.locator('body[data-phase="drive"]').waitFor();
+    console.log('PASS Cúp Bánh Mì reaches the track');
+
+    await go('/theory-exam');
+    await page.locator('#begin').click();
+    await page.locator('#choices button').first().click();
+    assert.match(await page.locator('#progress').innerText(),/^1\/30/);
+    await page.locator('#submit').click();
+    await page.locator('#send').click();
+    assert.match(await page.locator('#result').innerText(),/\d+\/30/);
+    const images = await page.evaluate(()=>window.driveBank.filter(q=>q.image).map(q=>q.imageAlt));
+    assert.equal(images.length,318);
+    assert.ok(images.every(description=>typeof description==='string'&&description.length>15));
+    console.log('PASS theory exam answers, grades and includes 318 image descriptions');
+  });
+  await check(true, async page=>{
+    for (const route of ['/cup','/yard','/road-exam','/streets','/?intro=turtle']) {
+      await page.goto(new URL(route,base).href,{waitUntil:'domcontentloaded'});
+      if (route.startsWith('/?')) await page.getByRole('button',{name:'Cầm lái',exact:true}).click();
+      const theory = page.locator('#graphicsUnavailable[open]').getByRole('link',{name:'Ôn lý thuyết'});
+      await theory.waitFor();
+      await theory.click();
+      await page.locator('#begin').click();
+      await page.locator('#choices button').first().waitFor();
+    }
+    console.log('PASS all five 3D modes reach an interactive exam without WebGL');
+  });
+} finally {
+  if(server)await new Promise(resolve=>server.close(resolve));
+}

@@ -5,7 +5,7 @@
   const scene = new T.Scene();
   const impactFX = window.createImpactEffects(scene, canvas);
   scene.fog = new T.FogExp2(0xf1cfac, 0.0061);
-  const renderer = new T.WebGLRenderer({canvas, antialias:true, alpha:false, powerPreference:'high-performance'});
+  const renderer = DrivingRenderer.get(canvas);
   const camera = new T.PerspectiveCamera(48, 1, 0.12, 600);
   scene.add(new T.HemisphereLight(0xe2ecff, 0x958779, 1.56));
   const sun = new T.DirectionalLight(0xffce8a, 2.55);

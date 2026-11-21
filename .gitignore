@@ -5,3 +5,4 @@
 /dist/server/
 /dist/.openai/
 /.wrangler/
+/tools/smoke/node_modules/

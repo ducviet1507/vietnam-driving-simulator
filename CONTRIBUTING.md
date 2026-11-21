@@ -13,6 +13,8 @@ Các trang chơi và tài nguyên nằm trong `dist/`. Có thể sửa tại đ�
 
 ## Tạo bản phát hành
 
+Mỗi pull request chạy thử bản phát hành trên Chromium: cầm lái, tạm dừng và lái tiếp, xuất phát ở Cúp Bánh Mì, nộp bài lý thuyết và mở bài lý thuyết từ các màn 3D khi WebGL không khả dụng. Để chạy cùng bộ kiểm tra trên máy, build commit cần thử bằng lệnh bên dưới, sau đó vào `tools/smoke/` và chạy `npm ci`, `npx playwright-core install chromium` rồi `npm test`.
+
 Sau khi checkout commit cần phát hành vào thư mục sạch, chạy lệnh sau ở thư mục gốc. Bước này cần Node.js, Git và `tar`.
 
 ```sh

@@ -1,4 +1,5 @@
 import {bundleJourneyScripts} from "./bundle-journey.mjs";
+import {packJourneyData} from "./pack-journey-data.mjs";
 import {packRoadAssets} from "./pack-road-assets.mjs";
 import {prepareSightSurfaces} from "./prepare-sight-surfaces.mjs";
 import {preparePageUrls} from "./page-urls.mjs";
@@ -22,6 +23,7 @@ const results = await Promise.all([once(archive,"close"),once(unpack,"close"),pi
 if(results[0][0]!==0||results[1][0]!==0) throw new Error("Could not export the game assets.");
 await Promise.all([packRoadAssets(client),prepareSightSurfaces(client)]);
 const pagePaths = await preparePageUrls(client);
+await packJourneyData(client);
 await bundleJourneyScripts(client);
 // Sites normalizes public .html assets with a 307 before invoking the Worker.
 // Keep the document bytes in the asset store and let the Worker own page URLs.

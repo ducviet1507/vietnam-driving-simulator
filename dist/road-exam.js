@@ -79,7 +79,7 @@ function roadCoordinates(x,z,near){
   }
   return {d,offset};
 }
-const scene=new T.Scene(), renderer=new T.WebGLRenderer({canvas:$('world'),antialias:true});
+const scene=new T.Scene(), renderer=DrivingRenderer.get($('world'));
 scene.background=new T.Color(0xbcd7de);scene.fog=new T.FogExp2(0xc8dbd4,.00205);
 if(!featuredPass)new T.TextureLoader().load('streetscape/sky.jpg',tex=>{tex.mapping=T.EquirectangularReflectionMapping;tex.colorSpace=T.SRGBColorSpace;scene.background=tex;if(!scene.environment)scene.environment=tex;});
 if(arcade)new T.TextureLoader().load('streetscape/'+(route.stage?'pass':route.id)+'-reflection.jpg',tex=>{

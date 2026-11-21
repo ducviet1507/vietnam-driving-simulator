@@ -1,0 +1,21 @@
+name: Build and play ViVu3D
+on:
+  pull_request:
+  push:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - run: node tools/build-site.mjs
+      - run: npm ci && npx --no-install playwright-core install --with-deps chromium
+        working-directory: tools/smoke
+      - run: npm test
+        working-directory: tools/smoke

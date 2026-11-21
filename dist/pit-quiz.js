@@ -12,19 +12,31 @@ window.createPitQuiz=function(dialog,onWrong,onReady){
   }
   $('#repair').onclick=()=>{dialog.close();onReady();};
   dialog.oncancel=e=>e.preventDefault();
-  return function show(kind){
-    const q=draw(),img=$('#pitImage');
+  return async function show(kind){
     $('#remark').textContent=kind==='water'?'Chú Tư kéo xe lên bờ rồi!':kind==='car'?'Cản sau đâu phải nút bấm còi!':kind==='curve'?'Cua trái, cản trước đi thẳng.':kind==='downhill'?'Đổ đèo, đừng đổ phụ tùng!':'Lề đường vừa xin chữ ký.';
+    const choices=$('#choices'),img=$('#pitImage');
+    choices.replaceChildren();img.hidden=true;$('#repair').hidden=true;
+    $('#reply').textContent='';$('#prompt').textContent='Đang tải câu hỏi…';
+    if(!dialog.open)dialog.showModal();
+    if(!window.driveBank){
+      try{await import('./bank.js');}
+      catch{
+        $('#prompt').textContent='Chưa tải được câu hỏi. Hãy kiểm tra kết nối rồi thử lại.';
+        const retry=document.createElement('button');retry.textContent='Thử tải lại';
+        retry.onclick=()=>show(kind);choices.append(retry);return;
+      }
+    }
+    const q=draw();
     $('#prompt').textContent=q.prompt;img.hidden=!q.image;
-    if(q.image){img.src=q.image;img.alt='Hình minh họa câu '+q.id;}else img.removeAttribute('src');
+    img.alt=q.imageAlt||'';
+    if(q.image)img.src=q.image;else img.removeAttribute('src');
     $('#reply').textContent='Chú Tư đang mở nắp ca-pô. Trả lời câu này để chú ráp xe.';
-    const choices=$('#choices');choices.replaceChildren();$('#repair').hidden=true;
     q.choices.forEach((text,i)=>{
       const b=document.createElement('button');b.textContent=text;b.onclick=()=>{
         if(i!==q.correct){b.disabled=true;$('#reply').textContent=onWrong();return;}
         for(const item of choices.children)item.disabled=true;
         $('#reply').textContent='Chuẩn bài! Cản trước đã về với chính chủ.';$('#repair').hidden=false;$('#repair').focus();
       };choices.append(b);
-    });dialog.showModal();
+    });
   };
 };

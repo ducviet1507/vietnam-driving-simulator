@@ -76,7 +76,8 @@
     }
     $('counter').textContent='CÂU '+String(state.index+1).padStart(2,'0')+' / 30'+(done?' · NGÂN HÀNG #'+q.id+(critical.has(q.id)?' · ĐIỂM LIỆT':''):'');
     $('prompt').textContent=q.prompt; const image=$('diagram'); image.hidden=!q.image;
-    if(q.image){image.src=q.image;image.alt='Hình minh họa câu '+(state.index+1);}else image.removeAttribute('src');
+    image.alt=q.imageAlt||'';
+    if(q.image)image.src=q.image;else image.removeAttribute('src');
     $('choices').replaceChildren(...q.choices.map((text,i)=>{
       const button=document.createElement('button'),letter=document.createElement('b'),body=document.createElement('span');
       letter.textContent=String.fromCharCode(65+i);body.textContent=text;button.append(letter,body);

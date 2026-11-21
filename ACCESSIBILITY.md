@@ -13,7 +13,7 @@ ViVu3D ưu tiên điều hướng bằng bàn phím, nhãn rõ ràng cho nút v�
 ## Rào cản đã biết
 
 - Cảnh 3D, bản đồ và vị trí xe hiển thị trên canvas. Trình đọc màn hình hiện chưa có thông tin tương đương về đường, vị trí xe và vật cản trong lúc lái.
-- Một số câu hỏi sát hạch phụ thuộc vào hình minh họa. Chưa có mô tả văn bản đầy đủ cho mọi chi tiết cần để trả lời.
+- Cả 318 câu có hình đều có mô tả tiếng Việt cho trình đọc màn hình. Mô tả ghi ký hiệu, số thứ tự và vị trí tương đối của xe, biển hoặc vạch đường. Khi báo thiếu chi tiết, hãy gửi kèm số câu trong ngân hàng.
 
 ## Báo rào cản
 
