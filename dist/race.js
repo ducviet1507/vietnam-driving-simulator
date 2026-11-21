@@ -19,6 +19,7 @@ carMenu.value=chosenCar;
 carMenu.onchange=()=>{try{localStorage.setItem('taylai.garage',carMenu.value);}catch{} location.reload();};
 const coupeAssets=new Map();
 const animatedCars=[];
+const cupFx=createDrivingFX(T,scene,renderer);
 async function fitCoupe(parent,paint,isPlayer,name,driver){
  if(!coupeAssets.has(name))coupeAssets.set(name,TrafficModels.load.loadAsync('streetscape/'+name+'.glb'));
  const {scene:template}=await coupeAssets.get(name),model=template.clone(true);
@@ -38,11 +39,11 @@ async function fitCoupe(parent,paint,isPlayer,name,driver){
  });
  model.rotation.y=Math.PI;
  parent.add(model);
+ if(isPlayer)cupFx.mountExhaust(model,chosenCar);
  animatedCars.push({model,isPlayer,driver,wheels:['FL','FR','RL','RR'].map(id=>model.getObjectByName('wheel_'+id)),front:['FL','FR'].map(id=>model.getObjectByName('steer_'+id)),rear:finish.get('light_rear')});
 }
 fitCoupe(outer,0xcb331e,true,raceModels[chosenCar],null).then(()=>outer.remove(fallback)).catch(()=>loadSedan().catch(()=>{}));
 const cupBody={model:chosenCar};
-const cupFx=createDrivingFX(T,scene,renderer);
 let crashTime=0,crashKind='';
 const rivals = [
   {name:'Bảy Bánh Mì',lane:-3.4,grid:16,pace:.99,cornerGrip:12,model:'gt',takesRamp:true,color:0xcaa14c},
@@ -315,10 +316,10 @@ function raceCamera(dt,now){
    camera.position.copy(eye);camera.lookAt(look);
  }
 
- const desired=inside?64:state.mode==='grid'?47:57+Math.abs(state.v)*.29+(driving&&cupBody.boost?5:0);
+ const desired=(inside?64:state.mode==='grid'?47:57+Math.abs(state.v)*.29)+cupFx.boostFov(driving&&cupBody.boost,inside);
  if(Math.abs(camera.fov-desired)>.05){camera.fov+=(desired-camera.fov)*(1-Math.exp(-dt*5));camera.updateProjectionMatrix();}
  cupBody.y=height(state.d)+state.lift;cupBody.driving=driving&&!state.airborne;
- cupFx.update(cupBody,state.mode==='paused'?0:dt,0,0,inside,camera);
+ cupFx.update(cupBody,state.mode==='paused'?0:dt,0,0,inside,camera,courseWeather.rainfall);
 }
 function pauseRace(){
  if(!['drive','countdown'].includes(state.mode))return;

@@ -1132,6 +1132,7 @@
         player.request();player.root.visible=true;
       }
       pose(player,car,dt,true);player.outside.visible=!inside;
+      driveFx.mountExhaust(player.detail?.children[0],kind);
       player.shadow.visible=!car.flood;for(const shadow of player.axleShadows)shadow.visible=!car.flood;
       player.outside.rotation.set(-(car.pitch||0),0,-(car.roll||0));
       car.y=player.root.position.y-.011;playerRig.position.copy(player.root.position);
@@ -1213,7 +1214,7 @@
       // Fit the facade on a narrow screen without backing the eye into a tree.
       const fixedView=car.sightView?.data.viewRadius;
       const fov=fixedView?T.MathUtils.radToDeg(2*Math.atan(Math.tan(T.MathUtils.degToRad(57/2))/Math.min(1,camera.aspect))):
-        (inside?64:car.openingPose?57+Math.min(15,speed*.28)-9*car.openingPose:car.showroom?47:57+Math.min(15,speed*.28))+(car.boost?5:0);
+        (inside?64:car.openingPose?57+Math.min(15,speed*.28)-9*car.openingPose:car.showroom?47:57+Math.min(15,speed*.28))+driveFx.boostFov(car.driving&&car.boost,inside);
       if(Math.abs(fov-camera.fov)>.05){
         camera.fov=car.showroom||car.sightView?.data.views?fov:camera.fov+(fov-camera.fov)*(1-Math.exp(-dt*7));
         camera.updateProjectionMatrix();
@@ -1249,7 +1250,7 @@
       }
       if(car.showroom&&player.modelReady)cabin?.prepare(renderer,scene,camera);
       if(inside&&cabin)cabin.reflect(mirrorAdapter,scene,playerRig,0,0,graphics.profile.mirrorMs);
-      roadsideImpact.update(dt);driveFx.update(car,dt,originX,originZ,inside,camera);
+      roadsideImpact.update(dt);driveFx.update(car,dt,originX,originZ,inside,camera,atmosphere.wetness.value);
       landmarks?.weather(weather.rainfall);
       const waterLevel=graphics.profile.waterWidth?nearbyWaterLevel(viewpoint.x-originX,viewpoint.z-originZ):null;
       const wetRoad=atmosphere.wetness.value>.12&&!car.sightView&&!car.flood;

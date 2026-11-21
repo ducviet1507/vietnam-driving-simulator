@@ -8,7 +8,7 @@ window.createDrivingFX = function (T, scene, renderer) {
   root.name = 'Driving feedback';
   scene.add(root);
   let ox = 0, oz = 0, clock = 0, boostLevel = 0, kick = 0, kickX = 0, kickZ = 0;
-  let smokeFraction = 0, skidDistance = 0, lastCar = null;
+  let smokeFraction = 0, sprayFraction = 0, skidDistance = 0, lastCar = null;
   const temp = new T.Object3D();
 
   // Cross-section narrows downstream, with a little turbulence in the outer edge.
@@ -31,16 +31,34 @@ window.createDrivingFX = function (T, scene, renderer) {
     fragmentShader:'varying vec2 vUv;uniform float time,power;void main(){float v=vUv.y;float pulse=.5+.5*cos(v*30.-time*43.);vec3 c=mix(vec3(.72,1.,1.),vec3(.09,.64,1.),smoothstep(.01,.38,v));c=mix(c,vec3(.57,.23,1.),smoothstep(.40,.91,v));float a=(1.-v)*(.76+.22*pulse)*power;gl_FragColor=vec4(c*(1.1+.45*pulse),a);}',
     transparent:true,side:T.DoubleSide,depthWrite:false,toneMapped:false
   });
-  const jets = [-1,1].map(() => {
-    const m = new T.Mesh(flameGeometry,flameMaterial);root.add(m);return m;
-  });
+  // Outlets in the authored model's local metres, with its nose pointing +Z.
+  const outlets={
+    supercar:{x:0,y:.32,z:-2.35,width:2.35,height:.78},
+    gt:{x:-.42,y:.249,z:-2.24,width:.48,height:.48},
+    rally:{x:-.50,y:.28,z:-2.02,width:.70,height:.70}
+  };
+  const exhaust=new T.Group(),jet=new T.Mesh(flameGeometry,flameMaterial);
+  jet.rotation.y=Math.PI;exhaust.add(jet);
   const glow = new T.Mesh(new T.PlaneGeometry(1,1),new T.ShaderMaterial({
     uniforms:{power:{value:0}},
     vertexShader:'varying vec2 vUv;void main(){vUv=uv;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}',
     fragmentShader:'varying vec2 vUv;uniform float power;void main(){float r=length((vUv-.5)*2.);gl_FragColor=vec4(.08,.46,1.,power*.4*(1.-smoothstep(.0,1.,r)));}',
     transparent:true,depthWrite:false,blending:T.AdditiveBlending,toneMapped:false
   }));
-  glow.rotation.x=-Math.PI/2;glow.scale.set(2.6,2.2,1);root.add(glow);
+  glow.rotation.x=-Math.PI/2;glow.scale.set(1.35,1.65,1);exhaust.add(glow);
+  function mountExhaust(model,kind){
+    const outlet=outlets[kind],parent=outlet?model:null;
+    if(exhaust.parent===(parent??null))return;
+    exhaust.removeFromParent();
+    if(!parent)return;
+    jet.position.set(outlet.x,outlet.y,outlet.z);
+    jet.scale.set(outlet.width,outlet.height,1);
+    glow.position.set(outlet.x,.06,outlet.z-.48);
+    parent.add(exhaust);
+  }
+  function boostFov(active,inside){
+    return active&&!reduced.matches?(inside?2:5):0;
+  }
 
   const smokeCapacity=96, smoke=Array.from({length:smokeCapacity},()=>({life:0}));
   let smokeIndex=0;
@@ -101,7 +119,7 @@ window.createDrivingFX = function (T, scene, renderer) {
   function mark(ax,ay,az,bx,by,bz,strength){
     const i=markIndex++%markCount;
     marks[i]={ax,ay,az,bx,by,bz,w:.112};writeMark(i);
-    marksBorn.fill(clock,i*6,i*6+6);marksLevel.fill(.24+.43*strength,i*6,i*6+6);
+    marksBorn.fill(clock,i*6,i*6+6);marksLevel.fill(.67*strength,i*6,i*6+6);
     for(const key of ['position','born','strength'])markGeo.attributes[key].needsUpdate=true;
   }
 
@@ -160,11 +178,11 @@ window.createDrivingFX = function (T, scene, renderer) {
   function reset(){
     for(const pool of [smoke,sparks,chips])for(const p of pool)p.life=0;
     marks.fill(null);marksBorn.fill(-100);markGeo.attributes.born.needsUpdate=true;
-    kick=boostLevel=flow=smokeFraction=skidDistance=0;lastCar=previousAxle=null;root.visible=false;
+    kick=boostLevel=flow=smokeFraction=sprayFraction=skidDistance=0;lastCar=previousAxle=null;root.visible=exhaust.visible=false;
   }
-  function update(car,dt,originX=0,originZ=0,inside=false,camera){
+  function update(car,dt,originX=0,originZ=0,inside=false,camera,wetness=0){
     dt=clamp(dt||0,0,.1);clock+=dt;
-    const driving=car.driving!==false&&!car.showroom&&!car.wading;
+    const driving=car.driving!==false&&!car.showroom&&!car.wading&&!car.flood;
     if(originX!==ox||originZ!==oz){
       ox=originX;oz=originZ;
       for(let i=0;i<markCount;i++)if(marks[i]&&clock-marksBorn[i*6]<24)writeMark(i);
@@ -172,37 +190,47 @@ window.createDrivingFX = function (T, scene, renderer) {
     }
     root.visible=true;const s=Math.sin(car.yaw),c=Math.cos(car.yaw),y=car.y||0,x=car.x,z=car.z;
     const speed=Math.abs(car.speed||0),slip=clamp(car.slip||0,0,1);
-    const level=driving?Math.max(slip,car.brake?clamp((speed-7)/16,0,1)*.85:0):0;
-    const dirty=driving&&car.offroad&&speed>2;
-    boostLevel+=((driving&&car.boost?1:0)-boostLevel)*(1-Math.exp(-dt*18));
-    const tail=car.model==='rally'?1.96:2.21, spread=car.model==='supercar'?.31:.66;
-    const ex=x-s*tail,ez=z+c*tail;
-    jets.forEach((m,i)=>{
-      const side=(i?1:-1)*spread;m.visible=boostLevel>.045&&!inside;
-      if(m.visible){m.position.set(ex+c*side-ox,y+.32,ez+s*side-oz);m.rotation.y=-car.yaw;}
-    });
-    flameMaterial.uniforms.time.value=clock;flameMaterial.uniforms.power.value=boostLevel;
-    glow.visible=boostLevel>.045;glow.position.set(ex-s*.55-ox,y+.046,ez+c*.55-oz);glow.rotation.z=car.yaw;glow.material.uniforms.power.value=boostLevel;
+    const rolling=driving&&speed>2,wet=clamp(wetness,0,1);
+    const skid=rolling&&!car.offroad?clamp((slip-.22)/.62,0,1):0;
+    const dry=1-wet,dust=rolling&&car.offroad;
+    const boostTarget=driving&&car.boost?1:0;
+    boostLevel+=(boostTarget-boostLevel)*(1-Math.exp(-dt*(boostTarget?12:8)));
+    exhaust.visible=driving&&boostLevel>.045&&!inside;
+    flameMaterial.uniforms.time.value=reduced.matches?0:clock;
+    flameMaterial.uniforms.power.value=boostLevel;
+    glow.material.uniforms.power.value=boostLevel;
     const ax=x-s*1.35,az=z+c*1.35;
     const travel=lastCar?Math.hypot(lastCar.x-x,lastCar.z-z):0;
-    if(travel>7||!driving||dt===0)previousAxle=null;
-    const rear={x:ax,y,z:az,s,c};
-    if(driving&&dt>0&&speed>2&&(level>.23||dirty)){
-      const skew=dirty?.35:level;
-      if(previousAxle&&!dirty){
-        skidDistance+=travel;
-        if(skidDistance>=.28&&skidDistance<7){
-          for(const side of [-.78,.78])mark(previousAxle.x+previousAxle.c*side,previousAxle.y,previousAxle.z+previousAxle.s*side,ax+c*side,y,az+s*side,skew);
-          previousAxle=rear;skidDistance=0;
+    if(travel>7||dt===0){previousAxle=null;skidDistance=0;}
+    const rubber=skid*dry;
+    if(rubber>.05&&dt>0){
+      if(previousAxle)skidDistance+=travel;
+      if(!previousAxle||skidDistance>=.28){
+        if(previousAxle)for(const side of [-.78,.78]){
+          mark(previousAxle.x+previousAxle.c*side,previousAxle.y,previousAxle.z+previousAxle.s*side,ax+c*side,y,az+s*side,rubber);
         }
-      }else{previousAxle=rear;skidDistance=0;}
-      smokeFraction+=dt*(dirty?Math.min(22,speed*1.3):5+skew*22);
-      while(smokeFraction>=1){
-        const side=Math.random()>.5?.78:-.78;
-        puff(ax+c*side,y+.13,az+s*side,s*speed*.09+(Math.random()-.5)*.6,.4+Math.random()*.68,-c*speed*.09,.24+skew*.21,dirty?1.1:.88,dirty?[.64,.53,.38]:[.74,.76,.78],dirty?.44:.22+skew*.28);
-        smokeFraction--;
+        previousAxle={x:ax,y,z:az,s,c};skidDistance=0;
       }
-    }else{previousAxle=null;skidDistance=0;smokeFraction=0;}
+    }else{previousAxle=null;skidDistance=0;}
+    const smokeRate=(dust?Math.min(22,speed*1.3):24*skid)*dry*dry;
+    smokeFraction=smokeRate?smokeFraction+dt*smokeRate:0;
+    while(smokeFraction>=1){
+      const side=Math.random()>.5?.78:-.78;
+      const size=dust?.32:.24+skid*.21,alpha=dry*(dust?.44:.22+skid*.28);
+      puff(ax+c*side,y+.13,az+s*side,s*car.speed*.09+(Math.random()-.5)*.6,.4+Math.random()*.68,-c*car.speed*.09,
+        size,dust?1.1:.88,dust?[.64,.53,.38]:[.74,.76,.78],alpha);
+      smokeFraction--;
+    }
+    // Pairs of short, low fans let both wheel tracks read even in light rain.
+    const spray=rolling&&!car.offroad?wet*clamp((speed-2)/20,0,1):0;
+    sprayFraction=spray?sprayFraction+dt*spray*22:0;
+    while(sprayFraction>=1){
+      for(const wheel of [-1,1]){
+        const side=wheel*.78,out=wheel*(.55+spray+Math.random()*.45),back=car.speed*.17;
+        puff(ax+c*side,y+.09,az+s*side,c*out-s*back,.23+spray*.48,s*out+c*back,.16+spray*.11,.32+spray*.20,[.68,.78,.84],.25+spray*.20);
+      }
+      sprayFraction--;
+    }
     lastCar={x,y,z};
     let count=0;
     for(let i=0;i<smokeCapacity;i++){
@@ -236,7 +264,7 @@ window.createDrivingFX = function (T, scene, renderer) {
     }
     chipMesh.visible=chipDraw;if(chipDraw)chipMesh.instanceMatrix.needsUpdate=true;
     markMat.uniforms.now.value=clock;
-    const wind=driving&&!reduced.matches?Math.max(boostLevel*.85,clamp((speed-28)/28,0,.5)):0;
+    const wind=driving&&!reduced.matches?Math.max(boostLevel*.85*clamp(speed/16,0,1),clamp((speed-28)/28,0,.5)):0;
     air.visible=wind>.08;
     if(air.visible){
       flow=(flow+speed*dt)%21;
@@ -254,5 +282,5 @@ window.createDrivingFX = function (T, scene, renderer) {
     kick*=Math.exp(-dt*8);
   }
   reset();
-  return {update,impact,scrape,reset};
+  return {update,impact,scrape,reset,mountExhaust,boostFov};
 };

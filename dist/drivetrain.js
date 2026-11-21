@@ -116,7 +116,8 @@ window.DriveBody={
    const lateral=(side-Math.sin(yawRate*dt)*forward)*Math.exp(-dt*grip*(c.brake?.65:1));
    c.vx=sin*next+cos*lateral;c.vz=-cos*next+sin*lateral;c.speed=next;
    c.x+=c.vx*dt;c.z+=c.vz*dt;
-   c.slip=Math.min(1,Math.abs(lateral)*.19+(c.brake?Math.abs(next)*.012:0));
+   // Scrub follows sideways tyre motion. Braking already reduces grip above.
+   c.slip=Math.min(1,Math.abs(lateral)*.19);
  },
  // Separating-axis contact between two oriented car footprints.
  contact(c,other,halfWidth=.91,halfLength=1.98){
