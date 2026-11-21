@@ -110,6 +110,7 @@ async function startAt(place,restore=null,guided=null){
  document.body.removeAttribute('data-awaiting-motion');
  document.body.toggleAttribute('data-lakeside',firstDrive);
  const site=place[3]||destinations.find(entry=>restore?.destination===entry.id)||catalogStop(restore?.destination);
+ if(site)useSightEntrance(site);
  car.scenicHour=scenicPasses.has(site?.id)?scenicHour():null;
  const departure=restore?null:JourneyDepartures.byId(site?.id);
  JourneyDepartures.select(departure);
@@ -959,7 +960,19 @@ function catalogStop(id){
  const key=VietnamTourism.aliases?.[id]||id;
  return legacyDestinations.get(id)||modeledStops.get(key)||catalogById.get(key);
 }
-const tourPlace=site=>[site.km?site.name:site.name+' · '+site.city,...site.start,site];
+function useSightEntrance(site){
+ if(site.accessRoad)return;
+ const stop=site.stops?.[0]||site,arrival=indexData?.sightAccess?.stops[stop.catalogId||stop.id];
+ if(!arrival)return;
+ const [edge,x,y,dx,dy]=arrival,lon=x/1e5,lat=y/1e5,cos=Math.cos(lat*Math.PI/180);
+ site.start=[lon,lat];site.accessRoad=edge;
+ site.approachMeters=Math.hypot((site.lon-lon)*111320*cos,(site.lat-lat)*110900);
+ site.bearing=Math.atan2(dx*cos,dy)*180/Math.PI;
+}
+function tourPlace(site){
+ useSightEntrance(site);
+ return [site.km?site.name:site.name+' · '+site.city,...site.start,site];
+}
 function featuredDeparture(departure){
  return departure.id==='tam-chuc'?openingPlace:tourPlace(models.find(site=>site.id===departure.id));
 }
@@ -1190,16 +1203,6 @@ async function fetchJSON(path){const r=await fetch(path);if(!r.ok)throw Error('C
  try{
    const [roadIndex,trafficIndex]=await Promise.all([fetchJSON('vn-roads/index.json'),fetchJSON('vn-traffic/index.json').catch(()=>null)]);
    indexData=roadIndex;
-   const access=roadIndex.sightAccess;
-   if(access)for(const site of [...destinations,...tamChucParts]){
-     const stop=site.stops?.[0]||site;
-     const arrival=access.stops[stop.catalogId||stop.id];
-     if(!arrival)continue;
-     const [edge,x,y,dx,dy]=arrival,lon=x/1e5,lat=y/1e5,cos=Math.cos(lat*Math.PI/180);
-     site.start=[lon,lat];site.accessRoad=edge;
-     site.approachMeters=Math.hypot((site.lon-lon)*111320*cos,(site.lat-lat)*110900);
-     site.bearing=Math.atan2(dx*cos,dy)*180/Math.PI;
-   }
    if(trafficIndex?.graphSourceSha256===roadIndex.sourceSha256&&trafficIndex.osmTimestamp===roadIndex.osmTimestamp)indexData.trafficTiles=trafficIndex.tiles;
    $('coverage').textContent=indexData.roadKm.toLocaleString('vi-VN')+' km đường · Dữ liệu '+new Date(indexData.osmTimestamp).toLocaleDateString('vi-VN');
    $('openingAtlas').disabled=false;$('openMap').disabled=false;$('travel').disabled=false;
