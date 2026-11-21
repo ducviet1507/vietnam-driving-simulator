@@ -436,3 +436,7 @@ https://tgpsaigon.net/bai-viet/vuong-cung-thanh-duong-duc-ba-sai-gon-37259
 Mở rộng cụm địa danh Nghệ An (15 công trình mới) — Quảng trường Hồ Chí Minh (TP. Vinh), Bảo tàng Xô Viết Nghệ Tĩnh, Cửa Tả và Cửa Hữu Thành cổ Vinh, Đền thờ Hoàng đế Quang Trung, Chùa Đại Tuệ, Khu lăng mộ Bà Hoàng Thị Loan, Quê ngoại Hoàng Trù, Đền Cờn, Cầu Cửa Hội, Cầu Bến Thủy, Nhà thờ chính tòa Xã Đoài, Đình Trung Cần, Khu di tích Truông Bồn và Bảo tàng Quân khu 4. Tọa độ OpenStreetMap (ODbL 1.0); mô hình 3D dựng thủ tục bằng Three.js.
 https://www.openstreetmap.org/copyright
 https://dulichnghean.gov.vn/
+
+Cụm địa danh Thanh Hóa (7 công trình mới) — Cầu Hàm Rồng, Chính điện Lam Kinh, Đền Bà Triệu, Đền Độc Cước Sầm Sơn, Hòn Trống Mái Sầm Sơn, Tượng đài Lê Lợi và Thái Miếu nhà Hậu Lê. Tọa độ OpenStreetMap (ODbL 1.0); mô hình 3D dựng thủ tục bằng Three.js.
+https://www.openstreetmap.org/copyright
+https://dsvh.gov.vn/
