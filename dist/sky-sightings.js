@@ -121,7 +121,7 @@ function createSkySightings(T, scene, random = Math.random, ground = () => 0) {
     const bearing = car.yaw + (.025 + random()*.09)*Math.min(1,aspect);
     const x = car.x+range*Math.sin(bearing), z = car.z-range*Math.cos(bearing);
     const ridge = Math.max(car.y,ground(x,z),ground((car.x+x)/2,(car.z+z)/2));
-    flight = {kind:'shen-long', age:0, waiting:0, x,z, range, yaw:bearing, altitude:ridge+range*.235};
+    flight = {kind:'shen-long', age:0, waiting:0, x,z, range, yaw:bearing, altitude:ridge+range*.305};
     dragonMap ??= new T.TextureLoader().load('sky-shen-long.webp', undefined, undefined, () => {
       dragonMap.dispose(); dragonMap=null;
     });

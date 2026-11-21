@@ -47,7 +47,7 @@ function createShenLong(T, scene, dragonMap) {
       g.beginPath(); g.arc(x-.8,y-1,1.3,0,2*Math.PI); g.fillStyle='#fff4ab'; g.fill();
     }
   }));
-  recipient.scale.set(20,20,1); recipient.position.set(66,-26,.4); recipient.renderOrder=3;
+  recipient.scale.set(20,20,1); recipient.position.set(66,-20,.4); recipient.renderOrder=3;
   const dragon = plane(dragonMap);
   dragon.scale.set(106,106*608/553,1); dragon.renderOrder=1;
   const aura = plane(glow,true);
@@ -56,7 +56,7 @@ function createShenLong(T, scene, dragonMap) {
   ray.renderOrder=2; spark.renderOrder=4; blessing.renderOrder=2;
   // The mouth is at (0.764, 0.416) measured from the top left of the dragon texture.
   const mouthX=(.764-.5)*dragon.scale.x, mouthY=(.5-.416)*dragon.scale.y;
-  const handX=70, handY=-18;
+  const handX=70, handY=-12;
   const smooth = T.MathUtils.smoothstep;
   return {
     hide() { root.visible=false; },

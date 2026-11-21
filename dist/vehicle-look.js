@@ -2,13 +2,13 @@
 
 function createVehicleLook(button, canvas, canLook) {
   const view = {yaw:0, pitch:0};
-  let pointer = null, armed = false, idleUntil = 0, usedCanvas = false;
+  let pointer = null, armed = false, idle = 0, usedCanvas = false;
   const arrows = new Set();
   function arm(value) {
     armed = value;
     button.setAttribute('aria-pressed', String(value));
     canvas.classList.toggle('looking', value);
-    idleUntil = performance.now() + 3500;
+    idle = 5;
   }
   function end() {
     const contact = pointer;
@@ -74,7 +74,7 @@ function createVehicleLook(button, canvas, canLook) {
         view.yaw = Math.max(-Math.PI, Math.min(Math.PI, view.yaw + dt * 2.3 * horizontal));
         view.pitch = Math.max(-.75, Math.min(1.25, view.pitch + dt * 1.6 * vertical));
       } else if (!pointer) {
-        if (armed && performance.now() > idleUntil) end();
+        if (armed && (idle -= dt) <= 0) end();
         const decay = Math.exp(-dt * 9);
         view.yaw = Math.abs(view.yaw) < .001 ? 0 : view.yaw * decay;
         view.pitch = Math.abs(view.pitch) < .001 ? 0 : view.pitch * decay;
