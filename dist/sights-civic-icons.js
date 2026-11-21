@@ -101,10 +101,11 @@
     wavingFlag(6.5,4.33,2.0,24.72,73.5);
   }
 
-  function cathedral(T,{group,box,stamp,tapered,outline}){
+  function cathedral(T,{palette, group,box,stamp,tapered,outline}){
     const brick=masonry(T,group,false),b=brick.block;
     const red=0xb66b4b,redShadow=0x99583e,sand=0xc6a485,pale=0xd9c1a4,glass=0x524c43,roof=0xa15c46;
     const front=38.70,tx=[-8.0,10.40],mid=1.20;
+    palette({glass});
     function lid(x,z,width,depth,eave,ridge,colour=roof){
       const w=width/2,d=depth/2;
       brick.face([x-w,eave,z+d],[x,eave+ridge,z+d],[x,eave+ridge,z-d],[x-w,eave,z-d],colour);

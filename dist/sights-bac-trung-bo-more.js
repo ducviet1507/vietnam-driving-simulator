@@ -50,8 +50,22 @@
   // 4. Tượng đài Xô Viết Nghệ Tĩnh (Ngã ba Nghèn, Can Lộc)
   function tuongDaiXoVietCanLoc(T, kit) {
     A.memorialMonument(T, kit, {
-      plazaW: 25, plazaD: 19, h: 17, style: 'statue', backdrop: true,
-      stone: 0xcac3b6, darkStone: 0x746f68, bronze: 0x6a553d, accent: 0xb23225,
+      plazaW: 25, plazaD: 19, style: 'statue', flags: false, wings: false,
+      stone: 0x92938b, darkStone: 0x666860,
+      sculpt(T, kit, base) {
+        const slate = 0x92958d;
+        kit.palette({stone:[slate,0x9b9d94,0xa0a297,0x82867e,0x9b9e92]});
+        // The Nghèn group rises against a tall, cantilevered stone banner.
+        // Recessing successive planes makes the folds readable from either side.
+        kit.outline([[-3,0],[-3,5.3],[-4.1,6.3],[-4.35,10.2],[-3.4,9.7],[-2.1,10.1],[-2.2,12.2],
+          [1.35,12.8],[1.52,12.2],[4.4,13.8],[3.22,10.0],[3.08,8.9],[1.92,8.55],[-.45,6.7],[.65,6.4],[2.8,7.4],
+          [2.5,6.5],[.85,5.6],[.7,0]],slate,0,base,-2.8,1.05);
+        kit.outline([[-2.05,10.08],[-2.12,12.08],[1.29,12.65],[1.39,11.95],[.45,10.6]],0x9b9d94,0,base,-1.81,.21);
+        kit.outline([[-.43,7.55],[1.47,12.06],[4.27,13.65],[3.05,9.05],[1.91,8.7]],0xa0a297,0,base,-1.82,.32);
+        A.statueFigure(T,kit,slate,0,base,-.65,6.95,{rightArm:[[-.16,.83,.02],[-.24,.89,.06],[-.29,.93,.07]]});
+        A.statueFigure(T,kit,0x82867e,-2.03,base,-.12,5.9,{yaw:-.21,headcloth:true});
+        A.statueFigure(T,kit,0x9b9e92,1.82,base,-.28,6.35,{yaw:.2,leftArm:[[.19,.74,.07],[.21,.86,.09],[.22,.9,.11]]});
+      },
       title: 'XÔ VIẾT NGHỆ TĨNH 1930-1931'
     });
   }
@@ -74,26 +88,32 @@
 
   // 7. Tượng đài Mẹ Suốt (Bến đò sông Nhật Lệ, Đồng Hới)
   function tuongDaiMeSuot(T, kit) {
-    const { box, stamp, outline, tapered } = kit;
-    const stone = 0xd2cbc0, darkStone = 0x7a756d, bronze = 0x624e38, water = 0x3b6c7a;
-
-    // Riverfront stepped granite plaza & stylized wooden ferryboat bow pedestal
-    box(darkStone, 0, 0.35, 0, 18, 0.70, 16);
-    box(stone, 0, 0.85, 0, 14, 0.42, 12);
-    // Boat-hull sculpted pedestal beneath Mother Suốt's statue
-    outline([[-4.6, 0], [-6.2, 2.2], [-3.2, 2.5], [3.2, 2.5], [6.2, 2.2], [4.6, 0]], stone, 0, 1.05, -1.6, 3.2);
-    box(water, 0, 1.12, 3.6, 11.5, 0.16, 2.6);
-    A.plaque(T, kit, 'TƯỢNG ĐÀI MẸ SUỐT', 0, 1.95, 1.72, 4.8, 0.76, { bg: '#78251c', fg: '#f6d674' });
-
-    // Iconic bronze statue of Mother Suốt standing tall with her raised oar (mái chèo)
-    const sy = 3.55;
-    tapered(bronze, 0, sy + 2.8, 0, 1.25, 0.85, 5.6, 0.8, 12);
-    box(bronze, 0, sy + 6.0, 0, 2.1, 1.9, 1.15);
-    const head = new T.SphereGeometry(0.66, 12, 10);
-    stamp(head, bronze, 0, sy + 7.55, 0); head.dispose();
-    // Sweeping wooden-style bronze ferry oar held at an angle
-    A.strut(T, kit, 0x4f3e2b, -1.8, sy + 1.2, 0.6, 2.6, sy + 8.6, 0.6, 0.12);
-    box(0x4f3e2b, 2.75, sy + 8.85, 0.6, 0.55, 1.45, 0.12, 0, 0, -0.45);
+    const stone = 0xc6c6b8, pedestal = 0x656c68;
+    kit.palette({stone:[stone,pedestal,0x939990,0xb7b8ab]});
+    kit.palette({stone});
+    kit.box(pedestal, 0,.15,0,7.8,.30,6.1);
+    kit.box(0x939990, 0,.48,0,5.7,.37,4.3);
+    kit.box(pedestal, 0,1.08,0,4.6,.83,3.25);
+    A.plaque(T, kit, 'MẸ SUỐT ANH HÙNG', 0,1.10,1.65,2.75,.42,{bg:'#58605e',fg:'#e6d19c',frame:false});
+    const hull = A.carving(T,kit,stone,0,1.48,0,1);
+    hull.sweep([[0,0,0,1.65,1.27],[-.14,.28,.06,1.47,1.09],[-.09,.53,.12,1.14,.96],
+      [0,.82,.16,1.26,.98],[.08,1.04,.12,1.20,.92],[.12,1.22,.10,.88,.74]],.11,24);
+    for (const s of [-1,1]) {
+      hull.sweep([[s*1.38,.19,.54,.07,.10],[s*1.12,.43,.85,.10,.09],[s*.87,.64,.91,.09,.09],
+        [s*.49,.74,1.04,.10,.09],[s*.24,.86,1.08,.08,.09],[s*.20,.97,1.01,.04,.05]]);
+    }
+    hull.finish();
+    const base = 2.67, h = 4.32;
+    A.statueFigure(T, kit, stone, 0,base,0,h,{headcloth:true,
+      rightArm:[[-.137,.722,.079],[.051,.728,.123],[.085,.732,.126]],
+      leftArm:[[.143,.62,.022],[.11,.502,.135],[.128,.475,.138]]});
+    const oar = A.carving(T,kit,0xb7b8ab,0,base,0,h);
+    oar.sweep([[.21,-.035,.15,.041,.013],[.203,.035,.15,.049,.017],[.171,.20,.145,.032,.018],
+      [.156,.322,.14,.015,.015],[.072,.756,.128,.015,.015]],0,12);
+    // Wind lifts the loose cloth behind the planted figure.
+    oar.sweep([[.105,.335,-.065,.079,.030],[.218,.409,-.098,.086,.028],[.284,.470,-.153,.047,.025],
+      [.3,.514,-.171,.007,.010]],.18);
+    oar.finish();
     A.trees(T, kit, [{ x: -7.8, z: -5.5, h: 7.4, kind: 'palm' }, { x: 7.8, z: -5.5, h: 7.2, kind: 'palm' }]);
   }
 
@@ -112,6 +132,7 @@
 
     // Red basalt coastal hillside mound housing the underground village tunnels
     const hill = new T.SphereGeometry(1, 20, 12, 0, Math.PI * 2, 0, Math.PI * 0.52);
+    kit.palette({timber, stone});
     stamp(hill, grassHill, 0, -0.2, -3.5, 14.5, 6.2, 10.5);
     stamp(hill, redEarth, 0, -0.2, 2.2, 7.6, 4.4, 4.6);
     hill.dispose();
@@ -140,6 +161,7 @@
   function thanhDiaLaVang(T, kit) {
     const { box, stamp, round, tapered } = kit;
     const brick = 0x9c553d, agedStone = 0xb8aa92, cream = 0xefe6d2, gold = 0xdcb24e;
+    kit.palette({brick, plaster: cream});
 
     // Broad pilgrimage stone square
     box(0x9a9488, 0, 0.32, 0, 30, 0.64, 24);
@@ -207,7 +229,7 @@
       lon: 105.776010, lat: 18.452689, yaw: 2.193, width: 26, depth: 20,
       start: [105.776153, 18.452787],
       map: 'https://www.openstreetmap.org/node/4409318890',
-      source: 'https://dulichhatinh.com.vn/',
+      source: 'https://sknc.qdnd.vn/dia-chi-do/vang-danh-nga-ba-nghen-501999',
       build: tuongDaiXoVietCanLoc
     },
     
@@ -226,7 +248,7 @@
       lon: 106.625480, lat: 17.466880, yaw: -1.166, width: 18, depth: 16,
       start: [106.625308, 17.466812],
       map: 'https://www.openstreetmap.org/#map=18/17.46688/106.62548',
-      source: 'https://quangbinhtourism.vn/',
+      source: 'https://dulichquangtri.vn/diem-du-lich/tuong-dai-me-suot/',
       build: tuongDaiMeSuot
     },
     

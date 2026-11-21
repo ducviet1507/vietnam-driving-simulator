@@ -1,50 +1,11 @@
 'use strict';
 (() => {
-  function curvedRoof(T, {stamp, box, outline}, x, y, z, w, d, h, tileColor, ridgeColor, eaveColor, ridgeRatio = 0.28) {
-    const p = [], ledge = 0.15;
-    function quad(a, b, c, dPt) { p.push(...a, ...b, ...dPt, ...b, ...c, ...dPt); }
-    const ring = (t) => {
-      const v = [];
-      for (const [ax, az, bx, bz] of [[-1, -1, -1, 1], [-1, 1, 1, 1], [1, 1, 1, -1], [1, -1, -1, -1]]) {
-        for (let i = 0; i < 8; i++) {
-          const u = i / 8, xx = ax + (bx - ax) * u, zz = az + (bz - az) * u;
-          const corner = Math.pow(Math.min(Math.abs(xx), Math.abs(zz)), 4.5);
-          v.push([
-            x + xx * (w / 2 * (1 - t) + w * ridgeRatio * t),
-            y + h * t * t + corner * (1 - t) * Math.min(0.45, h * 0.38),
-            z + zz * (d / 2 * (1 - t))
-          ]);
-        }
-      }
-      return v;
-    };
-    let outer = ring(0), prev = outer;
-    for (const t of [0.33, 0.67, 1]) {
-      const next = ring(t);
-      for (let j = 0; j < 32; j++) { const k = (j + 1) % 32; quad(prev[j], next[j], next[k], prev[k]); }
-      prev = next;
-    }
-    for (let i = 0; i < p.length; i += 9) for (let axis = 0; axis < 3; axis++) [p[i + 3 + axis], p[i + 6 + axis]] = [p[i + 6 + axis], p[i + 3 + axis]];
-    for (let j = 0; j < 32; j++) {
-      const k = (j + 1) % 32, a = outer[j], b = outer[k];
-      quad(a, b, [b[0], b[1] - ledge, b[2]], [a[0], a[1] - ledge, a[2]]);
-    }
-    const g = new T.BufferGeometry();
-    g.setAttribute('position', new T.Float32BufferAttribute(p, 3));
-    g.computeVertexNormals();
-    stamp(g, tileColor, 0, 0, 0);
-    g.dispose();
-    box(ridgeColor, x, y + h + 0.08, z, w * ridgeRatio * 2.1, 0.18, 0.22);
-    for (const s of [-1, 1]) for (const f of [-1, 1]) {
-      outline([[-0.3, 0], [0, 0.05], [0.22, 0.24], [0.36, 0.54], [0.4, 0.22], [0.24, -0.02], [0, -0.15]],
-        eaveColor, x + s * w * 0.49, y + 0.34, z + f * (d / 2 - 0.1), 0.12, s === 1 ? 0 : Math.PI);
-    }
-  }
 
   // 1. Tháp Chuông Ngã ba Đồng Lộc (Can Lộc, Hà Tĩnh)
-  function ngaBaDongLoc(T, {box, stamp, round, tapered, sign}) {
+  function ngaBaDongLoc(T, {palette, box, stamp, round, tapered, sign}) {
     const stone = 0x9c988d, granite = 0xd6d2c8, darkStone = 0x5c5b56;
     const cream = 0xebe3cf, redTile = 0x9e3e2d, bronze = 0x7b6343, gold = 0xd6ae4a;
+    palette({stone: [stone, granite, darkStone], plaster: cream, metal: bronze});
 
     // Stepped octagonal hill terrace with 4 approach stairways
     tapered(stone, 0, 0.35, 0, 11.8, 11.4, 0.72, 1, 8);
@@ -95,6 +56,7 @@
     const {box, stamp, outline, profile, round, tapered, sign} = kit;
     const ochre = 0xd4b678, cream = 0xe9dec0, timber = 0x5c3626, tile = 0x8f4634;
     const stone = 0x8d887d, brick = 0x995843, gold = 0xd1a84a;
+    kit.palette({plaster: [ochre, cream], timber, tile, stone, brick});
 
     // Stone-bordered scholar courtyard & semi-circular lotus pond (hồ bán nguyệt)
     box(brick, 0, 0.14, 1.2, 23.0, 0.28, 19.5);
@@ -107,9 +69,9 @@
       profile(sh, ochre, cx, 0.28, 7.6, 1.8);
     }
     sign('KHU LƯU NIỆM NGUYỄN DU', 0, 4.15, 9.48, 3.9, 0.56);
-    curvedRoof(T, kit, 0, 4.82, 8.5, 5.8, 3.2, 0.95, tile, cream, gold, 0.3);
+    window.CentralArch.curvedRoof(T, kit, 0, 4.82, 8.5, 5.8, 3.2, 0.95, tile, cream, gold, 0.3);
     for (const s of [-1, 1]) {
-      curvedRoof(T, kit, s * 4.5, 3.52, 8.5, 4.4, 2.6, 0.72, tile, cream, gold, 0.26);
+      window.CentralArch.curvedRoof(T, kit, s * 4.5, 3.52, 8.5, 4.4, 2.6, 0.72, tile, cream, gold, 0.26);
       // Flanking Tứ Trụ Biểu
       box(ochre, s * 7.4, 2.55, 8.5, 0.74, 4.5, 0.74);
       box(cream, s * 7.4, 4.85, 8.5, 0.92, 0.22, 0.92);
@@ -133,12 +95,12 @@
       box(timber, dx, 2.15, -1.65, 2.65, 2.55, 0.14);
       box(0x7c4a32, dx, 2.45, -1.56, 2.2, 1.15, 0.06);
     }
-    curvedRoof(T, kit, 0, 3.85, -3.5, 17.6, 9.8, 2.55, tile, cream, ochre, 0.38);
+    window.CentralArch.curvedRoof(T, kit, 0, 3.85, -3.5, 17.6, 9.8, 2.55, tile, cream, ochre, 0.38);
 
     // Ornate carved stone screen (Bình phong) in courtyard center
     box(stone, 0, 1.45, 3.6, 4.4, 2.35, 0.42);
     box(cream, 0, 1.48, 3.83, 3.55, 1.55, 0.06);
-    curvedRoof(T, kit, 0, 2.65, 3.6, 5.1, 1.45, 0.62, tile, cream, ochre, 0.32);
+    window.CentralArch.curvedRoof(T, kit, 0, 2.65, 3.6, 5.1, 1.45, 0.62, tile, cream, ochre, 0.32);
   }
 
   // 3. Quảng Bình Quan – Đồng Hới (Quảng Trị / Quảng Bình cũ)
@@ -146,6 +108,7 @@
     const {box, stamp, outline, profile, round, sign} = kit;
     const brick = [0xa25b43, 0x944e39, 0xae664b, 0x8a4834];
     const plaster = 0xd8cdb5, stone = 0x868176, tile = 0x8c3f2e, dark = 0x3b2821;
+    kit.palette({plaster, stone, tile});
 
     // Circular/octagonal stone island plinth (like the real roundabout monument in Đồng Hới)
     box(stone, 0, 0.25, 0, 17.6, 0.5, 13.4);
@@ -186,11 +149,11 @@
     box(plaster, 0, 7.65, 0, 8.4, 2.85, 5.4);
     for (const x of [-4.05, -1.35, 1.35, 4.05]) for (const z of [-2.55, 2.55]) stamp(round, 0x7b2d23, x, 7.65, z, 0.18, 2.9, 0.18);
     for (const f of [-1, 1]) for (const dx of [-2.4, 0, 2.4]) box(0x52281f, dx, 7.65, f * 2.74, 1.25, 1.85, 0.08);
-    curvedRoof(T, kit, 0, 9.05, 0, 11.4, 7.4, 1.45, tile, plaster, plaster, 0.32);
+    window.CentralArch.curvedRoof(T, kit, 0, 9.05, 0, 11.4, 7.4, 1.45, tile, plaster, plaster, 0.32);
 
     box(0x8d4031, 0, 10.95, 0, 5.8, 1.55, 3.6);
     for (const f of [-1, 1]) for (const dx of [-1.45, 1.45]) box(dark, dx, 10.95, f * 1.84, 1.05, 0.92, 0.08);
-    curvedRoof(T, kit, 0, 11.65, 0, 8.2, 5.4, 1.42, tile, plaster, plaster, 0.28);
+    window.CentralArch.curvedRoof(T, kit, 0, 11.65, 0, 8.2, 5.4, 1.42, tile, plaster, plaster, 0.28);
 
     // Finial crest on summit
     const orb = new T.SphereGeometry(0.28, 10, 8);
@@ -199,9 +162,10 @@
   }
 
   // 4. Kỳ đài & Cầu Hiền Lương – Sông Bến Hải (Vĩnh Linh, Quảng Trị)
-  function hienLuong(T, {box, stamp, round, tapered, sign, wavingFlag}) {
+  function hienLuong(T, {palette, box, stamp, round, tapered, sign, wavingFlag}) {
     const stone = 0x9b988e, white = 0xe6e3da, darkGranite = 0x52524f;
     const red = 0xb82924, gold = 0xdfb847, northBlue = 0x2e6b9e, southYellow = 0xdcb43e;
+    palette({stone: [stone, darkGranite]});
 
     // Broad ceremonial riverfront plaza & 3-tier monumental pedestal of Kỳ đài Hiền Lương
     box(stone, 0, 0.22, 0, 22.0, 0.44, 18.0);
@@ -254,9 +218,10 @@
   }
 
   // 5. Thành cổ Quảng Trị (Cổng Tiền & Đài Tưởng Niệm 81 Ngày Đêm)
-  function thanhCoQuangTri(T, {box, stamp, profile, outline, tapered, round, sign}) {
+  function thanhCoQuangTri(T, {palette, box, stamp, profile, outline, tapered, round, sign}) {
     const brick = [0x98513c, 0x894734, 0xa55c44, 0x7b402f];
     const stone = 0x8a867b, cream = 0xd6cdb8, red = 0xa92d26, gold = 0xd4ad4b;
+    palette({stone, plaster: cream});
 
     // Broad paved memorial plaza
     box(stone, 0, 0.16, 0, 26.0, 0.32, 24.0);
@@ -298,9 +263,10 @@
   }
 
   // 6. Chứng tích Nhà thờ Tam Tòa – Đồng Hới (Quảng Trị / Quảng Bình cũ)
-  function nhaThoTamToa(T, {box, stamp, outline, profile, tapered}) {
+  function nhaThoTamToa(T, {palette, box, stamp, outline, profile, tapered}) {
     const brick = [0x9f5d44, 0x8f523b, 0xab694e, 0x7a4734];
     const plaster = 0xc9be9f, moss = 0x5d6949, stone = 0x8e897d, dark = 0x352a24;
+    palette({plaster, stone});
 
     // Riverside lawn stone base & low memorial fence
     box(stone, 0, 0.18, 0, 15.6, 0.36, 15.6);

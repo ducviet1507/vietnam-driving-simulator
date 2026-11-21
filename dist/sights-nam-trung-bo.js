@@ -1,51 +1,12 @@
 'use strict';
 (() => {
-  function curvedRoof(T, {stamp, box, outline}, x, y, z, w, d, h, tileColor, ridgeColor, eaveColor, ridgeRatio = 0.28) {
-    const p = [], ledge = 0.15;
-    function quad(a, b, c, dPt) { p.push(...a, ...b, ...dPt, ...b, ...c, ...dPt); }
-    const ring = (t) => {
-      const v = [];
-      for (const [ax, az, bx, bz] of [[-1, -1, -1, 1], [-1, 1, 1, 1], [1, 1, 1, -1], [1, -1, -1, -1]]) {
-        for (let i = 0; i < 8; i++) {
-          const u = i / 8, xx = ax + (bx - ax) * u, zz = az + (bz - az) * u;
-          const corner = Math.pow(Math.min(Math.abs(xx), Math.abs(zz)), 4.5);
-          v.push([
-            x + xx * (w / 2 * (1 - t) + w * ridgeRatio * t),
-            y + h * t * t + corner * (1 - t) * Math.min(0.45, h * 0.38),
-            z + zz * (d / 2 * (1 - t))
-          ]);
-        }
-      }
-      return v;
-    };
-    let outer = ring(0), prev = outer;
-    for (const t of [0.33, 0.67, 1]) {
-      const next = ring(t);
-      for (let j = 0; j < 32; j++) { const k = (j + 1) % 32; quad(prev[j], next[j], next[k], prev[k]); }
-      prev = next;
-    }
-    for (let i = 0; i < p.length; i += 9) for (let axis = 0; axis < 3; axis++) [p[i + 3 + axis], p[i + 6 + axis]] = [p[i + 6 + axis], p[i + 3 + axis]];
-    for (let j = 0; j < 32; j++) {
-      const k = (j + 1) % 32, a = outer[j], b = outer[k];
-      quad(a, b, [b[0], b[1] - ledge, b[2]], [a[0], a[1] - ledge, a[2]]);
-    }
-    const g = new T.BufferGeometry();
-    g.setAttribute('position', new T.Float32BufferAttribute(p, 3));
-    g.computeVertexNormals();
-    stamp(g, tileColor, 0, 0, 0);
-    g.dispose();
-    box(ridgeColor, x, y + h + 0.08, z, w * ridgeRatio * 2.1, 0.18, 0.22);
-    for (const s of [-1, 1]) for (const f of [-1, 1]) {
-      outline([[-0.3, 0], [0, 0.05], [0.22, 0.24], [0.36, 0.54], [0.4, 0.22], [0.24, -0.02], [0, -0.15]],
-        eaveColor, x + s * w * 0.49, y + 0.34, z + f * (d / 2 - 0.1), 0.12, s === 1 ? 0 : Math.PI);
-    }
-  }
 
   // 1. Chùa Thiên Ấn – Quảng Ngãi (Hilltop pagoda beside Trà Khúc River)
   function chuaThienAn(T, kit) {
     const {box, stamp, profile, round, tapered, sign} = kit;
     const ochre = 0xd6b874, cream = 0xece3ca, redTile = 0x9b402f, crimson = 0x7d2920;
     const stone = 0x8e897f, gold = 0xd4ad4a;
+    kit.palette({plaster: [ochre, cream], stone});
 
     // Deep hilltop stone terrace
     box(stone, 0, -1.2, 0, 24.5, 2.8, 22.0);
@@ -60,17 +21,17 @@
       profile(sh, ochre, cx, 0.42, 7.6, 1.8);
     }
     sign('CHÙA THIÊN ẤN', 0, 4.35, 9.48, 3.6, 0.55);
-    curvedRoof(T, kit, 0, 5.0, 8.5, 6.2, 3.2, 1.05, redTile, cream, gold, 0.3);
-    for (const s of [-1, 1]) curvedRoof(T, kit, s * 4.4, 3.7, 8.5, 4.4, 2.6, 0.78, redTile, cream, gold, 0.26);
+    window.CentralArch.curvedRoof(T, kit, 0, 5.0, 8.5, 6.2, 3.2, 1.05, redTile, cream, gold, 0.3);
+    for (const s of [-1, 1]) window.CentralArch.curvedRoof(T, kit, s * 4.4, 3.7, 8.5, 4.4, 2.6, 0.78, redTile, cream, gold, 0.26);
 
     // Main Sanctuary Hall (Chính Điện) at rear (-Z)
     box(stone, 0, 0.75, -3.5, 16.0, 0.75, 9.4);
     box(ochre, 0, 3.1, -3.5, 13.8, 4.0, 7.2);
     for (const x of [-6.4, -3.2, 0, 3.2, 6.4]) stamp(round, crimson, x, 3.1, 0.65, 0.18, 4.1, 0.18);
     for (const dx of [-3.2, 0, 3.2]) box(crimson, dx, 2.65, 0.14, 1.85, 2.75, 0.1);
-    curvedRoof(T, kit, 0, 5.15, -3.5, 16.8, 10.6, 2.05, redTile, cream, gold, 0.36);
+    window.CentralArch.curvedRoof(T, kit, 0, 5.15, -3.5, 16.8, 10.6, 2.05, redTile, cream, gold, 0.36);
     box(ochre, 0, 7.55, -3.5, 9.2, 1.45, 5.2);
-    curvedRoof(T, kit, 0, 8.25, -3.5, 11.4, 7.2, 1.65, redTile, cream, gold, 0.3);
+    window.CentralArch.curvedRoof(T, kit, 0, 8.25, -3.5, 11.4, 7.2, 1.65, redTile, cream, gold, 0.3);
 
     // Iconic Thiên Ấn Bell Pavilion (Lầu Chuông Thần) on the right courtyard
     const bx = 8.4, bz = 2.6;
@@ -88,6 +49,7 @@
   function chuaMinhThanh(T, kit) {
     const {box, stamp, round, tapered} = kit;
     const red = 0xa8362a, gold = 0xdfb74a, cream = 0xeee5d1, darkTile = 0x4b4744, stone = 0x99958c;
+    kit.palette({plaster: cream, stone});
 
     // Raised granite terrace & lotus pool court
     box(stone, 0, 0.25, 0, 29.0, 0.5, 24.0);
@@ -121,16 +83,17 @@
     box(cream, hx, 3.6, hz, 12.2, 4.3, 9.2);
     for (const x of [-5.8, -2.9, 0, 2.9, 5.8]) stamp(round, red, hx + x, 3.7, hz + 4.95, 0.2, 4.4, 0.2);
     for (const dx of [-3.2, 0, 3.2]) box(red, hx + dx, 3.1, hz + 4.65, 1.95, 3.1, 0.12);
-    curvedRoof(T, kit, hx, 5.85, hz, 16.2, 12.8, 2.2, darkTile, gold, gold, 0.36);
+    window.CentralArch.curvedRoof(T, kit, hx, 5.85, hz, 16.2, 12.8, 2.2, darkTile, gold, gold, 0.36);
     box(red, hx, 8.65, hz, 8.6, 1.9, 6.2);
     for (const dx of [-2.4, 0, 2.4]) box(gold, hx + dx, 8.65, hz + 3.16, 1.15, 1.15, 0.08);
-    curvedRoof(T, kit, hx, 9.6, hz, 11.8, 8.8, 2.1, darkTile, gold, gold, 0.32);
+    window.CentralArch.curvedRoof(T, kit, hx, 9.6, hz, 11.8, 8.8, 2.1, darkTile, gold, gold, 0.32);
   }
 
   // 3. Bảo tàng Thế giới Cà phê – Buôn Ma Thuột (Đắk Lắk) — 5 Dramatic Curved Basalt Longhouse Domes
-  function baoTangCaPhe(T, {box, stamp, outline, profile, sign}) {
+  function baoTangCaPhe(T, {palette, box, stamp, outline, profile, sign}) {
     const basalt = 0x4e4e52, darkBasalt = 0x3b3b3f, slate = 0x626268;
     const cream = 0xd9d2c4, glass = 0x3f5862, stone = 0x9b968d, wood = 0x7b563a;
+    palette({stone: [basalt, stone], plaster: cream, glass, timber: wood});
 
     // Expansive stepped basalt-and-stone museum plaza
     box(stone, 0, 0.18, 0, 36.0, 0.36, 26.0);
@@ -176,9 +139,10 @@
   }
 
   // 4. Tháp Po Klong Garai – Phan Rang (Khánh Hòa / Ninh Thuận cũ)
-  function poKlongGarai(T, {box, outline, tapered, random}) {
+  function poKlongGarai(T, {palette, box, outline, tapered, random}) {
     const brick = [0xa84d35, 0x99452f, 0xb6593f, 0x873c28];
     const sandstone = 0xc2b49a, dark = 0x35241e, hill = 0x9e8c72;
+    palette({stone: sandstone});
 
     // Trầu Hill stepped stone terrace & brick courtyard
     box(hill, 0, -1.2, 0, 29.0, 2.8, 22.0);
@@ -238,9 +202,10 @@
   }
 
   // 5. Tháp Trầm Hương – Nha Trang (Khánh Hòa) — 6-tier Coral-Pink Stylized Lotus-Sail Tower
-  function thapTramHuong(T, {box, stamp, outline, tapered, round}) {
+  function thapTramHuong(T, {palette, box, stamp, outline, tapered, round}) {
     const coral = 0xe37762, peach = 0xec9781, cream = 0xf0e9dc, gold = 0xe0b64e;
     const glass = 0x487482, stone = 0xb5b1a6;
+    palette({plaster: cream, glass, stone});
 
     // 2/4 Square stepped circular granite podium
     tapered(stone, 0, 0.25, 0, 12.2, 11.8, 0.5, 1, 20);
@@ -283,9 +248,10 @@
 
   // 6. Khu di tích Trường Dục Thanh – Phan Thiết (Lâm Đồng / Bình Thuận cũ)
   function truongDucThanh(T, kit) {
-    const {box, stamp, outline, round, random, sign} = kit;
+    const {box, stamp, outline, round, sign} = kit;
     const timber = 0x5c3926, wood = 0x7b4f34, ochre = 0xd6bd82, tile = 0x984632;
     const brickFloor = 0x9c5a44, stone = 0x8f8a7f, cream = 0xebe0c5;
+    kit.palette({timber: [timber, wood], plaster: [ochre, cream], tile, stone});
 
     // Red brick heritage schoolyard & low plastered boundary walls
     box(brickFloor, 0, 0.14, 0.8, 23.0, 0.28, 19.0);
@@ -301,7 +267,7 @@
     }
     box(ochre, 0, 3.55, 9.8, 6.2, 0.85, 0.52);
     sign('TRƯỜNG DỤC THANH', 0, 3.55, 10.1, 4.4, 0.56);
-    curvedRoof(T, kit, 0, 4.05, 9.8, 6.9, 1.85, 0.72, tile, cream, ochre, 0.35);
+    window.CentralArch.curvedRoof(T, kit, 0, 4.05, 9.8, 6.9, 1.85, 0.72, tile, cream, ochre, 0.35);
 
     // Main 1907 Timber Schoolhouse (Nhà học chính)
     box(stone, 0, 0.42, -2.5, 16.4, 0.56, 8.6);
@@ -315,32 +281,19 @@
       box(timber, dx, 2.25, 1.0, 0.08, 2.4, 0.06);
     }
     // Broad terracotta hip roof (mái ngói âm dương Nam Trung Bộ)
-    curvedRoof(T, kit, 0, 4.05, -2.5, 18.2, 10.6, 2.55, tile, cream, ochre, 0.42);
+    window.CentralArch.curvedRoof(T, kit, 0, 4.05, -2.5, 18.2, 10.6, 2.55, tile, cream, ochre, 0.42);
 
     // Ngọa Du Sào scholar pavilion (nhà đọc sách cổ) on the left yard
     const nx = -6.8, nz = 4.6;
     box(stone, nx, 0.35, nz, 5.4, 0.42, 4.8);
     for (const dx of [-2.1, 2.1]) for (const dz of [-1.8, 1.8]) stamp(round, timber, nx + dx, 1.75, nz + dz, 0.13, 2.5, 0.13);
     box(wood, nx, 1.65, nz - 1.75, 4.1, 2.1, 0.16);
-    curvedRoof(T, kit, nx, 3.0, nz, 6.2, 5.4, 1.45, tile, cream, ochre, 0.32);
+    window.CentralArch.curvedRoof(T, kit, nx, 3.0, nz, 6.2, 5.4, 1.45, tile, cream, ochre, 0.32);
 
     // Century-old Starfruit Tree (Cây khế trăm tuổi) & well on the right yard
     stamp(round, 0x8e5642, 6.8, 0.52, 4.2, 0.88, 0.78, 0.88);
     stamp(round, 0x2c484c, 6.8, 0.58, 4.2, 0.66, 0.68, 0.66);
-    stamp(round, 0x614b37, 7.6, 2.6, 6.4, 0.32, 4.4, 0.32);
-    const canopy = new T.IcosahedronGeometry(1, 1);
-    const lp = canopy.attributes.position;
-    for (let i = 0; i < lp.count; i++) {
-      const lx = lp.getX(i), ly = lp.getY(i), lz = lp.getZ(i);
-      const n = 1 + 0.14 * Math.sin(lx * 10 + ly * 11 - lz * 8);
-      lp.setXYZ(i, lx * n, ly * n, lz * n);
-    }
-    canopy.computeVertexNormals();
-    for (let i = 0; i < 18; i++) {
-      const a = i * 2.399, r = Math.sqrt(i / 18) * 2.4;
-      stamp(canopy, [0x4c7138, 0x5d8242, 0x416431][i % 3], 7.6 + Math.cos(a) * r, 5.2 + random() * 0.9, 6.4 + Math.sin(a) * r, 0.95 + random() * 0.35, 0.75 + random() * 0.3, 0.9 + random() * 0.35, a);
-    }
-    canopy.dispose();
+    window.CentralArch.trees(T, kit, [{x: 7.6, y: .35, z: 6.4, h: 6.6, width: 7.1}]);
   }
 
   (window.VietnamSights ??= []).push({

@@ -2,49 +2,62 @@
 (() => {
   const A = window.CentralArch;
 
-  // 1. Cổng Tò Vò (Đảo Lý Sơn, Quảng Ngãi) — Iconic natural dark volcanic basalt sea arch over turquoise water
-  function congToVoLySon(T, kit) {
-    const { box, stamp, round } = kit;
-    const basalt = 0x3b3836, darkLava = 0x2b2827, lavaWarm = 0x524841, sea = 0x267486, foam = 0xb9e3eb, sand = 0xd6c9a8;
-
-    // Coastal shallow turquoise reef lagoon & volcanic boulder beach
-    box(sea, 0, 0.08, -2.5, 32, 0.16, 26);
-    box(sand, 0, 0.22, 8.2, 30, 0.34, 9.5);
-    box(foam, 0, 0.19, 3.2, 26, 0.08, 1.4);
-
-    // Sculpted porous dark-basalt volcanic arch curving organically across 13m span x 6.4m height
-    const rockGeo = new T.DodecahedronGeometry(1, 1);
-    // Left & right massive volcanic abutment crags
-    for (const s of [-1, 1]) {
-      for (let k = 0; k < 5; k++) {
-        const rx = s * (5.6 + k * 1.15), ry = 1.6 - k * 0.22, rz = (k % 2 ? 0.6 : -0.5);
-        stamp(rockGeo, k % 2 ? basalt : darkLava, rx, ry, rz, 2.4 - k * 0.18, 2.2 - k * 0.24, 2.3);
+  // Waves have cut a low opening through one continuous tongue of basalt.
+  function congToVoLySon(T, {group, random}) {
+    const positions=[],colors=[],indices=[],shade=new T.Color();
+    function add(x,y,z,tint,light){
+      positions.push(x,y,z);shade.setHex(tint).multiplyScalar(light);
+      colors.push(shade.r,shade.g,shade.b);
+    }
+    const rows=92,sides=36;
+    for(let j=0;j<=rows;j++){
+      const x=-10.5+21*j/rows;
+      for(let i=0;i<sides;i++){
+        const a=i*2*Math.PI/sides,c=Math.cos(a),s=Math.sin(a);
+        const shoulder=1-Math.exp(-(((x+1)*.21)**4));
+        const aperture=Math.max(0,1-((x+1+.31*s)/4.55)**2);
+        const rough=.11*Math.sin(2.3*x+5*s)+.08*Math.cos(5.13*x-4*c)+.06*Math.sin(8*x+a*7);
+        const base=-.83+2.91*aperture**.39+.13*Math.sin(4*x)*aperture;
+        const crown=2.58+.32*shoulder+.20*Math.sin(.78*x)-Math.max(0,Math.abs(x)-7)*.95;
+        const y=(crown+base)/2+(crown-base)/2*Math.sign(c)*Math.abs(c)**.62+rough;
+        const z=.63*Math.sin(x*.30)+(.82+1.54*shoulder+rough)*Math.sign(s)*Math.abs(s)**.72;
+        const tint=y<.42?0x485447:c<-.35?0x5b5148:0x66605a;
+        add(x+rough*.35,y,z,tint,.83+rough*.73+.15*Math.cos(x*3.2+a));
+        if(j){
+          const k=j*sides+i,next=j*sides+(i+1)%sides;
+          indices.push(k-sides,next-sides,k,k,next-sides,next);
+        }
       }
     }
-    // Natural lava bridge arch stones curving smoothly overhead
-    const archSegs = 13;
-    for (let i = 0; i <= archSegs; i++) {
-      const t = i / archSegs;
-      const a = Math.PI * t;
-      const ax = -Math.cos(a) * 6.4;
-      const ay = 1.4 + Math.sin(a) * 4.65;
-      const az = Math.sin(a * 2) * 0.35;
-      const thickness = 1.42 - Math.sin(a) * 0.44; // thicker at roots, slender sculpted bridge at crown!
-      stamp(rockGeo, i % 3 === 0 ? lavaWarm : (i % 2 ? basalt : darkLava), ax, ay, az, thickness * 1.15, thickness * 0.88, 1.85, t * 0.8);
+    // Broken, partly submerged lava beds leave narrow sea channels between them.
+    for(let island=0;island<36;island++){
+      const x=(random()-.5)*29,z=(random()-.5)*17;
+      if(Math.abs(x+1)<4.6&&Math.abs(z)<2)continue;
+      const width=.58+random()*2.3,depth=width*(.32+.37*random()),h=.18+random()*.45;
+      const first=positions.length/3,turn=random()*6.28,segments=15;
+      for(let r=0;r<4;r++)for(let i=0;i<segments;i++){
+        const a=2*Math.PI*i/segments,rad=[1.1,1,.77,.02][r];
+        const edge=1+.15*Math.sin(a*4+island)+.11*Math.cos(a*3.0-.4*island);
+        const dx=width*Math.cos(a)*rad*edge,dz=depth*Math.sin(a)*rad*edge;
+        const top=h*(1+.13*Math.sin(a*3+island));
+        add(x+dx*Math.cos(turn)-dz*Math.sin(turn),[-.68,top*.42,top,top*1.03][r],z+dx*Math.sin(turn)+dz*Math.cos(turn),
+          island%4===0&&r>=2?0x566140:0x504d47,.78+.16*r+.10*Math.sin(a*3+island));
+        if(r){
+          const k=first+r*segments+i,next=first+r*segments+(i+1)%segments;
+          indices.push(k-segments,k,next-segments,next-segments,k,next);
+        }
+      }
     }
-    // Scattered volcanic reef tide-pool rocks around the waterline
-    for (const [bx, bz, s] of [[-9.5, -5.2, 1.6], [8.8, -6.4, 1.9], [-4.2, -7.8, 1.2], [5.4, 5.4, 1.1], [-10.8, 4.6, 1.4]]) {
-      stamp(rockGeo, darkLava, bx, s * 0.42, bz, s * 1.2, s * 0.65, s * 1.1, bx);
-    }
-    rockGeo.dispose();
-
-    A.plaque(T, kit, 'CỔNG TÒ VÒ - LÝ SƠN', 0, 1.15, 10.6, 5.4, 0.78, { bg: '#2c3d46', fg: '#f6e288' });
+    const g=new T.BufferGeometry();g.setIndex(indices);g.setAttribute('position',new T.Float32BufferAttribute(positions,3));
+    g.setAttribute('color',new T.Float32BufferAttribute(colors,3));g.computeVertexNormals();
+    const ridge=new T.Mesh(g,globalThis.createSightStoneMaterial(T));ridge.castShadow=ridge.receiveShadow=true;group.add(ridge);
   }
 
   // 2. Bảo tàng Tổng hợp Quảng Ngãi — Terracotta & cream museum with tiered traditional roof & Sa Huỳnh jar monument
   function baoTangQuangNgai(T, kit) {
     const { box, stamp, round, tapered } = kit;
     const cream = 0xf0e7d4, trim = 0xd6c4a0, roof = 0x993e2b, glass = 0x264456, stone = 0xa29c90;
+    kit.palette({plaster: cream, glass, stone});
 
     box(stone, 0, 0.18, 0, 32, 0.36, 24);
     A.steps(kit, 0, 9.6, 12.6, 2.0, 4, 0.22, 0.40, 0x8d877d);
@@ -79,6 +92,7 @@
   function thapCanhTien(T, kit) {
     const { box, outline } = kit;
     const brick = 0xa95239, darkBrick = 0x853d2a, sandstone = 0xd6cab2, stone = 0x8e8679;
+    kit.palette({brick: [brick, darkBrick], stone: [sandstone, stone]});
 
     // Laterite hill platform & stone steps
     box(0x7c7864, 0, 0.35, 0, 22, 0.7, 22);
@@ -129,34 +143,36 @@
   function tranHungDaoQuyNhon(T, kit) {
     const { box, stamp, round, tapered } = kit;
     const granite = 0xaba69c, darkGranite = 0x79746b, bronze = 0x5d4c35, patina = 0x4c685c;
+    kit.palette({stone: [granite, darkGranite], metal: bronze});
 
     // Dramatic stepped coastal mountain summit platform
     box(darkGranite, 0, 0.65, 0, 28, 1.3, 24);
     A.steps(kit, 0, 12.6, 10.4, 2.4, 5, 0.26, 0.45, granite);
     box(granite, 0, 1.65, -1.4, 16.4, 1.2, 13.6);
 
-    // Towering monumental tapered granite pedestal (8.8m high) with carved bronze battle reliefs
-    tapered(granite, 0, 6.2, -1.4, 4.8, 3.4, 8.2, 0.85, 8);
-    box(darkGranite, 0, 2.45, -1.4, 6.8, 0.8, 5.8);
-    box(bronze, 0, 5.8, 2.25, 3.2, 3.6, 0.22); // front relief plaque
-
-    // Sweeping flanking granite battle relief wings
-    for (const s of [-1, 1]) {
-      box(granite, s * 7.8, 3.45, -3.2, 6.8, 3.4, 1.15, -s * 0.28);
-      box(patina, s * 7.8, 3.45, -2.56, 5.8, 2.25, 0.16, -s * 0.28);
+    // Red coping courses and the inset relief panel beneath the ochre figure.
+    const ochre=0xb89a5a, surround=0x944a34, base=5.8, h=10.1;
+    kit.palette({stone:[ochre,surround]});
+    box(surround,0,2.55,-1.4,7.8,.6,5.4);
+    box(0x977f63,0,4.12,-1.4,7.05,2.60,4.87);
+    box(surround,0,5.62,-1.4,7.55,.36,5.20);
+    box(bronze,0,4.15,1.09,4.56,1.85,.16);
+    for (const s of [-1,1]) {
+      box(granite,s*7.8,3.45,-3.2,6.8,3.4,1.15,-s*.28);
+      box(patina,s*7.8,3.45,-2.56,5.8,2.25,.16,-s*.28);
     }
-
-    // Iconic 11m heroic statue of Hưng Đạo Đại Vương pointing resolutely out toward Quy Nhơn Bay!
-    const sy = 10.4;
-    tapered(patina, 0, sy + 3.4, -1.4, 2.1, 1.35, 6.8, 0.82, 10); // flowing general's cloak & armor
-    box(patina, 0, sy + 7.4, -1.4, 2.9, 2.4, 1.6); // broad shoulders
-    const head = new T.SphereGeometry(0.95, 12, 10);
-    stamp(head, patina, 0, sy + 9.45, -1.4);
-    head.dispose();
-    tapered(bronze, 0, sy + 10.4, -1.4, 0.72, 0.36, 0.95, 1, 8); // royal military helmet crest
-    // Iconic outstretched right arm pointing seaward (+Z) + left hand resting on sword hilt!
-    A.strut(T, kit, patina, 1.35, sy + 7.8, -1.2, 2.1, sy + 8.6, 2.6, 0.34);
-    A.strut(T, kit, bronze, -1.45, sy + 6.4, -0.8, -1.75, sy + 2.4, 0.4, 0.14); // long sword
+    A.statueFigure(T,kit,ochre,0,base,-1.4,h,{beard:true,longCoat:true,stepUp:.073,
+      rightArm:[[-.170,.805,.109],[-.22,.859,.244],[-.235,.881,.292]],
+      leftArm:[[.168,.655,.017],[.128,.557,.083],[.124,.520,.101]]});
+    const armor=A.carving(T,kit,ochre,0,base,-1.4,h);
+    armor.sweep([[0,.948,0,.066,.064],[0,.956,0,.068,.066],[0,.990,-.004,.049,.052],[0,1.007,-.004,.027,.028],
+      [0,1.020,-.005,.010,.012]],.035);
+    armor.sweep([[0,.603,0,.093,.062],[0,.614,.002,.103,.072],[0,.641,.002,.105,.072],[0,.647,0,.094,.061]]);
+    armor.sweep([[.122,.549,.098,.014,.014],[.126,.526,.106,.027,.016],[.154,.440,.126,.020,.016],
+      [.211,.231,.129,.018,.014],[.235,.162,.119,.010,.009]]);
+    armor.sweep([[-.233,.876,.288,.009,.010],[-.243,.894,.331,.008,.008],[-.251,.906,.354,.005,.006]]);
+    armor.sweep([[-.075,.008,.088,.080,.099],[-.071,.040,.075,.076,.091],[-.070,.080,.078,.058,.078]],.06);
+    armor.finish();
 
     A.plaque(T, kit, 'TRẦN HƯNG ĐẠO - QUY NHƠN', 0, 2.75, 4.9, 7.6, 0.92, { bg: '#5a221b', fg: '#f8e084' });
   }
@@ -165,6 +181,7 @@
   function bietDienBaoDaiBmt(T, kit) {
     const { box, stamp, round } = kit;
     const cream = 0xeee4ce, timber = 0x5c3620, roof = 0x8f3f2b, stone = 0x8e877c, shutter = 0x264a38;
+    kit.palette({plaster: cream, timber: [timber, shutter], stone});
 
     // Shaded basalt-earth courtyard & wide ceremonial garden walk
     box(0x8e7c64, 0, 0.14, 0.5, 34, 0.28, 22);
@@ -213,6 +230,7 @@
   function chuaThanhLuong(T, kit) {
     const { box, stamp, round, tapered } = kit;
     const coral = 0xded4be, coralDark = 0xb8ad96, coconutWood = 0x4e3222, tile = 0x8e422e, gold = 0xdba944, emeraldPool = 0x26858a, marble = 0xf2f0ea;
+    kit.palette({tile, stone: marble});
 
     // Coastal coral-stone courtyard
     box(0xc5bba4, 0, 0.16, 1.0, 28, 0.32, 26);
@@ -260,6 +278,7 @@
   function vienHaiDuongHoc(T, kit) {
     const { box, stamp, round, outline } = kit;
     const yellow = 0xe8cc7d, cream = 0xf4efe2, shutter = 0x265242, roof = 0x9b422e, blue = 0x236484, stone = 0x9f998d;
+    kit.palette({plaster: cream, timber: shutter, stone});
 
     box(stone, 0, 0.18, 0, 32, 0.36, 22);
     A.steps(kit, 0, 8.2, 9.6, 1.8, 4, 0.20, 0.38, 0x8f8a7f);
@@ -301,6 +320,7 @@
   function thapPoRome(T, kit) {
     const { box, stamp, round } = kit;
     const brick = 0xa85239, darkBrick = 0x823c29, sandstone = 0xcebda0, dryHill = 0x9c8b68;
+    kit.palette({brick: [brick, darkBrick], stone: sandstone});
 
     // Sun-baked Ninh Thuận stone hill terrace & boulder outcrops
     box(dryHill, 0, 0.35, 0, 26, 0.7, 24);
@@ -323,6 +343,7 @@
   function chuaLinhPhuoc(T, kit) {
     const { box, stamp, round, tapered } = kit;
     const cobalt = 0x1e5c94, emerald = 0x2a7d62, gold = 0xe8b938, crimson = 0x9e2b24, mosaicWhite = 0xefe9db, stone = 0x9c968a;
+    kit.palette({stone});
 
     // Ornate tile courtyard
     box(0xb5a68e, 0, 0.16, 1.0, 32, 0.32, 28);
@@ -379,6 +400,7 @@
   function thienVienTrucLam(T, kit) {
     const { box, stamp, round, tapered } = kit;
     const white = 0xf0ece0, wood = 0x5c2f1d, glazeBrown = 0x7b4726, gold = 0xdba944, stone = 0x928d82;
+    kit.palette({timber: wood, stone});
 
     // Stepped hilltop monastery plaza with central hydrangea flowerbed
     box(stone, 0, 0.24, 1.0, 30, 0.48, 28);
@@ -426,6 +448,7 @@
   function dinh3BaoDaiDaLat(T, kit) {
     const { box, stamp, round } = kit;
     const cream = 0xf2e4b8, ivory = 0xf6f3ea, trim = 0xd6c698, glass = 0x2b4b5e, grass = 0x4b7740, rose = 0xc9425a, stone = 0x9b968a;
+    kit.palette({plaster: cream, glass, stone});
 
     // Formal French terraced royal lawn & rose garden beds
     box(grass, 0, 0.16, 1.0, 34, 0.32, 26);
@@ -479,13 +502,15 @@
   (window.VietnamSights ??= []).push(
     {
       id: 'cong-to-vo-ly-son', name: 'Cổng Tò Vò (Đảo Lý Sơn)', city: 'Lý Sơn', province: 'Quảng Ngãi', region: 'Trung Bộ',
-      lon: 109.093350, lat: 15.382650, start: [109.093994, 15.382965], yaw: 2.039,
+      lon: 109.09912, lat: 15.38977, start: [109.09921, 15.38932], yaw: -.27,
+      mappedEntrance: true, approachMeters: 51, arrivalNote: 'Từ đường ven biển phía bắc đảo, đi về phía bãi triều để ngắm vòm đá.',
+      viewRadius: 24, viewElevation: .18,
       width: 32, depth: 26,
       solids: [[-6.8, 0, 2.8, 2.6], [6.8, 0, 2.8, 2.6]],
       description: 'Vòm đá nham thạch núi lửa tự nhiên kỳ vĩ bên bờ biển phía Tây đảo Lý Sơn, vươn cong giữa bãi đá bazan đen và làn nước biển xanh ngọc.',
-      photo: 'https://vi.wikipedia.org/wiki/L%C3%BD_S%C6%A1n',
-      source: 'https://vi.wikipedia.org/wiki/L%C3%BD_S%C6%A1n',
-      map: 'https://www.openstreetmap.org/?mlat=15.38265&mlon=109.09335#map=17/15.38265/109.09335',
+      photo: 'https://quangngai.gov.vn/tin-tuc/tin-chi-dao-dieu-hanh/danh-lam-thang-canh-cong-to-vo-ly-son-duoc-xep-hang-di-tich-cap-quoc-gia.html',
+      source: 'https://dsvh.gov.vn/cong-to-vo-tinh-quang-ngai-22309',
+      map: 'https://www.openstreetmap.org/?mlat=15.38977&mlon=109.09912#map=18/15.38977/109.09912',
       build: congToVoLySon
     },
     {

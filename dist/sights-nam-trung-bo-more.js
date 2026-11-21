@@ -4,22 +4,43 @@
 
   // 1. Khu chứng tích Sơn Mỹ (Quảng Ngãi)
   function chungTichSonMy(T, kit) {
-    const { box, stamp, tapered } = kit;
-    const blackStone = 0x323538, marble = 0xd6d2c8, bronze = 0x5c4a38;
-    box(0x88847c, 0, 0.35, 0, 24, 0.7, 20);
-    box(0x3a6472, 0, 0.72, 5.8, 12.5, 0.14, 4.2);
-    box(blackStone, 0, 2.2, -1.5, 6.2, 3.0, 4.4);
-    A.plaque(T, kit, 'CHỨNG TÍCH SƠN MỸ', 0, 2.2, 0.76, 5.2, 0.82, { bg: '#2c2f32', fg: '#f0dfaa' });
-    // Sculpted mother-and-raised-fist memorial silhouette atop black stone plinth
-    tapered(bronze, 0, 6.4, -1.5, 1.55, 1.1, 5.4, 0.78, 10);
-    box(bronze, 0.95, 10.2, -1.5, 0.75, 2.6, 0.75);
-    const head = new T.SphereGeometry(0.68, 10, 8);
-    stamp(head, bronze, -0.35, 9.5, -1.5); head.dispose();
-    // Flanking carved stone relief walls
-    for (const s of [-1, 1]) {
-      box(marble, s * 7.8, 2.5, -3.2, 6.8, 3.4, 0.9, -s * 0.2);
-      box(0x9b958b, s * 7.8, 2.5, -2.7, 5.8, 2.2, 0.14, -s * 0.2);
+    const limestone = 0xd2d1c7;
+    kit.palette({stone:[limestone,0xcacbc2,0xacaaa1,0x777779,0x676768]});
+    kit.palette({stone: limestone});
+    kit.box(0xacaaa1,0,.16,0,17,.32,13.5);
+    kit.box(0x777779,0,.50,-.9,10.2,.36,5.6);
+    kit.box(0x676768,0,1.38,-.9,9.75,1.42,5.15);
+    const base = 2.09;
+    A.statueFigure(T,kit,limestone,.16,base,-.98,6.70,{
+      rightArm:[[-.118,.97,.005],[-.082,1.096,.018],[-.044,1.118,.052]],
+      leftArm:[[.138,.658,.041],[.048,.652,.105],[-.018,.669,.112]]});
+    const child = A.carving(T,kit,limestone,.16,base,-.98,6.70);
+    // The child lies across the left forearm, head tipped outwards.
+    child.sweep([[-.086,.706,.092,.029,.036],[.012,.706,.124,.053,.049],[.09,.695,.114,.048,.043],
+      [.147,.681,.102,.024,.026]]);
+    child.sweep([[.142,.673,.108,.020,.024],[.166,.657,.109,.048,.046],[.199,.645,.103,.050,.047],[.226,.632,.096,.030,.032]]);
+    child.sweep([[-.07,.699,.098,.025,.026],[-.11,.657,.124,.026,.026],[-.114,.603,.143,.018,.017]]);
+    child.sweep([[-.036,.69,.14,.024,.026],[-.055,.636,.17,.023,.023],[-.045,.58,.177,.015,.016]]);
+    child.finish();
+    // Lower figures form a continuous stone group on the same plinth. Bodies
+    // turn in towards one another and leave the central raised arm in silhouette.
+    const family = A.carving(T,kit,0xcacbc2,0,base,-.85,1);
+    family.sweep([[-3.7,.04,.22,.57,.78],[-3.18,.68,.29,.71,.79],[-2.47,1.52,.12,.74,.61],
+      [-2.25,2.56,-.06,.72,.53],[-2.36,3.08,-.08,.32,.33]],.07);
+    family.sweep([[-2.34,2.95,-.02,.25,.30],[-2.4,3.18,0,.38,.38],[-2.39,3.53,-.06,.42,.41],[-2.46,3.77,-.10,.26,.27]]);
+    family.sweep([[-2.76,.06,.60,.74,.59],[-2.42,.90,.71,.58,.51],[-2.08,1.60,.77,.64,.51],[-1.90,2.1,.71,.39,.32]],.07);
+    family.sweep([[-1.94,1.99,.75,.28,.27],[-2.03,2.20,.79,.34,.35],[-2.13,2.49,.76,.35,.35],[-2.16,2.64,.70,.21,.24]]);
+    family.sweep([[-2.89,2.83,.24,.26,.27],[-3.02,2.18,.68,.23,.26],[-2.49,1.76,.98,.18,.20],[-2.06,1.86,1.10,.14,.17]]);
+    family.sweep([[3.72,.10,-.30,.54,.71],[3.31,.59,-.04,.70,.64],[3.34,1.29,.04,.67,.66],[3.04,1.74,.18,.49,.52],
+      [2.86,1.88,.31,.33,.33],[2.65,1.84,.49,.48,.40],[2.53,1.64,.61,.27,.28]],.045);
+    family.sweep([[-.52,.50,.87,.42,.40],[.18,.69,.78,.61,.60],[1.02,.84,.72,.52,.43],[2.13,.66,.68,.33,.41],[2.76,.56,.54,.27,.28]],.05);
+    family.sweep([[3.14,1.48,.45,.29,.32],[2.60,.90,.83,.25,.28],[1.94,.85,.97,.18,.18]],.035);
+    for (const [cx,cy,cz] of [[-2.40,3.30,.34],[-2.10,2.32,1.08],[2.67,1.72,.81]]) {
+      family.sweep([[cx,cy-.10,cz,.07,.06],[cx,cy,cz+.02,.075,.095],[cx,cy+.17,cz-.01,.044,.052]],0,10);
+      for (const s of [-1,1]) family.sweep([[cx+s*.03,cy+.14,cz,.03,.04],[cx+s*.14,cy+.17,cz-.01,.05,.055],
+        [cx+s*.24,cy+.11,cz-.07,.03,.035]],0,10);
     }
+    family.finish();
     A.trees(T, kit, [{ x: -11.5, z: 4.0, h: 9.2, kind: 'banyan' }, { x: 11.5, z: 4.0, h: 8.8, kind: 'banyan' }]);
   }
 
@@ -33,35 +54,96 @@
 
   // 3. Nhà thờ Gỗ Kon Tum (1913 — gỗ cà chít Romanesque kết hợp nhà sàn Ba Na)
   function nhaThoGoKonTum(T, kit) {
-    const { box, stamp, round, tapered, outline } = kit;
-    const timber = 0x5c3622, darkWood = 0x3e2315, trim = 0xc9ab7c, roof = 0x733a28;
-    // Raised Ba Na stilt-house stone-and-timber veranda plinth
-    box(0x887f74, 0, 0.55, 0, 18.5, 1.1, 34);
-    A.steps(kit, 0, 17.5, 6.2, 1.8, 5, 0.22, 0.36, 0x999084);
-    // All-timber nave with side wooden cloister arches
-    box(timber, 0, 5.8, -1.2, 14.4, 9.4, 27.5);
-    A.gabledRoof(T, kit, 0, 10.5, -1.2, 15.8, 28.4, 5.4, roof, trim);
-    for (let z = -13.5; z <= 10.5; z += 3.0) {
-      for (const s of [-1, 1]) {
-        stamp(round, darkWood, s * 7.8, 3.2, z, 0.16, 4.4, 0.16);
-        box(0x281912, s * 7.26, 6.6, z + 1.5, 0.12, 3.2, 1.35);
+    const {box,stamp,round,tapered,profile,outline} = kit;
+    const frame=0x40372f, boards=0x665144, ochre=0xb49b66, lime=0xe6dac2;
+    const clay=0x865942, slate=0x544b44, stone=0x9e978b, glass=0x536c81;
+    kit.palette({timber:[frame,boards],plaster:lime,stone,tile:[clay,slate],glass});
+    // A round-head opening cut through a full spandrel. The paired, slimmer
+    // posts underneath it leave sightlines through the raised gallery.
+    function arcade(x,y,z,span,spring,angle) {
+      const r=span*.455, top=spring+r+.23, shape=new T.Shape();
+      shape.moveTo(-span/2,0); shape.lineTo(-r,0); shape.lineTo(-r,spring);
+      shape.absarc(0,spring,r,Math.PI,0,true);
+      shape.lineTo(r,0); shape.lineTo(span/2,0); shape.lineTo(span/2,top);
+      shape.lineTo(-span/2,top); shape.closePath();
+      profile(shape,frame,x,y,z,.26,angle);
+      const band=new T.TorusGeometry(r,.055,5,24,Math.PI);
+      stamp(band,ochre,x+.28*Math.sin(angle),y+spring,z+.28*Math.cos(angle),1,1,1,angle);
+      band.dispose();
+    }
+    box(stone,0,.50,0,19,1,32);
+    for(let i=0;i<5;i++)box(stone,0,.1+i*.10,17.15-i*.36,18.8-i*.08,.20+i*.20,.75);
+    // White infill and dark structural posts are visible above both lower aisles.
+    box(lime,0,6.10,-1.0,10,10.2,28);
+    A.gabledRoof(T,kit,0,11.25,-1.0,10.8,29.1,3.55,clay,slate);
+    for(const side of [-1,1]){
+      for(let j=0;j<9;j++){
+        const z=-13.6+3.18*j;
+        box(frame,side*5.04,6.02,z,.14,9.9,.15);
+        box(boards,side*5.10,9.55,z+1.22,.10,1.35,.58);
+      }
+      // Row of transverse pitched porches and slender balusters down each aisle.
+      for(let j=0;j<5;j++){
+        const z=-11.9+5.55*j, x=side*7.05;
+        A.gabledRoof(T,kit,x,5.65,z,4.35,5.2,1.62,slate,frame,{alongX:true,overhang:.19});
+        outline([[-2.74,0],[0,1.62],[2.74,0]],boards,side*9.1,5.65,z,.12,Math.PI/2);
+        arcade(side*8.97,1.02,z,5.48,2.10,side*Math.PI/2);
+        box(frame,side*9,2.0,z,.12,.14,5.5);
+        for(let i=-4;i<=4;i++)box(boards,side*9,1.48,z+i*.53,.11,.90,.085);
       }
     }
-    // Iconic central soaring wooden bell tower + twin flanking mini-spires
-    const fz = 12.6;
-    box(timber, 0, 10.5, fz, 5.8, 19.0, 5.4);
-    outline([[-7.4, 0], [0, 7.6], [7.4, 0]], timber, 0, 10.5, fz - 1.2, 1.8);
-    box(darkWood, 0, 3.2, fz + 2.75, 2.8, 4.4, 0.16);
-    stamp(round, trim, 0, 9.4, fz + 2.75, 1.45, 0.22, 1.45, 0, Math.PI / 2);
-    stamp(round, 0x35485a, 0, 9.4, fz + 2.82, 1.15, 0.14, 1.15, 0, Math.PI / 2);
-    tapered(darkWood, 0, 23.6, fz, 3.3, 0.14, 7.2, 1, 4);
-    box(0xdcb450, 0, 28.2, fz, 0.18, 2.8, 0.18);
-    box(0xdcb450, 0, 28.8, fz, 1.4, 0.18, 0.18);
-    for (const s of [-1, 1]) {
-      box(timber, s * 5.8, 8.2, fz + 0.4, 2.4, 14.2, 2.4);
-      tapered(darkWood, s * 5.8, 17.5, fz + 0.4, 1.45, 0.12, 4.4, 1, 4);
+    // Three open bays span the stair landing. Set the inner doors back under the porch.
+    for(const [cx,span] of [[-6.1,4.7],[0,7.5],[6.1,4.7]]){
+      arcade(cx,1.02,14.75,span,2.50,0);
+      box(boards,cx,3.03,12.95,span*.63,4,.14);
     }
-    A.plaque(T, kit, 'NHÀ THỜ GỖ KON TUM', 0, 6.2, fz + 2.82, 4.6, 0.68, { bg: '#472819', fg: '#f6dc90' });
+    for(const x of [-8.45,-3.77,3.77,8.45]){
+      box(frame,x,3.05,14.98,.37,4.05,.41);
+      box(ochre,x,4.94,14.98,.57,.18,.55);
+    }
+    for(const side of [-1,1]){
+      outline([[-side*2.35,0],[-side*2.35,3.7],[side*2.35,0]],
+        boards,side*6.1,5.65,14.70,.3);
+    }
+    // Front gable: tall bay, circular stained glass, smaller arched panels and gold-edged posts.
+    const face=15.06;
+    box(boards,0,9.88,14.1,8.3,7.12,1.72);
+    outline([[-4.35,0],[0,3.20],[4.35,0]],boards,0,13.42,13.12,1.84);
+    for(const x of [-3.85,-2.15,2.15,3.85])box(frame,x,9.9,face,.18,7.02,.19);
+    for(const y of [6.48,8.52,13.37])box(ochre,0,y,face,8.12,.09,.12);
+    for(let i=-3;i<=3;i++)arcade(i*.99,6.58,face,.94,.93,0);
+    stamp(round,glass,0,10.83,face,1.88,.18,1.88,0,Math.PI/2);
+    for(const r of [.34,.91,1.8]){
+      const ring=new T.TorusGeometry(r,r>1?.09:.045,6,48);
+      stamp(ring,ochre,0,10.83,face+.14);ring.dispose();
+    }
+    for(let i=0;i<12;i++){
+      const a=Math.PI*i/6;
+      box(0xa39a87,.99*Math.sin(a),10.83+.99*Math.cos(a),face+.13,.05,1.60,.07,0,0,-a);
+    }
+    for(const side of [-1,1]){
+      A.strut(T,kit,ochre,side*4.32,13.44,face,0,16.53,face,.068);
+      box(ochre,side*3.04,10.74,face,.68,2.38,.12);
+      box(glass,side*3.04,10.74,face+.09,.49,2.19,.10);
+    }
+    // Receding square belfry behind the façade, with louvred vents and narrow spire.
+    for(const [cy,w,h] of [[15.83,4.40,4.1],[19.07,3.05,2.55]]){
+      box(boards,0,cy,11.78,w,h,w);
+      for(const side of [-1,1])for(const bay of [-.21,.21]){
+        box(frame,bay*w,cy,11.78+side*w*.502,w*.28,h*.65,.16);
+        box(frame,side*w*.502,cy,11.78+bay*w,.16,h*.65,w*.28);
+        for(let i=-2;i<=2;i++){
+          box(ochre,bay*w,cy+i*h*.11,11.78+side*(w*.5+.09),w*.25,.09,.11);
+          box(ochre,side*(w*.5+.09),cy+i*h*.11,11.78+bay*w,.11,.09,w*.25);
+        }
+      }
+      box(frame,0,cy+h*.5,11.78,w+.52,.28,w+.52);
+    }
+    tapered(clay,0,23.15,11.78,2.36,.11,5.66,1,4);
+    for(const x of [-1.64,1.64])for(const z of [-1.64,1.64])
+      A.strut(T,kit,ochre,x,20.38,11.78+z,0,25.98,11.78,.058);
+    box(frame,0,26.46,11.78,.11,1.05,.11);
+    box(frame,0,26.65,11.78,.65,.10,.10);
   }
 
   // 4. Cầu treo Kon Klor (TP. Kon Tum — cầu treo dây võng màu cam rực rỡ)
@@ -111,8 +193,22 @@
   function quangTruongDaiDoanKet(T, kit) {
     const { box, stamp, round } = kit;
     A.memorialMonument(T, kit, {
-      plazaW: 30, plazaD: 22, h: 17, style: 'statue', backdrop: true, wings: false,
-      stone: 0xcbc4b8, darkStone: 0x6f6b64, bronze: 0x5c4833, accent: 0xaa3024,
+      plazaW: 30, plazaD: 22, style: 'statue', wings: false, flags: false,
+      stone: 0xa8a99b, darkStone: 0x696d65,
+      sculpt(T,kit,base) {
+        kit.palette({metal:0x986f50,stone:[0x72776d,0xb0b0a2,0xb9b9ac]});
+        kit.box(0x72776d,0,(base+4.5)/2,-1.2,7.8,4.5-base,5.35);
+        A.statueFigure(T,kit,0x986f50,0,4.5,-1.2,10.8,{beard:true,jacket:true,openHand:true,
+          rightArm:[[-.165,.674,.085],[-.154,.822,.13],[-.159,.894,.137]],
+          leftArm:[[.142,.651,0],[.153,.472,.018],[.151,.41,.024]]});
+        // The stone frieze opens into stepped, splayed lotus petals behind the figure.
+        for (let i=-4;i<=4;i++) {
+          const k=Math.abs(i),height=[7.3,6.8,5.9,5.2,4.8][k], width=1.85;
+          const ring=[[-width,0],[width,0],[width,height-1.45],[width*.63,height-.64],[width*.13,height],
+            [-width*.40,height-.44],[-width,height-1.23]];
+          kit.outline(ring,k%2?0xb0b0a2:0xb9b9ac,i*3.42,.35,-7.8+k*.61,1.05,i*.082);
+        }
+      },
       title: 'QUẢNG TRƯỜNG ĐẠI ĐOÀN KẾT'
     });
     // Iconic carved giant Central Highlands stone gong (Cồng chiêng đá) beside the monument
@@ -125,6 +221,7 @@
   function tuongDaiChienThangBmt(T, kit) {
     const { box, stamp, outline, round } = kit;
     const white = 0xeae6dc, darkStone = 0x76736c, tankGreen = 0x475e3e, darkTrack = 0x2f3c2a;
+    kit.palette({stone: darkStone});
 
     // Circular Ngã Sáu roundabout granite tiered base
     stamp(round, darkStone, 0, 0.45, 0, 11.5, 0.9, 11.5);
@@ -179,6 +276,7 @@
   function chuaLongSonNhaTrang(T, kit) {
     const { box, stamp, round, tapered } = kit;
     const white = 0xf2f0ea, cream = 0xe4dfd4, stone = 0x8f8a80, gold = 0xdcb24e;
+    kit.palette({plaster: cream, stone});
 
     // Hilltop stone plaza & ascending dragon stairs
     box(stone, 0, 0.55, 0, 24, 1.1, 24);
@@ -186,26 +284,16 @@
 
     // Sculpted white octagonal lotus-petal pedestal (Đài sen 7m)
     tapered(cream, 0, 3.6, -1.5, 6.4, 5.6, 5.0, 1, 8);
-    // Decorative ring of white lotus petals around top of pedestal
-    for (let i = 0; i < 12; i++) {
-      const a = i * Math.PI * 2 / 12;
-      box(white, Math.sin(a) * 5.6, 6.2, -1.5 + Math.cos(a) * 5.6, 1.85, 2.1, 0.45, a, -0.25);
-    }
-
-    // Iconic gleaming white 14m seated Buddha (Kim Thân Phật Tổ)
-    const by = 6.4;
-    // Crossed meditative legs base
-    tapered(white, 0, by + 1.8, -1.5, 5.2, 4.6, 3.2, 0.72, 14);
-    // Torso & draped monastic robe shoulders
-    tapered(white, 0, by + 6.4, -1.5, 3.4, 2.7, 6.6, 0.72, 14);
-    box(white, 0, by + 8.6, -1.5, 6.2, 2.4, 3.0);
-    // Serene Buddha head, ushnisha topknot & golden halo behind
-    const head = new T.SphereGeometry(1.65, 14, 10);
-    stamp(head, white, 0, by + 11.4, -1.5);
-    const knot = new T.SphereGeometry(0.68, 10, 8);
-    stamp(knot, white, 0, by + 13.0, -1.5);
-    head.dispose(); knot.dispose();
-    stamp(round, gold, 0, by + 11.6, -3.2, 2.6, 0.16, 2.6, 0, Math.PI / 2);
+    kit.palette({plaster:[white,cream]});
+    A.lotusSeat(T,kit,0,5.84,-1.5,5.3,1.30,white,cream);
+    const size=14/(1.048-.31),origin=7.3-.31*size;
+    A.statueFigure(T,kit,white,0,origin,-1.5,size,{seated:true,
+      rightArm:[[-.155,.492,.033],[-.035,.457,.147],[.016,.466,.161]],
+      leftArm:[[.155,.504,.032],[.050,.470,.132],[-.018,.470,.148]]});
+    const drape=A.carving(T,kit,white,0,origin,-1.5,size);
+    for(let i=0;i<4;i++) drape.sweep([[-.109,.785-i*.011,.008,.007,.012],[-.071,.708-i*.014,.058,.008,.009],
+      [.029,.624-i*.012,.063,.008,.009],[.098,.585-i*.015,.017,.005,.007]]);
+    drape.finish();
 
     A.plaque(T, kit, 'CHÙA LONG SƠN', 0, 2.6, 4.4, 4.8, 0.78, { bg: '#7c241b', fg: '#f8da74' });
     A.trees(T, kit, [{ x: -10.5, z: -8.0, h: 9.0, kind: 'palm' }, { x: 10.5, z: -8.0, h: 9.2, kind: 'palm' }]);
@@ -224,6 +312,7 @@
   function thapNuocPhanThiet(T, kit) {
     const { stamp, tapered, box } = kit;
     const brick = 0xa9523b, darkBrick = 0x8a402d, cream = 0xebe2cc, tile = 0x7c3b2a;
+    kit.palette({brick: [brick, darkBrick], plaster: cream, tile});
 
     // Octagonal riverside park plinth & lower arched brick base
     tapered(0x8c867c, 0, 0.45, 0, 7.2, 6.8, 0.9, 1, 8);
@@ -253,6 +342,7 @@
     const { box, stamp, tapered } = kit;
     const plaza = 0xb8b2a5, darkStone = 0x76736c;
     const sunGold = 0xe8b926, sunDark = 0xc9961c, leafGreen = 0x2e7d52, glassTeal = 0x4ca68a;
+    kit.palette({stone: darkStone});
 
     // Vast lakeside tiered granite square overlooking Hồ Xuân Hương
     box(darkStone, 0, 0.45, 0, 38, 0.9, 26);
@@ -321,6 +411,7 @@
     // Signature sweeping curved 3-story French red-brick classroom wing (10 arc segments)
     const R = 24.0;
     const segs = 9;
+    kit.palette({plaster: cream});
     for (let i = 0; i < segs; i++) {
       const a = -0.58 + (i / (segs - 1)) * 1.16;
       const sx = Math.sin(a) * R;
@@ -361,7 +452,7 @@
       lon: 108.872704, lat: 15.177955, yaw: -1.312, width: 25, depth: 20,
       start: [108.871750, 15.177710],
       map: 'https://www.openstreetmap.org/node/13260659280',
-      source: 'https://dsvh.gov.vn/',
+      source: 'https://vovworld.vn/vi-VN/media/chung-tich-son-my-sau-50-nam-tham-sat-my-lai-1558953.vov5',
       build: chungTichSonMy
     },
     
@@ -412,7 +503,7 @@
       lon: 108.005989, lat: 13.982935, yaw: -2.177, width: 32, depth: 24,
       start: [108.005865, 13.983018], viewDistance: 1250,
       map: 'https://www.openstreetmap.org/node/5997147685',
-      source: 'https://dulichgialai.vn/',
+      source: 'https://baochinhphu.vn/ket-luan-cua-ban-bi-thu-trung-uong-dang-ve-viec-xay-dung-tuong-dai-bac-ho-tai-gia-lai-10240252.htm',
       build: quangTruongDaiDoanKet
     },
     {

@@ -475,7 +475,12 @@ https://vi.wikipedia.org/wiki/Cung_An_%C4%90%E1%BB%8Bnh
 
 
 Mở rộng Thanh Hóa, Hà Tĩnh & Quảng Trị (Quảng Bình) đợt 3: Bảo tàng tỉnh Thanh Hóa, Đền Sòng Sơn, Đàn Tế Nam Giao Thành Nhà Hồ, Nhà thờ Chính tòa Thanh Hóa, Chùa Cầm Sơn, Khu lưu niệm Hà Huy Tập, Khu di tích Hải Thượng Lãn Ông, Sân bay Tà Cơn Khe Sanh, Bảo tàng Tổng hợp Quảng Bình – Quảng Trị và Hoành Sơn Quan (Đèo Ngang)
-Đối chiếu tọa độ OpenStreetMap và hình khối kiến trúc đặc trưng Bắc Trung Bộ (Trống đồng Đông Sơn, Đàn tế đá xanh Tây Đô & Giếng Vua, đường băng ghi sắt cùng máy bay C-130 & trực thăng UH-1 tại Tà Cơn, cửa ải đá Hoành Sơn Quan 1833 trên đỉnh Đèo Ngang).
+Tại Bảo tàng tỉnh Thanh Hóa, ba nhà trưng bày và hai hành lang nối được dựng theo đường bao OpenStreetMap. Ảnh tại 206 Trường Thi dùng để đối chiếu hai vế thang, mặt tiền vàng nhạt, nhịp cửa sổ và hàng vòm bên sân. Chiều cao và cây xanh được ước lượng từ ảnh.
+https://csdl.vietnamtourism.gov.vn/vcgt/?item=177
+https://visitthanhhoa.com/vi/bao-tang-thanh-hoa
+https://www.openstreetmap.org/way/762771467
+https://www.openstreetmap.org/way/1021330358
+Đối chiếu tọa độ OpenStreetMap và hình khối kiến trúc đặc trưng Bắc Trung Bộ (Đàn tế đá xanh Tây Đô & Giếng Vua, đường băng ghi sắt cùng máy bay C-130 & trực thăng UH-1 tại Tà Cơn, cửa ải đá Hoành Sơn Quan 1833 trên đỉnh Đèo Ngang).
 https://thanhnhaho.vn/
 https://hatinh.gov.vn/
 https://vi.wikipedia.org/wiki/S%C3%A2n_bay_T%C3%A0_C%C6%A1n
@@ -488,3 +493,29 @@ https://vietnamtourism.gov.vn/
 https://vi.wikipedia.org/wiki/Ch%C3%B9a_Linh_Ph%C6%B0%E1%BB%9Bc
 https://vi.wikipedia.org/wiki/Vi%E1%BB%87n_H%E1%BA%A3i_d%C6%B0%C6%A1ng_h%E1%BB%8Dc
 https://vi.wikipedia.org/wiki/Dinh_III_(%C4%90%C3%A0_L%E1%BA%A1t)
+
+Nhà thờ gỗ Kon Tum và Điện Thái Hòa
+Ảnh chụp dùng để đối chiếu hàng hiên mái ngang, nhịp vòm và kính tròn trên mặt tiền nhà thờ, cùng sắc ngói, hai chái và hàng cửa khuất dưới mái điện. Chi tiết được dựng ở tỷ lệ gần đúng.
+https://tamviet.tienphong.vn/can-canh-thanh-duong-go-kon-tum-co-mot-khong-hai-tren-the-gioi-post1349875.tpo
+https://commons.wikimedia.org/wiki/File:Dien_Thai_Hoa.jpg
+
+Tượng đài Mẹ Suốt và Khu chứng tích Sơn Mỹ
+Ảnh chính diện dùng để đối chiếu hướng mái chèo, hai bàn tay của Mẹ Suốt, chất đá sáng và cụm nhân vật thấp bao quanh người mẹ bồng con ở Sơn Mỹ.
+https://dulichquangtri.vn/diem-du-lich/tuong-dai-me-suot/
+https://vovworld.vn/vi-VN/media/chung-tich-son-my-sau-50-nam-tham-sat-my-lai-1558953.vov5
+
+Tượng đài Lê Lợi, Ngã ba Nghèn và tượng đài Bác Hồ ở Pleiku, Vinh
+Đối chiếu đá núi Nhồi và dáng gươm ở Thanh Hóa, cờ đá vươn cao trên nhóm tượng ở Can Lộc, tay vẫy chào bằng đồng ở Pleiku và dáng bước đi trên nền đồi cây ở Vinh.
+https://vnexpress.net/thanh-hoa-tu-bo-xong-tuong-dai-da-xanh-lon-nhat-tinh-3914113.html
+https://baohatinh.vn/sang-mai-co-hong-mua-thu-ay-post100273.html
+https://baochinhphu.vn/ket-luan-cua-ban-bi-thu-trung-uong-dang-ve-viec-xay-dung-tuong-dai-bac-ho-tai-gia-lai-10240252.htm
+https://dantri.com.vn/thoi-su/hanh-trinh-don-tuong-bac-ho-ve-voi-dong-bao-gia-lai-20200518150951159.htm
+https://visitnghean.gov.vn/diem-tham-quan/quang-truong-ho-chi-minh-va-tuong-dai-bac-ho
+
+Tượng đài Mẹ Việt Nam Anh hùng, Trần Hưng Đạo, Quan Âm Bãi Bụt và Kim Thân Phật Tổ
+Ảnh tư liệu dùng để dựng khối chân dung nổi giữa vách đá ở Tam Kỳ, thế chân trụ và tay chỉ của Trần Hưng Đạo ở Quy Nhơn, dáng đứng hướng biển ở Sơn Trà và thế ngồi trên đài sen ở Nha Trang. Chi tiết chân dung, nếp áo và mặt bằng được ước lượng.
+https://baochinhphu.vn/quang-nam-hoan-thanh-tuong-dai-ba-me-viet-nam-anh-hung-102178927.htm
+https://dulichquynhon.binhdinh.gov.vn/vi/tuongtranhungdao
+https://gialai.dcs.vn/van-hoa-xa-hoi/-/view-content/416785/tuong-dai-tran-hung-dao-bieu-tuong-uy-nghiem-noi-cua-bien-quy-nhon
+https://danangfantasticity.com/en/kham-pha/chua-linh-ung-bai-but-da-nang
+https://dulichso.khanhhoa.gov.vn/article/chua-long-son-b4e

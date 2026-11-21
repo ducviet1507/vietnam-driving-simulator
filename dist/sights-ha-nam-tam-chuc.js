@@ -1,10 +1,11 @@
 'use strict';
 (() => {
-  function buildWaterPavilion(T,{stamp,box,deck,outline}) {
+  function buildWaterPavilion(T,{palette, stamp,box,deck,outline}) {
     const timber=0x513522, beam=0x6c4c33, trim=0x896d50, stone=0xaca99e;
     const tile=[0x605e58,0x68675f,0x64615b,0x5f5c57,0x68645e];
     const post=new T.CylinderGeometry(1,1,1,8);
     const point=(x,y,z)=>new T.Vector3(x,y,z);
+    palette({timber, stone});
 
     function column(x,z,y,h,r){
       box(0xaaa69a,x,y+.2,z,r*2.65,.4,r*2.65);

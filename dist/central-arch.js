@@ -60,6 +60,7 @@
 
   function curvedRoof(T, kit, x, y, z, w, d, h, tileColor, ridgeColor, eaveColor, ridgeRatio = 0.28, opts = {}) {
     const { stamp, box, outline } = kit;
+    kit.palette({tile:tileColor}, true);
     const p = [], ledge = 0.15;
     function quad(a, b, c, dPt) { p.push(...a, ...b, ...dPt, ...b, ...c, ...dPt); }
     const ring = (t) => {
@@ -88,13 +89,29 @@
     }
     for (let j = 0; j < 32; j++) {
       const k = (j + 1) % 32, a = outer[j], b = outer[k];
-      quad(a, b, [b[0], b[1] - ledge, b[2]], [a[0], a[1] - ledge, a[2]]);
+      const lowerA = [a[0], a[1] - ledge, a[2]], lowerB = [b[0], b[1] - ledge, b[2]];
+      quad(b, a, lowerA, lowerB);
+      // Return the soffit to the wall so the sky does not show through the eaves.
+      const inner = v => [x + (v[0]-x)*.75, y-.12, z + (v[2]-z)*.75];
+      quad(lowerA, lowerB, inner(lowerB), inner(lowerA));
     }
     const g = new T.BufferGeometry();
     g.setAttribute('position', new T.Float32BufferAttribute(p, 3));
     g.computeVertexNormals();
     stamp(g, tileColor, 0, 0, 0);
     g.dispose();
+    // Raised hip caps follow the four swept pitches right to the corner tile.
+    for (const sx of [-1, 1]) for (const sz of [-1, 1]) {
+      const points=[];
+      for (let j=0; j<=4; j++) {
+        const t=j/4;
+        points.push(new T.Vector3(x+sx*w*((1-t)*.5+ridgeRatio*t),
+          y+h*t*t+(1-t)*Math.min(.55,h*.44)+.045, z+sz*d*.5*(1-t)));
+      }
+      const cap=new T.TubeGeometry(new T.CatmullRomCurve3(points),6,.093,6,false);
+      stamp(cap,ridgeColor,0,0,0);
+      cap.dispose();
+    }
     box(ridgeColor, x, y + h + 0.08, z, Math.max(0.45, w * ridgeRatio * 2.15), 0.19, 0.24);
     for (const s of [-1, 1]) for (const f of [-1, 1]) {
       outline([[-0.30, 0], [0, 0.05], [0.22, 0.24], [0.38, 0.54], [0.40, 0.22], [0.24, -0.02], [0, -0.15]],
@@ -114,6 +131,7 @@
 
   function gabledRoof(T, kit, x, y, z, w, d, h, tileColor, ridgeColor, opts = {}) {
     const { outline, box } = kit;
+    kit.palette({tile:tileColor}, true);
     const thick = opts.thick || 0.22;
     const over = opts.overhang || 0.35;
     const hw = w / 2 + over;
@@ -216,6 +234,7 @@
     const stone = opts.stone || 0x918a7f;
     const bays = opts.bays || 5;
 
+    kit.palette({timber:wood,stone,plaster:wall}, true);
     // Terraced stone foundation & front steps
     box(stone, 0, baseH * 0.5, 0, w + 2.4, baseH, d + 2.6);
     steps(kit, 0, d * 0.5 + 1.6, Math.min(7.5, w * 0.42), 1.4, 4, baseH / 4, 0.38, 0x847e74);
@@ -234,9 +253,16 @@
       }
       if (i < bays) {
         const bx = px + (w - 1.0) / bays * 0.5;
-        // Red-lacquered panel doors (cửa bức bàn)
-        box(wood, bx, baseH + colH * 0.44, d / 2 - 1.35, (w - 1.4) / bays * 0.84, colH * 0.84, 0.12);
-        box(0x8c3a27, bx, baseH + colH * 0.56, d / 2 - 1.27, (w - 1.4) / bays * 0.62, colH * 0.38, 0.06);
+        // Framed leaves, recessed panels and an open lattice above the door rail.
+        const span=(w-1.4)/bays*.86, face=d/2-1.38;
+        box(0x37271e,bx,cy,face,span,colH*.88,.16);
+        for(const side of [-1,1]){
+          const leaf=bx+side*span*.25;
+          box(wood,leaf,baseH+colH*.36,face+.10,span*.46,colH*.50,.09);
+          for(const edge of [-1,1])box(wood,leaf+edge*span*.214,cy,face+.17,.07,colH*.84,.07);
+          for(const f of [.13,.44,.60,.84])box(wood,leaf,baseH+colH*f,face+.17,span*.46,.08,.07);
+          for(let j=-1;j<=1;j++)box(wood,leaf+j*span*.105,baseH+colH*.72,face+.15,.04,colH*.22,.05);
+        }
       }
     }
     // Front veranda beam & optional horizontal plaque
@@ -280,6 +306,7 @@
     const sandstone = opts.sandstone || 0xc5b293;
     const octagonal = Boolean(opts.octagonal);
 
+    kit.palette({stone:sandstone,brick:[brick,darkBrick]}, true);
     // Molded brick plinth base (chân đế)
     if (octagonal) {
       stamp(new T.CylinderGeometry(w * 0.62, w * 0.68, 1.4, 8), darkBrick, x, 0.7, z);
@@ -367,6 +394,7 @@
     const tile = opts.tile || 0x894230;
     const trim = opts.trim || 0xb78e4d;
 
+    kit.palette({plaster:wall,tile}, true);
     // Stepped octagonal foundation
     tapered(0x888176, x, 0.55, z, baseR + 1.4, baseR + 1.1, 1.1, 1, 8);
     let curY = 1.1;
@@ -405,6 +433,7 @@
     const octagonal = Boolean(opts.octagonal);
     const sides = octagonal ? 8 : 20;
 
+    kit.palette({plaster:[body,band],metal:[dome,0x3a4042],glass:0xadc6c7}, true);
     // Coastal stone seawall terrace
     box(0x888479, 0, 0.65, 0, 14.5, 1.3, 12.5);
     box(0x9a9588, 0, 1.42, 0, 14.8, 0.24, 12.8);
@@ -451,7 +480,10 @@
     rail.dispose();
 
     // Glazed lantern room + cupola dome + lightning finial
-    stamp(round, 0xfff0b8, tx, galY + 1.95, tz, rTop * 0.74, 2.25, rTop * 0.74);
+    // Recess the glazing behind the lantern mullions and gallery rail.
+    stamp(round, 0xadc6c7, tx, galY + 1.95, tz, rTop * 0.71, 2.25, rTop * 0.71);
+    for(const level of [1.0,2.85])
+      stamp(round,0x3a4042,tx,galY+level,tz,rTop*.77,.095,rTop*.77);
     for (let i = 0; i < 8; i++) {
       const a = i * Math.PI / 4;
       box(0x2f3538, tx + Math.sin(a) * rTop * 0.76, galY + 1.95, tz + Math.cos(a) * rTop * 0.76, 0.09, 2.3, 0.09);
@@ -479,6 +511,7 @@
     const towerH = opts.towerH || 24;
     const naveH = opts.naveH || 10.5;
 
+    kit.palette({plaster:[wall,trim],glass:0x3b4e63}, true);
     // Stepped stone forecourt
     box(0x8c877d, 0, 0.4, 1.2, w + 3.0, 0.8, d + 4.8);
     steps(kit, 0, d / 2 + 2.4, w * 0.52, 1.6, 4, 0.2, 0.36, 0x999389);
@@ -519,10 +552,15 @@
       box(trim, tx, baseTop + 0.14, fz + 0.2, tw + 0.48, 0.30, tw + 0.48);
       // Belfry louver tier
       const bh = towerH * 0.16;
-      box(wall, tx, baseTop + 0.28 + bh * 0.5, fz + 0.2, tw * 0.88, bh, tw * 0.88);
-      for (const f of [-1, 1]) {
-        box(dark, tx, baseTop + 0.28 + bh * 0.5, fz + 0.2 + f * (tw * 0.46), tw * 0.34, bh * 0.68, 0.12);
-        box(dark, tx + f * (tw * 0.46), baseTop + 0.28 + bh * 0.5, fz + 0.2, 0.12, bh * 0.68, tw * 0.34);
+      const bellY=baseTop+.28+bh*.5, half=tw*.44;
+      for(const sx of [-1,1])for(const sz of [-1,1])
+        box(wall,tx+sx*(half-tw*.09),bellY,fz+.2+sz*(half-tw*.09),tw*.18,bh,tw*.18);
+      for(const level of [-1,1])box(trim,tx,bellY+level*bh*.44,fz+.2,tw*.91,bh*.12,tw*.91);
+      tapered(0x65583e,tx,bellY,fz+.2,tw*.20,tw*.095,bh*.44,1,16);
+      for(const side of [-1,1])for(let j=1;j<=4;j++){
+        const sy=bellY+bh*(j/5-.5)*.82;
+        box(dark,tx,sy,fz+.2+side*half,tw*.53,.07,.16,0,side*.38);
+        box(dark,tx+side*half,sy,fz+.2,.16,.07,tw*.53,0,0,-side*.38);
       }
       // Tall spire & cross
       const spireY = baseTop + 0.28 + bh;
@@ -552,6 +590,7 @@
     const roof = opts.roof || 0x9c4532;
     const bays = opts.bays || Math.max(5, Math.round(w / 3.8));
 
+    kit.palette({plaster:[wall,trim],timber:shutter,glass:0x283538}, true);
     // Raised stone plinth
     box(0x8d877c, 0, 0.45, 0, w + 1.4, 0.9, d + 1.4);
     steps(kit, 0, d / 2 + 1.1, Math.min(6.4, w * 0.28), 1.3, 4, 0.22, 0.32, 0x999286);
@@ -601,6 +640,147 @@
   }
 
   // Heroic Vietnamese Memorial / Victory Monument (Tượng đài & Quảng trường)
+  // Sweep elliptical cross sections through the carve. Each section records
+  // its centre and the two radii, in fractions of the height of one figure.
+  function carving(T, kit, tint, x, y, z, size, yaw = 0) {
+    const vertices = [], indices = [];
+    function sweep(sections, folds = 0, sides = 16) {
+      const first = vertices.length / 3;
+      const centres = sections.map(([x, y, z]) => new T.Vector3(x, y, z));
+      const axis = new T.Vector3(), side = new T.Vector3(), front = new T.Vector3();
+      for (let row = 0; row < sections.length; row++) {
+        axis.subVectors(centres[Math.min(row + 1, centres.length - 1)], centres[Math.max(0, row - 1)]).normalize();
+        // Looking down an arm or leg, keep the carving's broad faces
+        // aligned with the front of the statue as the joint bends.
+        side.set(axis.y, -axis.x, 0);
+        if (side.lengthSq() < 1e-6) side.set(1, 0, 0);
+        side.normalize();
+        front.crossVectors(side, axis).normalize();
+        const [cx, cy, cz, width, depth] = sections[row];
+        for (let j = 0; j < sides; j++) {
+          const a = j * Math.PI * 2 / sides;
+          const ripple = 1 + folds * (Math.cos(5 * a + row * .36) + .4 * Math.cos(3 * a - row * .47));
+          const u = Math.sin(a) * width * ripple, v = Math.cos(a) * depth * ripple;
+          vertices.push(cx + u * side.x + v * front.x, cy + u * side.y + v * front.y, cz + u * side.z + v * front.z);
+          if (row) {
+            const p = first + (row - 1) * sides + j, q = first + (row - 1) * sides + (j + 1) % sides;
+            indices.push(p, q, p + sides, q, q + sides, p + sides);
+          }
+        }
+      }
+      for (let j = 1; j < sides - 1; j++) {
+        const last = first + (sections.length - 1) * sides;
+        indices.push(first, first + j + 1, first + j, last, last + j, last + j + 1);
+      }
+    }
+    function finish() {
+      const geo = new T.BufferGeometry();
+      geo.setAttribute('position', new T.Float32BufferAttribute(vertices, 3));
+      geo.setIndex(indices);
+      geo.computeVertexNormals();
+      kit.stamp(geo, tint, x, y, z, size, size, size, yaw);
+      geo.dispose();
+    }
+    return { sweep, finish };
+  }
+
+  function statueFigure(T, kit, tint, x, y, z, size, pose = {}) {
+    const { sweep, finish } = carving(T, kit, tint, x, y, z, size, pose.yaw);
+    // Slight offset at the knees puts the weight on the rear foot. The
+    // separately carved shoes and flared trouser hems leave space between legs.
+    for (const s of [-1, 1]) {
+      if (pose.seated) {
+        // Fold the leg back across the opposite calf, under the robe.
+        sweep([[s*.058,.49,0,.071,.075],[s*.154,.424,.066,.067,.075],[s*.196,.38,.10,.067,.070],
+          [s*.130,.375,.15,.062,.065],[-s*.015,.390,.187,.049,.045],[-s*.115,.420,.162,.030,.055]],.065,20);
+      } else if (!pose.robe) {
+        const rise = s < 0 ? (pose.stepUp||0) : 0;
+        const foot = s < 0 ? .04+rise*.54 : -.017, hip = s * .056, ankle = s * .070;
+        sweep([[ankle,.012+rise,foot+.015,.04,.072],[ankle,.025+rise,foot+.017,.042,.071],[ankle,.047+rise,foot,.032,.043]]);
+        sweep([[ankle,.038+rise,foot,.039,.037],[ankle,.056+rise,foot,.048,.045],[s*.066,.19+rise*.7,foot*.72,.046,.048],
+          [s*.064,.255+rise*.66,foot+.008,.049,.052],[hip,.38,0,.062,.061],[hip,.50,0,.063,.064]],.085);
+      }
+    }
+    if (pose.robe) {
+      sweep([[0,.015,0,.153,.090],[0,.041,-.005,.154,.094],[.006,.17,-.010,.141,.09],
+        [-.014,.36,-.005,.129,.082],[0,.51,0,.108,.073]],.13,32);
+      for(const s of [-1,1]) sweep([[s*.084,.808,-.010,.044,.054],[s*.103,.713,-.035,.042,.052],
+        [s*.121,.53,-.035,.032,.052],[s*.107,.34,-.020,.024,.043]],.10);
+    }
+    const hem = pose.longCoat ? .34 : .43;
+    sweep([[0,hem,0,.115,.069],[0,hem+.014,0,.118,.071],[.004,.53,0,.095,.066],[0,.615,0,.087,.061],
+      [0,.72,.002,.110,.070],[0,.796,-.007,.126,.064],[0,.819,-.008,.086,.044],[0,.836,0,.040,.041]],.048,24);
+    if (pose.jacket) {
+      sweep([[0,.45,.069,.003,.003],[.002,.61,.064,.004,.004],[0,.73,.071,.004,.005],[0,.795,.057,.004,.005]],0,8);
+      for (const s of [-1,1]) {
+        sweep([[s*.014,.790,.055,.004,.004],[s*.041,.805,.051,.009,.006],[s*.039,.822,.036,.005,.005]],0,10);
+        for (const py of [.53,.72]) {
+          sweep([[s*.043,py,.066,.003,.004],[s*.063,py-.003,.062,.006,.005],[s*.082,py,.055,.003,.004]],0,10);
+        }
+      }
+    } else {
+      // Raised folds follow the pull from the shoulder to the belted waist.
+      for (const s of [-1,1]) {
+        sweep([[s*.081,.782,.044,.003,.004],[s*.055,.711,.064,.006,.006],[s*.029,.651,.057,.004,.004]],0,10);
+        sweep([[s*.062,hem+.018,.056,.003,.004],[s*.044,(hem+.60)/2,.064,.008,.008],[s*.022,.599,.060,.003,.003]],0,10);
+      }
+    }
+    // Collar, neck, jaw and cheekbones have independent profiles. Projecting
+    // brows, nose, lower lip and ears catch light at street-eye height.
+    sweep([[0,.809,0,.044,.044],[0,.837,0,.037,.040],[0,.861,.004,.035,.037]]);
+    sweep([[0,.846,.015,.018,.024],[0,.857,.013,.036,.036],[0,.885,.006,.047,.048],[0,.908,.005,.054,.049],
+      [0,.931,.003,.053,.047],[0,.950,0,.055,.052],[0,.976,-.003,.050,.049],[0,.994,-.004,.034,.034],[0,1,-.005,.013,.017]]);
+    for (const s of [-1, 1]) {
+      sweep([[s*.050,.892,0,.007,.006],[s*.053,.911,-.002,.009,.012],[s*.051,.930,-.003,.006,.008]],0,10);
+      sweep([[s*.007,.932,.048,.004,.005],[s*.019,.935,.048,.006,.007],[s*.038,.928,.040,.004,.004]],0,10);
+    }
+    sweep([[0,.898,.052,.009,.006],[0,.906,.056,.013,.012],[0,.923,.051,.008,.010],[0,.938,.046,.008,.006]],0,12);
+    sweep([[-.018,.881,.049,.003,.003],[0,.881,.054,.005,.004],[.018,.881,.049,.003,.003]],0,10);
+    if (pose.seated || pose.robe) {
+      sweep([[0,.957,-.009,.053,.052],[0,.987,-.010,.054,.053],[0,1.006,-.012,.040,.039],
+        [0,1.016,-.012,.025,.025],[0,1.040,-.012,.018,.020],[0,1.048,-.012,.007,.008]],.06,24);
+      for (const s of [-1,1]) sweep([[s*.052,.87,-.004,.005,.008],[s*.054,.892,0,.009,.013],
+        [s*.055,.924,0,.010,.011]],0,12);
+    }
+    if (pose.beard) sweep([[0,.807,.047,.006,.005],[0,.838,.047,.019,.011],[0,.861,.044,.032,.016],[0,.876,.043,.029,.014]],.10);
+    if (pose.headcloth) sweep([[0,.940,-.006,.054,.051],[0,.960,-.007,.058,.055],[0,.988,-.006,.048,.048],[0,1.005,-.010,.016,.024]],.04);
+    for (const s of [-1, 1]) {
+      const arm = (s < 0 ? pose.rightArm : pose.leftArm) || [[s*.139,.65,.005],[s*.141,.50,.025]];
+      const [elbow, wrist] = arm;
+      sweep([[s*.102,.788,-.004,.042,.047],[s*.122,.754,0,.041,.043],[...elbow,.035,.038],
+        [(elbow[0]+wrist[0])/2,(elbow[1]+wrist[1])/2,(elbow[2]+wrist[2])/2,.033,.035],
+        [...wrist,.026,.029]],.045);
+      const hand = arm[2] || [wrist[0],wrist[1]-.052,wrist[2]+.006];
+      const middle = hand.map((v,i) => (v+wrist[i])*.5);
+      sweep([[...wrist,.022,.020],[...middle,.030,.020],[...hand,.022,.014]],0,12);
+      sweep([[middle[0]-s*.013,middle[1],middle[2]+.008,.014,.014],
+        [hand[0]-s*.027,(hand[1]+middle[1])/2,hand[2]+.012,.009,.011],
+        [hand[0]-s*.026,hand[1],hand[2]+.013,.006,.008]],0,8);
+      if (s < 0 && pose.openHand) {
+        for (let finger=0;finger<4;finger++) {
+          const shift=(finger-1.5)*.011;
+          sweep([[hand[0]+shift,hand[1]-.004,hand[2],.007,.009],
+            [hand[0]+shift*1.25,hand[1]+.025,hand[2]+.005,.006,.007],
+            [hand[0]+shift*1.38,hand[1]+.042-Math.abs(shift)*.55,hand[2]+.009,.005,.005]],0,8);
+        }
+      }
+    }
+    finish();
+  }
+
+  function lotusSeat(T,kit,x,y,z,r,h,pale,shadow) {
+    for(let row=0;row<2;row++) {
+      const radius=r*(row?.92:1), base=y+row*h*.42;
+      for (let i=0;i<16;i++) {
+        const a=(i+row*.5)*Math.PI/8;
+        const petal=carving(T,kit,row?pale:shadow,x+Math.sin(a)*radius,base,z+Math.cos(a)*radius,1,a);
+        petal.sweep([[0,0,-r*.15,r*.102,r*.045],[0,h*.24,-r*.10,r*.170,r*.065],
+          [0,h*.58,0,r*.192,r*.076],[0,h*.84,r*.035,r*.116,r*.046],[0,h,r*.063,r*.016,r*.017]],0,16);
+        petal.finish();
+      }
+    }
+  }
+
   function memorialMonument(T, kit, opts = {}) {
     const { box, stamp, tapered, round, wavingFlag } = kit;
     const plazaW = opts.plazaW || 24;
@@ -611,6 +791,7 @@
     const bronze = opts.bronze || 0x5c4a35;
     const accent = opts.accent || 0xa93829;
     const style = opts.style || 'obelisk'; // 'obelisk' | 'statue' | 'flame' | 'arch'
+    kit.palette({stone:[stone,darkStone],metal:bronze});
 
     // Broad stepped granite plaza
     box(darkStone, 0, 0.28, 0, plazaW, 0.56, plazaD);
@@ -633,22 +814,7 @@
     }
 
     if (style === 'statue') {
-      // Tall heroic statue silhouette on granite plinth (e.g. Bác Hồ, Mẹ Suốt, Lê Lợi, Đại Đoàn Kết)
-      const sy = 3.85;
-      tapered(bronze, 0, sy + h * 0.22, -1.2, 1.65, 1.15, h * 0.44, 0.75, 12);
-      box(bronze, 0, sy + h * 0.52, -1.2, 2.7, h * 0.24, 1.4);
-      const head = new T.SphereGeometry(0.92, 12, 10);
-      stamp(head, bronze, 0, sy + h * 0.70, -1.2);
-      head.dispose();
-      // Raised hand / sweeping cloak silhouette
-      box(bronze, 1.45, sy + h * 0.62, -0.85, 0.65, h * 0.22, 0.65, 0, 0.32, -0.35);
-      // Curved granite lotus backdrop behind statue
-      if (opts.backdrop) {
-        for (let i = -3; i <= 3; i++) {
-          const bh = h * (0.95 - Math.abs(i) * 0.08);
-          box(stone, i * 2.1, 1.0 + bh * 0.5, -5.2 + Math.abs(i) * 0.35, 1.85, bh, 0.95);
-        }
-      }
+      opts.sculpt(T, kit, 3.825);
     } else if (style === 'flame') {
       // Stylized rising torch / flame / lotus petals (Truông Bồn, Xô Viết Nghệ Tĩnh)
       const sy = 3.85;
@@ -692,6 +858,7 @@
     const pierColor = opts.pierColor || 0x9b9588;
     const arched = opts.arched !== false;
 
+    kit.palette({metal:[steel,steelDark],plaster:pierColor}, true);
     // Deck edge girders & railings strictly outside carriageway (`|z| >= halfW`)
     for (const s of [-1, 1]) {
       box(steelDark, 0, -0.45, s * (halfW + 0.35), len + 2, 0.95, 0.72);
@@ -758,6 +925,7 @@
     const tilt = opts.tilt || 0; // non-zero for Cầu Trần Thị Lý's iconic leaning mast!
     const centralMast = Boolean(opts.centralMast); // single median pylon (e.g. Cầu Sông Hàn / Trần Thị Lý)
 
+    kit.palette({metal:cableColor,plaster:pylonColor}, true);
     // Deck edge fascia & pedestrian railings outside driving lanes
     for (const s of [-1, 1]) {
       box(0x888b8c, 0, -0.55, s * (halfW + 0.45), len + 2, 1.05, 0.90);
@@ -840,6 +1008,7 @@
     const deckColor = opts.deckColor || 0x7b8285;
 
     // Deck edge beams & railings
+    kit.palette({metal:[cableColor,deckColor]}, true);
     for (const s of [-1, 1]) {
       box(deckColor, 0, -0.52, s * (halfW + 0.35), len + 2, 0.98, 0.75);
       box(towerColor, 0, 1.08, s * (halfW + 0.52), len, 0.10, 0.10);
@@ -889,40 +1058,23 @@
     }
   }
 
-  // Regional Vietnamese foliage clusters (single fast mesh per landmark)
-  function trees(T, kit, list) {
-    // Each item: { x, z, h, kind: 'banyan' | 'pine' | 'palm' }
-    const { stamp, round, random } = kit;
-    const canopy = new T.IcosahedronGeometry(1, 1);
-    const cone = new T.ConeGeometry(1, 1, 7);
-    for (const item of list) {
-      const h = item.h || 7;
-      if (item.kind === 'pine') {
-        stamp(round, 0x614836, item.x, h * 0.35, item.z, 0.18, h * 0.7, 0.18);
-        for (let k = 0; k < 3; k++) {
-          const r = (2.1 - k * 0.48) * (h / 9);
-          stamp(cone, [0x2f5a38, 0x376640, 0x2b5033][k], item.x, h * (0.50 + k * 0.19), item.z, r, h * 0.34, r);
-        }
-      } else if (item.kind === 'palm') {
-        stamp(round, 0x8f8862, item.x, h * 0.5, item.z, 0.11, h, 0.11);
-        for (let j = 0; j < 6; j++) {
-          const a = j * Math.PI / 3 + random() * 0.3;
-          kit.box(j % 2 ? 0x4b773c : 0x588644, item.x + Math.sin(a) * 1.15, h + 0.12, item.z + Math.cos(a) * 1.15, 0.42, 0.10, 2.25, a, 0.35);
-        }
-      } else {
-        // Broad tropical banyan / shade tree
-        stamp(round, 0x624d3b, item.x, h * 0.32, item.z, 0.32, h * 0.64, 0.32);
-        for (let k = 0; k < 5; k++) {
-          const a = k * 1.25 + random() * 0.4;
-          const ox = k === 0 ? 0 : Math.cos(a) * (h * 0.22);
-          const oz = k === 0 ? 0 : Math.sin(a) * (h * 0.22);
-          const r = (k === 0 ? 0.34 : 0.26) * h;
-          stamp(canopy, [0x3d6935, 0x4a783d, 0x355c2e][k % 3], item.x + ox, h * (0.68 + (k === 0 ? 0.12 : 0)), item.z + oz, r, r * 0.72, r, a);
-        }
-      }
+  // Geometry is owned by the landmark so streaming can release it. The leaf
+  // atlas is already shared with the roadside trees and survives site eviction.
+  function trees(T, { group }, list) {
+    const models = createTreeModels(T);
+    const crownScale = { pine: 0.80, palm: 0.68, banyan: 1.03 };
+    for (const { x, y = 0, z, h = 7, width, kind = 'banyan' } of list) {
+      const variant = models.variantAt(x, z);
+      const species = kind === 'banyan' ? 'tree' : kind;
+      const geometry = models.geometry(species, true, variant);
+      const mesh = new T.Mesh(geometry, kind === 'palm' ? models.palmMaterial : models.material);
+      const spread = width ?? h * crownScale[kind];
+      mesh.position.set(x, y, z);
+      mesh.scale.set(spread, h, spread);
+      mesh.rotation.y = x * 0.81 + z * 0.57;
+      mesh.castShadow = mesh.receiveShadow = true;
+      group.add(mesh);
     }
-    canopy.dispose();
-    cone.dispose();
   }
 
   window.CentralArch = {
@@ -940,7 +1092,7 @@
     lighthouse,
     gothicChurch,
     colonialBuilding,
-    memorialMonument,
+    memorialMonument, carving, statueFigure, lotusSeat,
     steelTrussBridge,
     cableStayedBridge,
     suspensionBridge,

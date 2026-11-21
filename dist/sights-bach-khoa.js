@@ -60,6 +60,7 @@
     const {group,stamp,box,round,outline,random,wavingFlag}=kit;
     const stone=0xe1dfd2,white=0xf0eee4,trim=0xb4b4a9,blue=0x344f63,red=0xa93932;
     const foundations=createTempleFoundations(T,kit);
+    kit.palette({stone});
     function fixture(x,z,create){
       const start=group.children.length;
       let mounted=[];

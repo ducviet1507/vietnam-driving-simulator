@@ -76,6 +76,13 @@ const roadCodec = await readFile(path.join(client,"road-tile-codec.js"),"utf8");
 for (const name of await readdir(client)) {
   if (name.endsWith(".js")) await storeGzip(path.join(client,name));
 }
+// Keep the regional model modules and pass terrain in the same lossless
+// representation as the main scripts. Their public import URLs stay stable.
+for (const directory of ["journey-data","stage-terrain"]) {
+  for (const name of await readdir(path.join(client,directory))) {
+    if (/\.m?js$/.test(name)) await storeGzip(path.join(client,directory,name));
+  }
+}
 // Sites accepts a single ES module as its Worker entry point.
 await writeFile(path.join(server,"index.js"),body
   .replace('import trailerUrl from "./trailer-url.js";',"const trailerUrl = "+JSON.stringify("https://raw.githubusercontent.com/tang-vu/vietnam-driving-simulator/"+revision+"/dist/"+trailerPath)+";")

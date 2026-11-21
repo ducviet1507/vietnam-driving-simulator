@@ -1,46 +1,6 @@
 'use strict';
 (() => {
   // Helper: concave Vietnamese curved hip roof (mái đao cong) matching Ha Nam / Hue style
-  function curvedRoof(T, {stamp, box, outline}, x, y, z, w, d, h, tileColor, ridgeColor, eaveColor, ridgeRatio = 0.28) {
-    const p = [], ledge = 0.16;
-    function quad(a, b, c, dPt) { p.push(...a, ...b, ...dPt, ...b, ...c, ...dPt); }
-    const ring = (t) => {
-      const v = [];
-      for (const [ax, az, bx, bz] of [[-1, -1, -1, 1], [-1, 1, 1, 1], [1, 1, 1, -1], [1, -1, -1, -1]]) {
-        for (let i = 0; i < 8; i++) {
-          const u = i / 8, xx = ax + (bx - ax) * u, zz = az + (bz - az) * u;
-          const corner = Math.pow(Math.min(Math.abs(xx), Math.abs(zz)), 4.5);
-          v.push([
-            x + xx * (w / 2 * (1 - t) + w * ridgeRatio * t),
-            y + h * t * t + corner * (1 - t) * Math.min(0.52, h * 0.42),
-            z + zz * (d / 2 * (1 - t))
-          ]);
-        }
-      }
-      return v;
-    };
-    let outer = ring(0), prev = outer;
-    for (const t of [0.33, 0.67, 1]) {
-      const next = ring(t);
-      for (let j = 0; j < 32; j++) { const k = (j + 1) % 32; quad(prev[j], next[j], next[k], prev[k]); }
-      prev = next;
-    }
-    for (let i = 0; i < p.length; i += 9) for (let axis = 0; axis < 3; axis++) [p[i + 3 + axis], p[i + 6 + axis]] = [p[i + 6 + axis], p[i + 3 + axis]];
-    for (let j = 0; j < 32; j++) {
-      const k = (j + 1) % 32, a = outer[j], b = outer[k];
-      quad(a, b, [b[0], b[1] - ledge, b[2]], [a[0], a[1] - ledge, a[2]]);
-    }
-    const g = new T.BufferGeometry();
-    g.setAttribute('position', new T.Float32BufferAttribute(p, 3));
-    g.computeVertexNormals();
-    stamp(g, tileColor, 0, 0, 0);
-    g.dispose();
-    box(ridgeColor, x, y + h + 0.08, z, w * ridgeRatio * 2.15, 0.19, 0.24);
-    for (const s of [-1, 1]) for (const f of [-1, 1]) {
-      outline([[-0.32, 0], [0, 0.05], [0.22, 0.24], [0.38, 0.56], [0.42, 0.24], [0.26, -0.02], [0, -0.16]],
-        eaveColor, x + s * w * 0.49, y + 0.36, z + f * (d / 2 - 0.1), 0.12, s === 1 ? 0 : Math.PI);
-    }
-  }
 
   // Footprints of the masonry on either side of an open arch, in model coordinates.
   function archPiers(x, z, width, radius, depth) {
@@ -73,6 +33,7 @@
     const laterite = [0x8c5c45, 0x99674c, 0x7d533e, 0xa27053];
     const brick = 0x8d523d, mortar = 0xb5a892, plaster = 0xc9be9f, timber = 0x613125;
     const tile = 0x6f4335, darkStone = 0x655f57, woodDoor = 0x51261b;
+    kit.palette({brick, plaster, timber, tile, stone: darkStone});
 
     // Approach stone bridge & moat walls in front (+Z)
     box(0x888175, 0, 0.16, 8.2, 6.8, 0.34, 9.6);
@@ -137,13 +98,13 @@
       }
     }
     // Lower sweeping curved tile roof
-    curvedRoof(T, kit, 0, 8.62, 0, 11.4, 7.1, 1.55, tile, mortar, plaster, 0.32);
+    window.CentralArch.curvedRoof(T, kit, 0, 8.62, 0, 11.4, 7.1, 1.55, tile, mortar, plaster, 0.32);
 
     // Upper attic tier (tầng cổ diêm) of Vọng Lâu
     box(brick, 0, 10.55, 0, 6.2, 1.45, 3.4);
     for (const x of [-2.9, 0, 2.9]) for (const z of [-1.62, 1.62]) box(timber, x, 10.55, z, 0.24, 1.48, 0.24);
     for (const f of [-1, 1]) for (const dx of [-1.45, 1.45]) box(0x3a2a24, dx, 10.6, f * 1.72, 1.05, 0.85, 0.08);
-    curvedRoof(T, kit, 0, 11.2, 0, 8.6, 5.2, 1.45, tile, mortar, plaster, 0.28);
+    window.CentralArch.curvedRoof(T, kit, 0, 11.2, 0, 8.6, 5.2, 1.45, tile, mortar, plaster, 0.28);
 
     // Sunburst crest (mặt trời / hồ lô) on top ridge
     const finial = new T.SphereGeometry(0.28, 10, 8);
@@ -153,9 +114,10 @@
 
   // 2. Nhà Bác Hồ ở Làng Sen (Kim Liên, Nam Đàn)
   function langSen(T, kit) {
-    const {box, stamp, outline, round, random, group} = kit;
+    const {box, stamp, outline, round, random} = kit;
     const thatch = [0xb39a6e, 0xa58b60, 0x9b8259, 0xbfaa7d];
     const bamboo = 0x87724d, timber = 0x563f2e, earth = 0xb99e77, hedge = 0x3f6632;
+    kit.palette({timber: [bamboo, timber]});
 
     // Packed-earth yard & low foundation platform
     box(earth, 0, 0.08, 1.6, 22.0, 0.16, 16.5);
@@ -240,36 +202,9 @@
     // Brick village well (giếng nước) & areca palms (hàng cau xứ Nghệ)
     stamp(round, 0x8e5642, 7.2, 0.45, 5.2, 0.95, 0.78, 0.95);
     stamp(round, 0x2d484d, 7.2, 0.52, 5.2, 0.72, 0.68, 0.72);
-    const xyz = [], rgb = [];
-    function tri(a, b, c, color) {
-      const t = new T.Color(color);
-      for (const pt of [a, b, c, c, b, a]) { xyz.push(...pt); rgb.push(t.r, t.g, t.b); }
-    }
-    for (const [px, pz, ph] of [[5.8, 7.8, 5.4], [8.2, 7.5, 6.1], [8.6, 1.5, 5.8], [-8.8, -4.2, 6.2], [8.2, -4.5, 5.6], [-4.8, 7.6, 5.1]]) {
-      stamp(round, 0x9b966b, px, ph / 2, pz, 0.11, ph, 0.11);
-      for (let j = 0; j < 7; j++) {
-        const a = j * 2.15 + random() * 0.5, dx = Math.sin(a), dz = Math.cos(a), l = 1.85 + random() * 0.55;
-        let prev = null;
-        for (let k = 0; k <= 5; k++) {
-          const t = k / 5, reach = l * t, fw = 0.34 * Math.sin(Math.PI * t), fy = ph + 0.9 * Math.sin(Math.PI * t) - 0.52 * t;
-          const m = [px + dx * reach, fy, pz + dz * reach];
-          const lft = [m[0] + dz * fw, fy - fw * 0.48, m[2] - dx * fw];
-          const rgt = [m[0] - dz * fw, fy - fw * 0.52, m[2] + dx * fw];
-          if (prev) {
-            tri(prev[0], prev[1], m, 0x567d43); tri(m, prev[1], lft, 0x62894a);
-            tri(prev[0], m, prev[2], 0x456b3c); tri(m, rgt, prev[2], 0x527a44);
-          }
-          prev = [m, lft, rgt];
-        }
-      }
-    }
-    const foliage = new T.BufferGeometry();
-    foliage.setAttribute('position', new T.Float32BufferAttribute(xyz, 3));
-    foliage.setAttribute('color', new T.Float32BufferAttribute(rgb, 3));
-    foliage.computeVertexNormals();
-    const mesh = new T.Mesh(foliage, new T.MeshLambertMaterial({vertexColors: true}));
-    mesh.castShadow = mesh.receiveShadow = true;
-    group.add(mesh);
+    const palms = [[5.8, 7.8, 6.2], [8.2, 7.5, 6.9], [8.6, 1.5, 6.6],
+      [-8.8, -4.2, 7.0], [8.2, -4.5, 6.4], [-4.8, 7.6, 5.9]];
+    window.CentralArch.trees(T, kit, palms.map(([x, z, h]) => ({x, z, h, width: 4.4, kind: 'palm'})));
   }
 
   // 3. Tam Quan Đền Cuông (Diễn Châu, Nghệ An) — ancient banyan roots over triple-arch gate
@@ -277,6 +212,7 @@
     const {box, stamp, outline, round, tapered, sign, random} = kit;
     const aged = 0xa99b82, moss = 0x6d7557, ochre = 0xb99c6e, tile = 0x6a4337, ridge = 0x8e8677;
     const rootWood = 0x5f4e3d, dark = 0x473e34;
+    kit.palette({plaster: ochre, tile});
 
     // Stepped stone approach terrace
     for (let i = 0; i < 4; i++) {
@@ -291,8 +227,8 @@
       // 2nd tier pavilion on side gates
       box(ochre, s * 5.2, 4.62, 0, 3.25, 1.25, 1.65);
       for (const f of [-1, 1]) box(dark, s * 5.2, 4.62, f * 0.85, 1.1, 0.78, 0.08);
-      curvedRoof(T, kit, s * 5.2, 3.68, 0, 4.95, 3.1, 0.76, tile, ridge, aged, 0.25);
-      curvedRoof(T, kit, s * 5.2, 5.18, 0, 4.15, 2.55, 0.74, tile, ridge, aged, 0.24);
+      window.CentralArch.curvedRoof(T, kit, s * 5.2, 3.68, 0, 4.95, 3.1, 0.76, tile, ridge, aged, 0.25);
+      window.CentralArch.curvedRoof(T, kit, s * 5.2, 5.18, 0, 4.15, 2.55, 0.74, tile, ridge, aged, 0.24);
       // Outer Tứ Trụ Biểu ceremonial pillars
       const px = s * 8.15;
       box(dark, px, 1.2, 0.2, 1.15, 0.65, 1.15);
@@ -310,11 +246,11 @@
       box(0x4c2d22, 0, 6.55, f * 1.3, 1.45, 1.25, 0.08);
       for (const s of [-1, 1]) box(moss, s * 1.55, 6.55, f * 1.3, 0.55, 1.2, 0.1);
     }
-    curvedRoof(T, kit, 0, 5.55, 0, 6.5, 4.2, 0.96, tile, ridge, aged, 0.3);
+    window.CentralArch.curvedRoof(T, kit, 0, 5.55, 0, 6.5, 4.2, 0.96, tile, ridge, aged, 0.3);
     box(ochre, 0, 8.25, 0, 3.1, 1.35, 1.85);
     for (const f of [-1, 1]) box(dark, 0, 8.25, f * 0.96, 1.05, 0.85, 0.08);
-    curvedRoof(T, kit, 0, 7.45, 0, 5.4, 3.45, 0.88, tile, ridge, aged, 0.28);
-    curvedRoof(T, kit, 0, 8.85, 0, 4.25, 2.75, 0.85, tile, ridge, aged, 0.25);
+    window.CentralArch.curvedRoof(T, kit, 0, 7.45, 0, 5.4, 3.45, 0.88, tile, ridge, aged, 0.28);
+    window.CentralArch.curvedRoof(T, kit, 0, 8.85, 0, 4.25, 2.75, 0.85, tile, ridge, aged, 0.25);
 
     // Twin dragons flanking moon on top ridge
     for (const s of [-1, 1]) {
@@ -333,22 +269,7 @@
       const rad = 0.042 + random() * 0.045;
       stamp(round, i % 3 === 0 ? moss : rootWood, rx, 1.0 + rh / 2, rz, rad, rh, rad, 0, 0, (random() - 0.5) * 0.35);
     }
-    stamp(round, rootWood, 6.1, 4.1, -1.65, 0.42, 6.4, 0.42, 0, 0.16, -0.2);
-    const canopy = new T.IcosahedronGeometry(1, 1);
-    const lp = canopy.attributes.position;
-    for (let i = 0; i < lp.count; i++) {
-      const lx = lp.getX(i), ly = lp.getY(i), lz = lp.getZ(i);
-      const n = 1 + 0.15 * Math.sin(lx * 9 + ly * 11 - lz * 7) + 0.09 * Math.cos(lz * 13 + ly * 8);
-      lp.setXYZ(i, lx * n, ly * n, lz * n);
-    }
-    canopy.computeVertexNormals();
-    for (let i = 0; i < 28; i++) {
-      const a = i * 2.399, r = Math.sqrt(i / 28) * 3.4;
-      stamp(canopy, [0x476438, 0x567441, 0x3f5b33][i % 3],
-        5.8 + Math.cos(a) * r, 7.2 + (1 - r / 4.2) * 1.35 + random() * 0.45, -1.5 + Math.sin(a) * r * 0.85,
-        1.15 + random() * 0.42, 0.82 + random() * 0.36, 1.08 + random() * 0.4, a);
-    }
-    canopy.dispose();
+    window.CentralArch.trees(T, kit, [{x: 5.9, y: .9, z: -1.65, h: 9.0, width: 9.3}]);
   }
 
   // 4. Nghi Môn Đền Ông Hoàng Mười (Hưng Nguyên, Nghệ An)
@@ -356,6 +277,7 @@
     const {box, stamp, outline, round, tapered, sign} = kit;
     const goldWall = 0xd6b16b, cream = 0xe8d9b5, redTile = 0xa84632, vermilion = 0x8e2c22;
     const stone = 0x8d887c, brickFloor = 0x9b5a44, gold = 0xd4ad52;
+    kit.palette({plaster: cream, stone});
 
     // Red Bát Tràng brick courtyard & triple stone stairs
     box(brickFloor, 0, 0.16, 0.8, 22.4, 0.32, 12.2);
@@ -396,10 +318,10 @@
     sign('ĐỀN ÔNG HOÀNG MƯỜI', 0, 4.35, 0.25, 4.25, 0.52);
 
     // Double-tier sweeping terracotta roofs over Tam Quan
-    curvedRoof(T, kit, 0, 4.72, -1.6, 13.4, 5.2, 1.28, redTile, cream, gold, 0.36);
+    window.CentralArch.curvedRoof(T, kit, 0, 4.72, -1.6, 13.4, 5.2, 1.28, redTile, cream, gold, 0.36);
     box(vermilion, 0, 6.28, -1.6, 6.2, 1.48, 2.65);
     for (const x of [-2.4, -0.8, 0.8, 2.4]) box(gold, x, 6.28, -0.24, 0.16, 1.32, 0.08);
-    curvedRoof(T, kit, 0, 6.95, -1.6, 8.2, 4.15, 1.24, redTile, cream, gold, 0.3);
+    window.CentralArch.curvedRoof(T, kit, 0, 6.95, -1.6, 8.2, 4.15, 1.24, redTile, cream, gold, 0.3);
 
     // Twin dragons & pearl on main ridge
     for (const s of [-1, 1]) {
@@ -427,6 +349,7 @@
   function km0HoChiMinh(T, kit) {
     const {box, stamp, outline, round, tapered, sign, wavingFlag} = kit;
     const granite = 0xd6d2c7, darkGranite = 0x5c5b58, redCap = 0xb52b27, gold = 0xdcb44c, stone = 0xa9a59b;
+    kit.palette({stone: [granite, darkGranite, stone]});
 
     // Broad octagonal ceremonial plaza
     tapered(stone, 0, 0.14, 0, 13.8, 13.5, 0.28, 1, 8);
@@ -472,7 +395,7 @@
       stamp(round, 0x7c3627, x, 2.25, z, 0.16, 2.9, 0.16);
     }
     box(darkGranite, 0, 2.15, -9.2, 1.75, 2.45, 0.42);
-    curvedRoof(T, kit, 0, 3.68, -9.2, 9.8, 6.2, 1.45, 0x984231, stone, granite, 0.34);
+    window.CentralArch.curvedRoof(T, kit, 0, 3.68, -9.2, 9.8, 6.2, 1.45, 0x984231, stone, granite, 0.34);
 
     // Perimeter stone bollards
     for (let i = 0; i < 8; i++) {

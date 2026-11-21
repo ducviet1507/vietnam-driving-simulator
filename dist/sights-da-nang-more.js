@@ -55,6 +55,7 @@
   function thanhDienHai(T, kit) {
     const { box, stamp, round, profile } = kit;
     const brick = 0x8e4c38, brickDark = 0x723d2d, mortar = 0xc2b69e, plaster = 0xe3d6b8;
+    kit.palette({brick, plaster});
 
     // Square Vauban fortress rampart front wall & flanking angled bastions
     A.vaultedBay(T, kit, 0, 0, 12.6, 5.2, 2.1, 2.5, 5.6, brick, mortar, 0x5c4f44);
@@ -79,6 +80,7 @@
   function nhaTrungBayHoangSa(T, kit) {
     const { box, stamp, round } = kit;
     const stone = 0xe3dfd5, darkGlass = 0x263c46, granite = 0x898780, crimson = 0xa92d22;
+    kit.palette({stone: [stone, granite], glass: darkGlass});
 
     // Coastal stepped granite podium
     box(granite, 0, 0.55, 0, 26, 1.1, 20);
@@ -191,6 +193,7 @@
   function choHoiAn(T, kit) {
     const { box, outline } = kit;
     const ochre = 0xebc558, ochreDark = 0xd6ad43, tile = 0x8b4430, timber = 0x5c341f;
+    kit.palette({plaster: ochre, tile, timber});
 
     // Heritage market hall with iconic triple ochre-yellow arched front gables
     box(0x9a9285, 0, 0.22, 0, 26, 0.44, 17);

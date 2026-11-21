@@ -227,7 +227,8 @@ async function serveGameAsset(request, env, url) {
   const legacyTile = roadTile && url.searchParams.get("format") !== "packed";
   let response;
   const packedModel = /^\/(streetscape|traffic)\/[^/]+\.glb$/.test(pathname);
-  const packedScript = /^\/[^/]+\.js$/.test(pathname);
+  const packedScript = /^\/[^/]+\.js$/.test(pathname) ||
+    /^\/(?:journey-data|stage-terrain)\/[^/]+\.m?js$/.test(pathname);
   if (["GET","HEAD"].includes(request.method) && (packedModel || packedScript)) {
     url.pathname += ".gz";
     const input = new Headers(request.headers);

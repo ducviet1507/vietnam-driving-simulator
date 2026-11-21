@@ -1,8 +1,9 @@
 'use strict';
 (() => {
-  function coveredBridge(T,{box,deck,outline,stamp,round}) {
+  function coveredBridge(T,{palette, box,deck,outline,stamp,round}) {
     const wood=0x613c32,red=0xb8543b,tile=0x55504c,ridge=0x9b9180;
     const z=2.4;
+    palette({timber: wood, tile});
     function roof(x,y,cz,length,half,rise){
       const points=[[-half,0],[-half*.58,rise*.31],[0,rise],[half*.58,rise*.31],[half,0],[half,-.18],[0,rise-.28],[-half,-.18]];
       outline(points,tile,x-length/2,y,cz,length,Math.PI/2);
@@ -76,9 +77,10 @@
     }
   }
 
-  function phoMinh(T,{tapered,box,outline}){
+  function phoMinh(T,{palette, tapered,box,outline}){
     const stone=0x918d7e,brick=[0x867363,0x8a7566,0x786b60],lip=0x655e53;
     const square=(c,y,h,b,t)=>tapered(c,0,y+h/2,0,b/Math.SQRT2,t/Math.SQRT2,h);
+    palette({stone});
     square(stone,0,.6,6,5.65);square(0xb0a795,.6,.66,5.5,5.16);
     let y=1.26;
     for(let i=0;i<14;i++){

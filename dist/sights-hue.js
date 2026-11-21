@@ -1,44 +1,7 @@
 'use strict';
 (() => {
-  function imperialRoof(T, {stamp, box, outline}, x, y, z, w, d, h, tileColor, ridgeColor, eaveColor, ridgeRatio = 0.32) {
-    const p = [], ledge = 0.16;
-    function quad(a, b, c, dPt) { p.push(...a, ...b, ...dPt, ...b, ...c, ...dPt); }
-    const ring = (t) => {
-      const v = [];
-      for (const [ax, az, bx, bz] of [[-1, -1, -1, 1], [-1, 1, 1, 1], [1, 1, 1, -1], [1, -1, -1, -1]]) {
-        for (let i = 0; i < 8; i++) {
-          const u = i / 8, xx = ax + (bx - ax) * u, zz = az + (bz - az) * u;
-          const corner = Math.pow(Math.min(Math.abs(xx), Math.abs(zz)), 4.5);
-          v.push([
-            x + xx * (w / 2 * (1 - t) + w * ridgeRatio * t),
-            y + h * t * t + corner * (1 - t) * Math.min(0.45, h * 0.38),
-            z + zz * (d / 2 * (1 - t))
-          ]);
-        }
-      }
-      return v;
-    };
-    let outer = ring(0), prev = outer;
-    for (const t of [0.33, 0.67, 1]) {
-      const next = ring(t);
-      for (let j = 0; j < 32; j++) { const k = (j + 1) % 32; quad(prev[j], next[j], next[k], prev[k]); }
-      prev = next;
-    }
-    for (let i = 0; i < p.length; i += 9) for (let axis = 0; axis < 3; axis++) [p[i + 3 + axis], p[i + 6 + axis]] = [p[i + 6 + axis], p[i + 3 + axis]];
-    for (let j = 0; j < 32; j++) {
-      const k = (j + 1) % 32, a = outer[j], b = outer[k];
-      quad(a, b, [b[0], b[1] - ledge, b[2]], [a[0], a[1] - ledge, a[2]]);
-    }
-    const g = new T.BufferGeometry();
-    g.setAttribute('position', new T.Float32BufferAttribute(p, 3));
-    g.computeVertexNormals();
-    stamp(g, tileColor, 0, 0, 0);
-    g.dispose();
-    box(ridgeColor, x, y + h + 0.08, z, w * ridgeRatio * 2.1, 0.2, 0.24);
-    for (const s of [-1, 1]) for (const f of [-1, 1]) {
-      outline([[-0.3, 0], [0, 0.05], [0.22, 0.24], [0.36, 0.54], [0.4, 0.22], [0.24, -0.02], [0, -0.15]],
-        eaveColor, x + s * w * 0.49, y + 0.34, z + f * (d / 2 - 0.1), 0.12, s === 1 ? 0 : Math.PI);
-    }
+  function imperialRoof(T,kit,x,y,z,w,d,h,tile,ridge,eave,ridgeRatio=.32){
+    window.CentralArch.curvedRoof(T,kit,x,y,z,w,d,h,tile,ridge,eave,ridgeRatio);
   }
 
   // 1. Ngọ Môn – Đại Nội Huế (U-shaped Imperial Bastion + Lầu Ngũ Phụng)
@@ -50,6 +13,7 @@
     // Front stone Kim Thủy bridge approaching the royal center gate (+Z)
     const bridgeStart = 1, bridgeEnd = 21.6;
     const bridgeCenter = (bridgeStart + bridgeEnd) / 2, bridgeLength = bridgeEnd - bridgeStart;
+    kit.palette({brick: [brick, darkBrick], glazedTile: [goldTile, greenTile]});
     box(trim, 0, 0.24, bridgeCenter, 9.6, 0.48, bridgeLength);
     for (const s of [-1, 1]) {
       box(rail, s * 4.55, 0.85, bridgeCenter, 0.42, 0.85, bridgeLength);
@@ -131,8 +95,9 @@
   }
 
   // 2. Cầu Trường Tiền – Huế (6-span 402m Eiffel parabolic steel truss bridge across Sông Hương)
-  function cauTruongTien(T, {stamp, box, round}) {
+  function cauTruongTien(T, {palette, stamp, box, round}) {
     const steel = 0xc9cdd0, lightSteel = 0xdbe0e2, darkSteel = 0x868c91, stonePier = 0x8e8b81;
+    palette({metal: [steel, darkSteel]});
     const spanLen = 67.0, numSpans = 6, total = spanLen * numSpans; // 402m total!
     const halfW = 6.25; // keeps full 10.4m secondary carriageway clear for driving!
 
@@ -204,6 +169,7 @@
   function phuVanLau(T, kit) {
     const {box, stamp, round, sign} = kit;
     const stone = 0xa8a397, rail = 0xc5bfb0, crimson = 0x86241d, goldTile = 0xd8a836, gold = 0xdfb84c;
+    kit.palette({stone, glazedTile: goldTile});
 
     // Raised stone terrace & perimeter balustrade with front/rear ceremonial steps
     box(stone, 0, 0.48, 0, 16.5, 0.96, 13.8);
@@ -247,10 +213,11 @@
   }
 
   // 4. Cầu Ngói Thanh Toàn – Hương Thủy, Huế ("Thượng gia hạ kiều" 7-bay covered bridge)
-  function cauNgoiThanhToan(T, {box, stamp, outline, round}) {
+  function cauNgoiThanhToan(T, {palette, box, stamp, outline, round}) {
     const wood = 0x5c3727, crimson = 0x8e2e24, jadeTile = 0x3b6c55, terraTile = 0x9b543a;
     const stone = 0x8d867a, cream = 0xd6cab0, gold = 0xd2a84b;
     const len = 18.2, halfD = 2.65;
+    palette({timber: wood, glazedTile: jadeTile, tile: terraTile, stone, plaster: cream});
 
     // Stone bridge abutments & 6 rows of timber/masonry bridge piers
     box(stone, 0, 0.38, 0, len + 2.2, 0.76, 5.2);
@@ -302,6 +269,7 @@
   function langKhaiDinh(T, kit) {
     const {box, stamp, outline, tapered, round} = kit;
     const darkStone = 0x5c5c59, greyStone = 0x7b7a75, lightStone = 0x9e9c94, moss = 0x5c644e, gold = 0xbfa055;
+    kit.palette({stone: [darkStone, greyStone, lightStone]});
 
     // Deep hillside foundation & 3 monumental stepped terraces ascending toward -Z
     box(darkStone, 0, -2.5, 0, 27, 5.2, 42);

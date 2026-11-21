@@ -6,6 +6,7 @@
   function nhaHatTrungVuong(T, kit) {
     const { box, stamp, round } = kit;
     const cream = 0xf2ece0, trim = 0xd8cdb8, cobalt = 0x26547c, glass = 0x243e52, roof = 0x5c6872, gold = 0xdcb452;
+    kit.palette({plaster: cream, glass});
 
     // Stepped granite theater forecourt
     box(0x9e9a92, 0, 0.16, 0.5, 34, 0.32, 24);
@@ -51,6 +52,7 @@
   function baoTangDaNang(T, kit) {
     const { box, stamp, round, outline } = kit;
     const ochre = 0xe8d08e, cream = 0xf4eee0, shutter = 0x274c3b, roof = 0x9c422f, stone = 0xa7a194;
+    kit.palette({plaster: [ochre, cream], timber: shutter, stone});
 
     // Terraced waterfront garden court
     box(stone, 0, 0.18, 0, 34, 0.36, 22);
@@ -109,6 +111,7 @@
   function caChepHoaRong(T, kit) {
     const { box, stamp, round, tapered, outline } = kit;
     const marble = 0xf2f0eb, marbleShade = 0xd9d6ce, granite = 0x8d9196, water = 0x2d6b82, heartRed = 0xc92a2a, woodDeck = 0x8b6240;
+    kit.palette({stone: [marble, marbleShade, granite], timber: woodDeck});
 
     // Han River stone promenade deck & river basin
     box(granite, 0, 0.25, 2.5, 24, 0.5, 13);
@@ -179,6 +182,7 @@
   function cungTheThaoTienSon(T, kit) {
     const { box, stamp, round, tapered } = kit;
     const silver = 0xdce1e6, steel = 0x7b8996, cobalt = 0x204d70, concrete = 0xb9b6ae, white = 0xf0f2f4;
+    kit.palette({metal: steel, plaster: concrete});
 
     // Vast tiered circular granite plaza
     stamp(round, concrete, 0, 0.25, 0, 26.5, 0.5, 26.5);
@@ -213,6 +217,7 @@
   function hoiQuanQuangDong(T, kit) {
     const { box, stamp, round } = kit;
     const yellow = 0xdfb85a, turquoise = 0x2f7d7a, tile = 0x8a3a29, crimson = 0x86241b, stone = 0x9c9586, gold = 0xdfb147;
+    kit.palette({tile, stone});
 
     // Flagstone Hoi An heritage courtyard
     box(0xa59a86, 0, 0.14, 0, 17.5, 0.28, 19.5);
@@ -257,6 +262,7 @@
   function nhaCoTanKy(T, kit) {
     const { box, stamp, round } = kit;
     const ochre = 0xdba94c, timber = 0x4b2e1e, darkWood = 0x362014, mossTile = 0x714734, stone = 0xa29884;
+    kit.palette({plaster: ochre, timber: [timber, darkWood], tile: mossTile, stone});
 
     // Flagstone street veranda
     box(stone, 0, 0.12, 0, 12.6, 0.24, 18.6);
@@ -300,6 +306,7 @@
   function tuongDaiMeThu(T, kit) {
     const { box, stamp, round, tapered } = kit;
     const granite = 0xc9c3b8, darkGranite = 0x8f897e, lightStone = 0xded9cf, grass = 0x4b7440;
+    kit.palette({stone: [granite, darkGranite, lightStone]});
 
     // Vast stepped ceremonial mountain esplanade
     box(0x9a958b, 0, 0.22, 2.5, 42, 0.44, 28);
@@ -316,26 +323,44 @@
       }
     }
 
-    // Monumental sweeping granite mountain-arc monolith (khối đá hoa cương hình cánh cung)
-    for (let i = -8; i <= 8; i++) {
-      const t = Math.abs(i) / 8;
-      const archH = 16.8 * Math.pow(Math.cos(t * Math.PI * 0.46), 0.72) + 2.2;
-      const x = i * 2.25;
-      const z = -4.2 + t * t * 4.8;
-      box(i % 2 ? granite : lightStone, x, 1.5 + archH * 0.5, z, 2.38, archH, 3.8 - t * 1.4, -i * 0.045);
+    // Join the rock masses into one ridgeline, with bedding planes and
+    // alternating projecting courses where the sculptors left the rock rough.
+    for (let i=-8;i<=8;i++) {
+      const t=Math.abs(i)/8, top=12.4-8.5*t+.62*Math.sin(i*2.1);
+      const x=i*2.28,z=-4.2+t*t*4.8;
+      kit.outline([[-1.18,0],[1.18,0],[1.18,top-.52],[.64,top+.13],[-.15,top+.26],[-1.18,top-.17]],
+        granite,x,.64,z,2.4-t*.7,-i*.044);
+      for(let j=0;j<3;j++){
+        const h=top*(.19+j*.25),phase=Math.sin(i*.9+j);
+        kit.outline([[-1.17,0],[.83,.17],[1.18,.70],[.71,1.41+phase*.3],[-.64,1.68],[-1.18,1.1]],
+          (i+j)%3?granite:darkGranite,x,.66+h,z+1.95-t*.62,.63+phase*.16,-i*.044);
+      }
     }
-    // Central deeply sculpted serene portrait relief of Mother Nguyễn Thị Thứ emerging from the granite mountain
-    box(lightStone, 0, 10.8, -1.8, 6.6, 12.2, 2.6);
-    const face = new T.SphereGeometry(2.65, 14, 12);
-    stamp(face, lightStone, 0, 12.2, -0.3, 0.88, 1.15, 0.68);
-    face.dispose();
-    // Sculpted traditional hair bun & serene shoulder shawl folds
-    const bun = new T.SphereGeometry(2.85, 12, 10);
-    stamp(bun, darkGranite, 0, 14.3, -1.1, 1.05, 0.82, 0.75);
-    bun.dispose();
-    for (const s of [-1, 1]) {
-      box(granite, s * 2.8, 6.8, -0.8, 2.2, 7.6, 1.4, -s * 0.16);
+    const bust=A.carving(T,kit,granite,0,0,0,1);
+    bust.sweep([[0,2,-1.08,5.5,1.25],[0,5,-1.17,6.8,1.54],[0,8.3,-1.3,6.5,1.67],
+      [0,10.7,-1.2,4.7,1.48],[0,12.0,-.94,2.32,1.27]],.065,28);
+    bust.sweep([[.03,11.35,-.20,1.01,.98],[.08,12.11,.21,1.59,1.03],[.08,13.08,.02,2.13,1.50],
+      [.06,14.12,-.15,2.41,1.65],[0,15.23,-.23,2.34,1.53],[0,16.36,-.31,2.30,1.67],
+      [-.10,17.23,-.41,1.96,1.42],[-.14,17.73,-.46,1.12,.92]],.02,32);
+    for(const side of [-1,1]) {
+      bust.sweep([[side*1.58,11.83,.08,.40,.40],[side*2.35,10.48,.42,.46,.44],
+        [side*1.34,8.30,.71,.39,.34],[side*.45,6.35,.65,.23,.28]],.08);
+      for(let j=0;j<3;j++) {
+        bust.sweep([[side*(2.89+j*.63),9.64-j*.68,-.1,.11,.17],
+          [side*(2.33+j*.75),7.58-j*.56,.43,.20,.23],[side*(1.78+j*.8),6.11-j*.68,.54,.23,.25],
+          [side*(1.28+j*.9),4.37-j*.36,.40,.13,.15]],.10);
+      }
+      bust.sweep([[side*.27,15.02,1.26,.17,.18],[side*.73,15.24,1.33,.19,.23],
+        [side*1.24,15.21,1.12,.18,.19],[side*1.78,14.98,.86,.11,.12]]);
+      bust.sweep([[side*.36,14.68,1.41,.06,.09],[side*.91,14.75,1.34,.095,.13],[side*1.50,14.67,1.03,.045,.07]]);
+      bust.sweep([[side*.44,14.42,1.42,.08,.10],[side*1.02,14.44,1.33,.16,.18],[side*1.52,14.48,1.10,.065,.095]]);
+      bust.sweep([[side*.57,13.96,1.48,.13,.15],[side*.83,13.69,1.43,.12,.14],[side*1.00,13.10,1.26,.07,.11]]);
+      bust.sweep([[side*1.94,12.11,-.95,.58,.62],[side*2.31,14.0,-.75,.69,.75],
+        [side*2.12,15.82,-.63,.70,.80],[side*1.55,17.04,-.53,.69,.74],[side*.56,17.67,-.47,.59,.64]],.12);
     }
+    bust.sweep([[.02,13.76,1.49,.29,.26],[.06,14.00,1.57,.40,.53],[.06,14.49,1.49,.23,.38],[.05,15.27,1.27,.21,.24]]);
+    bust.sweep([[-.82,13.06,1.37,.07,.12],[-.35,13.13,1.60,.14,.18],[0,13.08,1.63,.12,.17],[.4,13.13,1.58,.11,.17],[.86,13.10,1.33,.06,.10]]);
+    bust.finish();
 
     A.plaque(T, kit, 'TƯỢNG ĐÀI MẸ VIỆT NAM ANH HÙNG', 0, 2.25, 1.2, 11.4, 1.15, { bg: '#6e241c', fg: '#f6dc84' });
   }
@@ -344,6 +369,7 @@
   function baoTangMyThuatDaNang(T, kit) {
     const { box, stamp, round, outline } = kit;
     const cream = 0xf0eadb, warm = 0xdacbb0, terra = 0x9b4634, glass = 0x2c475a, stone = 0x9c968b;
+    kit.palette({plaster: cream, glass, stone});
 
     box(stone, 0, 0.16, 0, 30, 0.32, 22);
     A.steps(kit, 0, 8.2, 11.0, 1.8, 3, 0.22, 0.38, 0x8d877d);
@@ -391,6 +417,7 @@
   function cungAnDinh(T, kit) {
     const { box, stamp, round, tapered } = kit;
     const ochre = 0xe5ca82, cream = 0xf4eddc, mosaicTeal = 0x2f757a, tile = 0x8e3d2b, glass = 0x263946, gold = 0xdba942, stone = 0x9e978b;
+    kit.palette({plaster: [ochre, cream], tile, glass, stone});
 
     // Royal palace courtyard
     box(stone, 0, 0.16, 1.0, 32, 0.32, 28);
@@ -455,6 +482,7 @@
   function langGiaLong(T, kit) {
     const { box, stamp, round } = kit;
     const greyStone = 0x8f8c84, darkStone = 0x6f6c64, lime = 0xcfc8b8, tile = 0x7a4838, gold = 0xcfa44e;
+    kit.palette({stone: [greyStone, darkStone], plaster: lime, tile});
 
     // Three solemn terraced stone esplanades climbing gently toward Thiên Thọ mountain
     box(greyStone, 0, 0.25, 4.5, 28, 0.5, 20);
@@ -507,6 +535,7 @@
   function langDongKhanh(T, kit) {
     const { box, stamp, round } = kit;
     const yellowGlaze = 0xc99628, ochre = 0xdec486, crimson = 0x7c231a, stone = 0x928c81, gold = 0xe4b844, glassBlue = 0x2e6488;
+    kit.palette({glazedTile: yellowGlaze, plaster: ochre, stone, glass: glassBlue});
 
     // Terraced granite court & dragon balustrade steps
     box(0x9a9183, 0, 0.18, 1.2, 26, 0.36, 24);
@@ -550,6 +579,7 @@
   function chuaDieuDe(T, kit) {
     const { box, stamp, round, tapered } = kit;
     const ochre = 0xe3cb8e, blueGlaze = 0x2c6880, tile = 0x8a422f, gold = 0xd9a844, stone = 0x958f84, crimson = 0x7c251c;
+    kit.palette({plaster: ochre, glazedTile: blueGlaze, tile, stone});
 
     box(0xa4967e, 0, 0.16, 1.0, 28, 0.32, 26);
 
@@ -593,6 +623,7 @@
   function gaHue(T, kit) {
     const { box, stamp, round, outline } = kit;
     const pink = 0xd99b8c, cream = 0xf4eee0, shutter = 0x264b3b, roof = 0x984231, steel = 0x4b5862, stone = 0xa29c90;
+    kit.palette({plaster: cream, timber: shutter, metal: steel, stone});
 
     // Station plaza & rear railway platform + tracks
     box(stone, 0, 0.14, 1.5, 34, 0.28, 22);
@@ -643,6 +674,7 @@
   function danNamGiaoHue(T, kit) {
     const { box, stamp, round } = kit;
     const stone = 0x9b9487, darkStone = 0x7b756b, redWall = 0x9e3b2e, blueRim = 0x2b6e88, ochre = 0xd8c390, grass = 0x4b7442;
+    kit.palette({stone: [stone, darkStone], plaster: ochre});
 
     // Tier 1 (Nhân Đàn — outer square walled courtyard)
     box(grass, 0, 0.14, 0, 34, 0.28, 34);

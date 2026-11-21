@@ -6,6 +6,8 @@
   function dienThaiHoa(T, kit) {
     const { box, stamp, round } = kit;
     const goldTile = 0xd9a232, crimson = 0x7e2119, gold = 0xe8bd4c, stone = 0xa7a194, darkStone = 0x7c766c;
+    const lacquer=0x6e3329, shadow=0x392b26, lime=0xe5d9c3, ridge=0x837861;
+    kit.palette({glazedTile:goldTile,stone:[stone,darkStone,ridge],timber:[crimson,lacquer],plaster:lime});
 
     // Two-tier imperial stone terrace (Sân Đại Triều Nghi)
     box(darkStone, 0, 0.55, 0.8, 34, 1.1, 24);
@@ -16,26 +18,50 @@
     }
     // Front & rear interconnected twin halls (trùng thiềm điệp ốc)
     for (const [hz, hw, hd] of [[2.8, 25.5, 7.8], [-4.8, 23.0, 7.6]]) {
-      box(crimson, 0, 3.85, hz, hw - 1.2, 4.1, hd - 1.4);
+      // Recess the screen doors behind the columns. Each leaf has a solid
+      // lower panel and narrow slats across the shaded upper opening.
+      box(shadow,0,3.85,hz-.5,hw-1.5,4.08,hd-2.4);
+      const doorZ=hz+hd*.5-1.64, bay=hw*.11;
+      for(let i=-4;i<4;i++){
+        const bx=(i+.5)*bay;
+        for(let j=0;j<4;j++){
+          const lx=bx+(j-1.5)*bay*.226;
+          box(lacquer,lx,2.76,doorZ,bay*.214,1.62,.13);
+          box(crimson,lx,2.72,doorZ+.08,bay*.155,1.22,.08);
+          for(const sign of [-1,1])box(crimson,lx+sign*bay*.094,4.53,doorZ,.062,1.88,.10);
+          box(lacquer,lx,5.34,doorZ,bay*.224,.22,.13);
+        }
+      }
+      for(const side of [-1,1]){
+        box(lime,side*(hw*.5-.57),3.86,hz,1.15,4.08,hd-.32);
+        stamp(round,shadow,side*(hw*.5-.57),4.15,hz+hd*.5-.13,.38,.12,.38,0,Math.PI/2);
+      }
+      box(lacquer,0,5.68,hz+hd*.45,hw-.35,.36,.35);
       for (let i = -4; i <= 4; i++) {
         for (const dz of [-hd * 0.45, hd * 0.45]) {
           stamp(round, crimson, i * (hw * 0.11), 3.85, hz + dz, 0.22, 4.2, 0.22);
           stamp(round, stone, i * (hw * 0.11), 1.95, hz + dz, 0.34, 0.30, 0.34);
         }
       }
-      A.curvedRoof(T, kit, 0, 5.9, hz, hw + 2.6, hd + 2.4, 2.05, goldTile, gold, gold, 0.34, { dragons: true, goldColor: gold });
+      A.curvedRoof(T, kit, 0, 5.9, hz, hw + 2.6, hd + 2.4, 2.05, goldTile, ridge, ridge, 0.34, { dragons: true, goldColor: gold });
     }
     // Upper clerestory frieze (cổ diêm) & second golden roof tier over main hall
     box(0x8c281e, 0, 7.9, -4.8, 17.5, 1.55, 5.6);
-    for (let i = -3; i <= 3; i++) box(gold, i * 2.5, 7.9, -1.94, 0.22, 1.35, 0.12);
-    A.curvedRoof(T, kit, 0, 8.68, -4.8, 20.5, 8.0, 2.25, goldTile, gold, gold, 0.32, { dragons: true, goldColor: gold });
-    A.plaque(T, kit, 'THÁI HÒA ĐIỆN', 0, 6.25, 7.05, 5.2, 0.92, { bg: '#7c1c14', fg: '#f8dc76' });
+    for (let i=-8;i<=8;i++){
+      const x=i*.98;
+      box(0xbba782,x,7.92,-1.965,.94,.89,.14);
+      box(i%2===0?0x667f82:0xb0a06e,x,7.92,-1.87,.78,.68,.07);
+      box(0x987442,x,7.92,-1.816,.27,.26,.038,0,0,Math.PI/4);
+    }
+    A.curvedRoof(T, kit, 0, 8.68, -4.8, 20.5, 8.0, 2.25, goldTile, ridge, ridge, 0.32, { dragons: true, goldColor: gold });
+    A.plaque(T, kit, 'THÁI HÒA ĐIỆN', 0, 5.44, 6.56, 3.6, 0.66, { bg: '#7c1c14', fg: '#f8dc76' });
   }
 
   // 2. Hiển Lâm Các & Cửu Đỉnh (Thế Miếu, Đại Nội Huế)
   function hienLamCac(T, kit) {
     const { box, stamp, round } = kit;
     const tile = 0x8f4230, crimson = 0x78231a, ochre = 0xe4cf9d, gold = 0xd8ad4a;
+    kit.palette({tile, plaster: ochre});
 
     // Stepped courtyard platform
     box(0x9a9386, 0, 0.45, 1.5, 22, 0.9, 18);
@@ -74,6 +100,7 @@
   function langMinhMang(T, kit) {
     const { box, stamp, round } = kit;
     const goldTile = 0xd69f34, crimson = 0x7c231b, stone = 0x9b9487, water = 0x386670;
+    kit.palette({glazedTile: goldTile, stone});
 
     // Reflecting Tân Nguyệt / Trừng Minh lotus basin & stone bridge approach
     box(water, 0, 0.08, 7.6, 26, 0.16, 8.2);
@@ -102,6 +129,7 @@
   function langTuDuc(T, kit) {
     const { box, stamp, round } = kit;
     const water = 0x3b6a6e, wood = 0x5c2d1f, tile = 0x7c4a38, gold = 0xc99c4a;
+    kit.palette({timber: wood, tile});
 
     // Lưu Khiêm lotus lake surrounding the poetic water pavilion
     box(water, 0, 0.08, 2.5, 28, 0.16, 20);
@@ -137,6 +165,7 @@
   function truongQuocHocHue(T, kit) {
     const { box } = kit;
     const crimson = 0x8f332c, cream = 0xf4ead4, roof = 0x994230;
+    kit.palette({plaster: cream});
     // Iconic deep-burgundy French-Indochinese school building
     A.colonialBuilding(T, kit, {
       w: 32, d: 13.5, floors: 2, floorH: 4.1,
@@ -158,6 +187,7 @@
   function nhaThoPhuCam(T, kit) {
     const { box, outline, tapered } = kit;
     const concrete = 0xd6d1c6, darkConc = 0x8c887f, glass = 0x354b5e, gold = 0xdab252;
+    kit.palette({plaster: [concrete, darkConc], glass});
 
     // Elevated hillside terrace & monumental broad entrance stairs
     box(darkConc, 0, 0.65, 1.0, 24, 1.3, 38);
@@ -194,6 +224,7 @@
   function nhaThoDongChuaCuuThe(T, kit) {
     const { box, tapered } = kit;
     const wall = 0xe8d9be, brick = 0x994230, trim = 0xf4eee0;
+    kit.palette({brick});
     // Nave topped with Vietnamese curved tile eaves!
     box(0x8e887d, 0, 0.45, 0, 18, 0.9, 32);
     box(wall, 0, 5.8, -1.5, 15.0, 9.8, 25.0);
@@ -215,6 +246,7 @@
   function choDongBa(T, kit) {
     const { box, stamp, round } = kit;
     const ochre = 0xebce7a, cream = 0xf4ecd8, tile = 0x994230;
+    kit.palette({plaster: [ochre, cream], tile});
     A.colonialBuilding(T, kit, {
       w: 34, d: 15, floors: 2, floorH: 3.9,
       wall: ochre, trim: cream, shutter: 0x385e4d, roof: tile,
@@ -238,6 +270,7 @@
 
     // Sandy circular fighting arena floor
     const floor = new T.CylinderGeometry(rIn + 0.4, rIn + 0.4, 0.24, segs);
+    kit.palette({brick});
     kit.stamp(floor, sand, 0, 0.12, 0); floor.dispose();
 
     // Twin concentric circular brick arena walls

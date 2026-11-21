@@ -55,10 +55,11 @@
 
   // Surveyed circular shell, OSM w640290239. The principal access faces
   // Võ Nguyên Giáp. The projecting lattice is continuous across the glazing.
-  function victoryMuseum(T, {group, box, tapered, sign}) {
+  function victoryMuseum(T, {palette, group, box, tapered, sign}) {
     const stone = 0xd0c9b6, metal = 0xdddcca, glass = 0x405860;
     const shell = panels(T), lawn = panels(T), paving = panels(T);
     const polar = (r, y, a) => [Math.sin(a)*r, y, Math.cos(a)*r];
+    palette({stone, metal, glass});
     function strut(a,b, thickness, tint) {
       const dx=b[0]-a[0], dy=b[1]-a[1], dz=b[2]-a[2];
       box(tint,(a[0]+b[0])/2,(a[1]+b[1])/2,(a[2]+b[2])/2,
@@ -151,9 +152,10 @@
     ...[-1,1].flatMap(side=>[[7.1*side,16.2,9.2,5.9,Math.PI/2,.37],
       [7*side,2.05,9.5,5.95,Math.PI/2,.7],[7.1*side,-13,10,6.05,Math.PI/2,1.04]]),
   ];
-  function vuongResidence(T, {group, box, round, stamp, tapered, random}) {
+  function vuongResidence(T, {palette, group, box, round, stamp, tapered, random}) {
     const slate=0x9c9a8d,timber=0x594637,stone=0x978e7a;
     const roofs=panels(T);
+    palette({timber, stone});
     function hall(cx,cz,length,depth,yaw,base,single=false) {
       const sin=Math.sin(yaw),cos=Math.cos(yaw);
       const local=(x,y,z)=>[cx+cos*x+sin*z,y,cz-sin*x+cos*z];

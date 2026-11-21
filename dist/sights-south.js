@@ -1,8 +1,9 @@
 ﻿'use strict';
 (() => {
-  function holySee(T,{stamp,box,round,tapered,outline,arch}) {
+  function holySee(T,{palette, stamp,box,round,tapered,outline,arch}) {
     const buff=0xe8ad63,cream=0xffdf98,pink=0xc96858,blue=0x568eb0,red=0xac4936,shade=0x473c37;
     const globe=new T.SphereGeometry(1,16,10);
+    palette({plaster: cream});
     function dome(x,y,z,r,h){
       stamp(globe,cream,x,y,z,r,h,r);
       stamp(round,pink,x,y+.2,z,r*1.05,.28,r*1.05);

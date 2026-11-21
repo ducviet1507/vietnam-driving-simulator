@@ -2,56 +2,95 @@
 (() => {
   const A = window.CentralArch;
 
-  // 1. Bảo tàng tỉnh Thanh Hóa — Iconic Giant Đông Sơn Bronze Drum architectural landmark
+  // 206 Trường Thi. Local X and Z follow east and south in the surveyed
+  // compound. The two galleries link back to the exhibition hall by passages.
   function baoTangThanhHoa(T, kit) {
-    const { box, stamp, round, tapered } = kit;
-    const bronze = 0x7b633c, patina = 0x4f685c, gold = 0xd6ae4a, glass = 0x264454, granite = 0xaba599, cream = 0xede5d4;
-
-    // Stepped circular granite plaza
-    stamp(round, granite, 0, 0.22, 0, 19.5, 0.44, 19.5);
-    A.steps(kit, 0, 16.5, 11.5, 2.2, 4, 0.24, 0.42, 0x908a7f);
-
-    // Lower flared base of the giant Đông Sơn bronze drum (chân trống)
-    tapered(patina, 0, 2.4, -0.5, 15.6, 12.4, 4.4, 1, 24);
-    // Cylindrical drum waist (thân trống) wrapped in tall glazed museum bands & bronze ribs
-    stamp(round, glass, 0, 6.2, -0.5, 12.1, 3.6, 12.1);
-    for (let i = 0; i < 16; i++) {
-      const a = (i / 16) * Math.PI * 2;
-      box(bronze, Math.sin(a) * 12.35, 6.2, -0.5 + Math.cos(a) * 12.35, 0.48, 3.8, 0.48, a);
+    const {box, stamp, round} = kit;
+    const ochre=0xe3c386, cream=0xecdfbb, trim=0xb79762, glass=0x405055;
+    const stone=0xaaa697, tile=0x8b6f59, timber=0x58483d;
+    kit.palette({plaster:[ochre,cream,trim],glass,stone,tile,timber});
+    const cx=-3.75, front=1.78, width=46.5;
+    box(stone,cx,.095,9.7,48,.19,17);
+    box(ochre,cx,5.9,-4.2,width,11.8,11.96);
+    for(const x of [-25.45,18.15]) box(ochre,x,5.9,-12.4,3,11.8,5.5);
+    for(const [y,h,c,overhang] of [[.26,.32,stone,.12],[3.34,.16,trim,.10],[3.54,.18,cream,.18],
+      [11.59,.16,trim,.12],[11.83,.20,cream,.24],[12.06,.16,ochre,.16]]) {
+      box(c,cx,y,-4.2,width+overhang*2,h,11.96+overhang*2);
     }
-    // Iconic wide overhanging convex upper shoulder (tang trống) & flat drumhead (mặt trống đồng)
-    tapered(bronze, 0, 9.5, -0.5, 12.4, 16.4, 3.1, 1, 24);
-    stamp(round, gold, 0, 11.15, -0.5, 16.6, 0.34, 16.6);
-    stamp(round, patina, 0, 11.42, -0.5, 15.4, 0.24, 15.4);
-    // Stylized 12-ray Đông Sơn sun star emblem on top of the drum roof
-    stamp(round, gold, 0, 11.62, -0.5, 3.6, 0.16, 3.6);
-    for (let i = 0; i < 12; i++) {
-      const a = (i / 12) * Math.PI * 2;
-      box(gold, Math.sin(a) * 6.8, 11.60, -0.5 + Math.cos(a) * 6.8, 0.46, 0.14, 6.2, a);
+    // Recessed triplets of narrow upper windows, set behind the vertical fins.
+    for(const face of [-1,1]) {
+      const z=face>0?front:-10.18;
+      for(let i=-6;i<=6;i++) {
+        if(i===0&&face===1)continue;
+        const x=cx+i*3.45;
+        for(const [y,h,pane] of [[1.72,2.22,.96],[5.62,2.78,.61],[9.65,2.70,.61]]) {
+          const cols=y<2?2:3;
+          for(let k=0;k<cols;k++) {
+            const wx=x+(k-(cols-1)*.5)*(pane+.20);
+            box(timber,wx,y,z+face*.02,pane+.10,h+.08,.075);
+            box(glass,wx,y+.02,z+face*.065,pane-.055,h-.12,.038);
+            box(cream,wx,y-.04,z+face*.092,.042,h,.05);
+          }
+          box(cream,x,y-h*.5-.05,z+face*.13,2.63,.11,.32);
+        }
+        box(ochre,x+1.51,7.46,z+face*.105,.18,7.85,.25);
+      }
     }
-    // Paired traditional loop drum handles (quai trống) on left & right flanks
-    for (const s of [-1, 1]) {
-      const handle = new T.TorusGeometry(1.65, 0.32, 8, 14, Math.PI);
-      stamp(handle, bronze, s * 13.6, 6.6, -0.5, 1, 1.15, 1, 0, 0, s > 0 ? -Math.PI / 2 : Math.PI / 2);
-      handle.dispose();
+    // The openwork parapet runs below a continuous coping at both roof edges.
+    for(const z of [front,-10.18]) {
+      box(ochre,cx,12.27,z,width,.35,.39);
+      box(cream,cx,12.89,z,width+.18,.17,.45);
+      for(let i=0;i<=110;i++)box(ochre,cx-width/2+i*width/110,12.59,z,i%11?.16:.36,.57,.34);
     }
-
-    // Projecting contemporary glass-and-cream arrival portico at front (+Z)
-    box(cream, 0, 3.4, 12.6, 12.2, 6.4, 4.4);
-    box(glass, 0, 3.1, 14.84, 8.6, 4.8, 0.16);
-    box(bronze, 0, 6.65, 13.2, 13.4, 0.55, 5.8);
-    A.plaque(T, kit, 'BẢO TÀNG TỈNH THANH HÓA', 0, 6.65, 16.16, 9.2, 1.05, { bg: '#5a3d20', fg: '#f8e082' });
-
-    A.trees(T, kit, [
-      { x: -16.8, z: 10.6, h: 7.4, kind: 'banyan' },
-      { x: 16.8, z: 10.6, h: 7.4, kind: 'banyan' }
-    ]);
+    // Raised entrance reached by mirrored flights across the facade.
+    box(ochre,cx,6.52,2.70,5.5,13.04,1.84);
+    box(cream,cx,12.98,2.70,5.84,.32,2.20);
+    box(timber,cx,4.77,3.66,2.10,2.73,.15);
+    box(glass,cx,4.73,3.76,1.68,2.48,.10);
+    box(cream,cx,9.23,3.66,3.15,4.66,.18);
+    stamp(round,0xab7952,cx,10.02,3.80,1.08,.12,1.08,0,Math.PI/2);
+    const ring=new T.TorusGeometry(.80,.039,6,32);
+    stamp(ring,cream,cx,10.02,3.88);
+    ring.dispose();
+    A.plaque(T,kit,'BẢO TÀNG THANH HÓA',cx,8.15,3.80,3.05,.46,{bg:'#e1d7c5',fg:'#4d4438',frame:false});
+    box(ochre,cx,1.78,4.71,2.84,3.56,2.48);
+    for(const side of [-1,1]) {
+      for(let i=0;i<17;i++) {
+        const h=(i+1)*.20,x=cx+side*(7.18-i*.345);
+        box(stone,x,h/2,4.77,.35,h,2.14);
+        box(ochre,x,h+.22,5.88,.35,.44,.36);
+        if(i%2===0)box(ochre,x,h+.53,5.88,.17,.65,.31);
+      }
+      box(ochre,cx+side*4.34,2.60,5.88,6.84,.21,.37,0,0,-side*.52);
+    }
+    // Respect both surveyed wing footprints and the intervening openings.
+    for(const [x,z,w,d] of [[-46.83,-11.10,22.6,14.3],[49.26,-12.05,15.8,10.4]]) {
+      box(cream,x,3.63,z-.82,w,7.26,d-1.64);
+      box(stone,x,.24,z,w+.44,.48,d+.32);
+      for(const y of [3.44,7.15])box(cream,x,y,z,w+.34,.24,d+.26);
+      const count=Math.round(w/3.3),bay=w/count;
+      for(let i=0;i<count;i++){
+        const wx=x-w/2+(i+.5)*bay;
+        for(const y of [.46,3.65]){
+          box(timber,wx,y+1.20,z+d/2-1.61,1.34,2.22,.08);
+          kit.arch(cream,wx,y,z+d/2-.28,bay,3.22);
+        }
+      }
+      A.gabledRoof(T,kit,x,7.30,z,w+.48,d+.70,1.83,tile,cream,{alongX:true});
+    }
+    for(const [x,w] of [[-31.25,8.5],[30.52,21.75]]){
+      box(cream,x,3.19,-8.55,w,.23,2.62);
+      for(let j=0;j<Math.ceil(w/3.5);j++)box(ochre,x-w/2+.3+j*3.5,1.60,-7.53,.34,3.2,.34);
+    }
+    A.trees(T,kit,[{x:-18,z:11,h:14,kind:'banyan'},{x:18,z:13,h:13,kind:'banyan'},
+      {x:-13.4,z:4.3,h:6.9,kind:'palm'},{x:7.3,z:4.65,h:6.5,kind:'palm'}]);
   }
 
   // 2. Đền Sòng Sơn (Bỉm Sơn, Thanh Hóa) — "Đền Sòng thiêng nhất xứ Thanh" with clear Suối Cá stream & stone bridge
   function denSongSon(T, kit) {
     const { box, stamp, round } = kit;
     const ochre = 0xe3c888, crimson = 0x86241b, tile = 0x943f2b, gold = 0xdcb045, stone = 0x948d81, stream = 0x2f7d86;
+    kit.palette({plaster: ochre, tile, stone});
 
     // Brick-paved sacred courtyard bisected by the iconic clear emerald stream (Suối Cá Đền Sòng)
     box(0x9b5a44, 0, 0.14, 1.0, 28, 0.28, 26);
@@ -96,6 +135,7 @@
   function danTeNamGiaoTayDo(T, kit) {
     const { box, stamp, round } = kit;
     const blueStone = 0x7c8682, darkStone = 0x5c6662, paleStone = 0x9aa39e, grass = 0x4b7440;
+    kit.palette({stone: [blueStone, darkStone, paleStone]});
 
     // Vast grassy UNESCO archaeological precinct
     box(grass, 0, 0.12, 0, 38, 0.24, 38);
@@ -161,6 +201,7 @@
   function chuaCamSon(T, kit) {
     const { box, stamp, round, tapered } = kit;
     const ochre = 0xe2c88d, tile = 0x8f3f2c, gold = 0xdba844, stone = 0x8f8a80, crimson = 0x7b231a;
+    kit.palette({plaster: ochre, tile, stone});
 
     // Terraced stone mountain cliff platform
     box(stone, 0, 0.45, 0.5, 28, 0.9, 25);
@@ -205,6 +246,7 @@
   function khuTuongNiemHaHuyTap(T, kit) {
     const { box, stamp, round, tapered } = kit;
     const thatch = 0xb59c6a, wood = 0x5d3d26, tile = 0x8c3f2c, cream = 0xeee4ce, granite = 0xa39e94, bronze = 0x6f5536;
+    kit.palette({thatch, timber: wood, tile, plaster: cream, stone: granite, metal: bronze});
 
     box(0xaa9c82, 0, 0.14, 0.5, 28, 0.28, 24);
 
@@ -247,6 +289,7 @@
   function haiThuongLanOng(T, kit) {
     const { box, stamp, round } = kit;
     const stone = 0x8f8c83, darkStone = 0x6f6c64, ochre = 0xdec895, tile = 0x863f2e, gold = 0xd2a54a, crimson = 0x79251b;
+    kit.palette({stone: [stone, darkStone], plaster: ochre, tile});
 
     // Terraced mountain memorial court with carved stone balustrade steps
     box(stone, 0, 0.22, 1.5, 28, 0.44, 26);
@@ -341,6 +384,7 @@
   function baoTangQuangBinh(T, kit) {
     const { box, stamp, round } = kit;
     const white = 0xf2eee4, sand = 0xdbc9a6, terra = 0x9c4832, glass = 0x264b60, stone = 0xa29d92;
+    kit.palette({glass, stone});
 
     // Riverfront stone museum terrace
     box(stone, 0, 0.22, 0, 34, 0.44, 24);
@@ -379,6 +423,7 @@
   function hoanhSonQuan(T, kit) {
     const { box, stamp, round } = kit;
     const mossStone = 0x7c796c, darkBrick = 0x625d51, lichen = 0x6c755e, rampart = 0x8a8576, pathStone = 0x9b9586;
+    kit.palette({brick: darkBrick});
 
     // Mountain-pass stone terrace & historic stepped mandarin highway (Thiên lý Bắc – Nam)
     box(0x5d6e4c, 0, 0.16, 0, 30, 0.32, 22);
@@ -423,13 +468,15 @@
   (window.VietnamSights ??= []).push(
     {
       id: 'bao-tang-tinh-thanh-hoa', name: 'Bảo tàng tỉnh Thanh Hóa', city: 'Thanh Hóa', province: 'Thanh Hóa', region: 'Trung Bộ',
-      lon: 105.780389, lat: 19.815137, start: [105.781070, 19.815132], yaw: 1.563,
-      width: 40, depth: 36,
-      solids: [[0, -0.5, 16.5, 16.5], [0, 12.6, 6.4, 2.4]],
-      description: 'Công trình bảo tàng tạo hình Trống đồng Đông Sơn khổng lồ tại trung tâm Thanh Hóa với tang trống đồng vươn rộng, mặt trời 12 cánh trên mái và sảnh kính hiện đại.',
-      photo: 'https://vi.wikipedia.org/wiki/Thanh_H%C3%B3a',
-      source: 'https://vi.wikipedia.org/wiki/Thanh_H%C3%B3a',
-      map: 'https://www.openstreetmap.org/?mlat=19.815137&mlon=105.780389#map=18/19.815137/105.780389',
+      lon: 105.780387, lat: 19.815102, start: [105.780539,19.814101], yaw: 0,
+      width: 119, depth: 38,
+      boundary: [[-59,-19],[58,-19],[58,-5],[21,-5],[21,18],[-28,18],[-28,-2],[-59,-2]],
+      solids: [[-3.75,-4.2,23.25,5.98],[-3.75,3.82,1.42,2.10],[-46.83,-11.10,11.3,7.15],[49.26,-12.05,7.9,5.2]],
+      catalogId: 'osm-way-762771467',
+      description: 'Bảo tàng tại 206 Trường Thi gồm ba tòa nhà xây từ thời Pháp thuộc. Hai vế thang dẫn lên cửa chính giữa mặt tiền vàng nhạt. Các dãy bên có hành lang vòm nhìn ra sân cây.',
+      photo: 'https://visitthanhhoa.com/vi/bao-tang-thanh-hoa',
+      source: 'https://csdl.vietnamtourism.gov.vn/vcgt/?item=177',
+      map: 'https://www.openstreetmap.org/way/762771467',
       build: baoTangThanhHoa
     },
     {

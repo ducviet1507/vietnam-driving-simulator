@@ -1,53 +1,14 @@
 'use strict';
 (() => {
-  function curvedRoof(T, {stamp, box, outline}, x, y, z, w, d, h, tileColor, ridgeColor, eaveColor, ridgeRatio = 0.28) {
-    const p = [], ledge = 0.16;
-    function quad(a, b, c, dPt) { p.push(...a, ...b, ...dPt, ...b, ...c, ...dPt); }
-    const ring = (t) => {
-      const v = [];
-      for (const [ax, az, bx, bz] of [[-1, -1, -1, 1], [-1, 1, 1, 1], [1, 1, 1, -1], [1, -1, -1, -1]]) {
-        for (let i = 0; i < 8; i++) {
-          const u = i / 8, xx = ax + (bx - ax) * u, zz = az + (bz - az) * u;
-          const corner = Math.pow(Math.min(Math.abs(xx), Math.abs(zz)), 4.5);
-          v.push([
-            x + xx * (w / 2 * (1 - t) + w * ridgeRatio * t),
-            y + h * t * t + corner * (1 - t) * Math.min(0.48, h * 0.4),
-            z + zz * (d / 2 * (1 - t))
-          ]);
-        }
-      }
-      return v;
-    };
-    let outer = ring(0), prev = outer;
-    for (const t of [0.33, 0.67, 1]) {
-      const next = ring(t);
-      for (let j = 0; j < 32; j++) { const k = (j + 1) % 32; quad(prev[j], next[j], next[k], prev[k]); }
-      prev = next;
-    }
-    for (let i = 0; i < p.length; i += 9) for (let axis = 0; axis < 3; axis++) [p[i + 3 + axis], p[i + 6 + axis]] = [p[i + 6 + axis], p[i + 3 + axis]];
-    for (let j = 0; j < 32; j++) {
-      const k = (j + 1) % 32, a = outer[j], b = outer[k];
-      quad(a, b, [b[0], b[1] - ledge, b[2]], [a[0], a[1] - ledge, a[2]]);
-    }
-    const g = new T.BufferGeometry();
-    g.setAttribute('position', new T.Float32BufferAttribute(p, 3));
-    g.computeVertexNormals();
-    stamp(g, tileColor, 0, 0, 0);
-    g.dispose();
-    box(ridgeColor, x, y + h + 0.08, z, w * ridgeRatio * 2.12, 0.19, 0.24);
-    for (const s of [-1, 1]) for (const f of [-1, 1]) {
-      outline([[-0.32, 0], [0, 0.05], [0.22, 0.24], [0.38, 0.56], [0.42, 0.24], [0.26, -0.02], [0, -0.16]],
-        eaveColor, x + s * w * 0.49, y + 0.34, z + f * (d / 2 - 0.1), 0.12, s === 1 ? 0 : Math.PI);
-    }
-  }
 
   // Alignment from the two OSM carriageways. Distances along +X run west
   // to east. The three exposed steel spans emerge separately above the deck.
-  function cauRong(T, {group, stamp, box, deck, profile, round}) {
+  function cauRong(T, {palette, group, stamp, box, deck, profile, round}) {
     const yellow = 0xf4bf19, sunlit = 0xffcf35, ochre = 0xc2941e;
     const pier = 0xc8c7ba, coping = 0xd9d4c5, iron = 0x64736e;
     const west = -315, east = 321;
     const tubes = [[0,1.47],[-1.48,.55],[1.48,.55],[-1.05,-.99],[1.05,-.99]];
+    palette({plaster: ochre, metal: iron});
     function pipe(points,radius,tint,steps) {
       const curve = new T.CatmullRomCurve3(points.map(([x,y,z])=>new T.Vector3(x,y,z)));
       const geo = new T.TubeGeometry(curve,steps,radius,9,false);
@@ -220,6 +181,7 @@
     const {box, profile, outline, sign} = kit;
     const brick = [0x8e5642, 0x9b624b, 0x7d4c3b, 0x845542];
     const stone = 0x7a766d, mortar = 0xb7ae9c, dark = 0x4b463f, moss = 0x677052;
+    kit.palette({stone});
 
     // Deep mountain-pass stone foundation plinth so it seats solidly on ridge slopes
     box(stone, 0, -1.6, 0, 26.5, 3.6, 22.5);
@@ -284,47 +246,34 @@
     const {box, stamp, round, tapered, sign} = kit;
     const marble = 0xebe8e0, pureWhite = 0xf4f2ec, lotusPink = 0xe4c7bf, gold = 0xd6b052;
     const tile = 0x9b4432, stone = 0x9e9a90, jade = 0x5c7f6f;
+    kit.palette({stone: [marble, stone], tile});
 
-    // Coastal stone terrace platform (with deep base for hillside)
-    box(stone, 0, -1.2, 0, 31, 3.0, 29);
-    box(marble, 0, 0.45, 0, 29.5, 0.36, 27.5);
-
-    // Monumental 17-metre-style Lotus Pedestal & White Guan Yin Sanctuary Spire (right-center)
-    const gx = 4.5, gz = -2.2;
-    tapered(marble, gx, 1.35, gz, 6.2, 5.6, 1.65, 1, 8);
-    tapered(pureWhite, gx, 3.45, gz, 5.1, 4.75, 2.65, 1, 8);
-    // Ornamental entrance arch at pedestal base
-    box(gold, gx, 2.95, gz + 4.82, 2.6, 2.75, 0.32);
-    box(0x523428, gx, 2.65, gz + 4.98, 1.75, 2.15, 0.14);
-    // Multi-layered carved pink-and-white lotus blossom crown
-    for (let i = 0; i < 12; i++) {
-      const a = i * Math.PI / 6;
-      box(lotusPink, gx + Math.sin(a) * 4.4, 5.45, gz + Math.cos(a) * 4.4, 1.95, 1.75, 0.45, a, 0.36);
-      box(pureWhite, gx + Math.sin(a + 0.26) * 3.85, 6.15, gz + Math.cos(a + 0.26) * 3.85, 1.65, 1.45, 0.38, a + 0.26, 0.24);
+    // The 35 m lotus and its circular sanctuary determine the footprint.
+    const gx=5.5,gz=-4.6;
+    box(stone,0,-1.2,0,52,3.0,51);
+    box(marble,0,.45,0,50,.36,49);
+    tapered(marble,gx,2.15,gz,16.45,15.6,3.0,1,40);
+    tapered(pureWhite,gx,5.12,gz,15.35,14.8,2.95,1,40);
+    for(let i=0;i<12;i++){
+      const angle=i*Math.PI/6,x=gx+Math.sin(angle)*15.93,z=gz+Math.cos(angle)*15.93;
+      box(marble,x,2.1,z,2.14,2.98,.33,angle);
+      box(0x67615c,x+.18*Math.sin(angle),1.9,z+.18*Math.cos(angle),1.53,2.37,.12,angle);
     }
-    // Graceful sculpted white Quan Âm monument silhouette rising above the lotus pedestal
-    tapered(pureWhite, gx, 9.8, gz, 2.85, 1.85, 6.6, 1, 16);
-    tapered(pureWhite, gx, 14.8, gz, 1.85, 1.45, 3.6, 1, 16);
-    tapered(pureWhite, gx, 17.8, gz, 1.55, 2.15, 2.6, 0.76, 16); // flared robe & shoulders
-    // Draped arms holding nectar vase & gesture
-    for (const s of [-1, 1]) {
-      stamp(round, pureWhite, gx + s * 1.55, 16.9, gz + 0.35, 0.65, 2.8, 0.72, 0, 0.25, s * 0.28);
-    }
-    stamp(round, marble, gx - 0.55, 16.3, gz + 1.35, 0.42, 0.85, 0.42);
-    // Neck, draped veil mantle & serene crown
-    tapered(marble, gx, 19.6, gz, 0.95, 0.78, 1.15, 1, 12);
-    const head = new T.SphereGeometry(1.05, 14, 12);
-    stamp(head, pureWhite, gx, 21.1, gz + 0.08, 0.92, 1.12, 0.94);
-    head.dispose();
-    tapered(pureWhite, gx, 22.35, gz, 0.95, 0.52, 1.2, 1, 12);
-    // Flowing outer veil behind shoulders
-    box(marble, gx, 19.6, gz - 0.75, 2.6, 4.8, 0.55);
-    const halo = new T.TorusGeometry(2.15, 0.14, 8, 24);
-    stamp(halo, gold, gx, 21.5, gz - 1.05, 1, 1, 1);
-    halo.dispose();
+    kit.palette({stone:[marble,pureWhite,lotusPink]});
+    CentralArch.lotusSeat(T,kit,gx,5.96,gz,16.43,3.62,pureWhite,lotusPink);
+    const base=10.2,h=(67-base)/1.048;
+    CentralArch.statueFigure(T,kit,pureWhite,gx,base,gz,h,{robe:true,
+      rightArm:[[-.153,.651,.045],[-.099,.729,.094],[-.077,.773,.108]],
+      leftArm:[[.148,.614,.018],[.090,.545,.082],[.055,.538,.10]]});
+    const vase=CentralArch.carving(T,kit,marble,gx,base,gz,h);
+    vase.sweep([[.047,.533,.103,.018,.018],[.047,.547,.103,.025,.026],[.046,.566,.103,.020,.019],
+      [.047,.582,.102,.009,.010],[.047,.591,.102,.013,.013]]);
+    vase.sweep([[0,.975,-.038,.055,.036],[.004,.915,-.048,.063,.039],[.007,.846,-.041,.080,.042],
+      [.013,.738,-.051,.105,.045],[.010,.644,-.055,.093,.039]],.09);
+    vase.finish();
 
     // 9-story octagonal Xá Lợi Stupa (Tháp Xá Lợi) on the left (-X)
-    const sx = -8.5, sz = -3.8;
+    const sx = -17.6, sz = -3.8;
     tapered(stone, sx, 1.15, sz, 4.4, 4.1, 1.25, 1, 8);
     let sy = 1.75;
     for (let tier = 0; tier < 9; tier++) {
@@ -341,13 +290,13 @@
 
     // Coastal Tam Quan Entrance Gate facing +Z
     for (const dx of [-5.8, -2.1, 2.1, 5.8]) {
-      box(marble, dx, 2.65, 10.6, 0.86, 4.1, 0.86);
-      box(gold, dx, 4.82, 10.6, 1.05, 0.22, 1.05);
+      box(marble, dx, 2.65, 19.2, 0.86, 4.1, 0.86);
+      box(gold, dx, 4.82, 19.2, 1.05, 0.22, 1.05);
     }
-    box(marble, 0, 4.75, 10.6, 12.6, 0.82, 1.45);
-    sign('CHÙA LINH ỨNG', 0, 4.82, 11.38, 4.2, 0.62);
-    curvedRoof(T, kit, 0, 5.25, 10.6, 14.2, 3.6, 1.35, jade, gold, gold, 0.34);
-    curvedRoof(T, kit, 0, 6.95, 10.6, 7.6, 2.8, 1.15, jade, gold, gold, 0.28);
+    box(marble, 0, 4.75, 19.2, 12.6, 0.82, 1.45);
+    sign('CHÙA LINH ỨNG', 0, 4.82, 19.98, 4.2, 0.62);
+    window.CentralArch.curvedRoof(T, kit, 0, 5.25, 19.2, 14.2, 3.6, 1.35, jade, gold, gold, 0.34);
+    window.CentralArch.curvedRoof(T, kit, 0, 6.95, 19.2, 7.6, 2.8, 1.15, jade, gold, gold, 0.28);
   }
 
   // 4. Hội quán Phúc Kiến – Hội An (Đà Nẵng / Quảng Nam cũ)
@@ -355,6 +304,7 @@
     const {box, stamp, outline, profile, round, sign} = kit;
     const coral = 0xd67c6a, rose = 0xc25f52, cream = 0xefe3c8, crimson = 0x8f2822;
     const jadeTile = 0x3b6e58, gold = 0xd9b04a, stone = 0x9b9589;
+    kit.palette({plaster: cream, glazedTile: jadeTile, stone});
 
     // Ancient Hoi An stone threshold & approach steps
     box(stone, 0, 0.16, 0, 18.8, 0.32, 6.2);
@@ -383,7 +333,7 @@
       stamp(round, cream, s * 5.2, 3.65, 1.14, 0.62, 0.1, 0.62, 0, Math.PI / 2);
       stamp(round, jadeTile, s * 5.2, 3.65, 1.18, 0.44, 0.1, 0.44, 0, Math.PI / 2);
       // Side gate double curved jade-green roofs
-      curvedRoof(T, kit, s * 5.2, 4.42, 0, 5.6, 3.4, 0.92, jadeTile, cream, gold, 0.3);
+      window.CentralArch.curvedRoof(T, kit, s * 5.2, 4.42, 0, 5.6, 3.4, 0.92, jadeTile, cream, gold, 0.3);
       // Crimson wooden doors slightly open
       box(crimson, s * 1.48, 1.72, 0.1, 0.14, 2.75, 1.05, s * 0.26);
       // Hanging glowing red Hoi An lanterns
@@ -397,12 +347,12 @@
     box(cream, 0, 5.62, 0, 5.8, 0.26, 3.2);
     box(crimson, 0, 4.88, 1.46, 3.6, 0.78, 0.14);
     sign('HỘI QUÁN PHÚC KIẾN', 0, 4.88, 1.55, 3.35, 0.54);
-    curvedRoof(T, kit, 0, 5.75, 0, 7.2, 4.4, 1.12, jadeTile, cream, gold, 0.34);
+    window.CentralArch.curvedRoof(T, kit, 0, 5.75, 0, 7.2, 4.4, 1.12, jadeTile, cream, gold, 0.34);
 
     // Upper pavilion attic with ornate pink/gold relief panels
     box(rose, 0, 7.25, 0, 4.4, 1.45, 2.45);
     for (const dx of [-1.4, 0, 1.4]) box(gold, dx, 7.25, 1.26, 0.65, 0.95, 0.08);
-    curvedRoof(T, kit, 0, 7.95, 0, 5.8, 3.6, 1.18, jadeTile, cream, gold, 0.3);
+    window.CentralArch.curvedRoof(T, kit, 0, 7.95, 0, 5.8, 3.6, 1.18, jadeTile, cream, gold, 0.3);
 
     // Ornate roof crest (Lưỡng long tranh châu)
     for (const s of [-1, 1]) {
@@ -440,8 +390,8 @@
     build: haiVanQuan
   }, {
     id: 'chua-linh-ung-son-tra', name: 'Chùa Linh Ứng Bãi Bụt', city: 'Sơn Trà', province: 'Đà Nẵng', region: 'Trung Bộ',
-    lon: 108.277016, lat: 16.099686, start: [108.277460, 16.098590], yaw: 0.372, width: 34, depth: 32, viewElevation: 0.22,
-    solids: [[4.5, -2.2, 5.5, 5.5], [-8.5, -3.8, 4.1, 4.1], [-5.8, 10.6, 0.7, 0.7], [5.8, 10.6, 0.7, 0.7]],
+    lon: 108.277016, lat: 16.099686, start: [108.277460, 16.098590], yaw: 0.372, width: 52, depth: 51, viewElevation: 0.22,
+    solids: [[5.5,-4.6,15.8,15.8],[-17.6,-3.8,4.1,4.1],[-5.8,19.2,.7,.7],[5.8,19.2,.7,.7]],
     description: 'Quần thể chùa ven biển trên bán đảo Sơn Trà nổi bật với đài sen trắng, tượng Quan Âm hướng vịnh Đà Nẵng, tháp Xá Lợi chín tầng và tam quan.',
     photo: 'https://danangfantasticity.com/en/culture-en/linh-ung-pagoda-on-son-tra-peninsula',
     source: 'https://vi.wikipedia.org/wiki/Ch%C3%B9a_Linh_%E1%BB%A8ng_(B%C3%A3i_B%E1%BB%A5t)',

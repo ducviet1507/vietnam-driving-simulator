@@ -24,33 +24,47 @@
        float mineral=dot(scan,vec3(.28,.62,.1));
        float dip=vMapUv.y*2.8+.46*sin(vMapUv.x*.8)+.18*sin(vMapUv.x*2.2);
        float grains=dot(texture2D(map,vMapUv*1.18).rgb,vec3(.28,.62,.1));
-       float crack=1.-smoothstep(.025,.12,abs(fract(dip+mineral*.73)-.5));
+       float oxidation=texture2D(map,vMapUv*.095+vec2(.33,.71)).g;
+       float crack=1.-smoothstep(.018,.11,abs(fract(dip+mineral*1.9)-.5));
+       crack*=smoothstep(.035,.115,oxidation);
        float fade=1.-smoothstep(.14,.72,fwidth(dip));
-       diffuseColor.rgb*=clamp(.39+3.7*mineral+1.9*grains-.21*crack*fade,.30,1.54);`);};
+       diffuseColor.rgb*=clamp(.32+5.7*mineral+2.6*grains-.20*crack*fade,.28,1.60);
+       diffuseColor.rgb*=mix(vec3(.65,.73,.68),vec3(1.12,1.06,.99),smoothstep(.028,.095,oxidation));`);};
     return m;
   }
   function waterMaterial(T,fall){
     // Use the normal renderer lighting; moving highlights are visible on the
     // sheets and the downstream pool even when viewed from the riverbank.
-    const m=new T.MeshPhongMaterial({vertexColors:true,side:T.DoubleSide,specular:0xc4e1d9,shininess:43});
+    const m=new T.MeshPhongMaterial({vertexColors:true,side:T.DoubleSide,specular:0xa3bdb9,shininess:fall?19:54,
+      transparent:true,depthWrite:false});
     const clock={value:0},quiet=matchMedia('(prefers-reduced-motion: reduce)');
     m.onBeforeRender=()=>{clock.value=quiet.matches?0:(performance.now()%600000)*.001;};
     m.customProgramCacheKey=()=>fall?'hydro-falling-water':'hydro-pool-water';
     m.onBeforeCompile=s=>{
       s.uniforms.streamClock=clock;
-      s.vertexShader='varying vec2 streamUV;\n'+s.vertexShader.replace('#include <begin_vertex>','#include <begin_vertex>\n streamUV=uv;');
-      s.fragmentShader='uniform float streamClock; varying vec2 streamUV;\n'+s.fragmentShader.replace('#include <color_fragment>',
-        '#include <color_fragment>\n'+(fall?
-          `float v=streamUV.y+streamClock*2.7;
-           float line=streamUV.x*21.+sin(v*.76+streamUV.x)*.9;
-           float phase=v*4.2+streamUV.x*1.8+sin(line)*1.7;
-           float stripes=sin(line)*(1.-smoothstep(.85,3.,fwidth(line)));
-           float streak=cos(phase)*(1.-smoothstep(.85,3.,fwidth(phase)));
-           diffuseColor.rgb*=.98+.12*stripes+.14*streak;`:
-          `float r=length(streamUV*vec2(1.,.79));
-           float ripples=sin(r*6.-streamClock*2.6+sin(streamUV.x*2.+streamClock*.3)*.7);
-           float light=pow(max(0.,ripples),6.)*(.35+.65*exp(-r*.12));
-           diffuseColor.rgb+=vec3(.12,.15,.13)*light*(1.-smoothstep(.12,.63,fwidth(r)));`));
+      const vary='varying vec2 streamUV; varying float waterCoverage;\n';
+      s.vertexShader=vary+'attribute float coverage;\n'+s.vertexShader.replace('#include <begin_vertex>',
+        '#include <begin_vertex>\n streamUV=uv;waterCoverage=coverage;');
+      s.fragmentShader=vary+`uniform float streamClock;
+        float streamHash(vec2 p){vec3 h=fract(p.xyx*.1031);h+=dot(h,h.yzx+33.33);return fract((h.x+h.y)*h.z);}
+        float streamNoise(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);
+          return mix(mix(streamHash(i),streamHash(i+vec2(1,0)),f.x),mix(streamHash(i+vec2(0,1)),streamHash(i+1.),f.x),f.y);}
+        `+s.fragmentShader.replace('#include <color_fragment>','#include <color_fragment>\n'+(fall?
+          `vec2 flow=vec2(streamUV.x,streamUV.y+streamClock*3.8);
+           float fold=streamNoise(flow*vec2(1.8,.34));
+           float filaments=streamNoise(flow*vec2(13.,.83)+fold*2.);
+           filaments=mix(filaments,.5,smoothstep(.06,.25,fwidth(flow.x)));
+           float aeration=clamp(.46*fold+.65*filaments,0.,1.);
+           diffuseColor.rgb=mix(diffuseColor.rgb*.71,vec3(.83,.90,.86),aeration*.76);
+           diffuseColor.a=waterCoverage*mix(.38,.97,smoothstep(.21,.80,aeration));`:
+          `vec2 p=streamUV;float r=length(p*vec2(.61,1.));
+           float drift=streamNoise(p*.54+vec2(0.,-streamClock*.52));
+           float ripple=sin(p.y*6.5+p.x*1.4-streamClock*2.6+drift*4.);
+           float eddy=sin(r*6.1-streamClock*3.7+drift*4.);
+           float nearFall=exp(-r*.17);
+           float light=pow(max(0.,mix(ripple,eddy,nearFall)),5.);
+           diffuseColor.rgb+=vec3(.08,.13,.12)*light*(1.-smoothstep(.12,.63,fwidth(r)));
+           diffuseColor.a=waterCoverage*(.79+.16*drift);`));
     };
     return m;
   }
@@ -58,13 +72,13 @@
   // point can blend between local terrain and a level pool/cave datum. Rebuilds
   // always use the original section, never accumulate the previous deformation.
   function surface(T,group,parts,material){
-    const p=[],uv=[],c=[],weight=[],indices=[],colour=new T.Color();
+    const p=[],uv=[],c=[],weight=[],coverage=[],indices=[],colour=new T.Color();
     function grid(nx,ny,sample){
       const first=p.length/3;
       for(let j=0;j<=ny;j++)for(let i=0;i<=nx;i++){
-        const [x,y,z,u,v,tint,mix]=sample(i/nx,j/ny);
+        const [x,y,z,u,v,tint,mix,alpha=1]=sample(i/nx,j/ny);
         p.push(x,y,z);uv.push(u,v);colour.setHex(tint);c.push(colour.r,colour.g,colour.b);
-        weight.push(mix);
+        weight.push(mix);if(material.transparent)coverage.push(alpha);
         if(i&&j){const k=first+j*(nx+1)+i;indices.push(k-nx-2,k-1,k-nx-1,k-1,k,k-nx-1);}
       }
     }
@@ -73,8 +87,10 @@
       const g=new T.BufferGeometry();
       g.setAttribute('position',new T.Float32BufferAttribute(p,3));
       g.setAttribute('uv',new T.Float32BufferAttribute(uv,2));g.setAttribute('color',new T.Float32BufferAttribute(c,3));g.setIndex(indices);
+      if(coverage.length)g.setAttribute('coverage',new T.Float32BufferAttribute(coverage,1));
       g.computeVertexNormals();g.computeBoundingSphere();
       const mesh=new T.Mesh(g,material);mesh.receiveShadow=true;mesh.castShadow=material.isMeshStandardMaterial;
+      if(material.transparent)mesh.renderOrder=material.customProgramCacheKey()==='hydro-falling-water'?2:1;
       group.add(mesh);parts.push({g,ys:Float32Array.from(weight,(_,i)=>p[3*i+1]),weight});
     }
     return {grid,finish};
@@ -99,6 +115,24 @@
         return [x,y,z,x*.47,(y+z*.36)*.53,stone(x,y,z,phase,true),0];
       });
     }
+  }
+  // Reuse one cutout texture for bank vegetation. Cards root in the same
+  // weighted bedrock samples as the stepped bank so they follow terrain loads.
+  function bankFerns(T,group,parts,roots,phase){
+    const plants=surface(T,group,parts,new T.MeshLambertMaterial({
+      map:map(T,'bank-fern.webp',true),alphaTest:.40,vertexColors:true,side:T.DoubleSide
+    }));
+    for(let i=0;i<roots.length;i++){
+      const [x,y,z,size,weight]=roots[i],turn=phase+i*2.39996;
+      for(let card=0;card<2;card++){
+        const a=turn+card*1.43,dx=Math.cos(a)*size,dz=Math.sin(a)*size;
+        plants.grid(2,1,(u,v)=>{
+          const t=u*2-1,lean=.12*v*(1-t*t);
+          return [x+t*dx+lean*dz,y+size*v*.95-.036,z+t*dz-lean*dx,u,v,card?0xdddfc9:0xd1dabf,weight];
+        });
+      }
+    }
+    plants.finish();
   }
   function groundFit(group,parts,z,entrance=false){
     group.userData.fitGround=ground=>{
@@ -137,6 +171,7 @@
   function waterfall(T,group,p,seed){
     const parts=[],rock=surface(T,group,parts,rockMaterial(T)),sheets=surface(T,group,parts,waterMaterial(T,true)),
       pool=surface(T,group,parts,waterMaterial(T,false)),w=p.width,h=p.height,centre=watercourse(p);
+    const roots=[];
     const tiers=p.form==='cascade'?3:p.form?1:p.heightSource==='estimate'&&p.grade>.30&&p.grade<.82&&h>4?3:h>2.8&&p.grade<.32?2:1;
     const ledge=clamp(w*.22+h*.13,1,9)*(tiers>1?1.3:1),undercut=p.form==='overhang';
     const dz=ledge/tiers,spread=clamp(w*.31+h*.09,1.8,13),phase=(seed%1597)*.013;
@@ -164,11 +199,14 @@
         const f=(k+.5)/runs;
         const distribution=Math.sin(f*12+phase)+.53*Math.sin(f*23-phase+j*.2)+.34*Math.cos(f*42+j);
         if(distribution<(p.intermittent?.19:p.form==='dry-season'?-.4:-1.06))continue;
-        sheets.grid(1,5,(u,v)=>{
-          const [x,y,z]=point((k+u)/runs,v,false),fall=v*v;
-          const spreadOut=(k+u-runs*.5)/runs*w*.13*fall;
-          return [x+spreadOut,y+.085,z+.14+Math.sin(Math.PI*v)*.21+Math.sin(f*32+phase)*fall*.17,x,y,
-            tint(0x809c96,0xeaf1e6,Math.min(1,.09+v*.60+(distribution+1.6)*.19)),1];
+        sheets.grid(2,9,(u,v)=>{
+          const drop=v*v,fraction=(k+u)/runs,[x,y,z]=point(fraction,drop,false);
+          const twist=Math.sin(fraction*33+phase+drop*3);
+          const flare=(fraction-.5)*w*.13*drop+twist*.06*w*drop;
+          const arc=(v-drop)*Math.min(3.1,.63*h/tiers);
+          const aeration=clamp(.15+drop*.61+.16*distribution+.13*twist,.05,1);
+          return [x+flare,y+.09,z+.18+arc+drop*twist*.10,x,y,
+            tint(0x638c8a,0xe5ece6,aeration),1,.82+.15*drop];
         });
         sheets.grid(1,2,(u,v)=>{
           const [x,y,z]=point((k+u)/runs,.52+v*.48,true);
@@ -188,13 +226,16 @@
       const breadth=w*.29+h*.45+2.1;
       function bluff(u,v,cap){
         const x=side*(w*.44+breadth*u);
-        const margin=1-clamp((u-.71)/.29,0,1);
-        const joint=.5+.5*Math.cos(u*16+phase+side);
-        const height=h*(1+.075*Math.sin(u*6+phase+side)+.037*joint)*margin;
+        const shoulder=.49+.13*Math.cos(phase+side);
+        const t=clamp((u-shoulder)/(1-shoulder),0,1);
+        const margin=1-t*t*(3-2*t);
+        const joint=.5+.5*Math.cos(u*17+phase+side);
+        const height=h*(1+.12*Math.sin(u*5+phase+side)+.045*joint)*margin;
         const line=lip(x)+toe*(.69+.28*Math.sin(u*8+phase))+u*w*.075;
         const y=height*(cap?1-v**1.7:1-v),exposure=h*.045+.12;
         const band=Math.cos(y/Math.max(h*.10,.38)+Math.sin(x*.27+phase)*.57);
-        const ledgeJoint=(band*.36+joint)*exposure;
+        const shelf=clamp((band+.37)*2.8,0,1);
+        const ledgeJoint=(shelf*.83+joint*.64-.48)*exposure;
         const front=line+v*(h*.10+.6)+ledgeJoint;
         const z=cap?line+ledgeJoint*(1-v)-(backDepth+dz)*v:front;
         const factor=margin*(cap?1-v:1);
@@ -203,14 +244,21 @@
       }
       rock.grid(24,24,(u,v)=>bluff(u,v,false));
       rock.grid(24,8,(u,v)=>bluff(u,v,true));
+      for(let i=0;i<28;i++){
+        const u=.05+.91*((i*.618+Math.abs(Math.sin(phase+side)))%1);
+        const t=.05+.73*((i*.386+Math.abs(Math.cos(phase-side)))%1);
+        const [x,y,z,,,,weight]=bluff(u,t,true);
+        roots.push([x,y,z,.42+.62*Math.abs(Math.sin(phase+i*.69)),weight]);
+      }
     }
     // A shallow elliptical pool abuts the foot of the last fall. Vary the
     // colour and foam by depth, with quiet margins against exposed bedrock.
     pool.grid(54,11,(u,v)=>{
-      const a=Math.PI*2*u,x=Math.cos(a)*v*(w*.62+spread*.29),z=pz+Math.sin(a)*v*(spread+.67);
-      const y=.10+.016*Math.sin(v*18+phase)*(1-v);
+      const a=Math.PI*2*u,shore=1+.13*Math.sin(a*3+phase)+.074*Math.sin(a*7-phase);
+      const x=Math.cos(a)*v*(w*.62+spread*.29)*shore,z=pz+Math.sin(a)*v*(spread+.67)*shore;
+      const y=.12+.014*Math.sin(v*18+phase)*(1-v);
       const foam=clamp(1-Math.abs(z-toe)/Math.max(1,spread*.7),0,1)*(1-v*.65);
-      return [xAt(x,z),y,z,x,z-toe,tint(tint(0x396360,0x687f71,v),0xc9dfd7,foam*.85),1];
+      return [xAt(x,z),y,z,x,z-toe,tint(tint(0x396360,0x687f71,v),0xc9dfd7,foam*.76),1,1-clamp((v-.77)/.23,0,1)];
     });
     const stonesAt=[];
     for(let i=0;i<13;i++){
@@ -219,21 +267,31 @@
         size*1.57,size*.83,size]);
     }
     stones(rock,stonesAt,phase);
-    rock.finish();sheets.finish();pool.finish();groundFit(group,parts,pz);
+    rock.finish();sheets.finish();pool.finish();
+    bankFerns(T,group,parts,roots,phase);groundFit(group,parts,pz);
   }
   function cave(T,group,p,seed){
     const parts=[],rock=surface(T,group,parts,rockMaterial(T)),w=p.width,h=p.height,phase=(seed%2377)*.014;
     const wing=Math.max(w*1.72,3.6),depth=clamp(w*1.47+h*.32,2.3,19),asymmetry=Math.sin(phase)*.18;
+    const skew=.09*Math.cos(phase*.71),fissure=p.form==='fissure',basalt=p.form==='basalt';
     function mouth(x){
       const t=x/(w*.5),u=clamp(t,-1,1);
-      return Math.abs(t)>=1?0:h*Math.pow(1-u*u,.57+.23*Math.cos(phase))*(1+u*asymmetry+.06*Math.sin(8*u+phase));
+      const dome=fissure?1-Math.abs(u+skew*(1-u*u)):Math.pow(1-Math.abs(u)**(basalt?3.2:2.25),.54);
+      const fracture=.086*Math.sin(7*u+phase)+.037*Math.cos(17*u-phase*.4);
+      return Math.abs(t)>=1?0:h*dome*(1+u*asymmetry+fracture);
     }
     function front(x,v){
-      const outer=clamp((wing-Math.abs(x))/(wing*.51),0,1),base=mouth(x);
-      const level=(h+Math.min(h*.80,wing*.65))*(.82+.13*Math.cos(x*.8+phase)+.07*Math.sin(x*2.2))*outer;
-      const y=base+(level-base)*v-.09*(1-outer);
-      const strata=.12*Math.cos(y*4.5+x*.37+phase)+.06*Math.sin(y*9.1-x*.23);
-      const z=.22*Math.sin(x*2.6+y*.8+phase)+Math.min(.76,w*.12)*Math.cos(x*.67+y*.29)-v*v*h*.29+strata;
+      const side=x<0?-1:1;
+      const outer=clamp((wing-Math.abs(x))/(wing*(.43+.09*Math.sin(phase+side))),0,1);
+      const flank=outer*outer*(3-2*outer),base=mouth(x);
+      const crest=h*(1.47+.20*Math.cos(x/(w*.68)+phase)+.12*Math.sin(x/(w*.22)+phase*.76));
+      const level=Math.max(base+h*.19,crest)*flank;
+      const y=base+(level-base)*v-.16*(1-flank);
+      const dip=x*.17+y+phase,scale=Math.max(.26,Math.min(h*.14,1.7));
+      const bed=dip/scale-Math.floor(dip/scale),ledge=(1-Math.abs(bed*2-1))*Math.min(.17,h*.03);
+      const recess=clamp(.60-.60*Math.cos(x/Math.max(.73,w*.16)+phase),0,1);
+      const z=.19*Math.sin(x*1.57+y*.61+phase)+Math.min(1.4,w*.2)*Math.cos(x/Math.max(1,w*.48)+phase)
+        +ledge+v*(1-v)*h*.54*recess-v*v*h*.41;
       return [x,y,z];
     }
     rock.grid(54,13,(u,v)=>{
@@ -263,12 +321,40 @@
       const [x,y,z]=front((u*2-1)*wing,1);
       return [x,(1-v)**.82*y-.23*v,z-v*depth*1.03,x*.53,(z-v*depth)*.57,stone(x,y,z-v*depth,phase,false),1-v];
     });
+    // Eroded flanks extend out of the cliff face. Detached blocks overlap its
+    // foot and bury the wall edge; the mapped opening remains clear.
     const rocks=[];
-    for(let i=0;i<11;i++){
-      const side=i%2?1:-1,r=.14+(.4+.34*Math.cos(phase+i*3.1))*Math.min(wing*.29,w*.3,1.24);
-      rocks.push([side*(w*.57+r+i%3*.31),.45+Math.sin(i*2.4+phase)*.83,r*1.4,r*.84,r]);
+    for(const side of [-1,1]){
+      const breadth=wing-w*.55;
+      for(let i=0;i<5;i++){
+        const t=(i+.45)/5,x=side*(w*.6+breadth*t),crest=front(x,1)[1];
+        const mass=Math.max(.18,crest*(.36+.18*Math.sin(phase+i*2.1+side)));
+        const cx=x+side*.11*w;
+        const cz=front(x,.35)[2]+.04*w;
+        rock.grid(18,8,(u,v)=>{
+          const a=u*Math.PI*2;
+          const face=Math.abs(Math.cos(a+.4*i))*.78+Math.abs(Math.sin(a+.4*i))*.56;
+          const strata=(1+.068*Math.sin(15*v+2*a+phase)+.065*Math.cos(6*a+i))/Math.max(.7,face);
+          const radius=(1-v*.24)*strata*Math.min(1,(1-v)*5);
+          const px=cx+(breadth*.24+.18)*radius*Math.cos(a)+side*v*w*.075;
+          const pz=cz+(.45+.27*w)*(1+.25*Math.sin(i+phase))*radius*Math.sin(a)-v*w*.12;
+          const py=mass*Math.min(1,v*1.22)*(1+.14*Math.cos(a+phase)*radius)-.22;
+          return [px,py,pz,px*.54,(py+.32*pz)*.58,stone(px,py,pz,phase,false),1-t*.6];
+        });
+      }
+      for(let i=0;i<12;i++){
+        const k=(i*.618+.19)%1,sz=.18+(.33+.28*Math.cos(phase+i*2.7))*Math.min(2,w*.39);
+        rocks.push([side*(w*.59+k*breadth),.29+Math.sin(i*2.4+phase)*1.03+sz,sz*1.41,sz*.86,sz]);
+      }
     }
-    stones(rock,rocks,phase);rock.finish();groundFit(group,parts,0,true);
+    stones(rock,rocks,phase);rock.finish();
+    const roots=[];
+    for(let i=0;i<52;i++){
+      const x=wing*((i*.61803399%1)*1.84-.92),v=(i*.393+Math.abs(Math.cos(phase)))%1;
+      const [,crest,z]=front(x,1);
+      roots.push([x,crest*(1-v)**.82-.23*v,z-v*depth*1.03,.32+.42*Math.abs(Math.cos(i+phase)),1-v]);
+    }
+    bankFerns(T,group,parts,roots,phase);groundFit(group,parts,0,true);
   }
   for(const [id,p] of Object.entries(profiles)){
     const site=byId.get(id);

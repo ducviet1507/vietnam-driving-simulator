@@ -4,8 +4,9 @@
 
   // 1. Quảng trường Hồ Chí Minh (TP. Vinh) — tượng đài Bác Hồ & bức tường cánh sen đá
   function quangTruongHcmVinh(T, kit) {
-    const { box, stamp, round, tapered, wavingFlag } = kit;
+    const { box, stamp, round, wavingFlag } = kit;
     const granite = 0xd6cab3, darkStone = 0x767067, redGranite = 0x7f2b22, lawn = 0x4f783d;
+    kit.palette({stone: [granite, darkStone]});
 
     // Vast stepped granite ceremonial plaza & flanking lawn strips
     box(darkStone, 0, 0.25, 1.5, 34, 0.50, 26);
@@ -13,30 +14,24 @@
     for (const s of [-1, 1]) box(lawn, s * 14.5, 0.54, 4.5, 4.2, 0.14, 15.5);
     A.steps(kit, 0, 11.2, 16, 1.8, 5, 0.16, 0.45, granite);
 
-    // Curved 9-slab Chung Mountain / lotus-petal relief backdrop wall behind the statue
-    for (let i = -4; i <= 4; i++) {
-      const dist = Math.abs(i);
-      const bh = 16.5 - dist * 1.35;
-      const bx = i * 2.55;
-      const bz = -7.6 + dist * dist * 0.24;
-      box(granite, bx, 0.8 + bh * 0.5, bz, 2.28, bh, 1.15, -i * 0.08);
-      box(0xb9ad98, bx, 0.8 + bh * 0.48, bz + 0.58, 1.85, bh * 0.72, 0.10, -i * 0.08);
-    }
+    // The low, planted rise behind the statue recalls Mount Chung in Nam Dan.
+    const hill = new T.SphereGeometry(1,32,12,0,Math.PI*2,0,Math.PI*.51);
+    stamp(hill,0x61714a,0,.1,-9.8,17,3.7,5.0);
+    hill.dispose();
+    A.trees(T,kit,[-1,1].flatMap(side=>[1,2,3].map(i=>({
+      x:side*(3+i*3.25),z:-9.7+i*.62,h:4.1+i*.32,kind:'banyan'
+    }))));
 
     // Stepped red-granite & pale-stone statue pedestal
     box(redGranite, 0, 1.9, -1.0, 8.8, 2.2, 6.2);
     box(granite, 0, 3.65, -1.0, 6.6, 1.5, 4.6);
     A.plaque(T, kit, 'QUẢNG TRƯỜNG HỒ CHÍ MINH', 0, 2.05, 2.16, 7.2, 0.96, { bg: '#7b221a', fg: '#f4d26e' });
 
-    // Iconic 18m Binh Dinh pale-granite statue of President Ho Chi Minh
-    const sy = 4.4;
-    tapered(0xdfd5c2, 0, sy + 4.4, -1.0, 2.05, 1.52, 8.8, 0.78, 14);
-    box(0xe4dac8, 0, sy + 9.2, -1.0, 3.4, 3.2, 1.65);
-    // Raised greeting right hand & gentle flowing coat fold
-    box(0xdfd5c2, 2.05, sy + 10.4, -0.55, 0.78, 2.8, 0.78, 0, 0.28, -0.42);
-    const head = new T.SphereGeometry(1.06, 14, 10);
-    stamp(head, 0xe8dfd0, 0, sy + 11.7, -1.0);
-    head.dispose();
+    const figureStone = 0xcfc8b4;
+    kit.palette({stone:[figureStone,redGranite]});
+    A.statueFigure(T,kit,figureStone,0,4.4,-1,18,{jacket:true,beard:true,
+      rightArm:[[-.135,.656,.004],[-.129,.49,.035],[-.127,.443,.047]],
+      leftArm:[[.146,.653,.013],[.112,.608,.074],[.087,.595,.10]]});
 
     // Flagpole & national flag + ornamental palms
     stamp(round, 0xe0ddd4, -11.8, 8.5, 7.5, 0.14, 16.5, 0.14);
@@ -69,6 +64,7 @@
     const { box, stamp, profile, round } = kit;
     const laterite = [0x8d5b44, 0x9b684d, 0x7e533e, 0xa37154];
     const mortar = 0xb8ab95, plaster = 0xcfc4a6, tile = 0x6f4335, timber = 0x5c2c20;
+    kit.palette({plaster, tile, timber});
 
     A.vaultedBay(T, kit, 0, 0, 12.8, 4.9, 2.15, 2.45, 6.8, laterite[0], mortar, 0x645e56);
     for (const s of [-1, 1]) {
@@ -97,6 +93,7 @@
     const { box, stamp, profile, round } = kit;
     const laterite = [0x885741, 0x946349, 0x79503b, 0x9e6d50];
     const mortar = 0xb4a790, plaster = 0xcbbda0, tile = 0x6b4133, timber = 0x58291e;
+    kit.palette({plaster, tile, timber});
 
     // Stone approach causeway
     box(0x888176, 0, 0.16, 6.6, 5.8, 0.32, 6.8);
@@ -165,6 +162,7 @@
   function moBaHoangThiLoan(T, kit) {
     const { box, outline, stamp, round } = kit;
     const granite = 0xd6cfc2, darkStone = 0x7f7970, marble = 0xede7db, lotus = 0xc5a87a;
+    kit.palette({stone: [granite, darkStone, marble]});
 
     // Ascending granite hillside sanctuary terrace
     box(darkStone, 0, 0.42, 0, 22, 0.84, 20);
@@ -205,6 +203,7 @@
   function queNgoaiHoangTru(T, kit) {
     const { box, stamp, outline, round } = kit;
     const thatch = [0xb39a6e, 0xa4895e, 0x987f56], timber = 0x563f2e, bamboo = 0x87724d;
+    kit.palette({timber: [timber, bamboo]});
 
     // Earthen village courtyard & hibiscus hedge
     box(0xba9f78, 0, 0.08, 1.2, 20.5, 0.16, 15.5);
@@ -413,7 +412,7 @@
       source: 'https://dulichnghean.gov.vn/',
       build: denConQuynhPhuong
     },
-    
+
     {
       id: 'cau-cua-hoi', name: 'Cầu Cửa Hội', city: 'Cửa Lò – Nghi Xuân', province: 'Nghệ An',
       lon: 105.746905, lat: 18.751042, yaw: -0.6426, width: 260, depth: 23,

@@ -282,6 +282,7 @@
     description:'Từ cổng 19C Hoàng Diệu, qua Đoan Môn tới thềm rồng. Hai thành rồng đá và hai thành mây hóa rồng từ năm 1467 chia thềm nam thành ba lối. Thềm nhỏ thời Lê Trung hưng nằm ở góc tây bắc nền điện.'},terrace);
   function pavilion(T,kit){
     const {box,stamp,profile,sign}=kit,grey=0xd7d3c6,trim=0xbdb9aa,red=0x9f4934,wood=0x884332,lacquer=0xb35c40;
+    kit.palette({timber: wood});
     for(const [w,y,h] of [[6.55,.105,.21],[6.18,.32,.22],[5.84,.51,.16]])box(0x9f9283,0,y,0,w,h,w);
     box(0xaf7260,0,.59,0,5.76,.12,5.76);
     for(const side of [-1,1])for(let i=0;i<3;i++){
@@ -354,6 +355,7 @@
 
   function onePillar(T,kit){
     const {box,stamp,round,random}=kit,stone=0xb5b3a1,light=0xc4bcab,wood=0x624733,dark=0x493b2c;
+    kit.palette({stone, timber: wood});
     // Linh Chiểu pond (w697326497) and the mapped south-west flight (w697326492).
     box(0x54796d,0,.059,0,16.44,.12,17.48);
     const tile=0xb4ad94;

@@ -6,6 +6,7 @@
   function choVinh(T, kit) {
     const { box, stamp, round, tapered, outline } = kit;
     const cream = 0xefe7d6, trim = 0xd6c7aa, roof = 0xa43a2b, cupola = 0x3b786c, glass = 0x2f4354, red = 0x9e2b22, stone = 0xa69f92;
+    kit.palette({plaster: cream, glass, stone});
 
     // Paved market apron & front steps
     box(stone, 0, 0.14, 0, 34, 0.28, 24);
@@ -74,6 +75,7 @@
   function gaVinh(T, kit) {
     const { box, stamp, round } = kit;
     const cream = 0xeee5d2, terra = 0xa8553b, slate = 0x4b5863, glass = 0x2a4557, concrete = 0xc5bfb3, railSteel = 0x5c6368;
+    kit.palette({plaster: [cream, concrete], glass});
 
     // Station plaza & concrete platform
     box(0x9b978d, 0, 0.14, 1.5, 34, 0.28, 22);
@@ -133,6 +135,7 @@
   function chuaCanLinh(T, kit) {
     const { box, stamp, round, tapered } = kit;
     const ochre = 0xe1c78c, crimson = 0x8b291f, tile = 0x8f3f2b, gold = 0xdba943, stone = 0x9b9487, water = 0x3f6e78;
+    kit.palette({plaster: ochre, tile, stone});
 
     // Red-brick temple forecourt
     box(0x9a5b44, 0, 0.14, 0.5, 30, 0.28, 25);
@@ -192,6 +195,7 @@
   function denHongSon(T, kit) {
     const { box, stamp, round } = kit;
     const ochre = 0xdbc18a, redBrick = 0x995843, tile = 0x823b2c, gold = 0xd2a144, stone = 0x8c8578;
+    kit.palette({plaster: ochre, tile, stone});
 
     // Courtyard paved in traditional terracotta tiles
     box(redBrick, 0, 0.14, 0.5, 26, 0.28, 25);
@@ -239,6 +243,7 @@
   function quangTruongBinhMinh(T, kit) {
     const { box, stamp, round, tapered, outline, wavingFlag } = kit;
     const granite = 0xd8d3c8, blueWave = 0x2b7294, seaTeal = 0x459ab4, petalGold = 0xf0be32, petalWarm = 0xe39e24, white = 0xf2f0ea;
+    kit.palette({stone: granite});
 
     // Wide circular beachfront granite plaza with concentric ocean wave bands
     stamp(round, granite, 0, 0.16, 0, 15.5, 0.32, 15.5);
@@ -298,6 +303,7 @@
   function denNguyenXi(T, kit) {
     const { box, stamp, round, tapered } = kit;
     const laterite = 0x8e6b4f, ochre = 0xd8c398, tile = 0x833c2c, gold = 0xcfa04c, stone = 0x8c867a;
+    kit.palette({plaster: ochre, tile, stone});
 
     // Red-brick forecourt with laterite border wall
     box(0x935942, 0, 0.14, 1.0, 28, 0.28, 26);
@@ -346,6 +352,7 @@
   function denVuaMaiHacDe(T, kit) {
     const { box, stamp, round } = kit;
     const goldWall = 0xe3c375, crimson = 0x7c2118, tile = 0x9c4527, gold = 0xe0b245, stone = 0x918a7e;
+    kit.palette({tile, stone});
 
     // Grand tiered stone forecourt
     box(0xa48e70, 0, 0.14, 1.2, 28, 0.28, 26);
@@ -398,6 +405,7 @@
   function phanBoiChau(T, kit) {
     const { box, stamp, round, tapered } = kit;
     const thatch = 0xb59b68, thatchRidge = 0x8f774c, wood = 0x5c3c26, bamboo = 0x8f7a53, granite = 0xa8a39a, bronze = 0x6b5234;
+    kit.palette({thatch, timber: [wood, bamboo], stone: granite, metal: bronze});
 
     // Quiet red-earth courtyard & low clipped hibiscus hedge
     box(0xb59b78, 0, 0.12, 0.5, 28, 0.24, 22);
@@ -441,6 +449,7 @@
   function denQuaSon(T, kit) {
     const { box, stamp, round } = kit;
     const lime = 0xe0d2b4, tile = 0x873f2e, gold = 0xd0a149, stone = 0x8f897e, crimson = 0x7a271d;
+    kit.palette({plaster: lime, tile, stone});
 
     // Terraced red-brick courtyard
     box(0x9b5a44, 0, 0.14, 1.2, 28, 0.28, 25);
@@ -484,6 +493,7 @@
   function denBachMa(T, kit) {
     const { box, stamp, round } = kit;
     const ochre = 0xdcc596, tile = 0x8a412e, gold = 0xd3a44a, stone = 0x908a7f, whiteHorse = 0xf2efe6;
+    kit.palette({plaster: ochre, tile, stone});
 
     // Courtyard & brick path
     box(0x985b46, 0, 0.14, 1.0, 26, 0.28, 25);

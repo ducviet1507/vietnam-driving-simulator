@@ -109,7 +109,7 @@ function createSightFinishes(T,nightLights){
           diffuseColor.rgb*=1.+(stain-.5)*.18-wet*.23;
           roughnessFactor=mix(roughnessFactor,min(.29,roughnessFactor),wet);
           ${surface}
-          ${brick?`if(diffuseColor.r>diffuseColor.g*1.38 && abs(fn.y)<.8){
+          ${brick?`if(${g.hasAttribute('finishKind')?'surfaceKind<.5 && ':''}diffuseColor.r>diffuseColor.g*1.38 && abs(fn.y)<.8){
             vec2 course=face/vec2(.31,.095);course.x+=mod(floor(course.y),2.)*.5;
             vec2 edge=min(fract(course),1.-fract(course)),aa=max(fwidth(course),vec2(.005));
             vec2 body=smoothstep(vec2(.026)-aa*.5,vec2(.055)+aa*.5,edge);

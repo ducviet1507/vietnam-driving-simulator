@@ -203,8 +203,9 @@
     photo:'https://plo.vn/trai-nghiem-di-thuyen-10-km-ngam-ky-quan-de-nhat-dong-phong-nha-tien-son-post832221.html',
     description:'Thuyền theo sông Son vào cửa động thấp dưới vách đá vôi. Vòm đá thu dần vào bóng tối, phía trên là sườn núi phủ cây.'},cave);
 
-  function mySon(T,{box,tapered,outline,random}){
+  function mySon(T,{palette, box,tapered,outline,random}){
     const brick=0x9b573d,red=0xa4664f,shadow=0x58473a,sandstone=0xb4a18a;
+    palette({brick, stone: sandstone});
     function shrine(x,z,w,d,h){
       box(shadow,x,.37,z,w+1.3,.74,d+1.4);box(red,x,.96,z,w+.8,.55,d+.85);
       box(brick,x,1.2+h*.33,z,w,h*.66,d);
@@ -245,8 +246,9 @@
     photo:'https://whc.unesco.org/en/list/949/gallery/',
     description:'Cụm tháp Chăm nổi bật với các trụ ốp bằng gạch, cửa bằng sa thạch và mái giật cấp. Tháp dài có hai đầu mái vút lên như yên ngựa.'},mySon);
 
-  function palace(T,{box,stamp,round,wavingFlag,group}){
+  function palace(T,{palette, box,stamp,round,wavingFlag,group}){
     const ivory=0xe9e0cb,edge=0xc4bda9,slate=0x666b61,glass=0x405354,wood=0x715545;
+    palette({glass, timber: wood});
     for(const [x,z,w,d,h] of [[0,8,82,19,18],[-25,-13,23,29,13],[25,-13,23,29,13],[0,-20,39,14,12]]){
       box(edge,x,.8,z,w+1.1,1.6,d+1.2);
       box(glass,x,h*.5+1.2,z,w,h,d);
@@ -292,8 +294,9 @@
     viewAngle:2.38,viewElevation:.19,gardenRadius:105,solids:[[0,8,41,9.5],[-25,-13,11.5,14.5],[25,-13,11.5,14.5],[0,-20,19.5,7]],
     photo:'https://dinhdoclap.gov.vn/kien-truc-dinh-doc-lap/',description:'Các dải ban công chạy ngang mặt đứng. Lớp rèm hoa đá gợi hình đốt trúc, che nắng cho hành lang phía sau.'},palace);
 
-  function lighthouse(T,{group,stamp,round,tapered,box}){
+  function lighthouse(T,{palette, group,stamp,round,tapered,box}){
     const granite=0xc2ac86,band=0xa79779;
+    palette({stone: granite});
     tapered(band,0,.55,0,4.6,4.35,1.1,1,8);
     tapered(granite,0,16.35,0,3.85,2.55,30.7,1,8);
     for(let i=0;i<6;i++)box(0x4a4a41,0,4+i*4.2,3.42-i*.17,.66,1.25,.24);

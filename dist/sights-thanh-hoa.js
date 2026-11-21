@@ -79,6 +79,7 @@
   function honTrongMaiSamSon(T, kit) {
     const { stamp, box } = kit;
     const granite = 0xa9a295, weathered = 0x8e877b, darkRock = 0x767067;
+    kit.palette({stone: granite});
 
     // Coastal mountain rock terrace & massive flat base boulder (Bệ đá Trường Lệ)
     box(0x888175, 0, 0.35, 0, 22, 0.70, 18);
@@ -106,17 +107,22 @@
 
   // 6. Tượng đài Lê Lợi (TP. Thanh Hóa — Hoàng đế cầm gươm Thuận Thiên)
   function tuongDaiLeLoi(T, kit) {
-    const { box, stamp, round } = kit;
     A.memorialMonument(T, kit, {
-      plazaW: 26, plazaD: 22, h: 18, style: 'statue', wings: false, backdrop: false,
-      stone: 0xd0c9bc, darkStone: 0x736e66, bronze: 0x614b34, accent: 0xaa3224,
-      title: 'TƯỢNG ĐÀI LÊ LỢI'
+      plazaW: 26, plazaD: 22, style: 'statue', wings: false, flags: false,
+      stone: 0xa3aa9f, darkStone: 0x828a80,
+      sculpt(T,kit,base) {
+        const tint=0x969f96, height=15.7-base;
+        kit.palette({stone:tint});
+        A.statueFigure(T,kit,tint,0,base,-1.2,height,{longCoat:true,beard:true,headcloth:true,
+          leftArm:[[.151,.664,.025],[.149,.568,.052],[.140,.533,.067]]});
+        const dress=A.carving(T,kit,tint,0,base,-1.2,height);
+        dress.sweep([[0,.610,.002,.097,.065],[0,.616,.002,.100,.067],[0,.637,.002,.099,.068],[0,.644,.002,.093,.064]]);
+        dress.sweep([[.149,.57,.067,.018,.018],[.130,.541,.074,.022,.023],[.104,.501,.089,.023,.021],
+          [.042,.47,.090,.020,.016],[-.010,.433,.088,.018,.014],[-.041,.331,.071,.016,.012],[-.052,.271,.075,.010,.008]]);
+        dress.finish();
+        A.plaque(T,kit,'LÊ LỢI',0,2.28,1.45,3.3,.74,{bg:'#8b9286',fg:'#454c44',frame:false});
+      }
     });
-    // Iconic Thuận Thiên Sword held high beside the statue
-    box(0xd8b24e, 1.85, 17.5, -0.7, 0.24, 5.8, 0.14);
-    box(0xd8b24e, 1.85, 15.2, -0.7, 1.1, 0.22, 0.22);
-    // Ornamental bronze drum base relief ring
-    stamp(round, 0x87683e, 0, 2.2, -1.2, 4.4, 2.2, 4.4);
   }
 
   // 7. Thái Miếu nhà Hậu Lê (TP. Thanh Hóa)
@@ -188,7 +194,7 @@
       lon: 105.775960, lat: 19.807300, yaw: -1.681, width: 26, depth: 22,
       start: [105.775682, 19.807329], viewDistance: 1200,
       map: 'https://www.openstreetmap.org/node/4565113392',
-      source: 'https://dulichthanhhoa.org/',
+      source: 'https://vnexpress.net/thanh-hoa-tu-bo-xong-tuong-dai-da-xanh-lon-nhat-tinh-3914113.html',
       build: tuongDaiLeLoi
     },
     {

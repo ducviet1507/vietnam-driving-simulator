@@ -1,11 +1,12 @@
 'use strict';
 (() => {
-  function baKien(T,{box,outline,round,stamp,random,group}) {
+  function baKien(T,{palette, box,outline,round,stamp,random,group}) {
     const timber=0x544538,oldWood=0x766653,lime=0x999186;
     const tile=[0x985e48,0x9e664d,0x925e47,0x886047,0xa3694e];
     const width=13.8,halfDepth=3.63,eaves=3.05,rise=2.5;
     const section=[[-halfDepth,0],[-2,.82],[0,rise],[2,.82],[halfDepth,0],
       [halfDepth,-.16],[2,.63],[0,rise-.18],[-2,.63],[-halfDepth,-.16]];
+    palette({timber, plaster: lime});
     box(0x986f56,0,.09,4.1,15.4,.18,6.4);
     box(0x74695d,0,.27,0,13.8,.54,6.6);
     for(let step=0;step<2;step++)box(0xa68269,0,.14+step*.1,3.73-step*.25,8.6,.19,.48);
@@ -89,8 +90,9 @@
     return leaves;
   }
 
-  function tranThuong(T,{box,outline,profile,stamp,round,tapered}) {
+  function tranThuong(T,{palette, box,outline,profile,stamp,round,tapered}) {
     const base=0x8a8780,aged=0xaaa69a,plaster=0xbcb7a7,edge=0x797972,roof=0x585952;
+    palette({plaster});
     function vaulted(x,z,w,h,r,sy,d){
       const shape=new T.Shape();
       shape.moveTo(-w/2,0);shape.lineTo(-r,0);shape.lineTo(-r,sy);

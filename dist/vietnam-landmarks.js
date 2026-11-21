@@ -43,16 +43,37 @@ window.VietnamLandmarks=(()=>{
     let seed=2043;
     function random(){seed=(Math.imul(seed,1664525)+1013904223)>>>0;return seed/4294967296;}
     const cube=new T.BoxGeometry(),round=new T.CylinderGeometry(1,1,1,20),colour=new T.Color();
+    const finishKinds=[], swatches=new Map();
+    function palette(spec, defaults=false) {
+      for(const [kind,tints] of Object.entries(spec))
+        for(const tint of [].concat(tints)){
+          if(!defaults||!swatches.has(tint))swatches.set(tint,landmarkFinish[kind]);
+        }
+    }
     function stamp(geo,tint,x,y,z,w=1,h=1,d=1,ry=0,rx=0,rz=0){
       pose.position.set(x,y,z);pose.scale.set(w,h,d);pose.rotation.set(rx,ry,rz,'YXZ');pose.updateMatrix();
       const p=geo.attributes.position,n=geo.attributes.normal,base=positions.length/3;
+      const kind=swatches.get(tint)??landmarkFinish.plain;
       normalMatrix.getNormalMatrix(pose.matrix);colour.setHex(tint);
       for(let i=0;i<p.count;i++){
         const {x:px,y:py,z:pz}=point.fromBufferAttribute(p,i).applyMatrix4(pose.matrix);
         const {x:nx,y:ny,z:nz}=normal.fromBufferAttribute(n,i).applyNormalMatrix(normalMatrix);
         positions.push(px,py,pz);normals.push(nx,ny,nz);colours.push(colour.r,colour.g,colour.b);
         const top=Math.abs(ny)>Math.max(Math.abs(nx),Math.abs(nz));
-        uvs.push((top||Math.abs(nz)>=Math.abs(nx)?px:pz)*.23,(top?pz:py)*.23);
+        let u=top||Math.abs(nz)>=Math.abs(nx)?px:pz, v=top?pz:py;
+        if(kind===landmarkFinish.tile||kind===landmarkFinish.glazedTile||kind===landmarkFinish.thatch){
+          // Across and down the pitch, with the overlap facing the eave.
+          const slopesX=Math.abs(nx)>Math.abs(nz);
+          u=slopesX?pz:px;
+          v=slopesX?px*Math.sign(nx):pz*Math.sign(nz);
+        }else if(kind===landmarkFinish.timber){
+          // Run the photographed fibres along the post, beam or deck plank.
+          const a=p.getX(i)*w,b=p.getY(i)*h,c=p.getZ(i)*d;
+          if(h>=w&&h>=d){u=b;v=Math.abs(n.getX(i))>.6?c:a;}
+          else if(w>=d){u=a;v=Math.abs(n.getY(i))>.6?c:b;}
+          else{u=c;v=Math.abs(n.getY(i))>.6?a:b;}
+        }
+        uvs.push(u,v);finishKinds.push(kind);
       }
       const order=geo.index;
       for(let i=0;i<(order?.count??p.count);i++)indices.push(base+(order?order.getX(i):i));
@@ -110,6 +131,7 @@ window.VietnamLandmarks=(()=>{
     }
     if(id==='turtle'){
       const stone=0xb5b1a4,band=0x92887a,roof=0x706052;
+      palette({stone:[stone,band],tile:roof});
       const island=new T.SphereGeometry(1,40,9);
       for(let i=0;i<island.attributes.position.count;i++){
         const p=island.attributes.position,x=p.getX(i),y=p.getY(i),z=p.getZ(i),a=Math.atan2(z,x),wave=1+.027*Math.sin(a*7)+.016*Math.cos(a*11);
@@ -336,6 +358,7 @@ window.VietnamLandmarks=(()=>{
     }
     // The following pieces share the same baked mesh and metric coordinates as the original three sites.
     const stone=0xa3937c,ochre=0xd3a451,cream=0xf3deb0,tileRed=0x95513d,wood=0x633e2e;
+    palette({stone,plaster:[cream,ochre],timber:wood,tile:tileRed});
     function gable(x,eaves,z,w,h,d,tint){
       outline([[-w/2,0],[0,h],[w/2,0]],tint,x,eaves,z-d/2,d);
     }
@@ -943,25 +966,11 @@ window.VietnamLandmarks=(()=>{
       stamp(round,0x92adb0,lx,deck+8.27,lz,.71,1.10,.71);
       tapered(0xe3dfd4,lx,deck+9.05,lz,.93,.10,.65,1,18);
       stamp(round,0x626e69,lx,deck+9.60,lz,.037,.55,.037);
-      const canopy=new T.IcosahedronGeometry(1,1);
-      const leaves=canopy.attributes.position;
-      for(let i=0;i<leaves.count;i++){
-        const x=leaves.getX(i),y=leaves.getY(i),z=leaves.getZ(i);
-        const noise=1+.14*Math.sin(x*11+y*12-z*8)+.085*Math.cos(z*14+y*10);
-        leaves.setXYZ(i,x*noise,y*noise,z*noise);
-      }
-      canopy.computeVertexNormals();
-      for(const side of [-1,1])stamp(round,0x675943,5.45+side*.91,6.98,-4.0,.21,3.1,.22,.22,0,-side*.68);
-      stamp(round,0x716551,5.6,5.48,-4.1,.47,6.2,.51,0,-.13,.16);
-      for(let i=0;i<32;i++){
-        const a=i*2.399,r=Math.sqrt(i/32)*3.65;
-        stamp(canopy,[0x586e43,0x677b49,0x526b3e][i%3],5.4+Math.cos(a)*r,8.75-r*.29+random()*.54,-4.1+Math.sin(a)*r,1.5+random()*.50,1.06+random()*.45,1.30+random()*.58,a);
-      }
-      canopy.dispose();
+      window.CentralArch.trees(T,{group},[{x:5.6,y:2.35,z:-4.1,h:7.8,width:10.1}]);
     }
     const addition=additions.get(id);
     if(addition){
-      const steps=addition.build(T,{group,stamp,box,deck,round,tapered,profile,outline,arch,sign,random,wavingFlag,vertexCount:()=>positions.length/3});
+      const steps=addition.build(T,{group,stamp,box,deck,round,tapered,profile,outline,arch,sign,random,wavingFlag,palette,vertexCount:()=>positions.length/3});
       if(steps?.next)yield* steps;
     }
     cube.dispose();round.dispose();group.name=id;
@@ -970,27 +979,17 @@ window.VietnamLandmarks=(()=>{
     geometry.setIndex(indices);
     for(const [name,values] of [['position',positions],['normal',normals],['color',colours]])geometry.setAttribute(name,new T.Float32BufferAttribute(values,3));
     geometry.setAttribute('uv',new T.Float32BufferAttribute(uvs,2));geometry.computeBoundingSphere();
-    // Shared metre-scale plaster grain. Edge wrapping also repeats stains at texture seams.
-    const tile=document.createElement('canvas');tile.width=tile.height=128;
-    const ctx=tile.getContext('2d'),pixels=ctx.createImageData(128,128);
-    for(let i=0;i<pixels.data.length;i+=4){const val=236+random()*18;pixels.data.set([val,val,val,255],i);}
-    ctx.putImageData(pixels,0,0);
-    for(let i=0;i<85;i++){
-      const x=random()*128,y=random()*128,r=1+random()*11;
-      for(const dx of [-128,0,128])for(const dy of [-128,0,128]){
-        const xx=x+dx,yy=y+dy,grad=ctx.createRadialGradient(xx,yy,0,xx,yy,r);
-        grad.addColorStop(0,'rgba(91,82,70,'+(addition?.plasterStain??.13)+')');grad.addColorStop(1,'rgba(91,82,70,0)');ctx.fillStyle=grad;ctx.fillRect(xx-r,yy-r,r*2,r*2);
-      }
-    }
-    const map=new T.CanvasTexture(tile);map.wrapS=map.wrapT=T.RepeatWrapping;map.colorSpace=T.SRGBColorSpace;
-    const finish=new T.MeshStandardMaterial({map,vertexColors:true,roughness:id==='coal'?.22:.88,metalness:id==='coal'?.42:0});
+    geometry.setAttribute('finishKind',new T.Uint8BufferAttribute(finishKinds,1));
+    const finish=createLandmarkMaterial(T,id,addition?.plasterStain??.18);
     if(id==='market'||id==='flag'){
       const fort=id==='flag';
-      finish.customProgramCacheKey=()=>fort?'citadel-brick':'market-roof';
+      const scanned=finish.onBeforeCompile;
+      finish.customProgramCacheKey=()=>fort?'citadel-brick-scan':'market-roof-scan';
       finish.onBeforeCompile=shader=>{
+        scanned(shader);
         const vary='varying vec3 masonryPoint; varying vec3 masonryNormal;\n';
         shader.vertexShader=vary+shader.vertexShader.replace('#include <begin_vertex>','#include <begin_vertex>\n masonryPoint=position; masonryNormal=normal;');
-        shader.fragmentShader=vary+shader.fragmentShader.replace('#include <map_fragment>','#include <map_fragment>\n'+(fort?`
+        shader.fragmentShader=vary+shader.fragmentShader.replace('#include <color_fragment>','#include <color_fragment>\n'+(fort?`
           if(masonryPoint.y<17.7){
             vec2 face=abs(masonryNormal.y)>.65?masonryPoint.xz:vec2(abs(masonryNormal.x)>.65?masonryPoint.z:masonryPoint.x,masonryPoint.y);
             vec2 course=face/vec2(.51,.215);course.x+=mod(floor(course.y),2.)*.5;

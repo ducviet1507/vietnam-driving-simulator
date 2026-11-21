@@ -22,9 +22,10 @@
     profile(surround,trim,x,y,z,.22,angle);
   }
 
-  function postOffice(T,{box,stamp,profile,outline,round,sign}){
+  function postOffice(T,{palette, box,stamp,profile,outline,round,sign}){
     const yellow=0xe6bc60,ochre=0xc49a50,ivory=0xf2e4cd,base=0xab7653;
     const shutter=0x285648,slat=0x356b59,iron=0x5c7069,tile=0xa9664e;
+    palette({plaster: ochre, timber: shutter, metal: iron, tile});
     function wing(x,z,w,d,h){
       box(base,x,.74,z,w,1.55,d);
       box(yellow,x,(h+1.5)/2,z,w,h-1.5,d);
@@ -153,9 +154,10 @@
     description:'Đồng hồ nằm trong vòm sắt phía trên cửa chính. Hai cánh nhà màu vàng chạy dọc Công trường Công xã Paris, với những dãy cửa chớp xanh và gờ phào sáng màu.'
   },postOffice);
 
-  function flagTower(T,{group,box,stamp,profile,tapered,round,wavingFlag}){
+  function flagTower(T,{palette, group,box,stamp,profile,tapered,round,wavingFlag}){
     const brick=0xb47c59,dark=0x694639,coping=0xe5d8c0,tiles=0xbc7d5b;
     const brickwork=new T.MeshStandardMaterial({color:brick,roughness:.95});
+    palette({brick});
     brickwork.onBeforeCompile=shader=>{
       shader.vertexShader='varying vec3 brickMetres; varying vec3 brickAxis;\n'+shader.vertexShader.replace('#include <begin_vertex>',
         '#include <begin_vertex>\n brickMetres=position;brickAxis=normal;');
