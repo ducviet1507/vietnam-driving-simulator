@@ -37,28 +37,31 @@ window.VietnamLandmarks=(()=>{
   const churchRails=[[-14.7,39,.29,16.4],[14.7,39,.29,16.4],[-10.05,55.1,4,.38],[10.05,55.1,4,.38]];
 
   // Bake the masonry, roof tiles, trims and ornaments into one draw call per building.
-  function model(T,id){
-    const positions=[],normals=[],colours=[],uvs=[],group=new T.Group(),pose=new T.Object3D();
+  function* model(T,id){
+    const positions=[],normals=[],colours=[],uvs=[],indices=[],group=new T.Group(),pose=new T.Object3D();
+    const point=new T.Vector3(),normal=new T.Vector3(),normalMatrix=new T.Matrix3();
     let seed=2043;
     function random(){seed=(Math.imul(seed,1664525)+1013904223)>>>0;return seed/4294967296;}
     const cube=new T.BoxGeometry(),round=new T.CylinderGeometry(1,1,1,20),colour=new T.Color();
     function stamp(geo,tint,x,y,z,w=1,h=1,d=1,ry=0,rx=0,rz=0){
       pose.position.set(x,y,z);pose.scale.set(w,h,d);pose.rotation.set(rx,ry,rz,'YXZ');pose.updateMatrix();
-      const transformed=geo.clone().applyMatrix4(pose.matrix),p=transformed.attributes.position,n=transformed.attributes.normal;
-      const order=transformed.index;colour.setHex(tint);
-      for(let i=0;i<(order?order.count:p.count);i++){
-        const j=order?order.getX(i):i,px=p.getX(j),py=p.getY(j),pz=p.getZ(j),nx=n.getX(j),ny=n.getY(j),nz=n.getZ(j);
+      const p=geo.attributes.position,n=geo.attributes.normal,base=positions.length/3;
+      normalMatrix.getNormalMatrix(pose.matrix);colour.setHex(tint);
+      for(let i=0;i<p.count;i++){
+        const {x:px,y:py,z:pz}=point.fromBufferAttribute(p,i).applyMatrix4(pose.matrix);
+        const {x:nx,y:ny,z:nz}=normal.fromBufferAttribute(n,i).applyNormalMatrix(normalMatrix);
         positions.push(px,py,pz);normals.push(nx,ny,nz);colours.push(colour.r,colour.g,colour.b);
         const top=Math.abs(ny)>Math.max(Math.abs(nx),Math.abs(nz));
         uvs.push((top||Math.abs(nz)>=Math.abs(nx)?px:pz)*.23,(top?pz:py)*.23);
       }
-      transformed.dispose();
+      const order=geo.index;
+      for(let i=0;i<(order?.count??p.count);i++)indices.push(base+(order?order.getX(i):i));
     }
     const box=(...args)=>stamp(cube,...args);
     const shoreRanges=[];
     function groundStamp(...args){
-      const first=positions.length/3;
-      stamp(...args);shoreRanges.push([first,positions.length/3]);
+      const first=indices.length;
+      stamp(...args);shoreRanges.push([first,indices.length]);
     }
     const deck=(...args)=>groundStamp(cube,...args);
     function tapered(tint,x,y,z,base,top,height,depthRatio=1,sides=4){
@@ -509,6 +512,8 @@ window.VietnamLandmarks=(()=>{
         }
         const geo=new T.BufferGeometry();geo.setAttribute('position',new T.Float32BufferAttribute(v,3));geo.computeVertexNormals();
         const n=geo.attributes.normal;
+        const first=positions.length/3;
+        for(let i=0;i<v.length/3;i++)indices.push(first+i);
         for(let i=0;i<v.length/3;i++){positions.push(v[i*3],v[i*3+1],v[i*3+2]);normals.push(n.getX(i),n.getY(i),n.getZ(i));colours.push(colors[i*3],colors[i*3+1],colors[i*3+2]);uvs.push((Math.abs(n.getX(i))>.7?v[i*3+2]:v[i*3])*.22,(n.getY(i)>.8?v[i*3+2]:v[i*3+1])*.22);}
         geo.dispose();
       }
@@ -955,10 +960,14 @@ window.VietnamLandmarks=(()=>{
       canopy.dispose();
     }
     const addition=additions.get(id);
-    if(addition)addition.build(T,{group,stamp,box,deck,round,tapered,profile,outline,arch,sign,random,wavingFlag,vertexCount:()=>positions.length/3});
+    if(addition){
+      const steps=addition.build(T,{group,stamp,box,deck,round,tapered,profile,outline,arch,sign,random,wavingFlag,vertexCount:()=>positions.length/3});
+      if(steps?.next)yield* steps;
+    }
     cube.dispose();round.dispose();group.name=id;
     if(!positions.length)return group;
     const geometry=new T.BufferGeometry();
+    geometry.setIndex(indices);
     for(const [name,values] of [['position',positions],['normal',normals],['color',colours]])geometry.setAttribute(name,new T.Float32BufferAttribute(values,3));
     geometry.setAttribute('uv',new T.Float32BufferAttribute(uvs,2));geometry.computeBoundingSphere();
     // Shared metre-scale plaster grain. Edge wrapping also repeats stains at texture seams.
@@ -1007,7 +1016,7 @@ window.VietnamLandmarks=(()=>{
   function create(T,scene,nightLights={value:0}){
     const cached=new Map(),shoreCovers=new WeakMap(),finishes=createSightFinishes(T,nightLights);
     let displayed;
-    function prepare(graph,cx,cz,ground=()=>0,deckHeight=null){
+    function* prepareSteps(graph,cx,cz,ground=()=>0,deckHeight=null){
     const active=[];
     const buildingAreas=[],gardens=[],modeledBuildings=new Set();
     const naturalSites=new Set(['Thác nước','Hang động','Đỉnh núi','Hồ','Vịnh','Bãi biển','Khu bảo tồn','Vườn quốc gia']);
@@ -1051,7 +1060,12 @@ window.VietnamLandmarks=(()=>{
     if(graph)for(const data of entries){
         if(additions.has(data.id)&&!data.build)continue;
         const {x,z}=graph.point(data.lon,data.lat);if(Math.hypot(x-cx,z-cz)>(data.viewDistance??1050))continue;
-        if(!cached.has(data.id)){const mesh=model(T,data.id);finishes.apply(mesh);mesh.userData.height=new T.Box3().setFromObject(mesh).max.y*(data.scale?.[1]||1);mesh.visible=false;scene.add(mesh);cached.set(data.id,mesh);}
+        if(!cached.has(data.id)){
+          const mesh=yield* model(T,data.id);
+          finishes.apply(mesh);mesh.userData.height=new T.Box3().setFromObject(mesh).max.y*(data.scale?.[1]||1);
+          mesh.visible=false;scene.add(mesh);cached.set(data.id,mesh);
+          yield;
+        }
         const foundation=deckHeight&&modeledBridgeLengths[data.id]?(px,pz)=>deckHeight(px,pz)??ground(px,pz):ground;
         const mesh=cached.get(data.id),c=Math.cos(data.yaw),s=Math.sin(data.yaw);
         const base=foundation(x,z);
@@ -1151,8 +1165,13 @@ window.VietnamLandmarks=(()=>{
         for(const resource of resources)resource.dispose();
       }
     }
+    function prepare(...args){
+      const steps=prepareSteps(...args);let result;
+      do{result=steps.next();}while(!result.done);
+      return result.value;
+    }
     displayed=prepare(null,0,0);
-    return {prepare,trim,setOrigin(...args){prepare(...args).activate();},weather:finishes.weather,
+    return {prepare,prepareSteps,trim,setOrigin(...args){prepare(...args).activate();},weather:finishes.weather,
       nearest:(...args)=>displayed.nearest(...args),reserved:(...args)=>displayed.reserved(...args),
       contact:(...args)=>displayed.contact(...args),addShoreCover:patch=>displayed.addShoreCover(patch),
       get buildingAreas(){return displayed.buildingAreas;},get gardens(){return displayed.gardens;},

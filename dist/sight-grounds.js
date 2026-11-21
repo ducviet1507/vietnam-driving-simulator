@@ -6,8 +6,9 @@ function createSightGrounds(T,small,source){
   const base='sight-grounds/',canvas=document.createElement('canvas'),span=1120;
   canvas.width=canvas.height=small?768:1280;
   const pen=canvas.getContext('2d',{willReadFrequently:true});
-  const texture=new T.CanvasTexture(canvas);
-  texture.generateMipmaps=false;texture.minFilter=T.LinearFilter;
+  // Collision lookup and the shader can share the same top-to-bottom raster.
+  const texture=new T.DataTexture(null,canvas.width,canvas.height);
+  texture.magFilter=texture.minFilter=T.LinearFilter;
   const uniforms={visitorMap:{value:texture},visitorOrigin:{value:new T.Vector2()},visitorActive:{value:0}};
   const codes={sand:1,rock:2,lawn:3,orchard:3,tea:3,court:4,trail:5,walk:6,steps:6,drive:7};
   const cache=new Map(),states=source?.states||new WeakMap(),projections=source?.projections||new WeakMap();
@@ -48,7 +49,7 @@ function createSightGrounds(T,small,source){
       shader.fragmentShader.replace('#include <roughnessmap_fragment>',`#include <roughnessmap_fragment>
       vec2 vu=(groundMetres-visitorOrigin)/1120.+.5;
       if(visitorActive>.5 && all(greaterThan(vu,vec2(0.))) && all(lessThan(vu,vec2(1.)))){
-        vec4 sampleGround=texture2D(visitorMap,vec2(vu.x,1.-vu.y));
+        vec4 sampleGround=texture2D(visitorMap,vu);
         float type=floor(sampleGround.r*8.+.5);
         vec2 m=groundMetres;
         float grain=clamp(dot(diffuseColor.rgb,vec3(.23,.63,.14))*4.,.72,1.22);
@@ -134,6 +135,7 @@ function createSightGrounds(T,small,source){
       pen.strokeStyle='rgb('+Math.round(code*255/8)+' 0 0)';pen.stroke();
     }
     mask=pen.getImageData(0,0,canvas.width,canvas.height).data;
+    texture.image.data=new Uint8Array(mask.buffer,mask.byteOffset,mask.byteLength);
     uniforms.visitorOrigin.value.set(cx,cz);uniforms.visitorActive.value=1;texture.needsUpdate=true;
   }
   function groundCode(x,z){

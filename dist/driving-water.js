@@ -143,13 +143,20 @@ window.createDrivingWater = function(T, mapped) {
       mirrorMap.value=target.texture;
     }else if(target.width!==profile.waterWidth)target.setSize(profile.waterWidth,profile.waterWidth*9/16);
   }
-  function prepare(renderer,scene,camera,profile,object){
+  function prepare(renderer,profile,work,draw=false){
     sizeTarget(profile);
-    const previous=renderer.getRenderTarget();
+    const previous=renderer.getRenderTarget(),visible=material.visible,mirror=mirrorMap.value;
     try{
+      if(draw){
+        target.scissor.set(0,0,1,1);target.scissorTest=true;
+        mirrorMap.value=null;material.visible=false;
+      }
       renderer.setRenderTarget(target);
-      return renderer.compileAsync(object,camera,scene);
-    }finally{renderer.setRenderTarget(previous);}
+      work();
+    }finally{
+      if(draw){target.scissorTest=false;material.visible=visible;mirrorMap.value=mirror;lastReflection=-Infinity;}
+      renderer.setRenderTarget(previous);
+    }
   }
   function reflect(renderer,scene,camera,level,now,near,profile){
     if(!profile.waterWidth||!near||camera.position.y<=level){mirrorStrength.value=0;lastReflection=-Infinity;return;}

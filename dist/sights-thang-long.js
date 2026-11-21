@@ -78,7 +78,7 @@
     group.add(mesh);
   }
   const gateBays=[[-16,2.95,1.50,1.40],[-6.6,2.85,2.16,1.30],[0,4.00,2.56,1.74],[6.6,2.85,2.16,1.30],[16,2.95,1.50,1.40]];
-  function doanMon(T,kit){
+  function* doanMon(T,kit){
     const {box,profile,sign,stamp,round,wavingFlag,random}=kit;
     const stone=0x938b77,brick=0x968671,dark=0x716e61,coping=0xac9b7f,plaster=0xe5bc72,edge=0xd0ae78;
     box(0xb0a393,0,-.05,16,52,.12,8.8);
@@ -86,6 +86,7 @@
     // Each bay spans the full width of its wall section. The arched void also
     // continues through the rearward returns of the U-shaped base.
     for(let i=0;i<gateBays.length;i++){
+      yield;
       const [x,w,spring,rise]=gateBays[i],r=w/2,right=i<4?(x+gateBays[i+1][0])/2:23.25;
       const outer=i===0||i===4,z0=outer?-14.4:-.8,z1=outer?11.8:13.2,h=outer?6.7:7.55;
       const s=new T.Shape();s.moveTo(left,0);s.lineTo(x-r,0);s.lineTo(x-r,spring);
@@ -140,6 +141,7 @@
     for(const z of [3.28,8.63])profile(loft,plaster,0,10.7,z,.32);
     for(const x of [-3.62,3.62])box(plaster,x,12.08,6.13,.32,2.77,5.55);
     tiledRoof(T,kit,0,6.12,4.72,3.66,13.41,1.36,0x8d634c,0x665b51);
+    yield;
     box(plaster,0,14.65,6.12,4.92,.48,3.35);tiledRoof(T,kit,0,6.12,3.58,2.63,14.82,1.47,0x99715a,0x655b51);
     stamp(round,0x9d9681,0,18,6.12,.055,3.65,.055);wavingFlag(1.72,1.04,0,19.8,6.12);
     for(const side of [-1,1])tree(T,kit,side*26,-13,10.4,4.6);
@@ -153,7 +155,7 @@
     description:'Năm vòm xuyên qua chân thành hình chữ U. Cửa chính giữa rộng nhất, bên trên đặt tấm biển đá khắc hai chữ Đoan Môn. Hai cầu thang hai bên dẫn lên sân lầu.'},doanMon);
   // Coordinates below are relative to the foot of a carved rail. Positive z faces
   // the viewer and the head, and negative z follows the back up the stone steps.
-  function carvedDragon(T,kit,x,z,length,rise,orientation=1,scale=1){
+  function* carvedDragon(T,kit,x,z,length,rise,orientation=1,scale=1){
     const {stamp}=kit,col=0xa8a59a,highlight=0xbdb8a7,shade=0x8d8d82,extent=length;
     const map=([u,y,along])=>[x+u*scale,y*scale,z+along*orientation*scale];
     const line=(p,r,c=col,n=13)=>cord(T,stamp,c,p.map(map),r*scale,n);
@@ -167,6 +169,7 @@
     oval(0,.85,.62,.201,.065,.29,shade,-.04);oval(0,.74,.49,.23,.093,.39);
     oval(0,.81,.75,.121,.12,.12,highlight);
     for(const hand of [-1,1]){
+      yield;
       oval(hand*.218,1.26,.30,.099,.095,.121,highlight);
       oval(hand*.277,1.26,.334,.032,.052,.062,shade);
       oval(hand*.162,1.15,.76,.075,.052,.086,shade);
@@ -197,12 +200,13 @@
     const g=new T.BufferGeometry();g.setIndex(idx);g.setAttribute('position',new T.Float32BufferAttribute(pos,3));g.computeVertexNormals();
     stamp(g,col,0,0,0);g.dispose();
     for(let j=0;j<4;j++){
+      yield;
       const t=.15+.192*j,py=.64+rise*t,pz=-.38-(extent-.42)*t,hand=j%2?1:-1;
       line([[hand*.10,py+.12,pz],[hand*.26,py-.08,pz+.16],[hand*.28,py-.24,pz+.04],[hand*.31,py-.31,pz+.25]],.060);
       for(let k=0;k<5;k++)line([[hand*.29,py-.25,pz+.14],[hand*(.30+k*.019),py-.30,pz+.20+k*.035],[hand*(.32+k*.023),py-.35,pz+.26+k*.04]],.020,highlight,6);
     }
   }
-  function terrace(T,kit){
+  function* terrace(T,kit){
     const {box,outline,stamp,random}=kit,h=2.32,topZ=9.82,baseZ=14.95,run=baseZ-topZ;
     const grey=[0xada99a,0xa4a194,0xbab5a6,0xaba99f],riser=[0x908e84,0xa09b8d,0x97978e,0xaaa497];
     const stone=0x9c9787,plinth=0x9b8d76;
@@ -256,7 +260,7 @@
           cord(T,stamp,0xb2ae9f,[[xx,y-.12,zz+.19],[xx,y+.05,zz+.11],[xx,y+.12,zz-.06],[xx,y+.03,zz-.18],[xx,y-.02,zz-.08]],.034,9);
         }
       }
-      carvedDragon(T,kit,cx,baseZ+.05,5.14,2.04);
+      yield* carvedDragon(T,kit,cx,baseZ+.05,5.14,2.04);
     }
     // Northern Lê Trung Hưng stair is a smaller separate seven-step flight on the west.
     const rx=-14.1,rz=-14.17;
@@ -264,7 +268,7 @@
       const y=(7-i)*h/7;
       box(grey[i%4],rx,y*.5,rz-(i+.5)*.54,3.55,y,.545);
     }
-    for(const side of [-1,1])carvedDragon(T,kit,rx+side*1.60,rz-3.85,4.36,2.49,-1,.80);
+    for(const side of [-1,1])yield* carvedDragon(T,kit,rx+side*1.60,rz-3.85,4.36,2.49,-1,.80);
     for(const [x,z,ht,r] of [[-9,-4,13,7.2],[10.3,-6,13.7,7.7],[-22,2,10.1,5.6],[24,1.5,11.3,6.1]])tree(T,kit,x,z,ht,r,h);
   }
   register('dien-kinh-thien',1497572243,{...visitorArrival,visitOnArrival:true,yaw:-.09,width:53,depth:34,

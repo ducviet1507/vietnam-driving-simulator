@@ -128,5 +128,9 @@ function createWorldStreetLife(T,scene,small,environment,amenities,prepareActor)
       actor.mixer?.update(dt);
     }
   }
-  return {activity,prepare,render,ready:()=>Promise.all(Array.from(walkers.values(),item=>item.ready)),get places(){return places;}};
+  async function prepareDeparture(){
+    await Promise.all(paths.map(p=>walker(p).ready));
+    return walkGroup;
+  }
+  return {activity,prepare,render,prepareDeparture,get places(){return places;}};
 }

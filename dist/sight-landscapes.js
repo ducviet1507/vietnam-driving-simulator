@@ -56,7 +56,7 @@ function createSightLandscapes(T){
   const mask=canvas.cloneNode(),surface=mask.getContext('2d',{willReadFrequently:true});
   canvas.width=canvas.height=side*4;
   const water=document.createElement('canvas');water.width=water.height=side*4;
-  const waterPen=water.getContext('2d');
+  const waterPen=water.getContext('2d',{willReadFrequently:true});
   const texture=new T.CanvasTexture(canvas);texture.colorSpace=T.SRGBColorSpace;
   const waterTexture=new T.CanvasTexture(water);
   const uniforms={sightImage:{value:texture},sightWater:{value:waterTexture},sightBounds:{value:new T.Vector4(0,0,1,1)},sightEnabled:{value:0}};

@@ -1,5 +1,26 @@
 'use strict';
 
+// Sum area-weighted triangle normals in slices while the previous mesh stays visible.
+function* updateTerrainNormals(T,geometry){
+  const points=geometry.attributes.position.array,triangles=geometry.index.array;
+  const attribute=geometry.attributes.normal||new T.BufferAttribute(new Float32Array(points.length),3);
+  const normals=attribute.array;normals.fill(0);
+  for(let i=0;i<triangles.length;i+=3){
+    const a=triangles[i]*3,b=triangles[i+1]*3,c=triangles[i+2]*3;
+    const ux=points[b]-points[a],uy=points[b+1]-points[a+1],uz=points[b+2]-points[a+2];
+    const vx=points[c]-points[a],vy=points[c+1]-points[a+1],vz=points[c+2]-points[a+2];
+    const nx=uy*vz-uz*vy,ny=uz*vx-ux*vz,nz=ux*vy-uy*vx;
+    for(let j=i;j<i+3;j++){const k=triangles[j]*3;normals[k]+=nx;normals[k+1]+=ny;normals[k+2]+=nz;}
+    if((i&8191)===0)yield;
+  }
+  for(let i=0;i<normals.length;i+=3){
+    const length=Math.sqrt(normals[i]**2+normals[i+1]**2+normals[i+2]**2)||1;
+    normals[i]/=length;normals[i+1]/=length;normals[i+2]/=length;
+    if((i&8191)===0)yield;
+  }
+  geometry.setAttribute('normal',attribute);attribute.needsUpdate=true;
+}
+
 // The fixed four-metre lattice serves both the visible bed and the tyre immersion query.
 // Its outer land vertices keep the same height and diagonal as the large terrain mesh.
 function* buildMappedShoreSteps(T, options){
@@ -100,14 +121,14 @@ function* buildMappedShoreSteps(T, options){
       waterTriangle(ns[a],ns[k],ns[b],ws[a],ws[k],ws[b]);waterTriangle(ns[k],ns[d],ns[b],ws[k],ws[d],ws[b]);
     }
   }
-  land.geometry.setIndex(remaining);
   const patch=new T.BufferGeometry();
   patch.setAttribute('position',new T.Float32BufferAttribute(verts,3));patch.setAttribute('uv',new T.Float32BufferAttribute(uv,2));
-  patch.setAttribute('shoreSediment',new T.Float32BufferAttribute(silt,1));patch.setIndex(indices);patch.computeVertexNormals();
+  patch.setAttribute('shoreSediment',new T.Float32BufferAttribute(silt,1));patch.setIndex(indices);yield* updateTerrainNormals(T,patch);
+  const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(water,3));g.setIndex(waterIndices);yield* updateTerrainNormals(T,g);
+  land.geometry.setIndex(remaining);
   const bank=new T.Mesh(patch,land.material);bank.name='Mapped banks and bed';bank.receiveShadow=true;land.add(bank);
   // The shared materials are picked for the current biome by the main renderer.
   bank.onBeforeRender=()=>{bank.material=land.material;};
-  const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(water,3));g.setIndex(waterIndices);g.computeVertexNormals();
   const surface=new T.Mesh(g,waterMaterial);surface.name='Mapped water';surface.receiveShadow=true;group.add(surface);
   // Index the actual triangles that cover a bank (verges, paving and gardens).
   // A cover below the waterline reduces the depth, while one above it stays dry.

@@ -29,7 +29,7 @@ function createVietnamRelief(T,scene,compact,landscapes,tunnelCut){
   const texels=Float32Array.from({length:256},(_,v)=>3500*(v/255)**1.6);
   // Fixed geographic lattice: shared ridgelines retain exactly the same vertices
   // when the streaming window moves by one cell.
-  const geometry=new T.BufferGeometry(),cells=compact?128:160,spacing=512,stride=cells+1;
+  const cells=compact?128:160,spacing=512,stride=cells+1;
   const axis=new Float32Array(stride);
   for(let i=1;i<=cells/2;i++){
     const f=i/(cells/2),size=f<=.42?64:f<=.64?128:f<=.83?256:512;
@@ -42,13 +42,20 @@ function createVietnamRelief(T,scene,compact,landscapes,tunnelCut){
     const result=axis.slice(),low=Math.floor(offset/64)*64;
     result[i-1]=low;result[i]=low+64;return result;
   }
-  const count=stride*stride,pos=new Float32Array(count*3),uv=new Float32Array(count*2),coarse=new Float32Array(count),indices=[];
+  const count=stride*stride,indices=[];
   for(let j=0;j<cells;j++)for(let k=0;k<cells;k++){
     const a=j*stride+k,b=a+stride;indices.push(a,b,a+1,a+1,b,b+1);
   }
-  const summitSurface=new T.BufferAttribute(new Float32Array(count*2),2);geometry.setAttribute('summitSurface',summitSurface);
-  geometry.setAttribute('coarseElevation',new T.BufferAttribute(coarse,1));geometry.setAttribute('position',new T.BufferAttribute(pos,3));geometry.setAttribute('uv',new T.BufferAttribute(uv,2));geometry.setIndex(indices);
-  const mesh=new T.Mesh(geometry,mat);mesh.name='Vietnam terrain horizon';mesh.visible=false;mesh.frustumCulled=false;scene.add(mesh);
+  const triangles=new T.Uint16BufferAttribute(indices,1);
+  function horizonGeometry(){
+    const geometry=new T.BufferGeometry();
+    for(const [name,size] of [['position',3],['normal',3],['uv',2],['coarseElevation',1],['summitSurface',2]]){
+      geometry.setAttribute(name,new T.BufferAttribute(new Float32Array(count*size),size).setUsage(T.DynamicDrawUsage));
+    }
+    geometry.setIndex(triangles);return geometry;
+  }
+  const mesh=new T.Mesh(horizonGeometry(),mat);mesh.name='Vietnam terrain horizon';mesh.visible=false;mesh.frustumCulled=false;scene.add(mesh);
+  let spare,building=null,displayedTerrain;
   let graph=null,originX=0,originZ=0,anchorX=NaN,anchorZ=NaN,pixels=null,width=0,height=0;
   function uvAt(x,z,g=graph){
     const [lon,lat]=g.geo(x,z),r=lat*Math.PI/180;
@@ -163,27 +170,27 @@ function createVietnamRelief(T,scene,compact,landscapes,tunnelCut){
   function activate(next,x,z){
     if(next!==terrain){
       terrain=next;graph=next.graph;activePass=next.pass;datum.value=next.base;
-      anchorX=anchorZ=NaN;closeDetail.value=scenicPasses.has(activePass?.stage.id)?1:0;
+      building=null;closeDetail.value=scenicPasses.has(activePass?.stage.id)?1:0;
       passSurface.select(activePass?.stage.id,activePass?.x,activePass?.z,activePass?.cos,activePass?.sin,activePass?.eastScale);
     }
     originX=x;originZ=z;
   }
   const ground=(x,z)=>terrain.ground(x,z);
-  function update(x,z){
-    if(!graph||!pixels)return;
-    const [u,v]=uvAt(x,z);mesh.visible=u>=0&&u<1&&v>=0&&v<1;if(!mesh.visible)return;
-    const ax=Math.round(x/spacing)*spacing,az=Math.round(z/spacing)*spacing;
-    if(ax!==anchorX||az!==anchorZ){
-      anchorX=ax;anchorZ=az;anchor.value.set(ax,az);let i=0;
-      const pagoda=activePass?.stage.id==='kim-bang'&&window.VietnamSights?.find(site=>site.id==='chua-ngoc-tam-chuc');
-      const peak=pagoda&&graph.point(pagoda.lon,pagoda.lat);
-      const nearPeak=peak&&Math.hypot(peak.x-ax,peak.z-az)<5000;
-      const xs=nearPeak?summitAxis(peak.x-ax):axis,zs=nearPeak?summitAxis(peak.z-az):axis;
-      for(let j=0;j<=cells;j++)for(let k=0;k<=cells;k++,i++){
+  function* buildHorizon(ax,az){
+    const target=spare??=horizonGeometry(),attrs=target.attributes;
+    const pos=attrs.position.array,uv=attrs.uv.array,coarse=attrs.coarseElevation.array,summit=attrs.summitSurface.array;
+    const pagoda=activePass?.stage.id==='kim-bang'&&window.VietnamSights?.find(site=>site.id==='chua-ngoc-tam-chuc');
+    const peak=pagoda&&graph.point(pagoda.lon,pagoda.lat);
+    const nearPeak=peak&&Math.hypot(peak.x-ax,peak.z-az)<5000;
+    const xs=nearPeak?summitAxis(peak.x-ax):axis,zs=nearPeak?summitAxis(peak.z-az):axis;
+    const us=Float64Array.from(xs,dx=>uvAt(ax+dx,az)[0]);
+    for(let j=0,i=0;j<=cells;j++){
+      const v=uvAt(ax,az+zs[j])[1];
+      for(let k=0;k<=cells;k++,i++){
         const dx=xs[k],dz=zs[j];
         const blend=nearPeak?1-T.MathUtils.smoothstep(Math.hypot(ax+dx-peak.x,az+dz-peak.z),135,640):0;
-        summitSurface.setXY(i,blend?ground(ax+dx,az+dz):0,blend);
-        const [u,v]=uvAt(ax+dx,az+dz);
+        summit[i*2]=blend?ground(ax+dx,az+dz):0;summit[i*2+1]=blend;
+        const u=us[k];
         let h=elevation(u,v);h=terrain.measured(ax+dx,az+dz,h);coarse[i]=h;
         if(activePass){
           const p=activePass,east=(ax+dx-p.x)*p.eastScale,south=az+dz-p.z;
@@ -191,9 +198,23 @@ function createVietnamRelief(T,scene,compact,landscapes,tunnelCut){
           const coverage=1-T.MathUtils.smoothstep(Math.max(Math.abs(tx),Math.abs(tz)),11200,15200);
           h+=(p.grid.elevation(tx,tz)-h)*coverage;
         }
-        pos.set([dx,h,dz],i*3);uv.set([u,1-v],i*2);
+        pos[i*3]=dx;pos[i*3+1]=h;pos[i*3+2]=dz;uv[i*2]=u;uv[i*2+1]=1-v;
       }
-      summitSurface.needsUpdate=true;geometry.attributes.coarseElevation.needsUpdate=geometry.attributes.position.needsUpdate=geometry.attributes.uv.needsUpdate=true;geometry.computeVertexNormals();
+      if((j&3)===3)yield;
+    }
+    yield* updateTerrainNormals(T,target);
+    for(const attr of Object.values(attrs))attr.needsUpdate=true;
+    target.boundingSphere=null;
+    spare=mesh.geometry;mesh.geometry=target;anchorX=ax;anchorZ=az;anchor.value.set(ax,az);displayedTerrain=terrain;
+  }
+  function update(x,z){
+    if(!graph||!pixels)return;
+    const [u,v]=uvAt(x,z);mesh.visible=u>=0&&u<1&&v>=0&&v<1;if(!mesh.visible)return;
+    const ax=Math.round(x/spacing)*spacing,az=Math.round(z/spacing)*spacing;
+    if(!building&&(ax!==anchorX||az!==anchorZ||displayedTerrain!==terrain))building=buildHorizon(ax,az);
+    if(building){
+      const deadline=displayedTerrain?.graph===graph?performance.now()+1.5:Infinity;
+      do{if(building.next().done){building=null;break;}}while(performance.now()<deadline);
     }
     passWeight.value=activePass?1-T.MathUtils.smoothstep(Math.hypot(x-activePass.x,z-activePass.z),8600,12000):0;
     mesh.position.set(anchorX-originX,0,anchorZ-originZ);eye.value.set(x-anchorX,z-anchorZ);

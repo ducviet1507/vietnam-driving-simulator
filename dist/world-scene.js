@@ -32,6 +32,8 @@
     const T=window.THREE,scene=new T.Scene();
     const renderer=DrivingRenderer.get(canvas,{powerPreference:'high-performance'});
     if(!renderer)throw Error('Chưa mở được cảnh lái 3D.');
+    // ANGLE can translate shaders again to produce debug logs on their first draw.
+    renderer.debug.checkShaderErrors=false;
     const small=matchMedia('(pointer:coarse)').matches;
     renderer.toneMapping=T.ACESFilmicToneMapping;renderer.toneMappingExposure=.98;
     renderer.shadowMap.enabled=true;renderer.shadowMap.type=T.PCFShadowMap;renderer.shadowMap.autoUpdate=false;
@@ -312,10 +314,14 @@
       const bridges=graph?createBridgeDistrict(graph,edges,cx,cz,terrain.ground):null;
       const tunnels=graph?createTunnelDistrict(graph,edges,terrain.ground):null;
       const localGround=(x,z)=>terrain.ground(cx+x,cz+z);
-      const landmarks=landmarkSource?.prepare(graph,cx,cz,terrain.ground,bridges?.signatureHeight);
+      const landmarks=landmarkSource?yield* landmarkSource.prepareSteps(graph,cx,cz,terrain.ground,bridges?.signatureHeight):null;
       yield;
       grounds.prepare(graph,cx,cz,landmarks);
       yield;
+      if(streamed&&grounds.uniforms.visitorActive.value){
+        renderer.initTexture(grounds.uniforms.visitorMap.value);
+        yield;
+      }
       const vistas=[];
       if(graph)for(const site of VietnamLandmarks.entries){
         const end=graph.point(site.lon,site.lat);if(Math.hypot(end.x-cx,end.z-cz)>1000)continue;
@@ -1112,6 +1118,11 @@
         if(mesh.children.length)meshes.push(...mesh.children);
         if((i & 7)===0)yield;
       }
+      if(streamed&&driveWarmed){
+        const pending=new T.Group(),owner=job;
+        pending.children.push(roadGroup,district.group,land,...(landmarks?.active||[]).map(site=>site.mesh));
+        yield {ready:warmMaterials(pending,()=>job!==owner).catch(error=>console.warn('District shader preparation',error))};
+      }
       yield;
       // Publish geometry and its complete contact index in the same frame.
       activate({land,district,grounds,landmarks,roadGroup,shorePatch,groundAt,bridges,tunnels,obstacleCells,waterAt,
@@ -1531,10 +1542,40 @@
       return player.modelReady;
     }
     let driveWarmed=false;
-    const actorPrograms=new Map();
-    async function warmMaterials(object){
-      if(graphics.profile.waterWidth)await waterSurface.prepare(renderer,scene,camera,graphics.profile,object);
-      await renderer.compileAsync(object,camera,scene);
+    const actorPrograms=new Map(),preparedPrograms=new WeakSet(),uploadedTextures=new WeakMap();
+    async function warmMaterials(object,canceled=()=>false){
+      const programs=new Set(),textures=new Set();
+      function compile(){
+        for(const mat of renderer.compile(object,camera,scene)){
+          // A material can have separate screen, reflection and instancing
+          // programs. A concurrent draw changes its currentProgram.
+          for(const program of renderer.properties.get(mat).programs.values()){
+            if(!preparedPrograms.has(program))programs.add(program);
+          }
+          for(const key of ['map','normalMap','roughnessMap','metalnessMap','aoMap','emissiveMap','alphaMap']){
+            const tex=mat[key];
+            if(tex?.image&&tex.image.complete!==false&&tex.version>0&&!tex.isRenderTargetTexture&&uploadedTextures.get(tex)!==tex.version)textures.add(tex);
+          }
+        }
+      }
+      if(graphics.profile.waterWidth)waterSurface.prepare(renderer,graphics.profile,compile);
+      compile();
+      while((programs.size||textures.size)&&!canceled()){
+        const end=performance.now()+2;
+        for(const program of programs){
+          if(!program.program||preparedPrograms.has(program))programs.delete(program);
+          else if(program.isReady()){
+            program.getUniforms();preparedPrograms.add(program);programs.delete(program);
+          }
+          if(performance.now()>=end)break;
+        }
+        for(const tex of textures){
+          if(performance.now()>=end)break;
+          if(uploadedTextures.get(tex)!==tex.version){renderer.initTexture(tex);uploadedTextures.set(tex,tex.version);}
+          textures.delete(tex);
+        }
+        if(programs.size||textures.size)await new Promise(resolve=>setTimeout(resolve,8));
+      }
     }
     function prepareActor(kind,object){
       if(!driveWarmed)return;
@@ -1543,12 +1584,35 @@
       return actorPrograms.get(key);
     }
     async function warmScene(){
-      // The first pose starts loading the actual meshes. Compiling the placeholder
-      // cars would leave their paint, glass and skinned riders for the first drive.
-      await Promise.all([environmentReady,player.ready,streetLife.ready(),
-        ...Array.from(trafficItems.values(),item=>item.ready)]);
+      const actors=new Map([[player.kind,player]]);
+      for(const item of trafficItems.values())if(!actors.has(item.kind))actors.set(item.kind,item);
+      for(const item of actors.values())item.request();
+      const [walkers]=await Promise.all([streetLife.prepareDeparture(),environmentReady,
+        ...Array.from(actors.values(),item=>item.ready)]);
       driveFx.mountExhaust(player.detail?.children[0],player.kind);
       await warmMaterials(scene);
+      // Some drivers specialize a linked program on its first draw. Prime the
+      // actual skinned and vehicle layouts behind the departure screen.
+      const actorsToRestore=[],scissor=renderer.getScissor(new T.Vector4()),clipped=renderer.getScissorTest();
+      try{
+        for(const root of [walkers,...Array.from(actors.values(),item=>item.root)])root.traverse(node=>{
+          actorsToRestore.push([node,node.visible,node.frustumCulled]);
+          node.visible=true;node.frustumCulled=false;
+        });
+        renderer.setScissor(0,0,1,1);renderer.setScissorTest(true);
+        renderer.shadowMap.needsUpdate=true;
+        if(graphics.profile.waterWidth)waterSurface.prepare(renderer,graphics.profile,()=>renderer.render(scene,camera),true);
+        renderer.render(scene,camera);
+      }finally{
+        for(const [node,visible,culled] of actorsToRestore){node.visible=visible;node.frustumCulled=culled;}
+        renderer.setScissor(scissor);renderer.setScissorTest(clipped);renderer.shadowMap.needsUpdate=true;
+      }
+      const gl=renderer.getContext(),fence=gl.fenceSync?.(gl.SYNC_GPU_COMMANDS_COMPLETE,0);
+      if(fence){
+        gl.flush();
+        try{while(gl.clientWaitSync(fence,0,0)===gl.TIMEOUT_EXPIRED)await new Promise(resolve=>setTimeout(resolve,8));}
+        finally{gl.deleteSync(fence);}
+      }
       driveWarmed=true;
     }
     function prepareShaders(car,traffic){
