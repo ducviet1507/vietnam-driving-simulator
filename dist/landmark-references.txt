@@ -432,3 +432,7 @@ Cầu Vàng Bà Nà, Lăng Chủ tịch Hồ Chí Minh và Nhà thờ Đức Bà
 https://danangfantasticity.com/en/cau-vang-thuong-hieu-moi-cua-du-lich-da-nang
 https://btllang.mod.gov.vn/tin-tuc/tin-tu-bo-tu-lenh-lang/4161-qua-trinh-xay-dung-lang-chu-tich-ho-chi-minh-cong-trinh-dac-biet-co-y-nghia-chinh-tri-van-hoa.html
 https://tgpsaigon.net/bai-viet/vuong-cung-thanh-duong-duc-ba-sai-gon-37259
+
+Mở rộng cụm địa danh Nghệ An (15 công trình mới) — Quảng trường Hồ Chí Minh (TP. Vinh), Bảo tàng Xô Viết Nghệ Tĩnh, Cửa Tả và Cửa Hữu Thành cổ Vinh, Đền thờ Hoàng đế Quang Trung, Chùa Đại Tuệ, Khu lăng mộ Bà Hoàng Thị Loan, Quê ngoại Hoàng Trù, Đền Cờn, Cầu Cửa Hội, Cầu Bến Thủy, Nhà thờ chính tòa Xã Đoài, Đình Trung Cần, Khu di tích Truông Bồn và Bảo tàng Quân khu 4. Tọa độ OpenStreetMap (ODbL 1.0); mô hình 3D dựng thủ tục bằng Three.js.
+https://www.openstreetmap.org/copyright
+https://dulichnghean.gov.vn/
