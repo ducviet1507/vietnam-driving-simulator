@@ -19,6 +19,9 @@
 }
 .arcade .opening #launch {--icon:var(--wheel-icon)}
 .arcade #openSetup, .arcade .layoutButton {--icon:var(--tune-icon)}
+.arcade #carMusic[aria-pressed=true] {background: var(--lime); color: #15261c}
+.arcade #carMusic .musicNote {font: 700 19px/1 system-ui, sans-serif}
+.arcade #carMusic:disabled {opacity: .6}
 .arcade #sound {--icon:var(--audio-icon)}
 .arcade #sound[data-muted=true] {--icon:var(--mute-icon)}
 .arcade :is(button, a, select, input, summary):focus-visible {
@@ -158,6 +161,7 @@
   .arcade[data-steering=right] .touch [data-key=w] {grid-area: 2 / 1}
   .arcade :is(#tourView, #scenicRadio), .arcade header .tools button {min-height: 44px}
   .arcade:not([data-phase=grid]) .tools button {width: 44px; padding: 0; font-size: 0; gap: 0}
+  .arcade:not([data-phase=grid]) .tools .musicLabel {display: none}
   .arcade:not([data-phase=grid]) .tools #sound::before {width: 19px; height: 19px}
   .arcade:not([data-phase=grid]) #pause::before {content: ""; box-sizing: border-box; width: 11px; height: 15px; border-inline: 4px solid currentColor}
   .arcade:not([data-phase=grid]) #camera::before {

@@ -5,6 +5,57 @@
   const preference='taylai.audio.muted';
   let enabled = true;
   try { enabled=localStorage.getItem(preference)!=='1'; } catch {}
+  function setupMusic() {
+    const button = document.getElementById('carMusic');
+    if (!button) return;
+    const track = document.getElementById('cabinTrack');
+    const label = button.querySelector('.musicLabel');
+    track.volume = .48;
+    let selected = false;
+    let driving = false;
+    let playRequest = 0;
+
+    function sync() {
+      button.hidden = !driving;
+      button.disabled = !enabled;
+      button.setAttribute('aria-pressed', String(selected));
+      label.textContent = selected ? 'Tắt nhạc' : 'Bật nhạc';
+      button.title = enabled ? label.textContent : 'Bật âm thanh để nghe nhạc';
+      const request = ++playRequest;
+      if (!selected || !driving || !enabled || document.hidden) {
+        track.pause();
+        return;
+      }
+      track.play().catch(() => {
+        if (request !== playRequest) return;
+        selected = false;
+        sync();
+        document.getElementById('callout').textContent = 'Chưa phát được nhạc. Bấm Bật nhạc để thử lại.';
+      });
+    }
+
+    button.addEventListener('click', () => {
+      selected = !selected;
+      if (selected) track.currentTime = 0;
+      sync();
+    });
+    document.addEventListener('visibilitychange', sync);
+    window.addEventListener('pagehide', () => {
+      selected = false;
+      sync();
+    });
+    sync();
+    return {
+      sync,
+      setDriving(value) {
+        if (driving === value) return;
+        driving = value;
+        sync();
+      }
+    };
+  }
+  const music = setupMusic();
+
   let nextTick = 0;
   let lowTick = false;
   let boosting = false;
@@ -121,6 +172,7 @@
     if(!enabled)stopVoice();
     try{localStorage.setItem(preference,enabled?'0':'1');}catch{}
     if(enabled)unlock();else if(sound)sound.output.gain.setTargetAtTime(0,sound.ctx.currentTime,.025);
+    music?.sync();
     return enabled;
   }
   for(const event of ['pointerdown','keydown','click'])window.addEventListener(event,()=>{
@@ -128,6 +180,7 @@
   },{capture:true});
 
   function update({ speed, throttle, braking, signal, mode, boost=false, slip=0, offroad=false, electric=false }) {
+    music?.setDriving(mode === 'driving');
     if(mode!=='driving'&&voiceLine)stopVoice();
     if (!enabled || sound?.ctx.state !== 'running') return;
     const { ctx, engine, engineGain, intake, roadGain, tire, rush, rushGain, scrub, scrubGain } = sound;
