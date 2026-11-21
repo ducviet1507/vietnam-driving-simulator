@@ -35,7 +35,7 @@
     return {stone,finish};
   }
   (window.VietnamSights??=[]).push({
-    id:'ganh-da-dia',name:'Gành Đá Đĩa',city:'Phú Yên',lon:109.29363,lat:13.35419,start:[109.29379,13.35479],yaw:2.82,viewAngle:-.86,width:65,depth:41,solids:[],
+    id:'ganh-da-dia',name:'Gành Đá Đĩa',city:'Phú Yên',lon:109.29363,lat:13.35419,start:[109.29379,13.35479],yaw:2.82,viewAngle:-.86,width:65,depth:41,gardenRadius:65,solids:[],
     photo:'https://www.dulichvn.org.vn/index.php/item/ngam-nhung-diem-du-lich-bien-qua-de-cu-top-7-canh-dep-bat-ngo-nhin-tu-khong-trung-62846',source:'https://dsvh.gov.vn/ganh-da-dia-tinh-phu-yen-3307',
     build(T,{group,random}){
       const xyz=[],rgb=[],rock=new T.Color(),cap=new T.Color(),radius=.83;
@@ -62,7 +62,7 @@
       const slab=new T.Mesh(g,new T.MeshStandardMaterial({vertexColors:true,roughness:.83}));slab.receiveShadow=slab.castShadow=true;group.add(slab);
     }
   },{
-    id:'hon-chong',name:'Hòn Chồng',city:'Nha Trang',lon:109.2066,lat:12.2728,start:[109.2058,12.27203],yaw:-2.28,width:46,depth:29,solids:[],
+    id:'hon-chong',name:'Hòn Chồng',city:'Nha Trang',lon:109.2066,lat:12.2728,start:[109.2058,12.27203],yaw:-2.28,width:46,depth:29,gardenRadius:45,solids:[],
     photo:'https://tcdulichtphcm.vn/du-khao/ra-hon-chong-xem-dau-tay-khong-lo-bi-an-in-tren-vach-da-c14a59017.html',source:'https://nhatrangguide.vn/vi/canh-dep/hon-chong',
     build(T,{group,random}){
       const {stone,finish}=granite(T,group,random);
@@ -74,7 +74,7 @@
       finish();
     }
   },{
-    id:'da-ba-chong',name:'Đá Ba Chồng',city:'Định Quán',lon:107.3484,lat:11.19079,start:[107.34889,11.19018],yaw:1.0,width:23,depth:17,solids:[[0,0,8,6]],
+    id:'da-ba-chong',name:'Đá Ba Chồng',city:'Định Quán',lon:107.3484,lat:11.19079,start:[107.34889,11.19018],yaw:1.0,width:23,depth:17,gardenRadius:25,solids:[[0,0,8,6]],
     photo:'https://commons.wikimedia.org/wiki/File:%C4%90%C3%A1_Ba_Ch%E1%BB%93ng_in_%C4%90%E1%BB%8Bnh_Qu%C3%A1n.jpg',source:'https://hvhnt.dongnai.gov.vn/Pages/newsdetail.aspx?CatId=100&NewsId=4620',
     build(T,{group,random}){
       const {stone,finish}=granite(T,group,random);

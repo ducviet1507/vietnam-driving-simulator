@@ -120,7 +120,7 @@ function createTourDistrict(T,scene,plaster,structures,osmBuildings,nightLights)
   function insideBuilding(x,z,rings){
     return insideRing(x,z,rings[0])&&!rings.slice(1).some(hole=>insideRing(x,z,hole));
   }
-  function overlapsSight(landmarks,rings,box,inferred){
+  function overlapsModel(landmarks,rings,box){
     if(!landmarks)return false;
     for(const {ring:area,bounds} of landmarks.buildingAreas){
       if(box.maxX<bounds.min.x||box.minX>bounds.max.x||box.maxZ<bounds.min.y||box.minZ>bounds.max.y)continue;
@@ -135,7 +135,10 @@ function createTourDistrict(T,scene,plaster,structures,osmBuildings,nightLights)
         }
       }
     }
-    if(inferred)for(const {x,z,r} of landmarks.gardens){
+    return false;
+  }
+  function overlapsGarden(landmarks,rings,box){
+    for(const {x,z,r} of landmarks?.gardens||[]){
       if(x+r<box.minX||x-r>box.maxX||z+r<box.minZ||z-r>box.maxZ)continue;
       if(insideBuilding(x,z,rings))return true;
       for(const ring of rings)for(let i=0,j=ring.length-1;i<ring.length;j=i++){
@@ -169,7 +172,7 @@ function createTourDistrict(T,scene,plaster,structures,osmBuildings,nightLights)
     }
     return false;
   }
-  function build(graph,cx,cz,landmarks,ground=()=>0,edges=[],visitorGround=()=>false){
+  function build(graph,cx,cz,landmarks,ground=()=>0,edges=[],openGround=()=>false){
     for(const mesh of [...group.children]){group.remove(mesh);mesh.geometry.dispose();}
     cells.clear();blocks.clear();streetFronts.length=0;if(!graph)return;
     const pieces=parts.rows(graph,cx,cz);
@@ -278,8 +281,12 @@ function createTourDistrict(T,scene,plaster,structures,osmBuildings,nightLights)
       const x=(minX+maxX)/2,z=(minZ+maxZ)/2;
       if(Math.hypot(x-cx,z-cz)>620+Math.hypot(maxX-minX,maxZ-minZ)/2)continue;
       const original=surveyedIds.has(id),box={minX,minZ,maxX,maxZ};
-      if(overlapsSight(landmarks,rings,box,!original))continue;
-      if(!original&&(visitorGround(x,z)||overlapsMapped(rings,box)||obstructsRoad(rings,box,x,z)))continue;
+      if(overlapsModel(landmarks,rings,box))continue;
+      const visitorArea=overlapsGarden(landmarks,rings,box);
+      if(!original){
+        if(visitorArea||outer.some(p=>openGround(p.x,p.y))||(openGround(x,z)&&insideBuilding(x,z,rings)))continue;
+        if(overlapsMapped(rings,box)||obstructsRoad(rings,box,x,z))continue;
+      }
       ids.add(id);
       // Keep floors level, and seat the plinth against the terrain around the
       // entire footprint, including courtyard edges and long downhill walls.
@@ -304,9 +311,13 @@ function createTourDistrict(T,scene,plaster,structures,osmBuildings,nightLights)
       const label=site?.name||'';
       opening=use==='temple'||['buddhist','vietnamese_folk','chinese_folk','Phật_Giáo'].includes(faith)||/^(chùa|đền|đình|miếu)\s/iu.test(label)?1:
         /church|cathedral|chapel/.test(use)||faith==='christian'||/^nhà thờ\s/iu.test(label)?2:use==='mosque'||faith==='muslim'?3:0;
+      // A mapped outline establishes that a building exists. In visitor grounds
+      // an unclassified outline is insufficient evidence for a house or a shop.
+      const unclassified=visitorArea&&!opening&&!part&&(use==='yes'||use==='building');
       const bottom=part?.min_height||part?.['building:min_level']*3.3||0;
       const rise=parseFloat(detail?.['roof:height'])||detail?.['roof:levels']*3.3;
-      const h=Math.min(850,Math.max(bottom+.3,2,tagH||parseFloat(detail?.height)||(levels&&levels*3.3+(part&&rise||0))||structures.heightAt(graph,x,z)||(warehouse?5.4:3.7+seed%3*3)));
+      const fallbackHeight=warehouse?5.4:3.7+(unclassified?0:seed%3*3);
+      const h=Math.min(850,Math.max(bottom+.3,2,tagH||parseFloat(detail?.height)||(levels&&levels*3.3+(part&&rise||0))||structures.heightAt(graph,x,z)||fallbackHeight));
       const b={id,h,bottom,parent:part?.parent,rings,...box,surveyed:original};
       const block=Math.floor(x/70)+','+Math.floor(z/70);blocks.set(block,(blocks.get(block)||0)+1);
       for(let i=Math.floor((minX-12)/cell);i<=Math.floor((maxX+12)/cell);i++)for(let j=Math.floor((minZ-12)/cell);j<=Math.floor((maxZ+12)/cell);j++){
@@ -316,10 +327,10 @@ function createTourDistrict(T,scene,plaster,structures,osmBuildings,nightLights)
       const zWalls=zone?zone.walls:null,zRoofs=zone?zone.roofs:null;
       const flat=rings.flat(),roofColor=detail?.['roof:colour']?new T.Color(detail['roof:colour']):zRoofs?new T.Color(zRoofs[opening===1?0:seed%zRoofs.length]):roofs[opening===1?0:seed%roofs.length];
       const base=detail?.['building:colour']?new T.Color(detail['building:colour']):detail?.['building:material']==='wood'?new T.Color(0x99765a):zWalls?new T.Color(zWalls[seed%zWalls.length]):palette[seed%palette.length];
-      if(!part&&!opening&&Math.hypot(x-cx,z-cz)<185&&h>=3&&h<17&&maxX-minX<32&&maxZ-minZ<32&&
+      if(!part&&!opening&&!unclassified&&Math.hypot(x-cx,z-cz)<185&&h>=3&&h<17&&maxX-minX<32&&maxZ-minZ<32&&
         /^(yes|residential|house|terrace|apartments|retail|commercial|building)$/.test(kind))streetFront(outer,h,roofColor,seed,zone);
       let eave=h;
-      const lowRiseRoof=!part&&h<(zone?.forcePitched?10.5:7.2)&&(warehouse||zone?.forcePitched||seed%5<2)?'gabled':null;
+      const lowRiseRoof=!part&&!unclassified&&h<(zone?.forcePitched?10.5:7.2)&&(warehouse||zone?.forcePitched||seed%5<2)?'gabled':null;
       const roofShape=shape||detail?.['roof:shape']||(opening===1?'hipped':opening===2?'gabled':lowRiseRoof);
       const pitched=['hipped','gabled','pyramidal','hipped-and-gabled','side_hipped','round','skillion','onion','dome','saltbox','mansard'].includes(roofShape);
       const visitorRoof=original&&(site||opening||part||shape)&&pitched&&buildVisitorRoof(T,rings,roofShape,h,
@@ -351,7 +362,7 @@ function createTourDistrict(T,scene,plaster,structures,osmBuildings,nightLights)
         const ring=rings[ri],profile=profiles[ri];
         const a=ring[j],c=ring[(j+1)%ring.length],length=a.distanceTo(c);
         if(length<.2)continue;
-        const count=warehouse?0:Math.floor(length/(opening?3.8:2.85)),floors=opening?Math.max(1,levels||1):Math.max(1,Math.round(h/3.3));
+        const count=warehouse||unclassified?0:Math.floor(length/(opening?3.8:2.85)),floors=opening?Math.max(1,levels||1):Math.max(1,Math.round(h/3.3));
         const samples=profile[j],next=profile[(j+1)%ring.length][0],wallBatch=batches[0];
         if(bottom>0){quad(wallBatch,a,c,bottom,Math.max(bottom,eave),base,count,floors);continue;}
         // On nearly level blocks the wall itself can reach beneath the grass.
@@ -389,6 +400,7 @@ function createTourDistrict(T,scene,plaster,structures,osmBuildings,nightLights)
     return near.find(b=>b.surveyed&&insideBuilding(x,z,b.rings));
   }
   return {load:async(g,x,z)=>(await Promise.all([load(g,x,z),parts.load(g,x,z)])).some(Boolean),
-    build,contact,footprint,overlapsSight,streetFronts,builtUp:(x,z)=>cells.has(Math.floor(x/cell)+','+Math.floor(z/cell)),
+    build,contact,footprint,overlapsSight:(landmarks,rings,box)=>overlapsModel(landmarks,rings,box)||overlapsGarden(landmarks,rings,box),
+    streetFronts,builtUp:(x,z)=>cells.has(Math.floor(x/cell)+','+Math.floor(z/cell)),
     mappedBlock:(x,z)=>(blocks.get(Math.floor(x/70)+','+Math.floor(z/70))||0)>=3};
 }

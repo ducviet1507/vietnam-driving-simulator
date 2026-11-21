@@ -1007,6 +1007,15 @@ window.VietnamLandmarks=(()=>{
   function create(T,scene,nightLights={value:0}){
     const cached=new Map(),finishes=createSightFinishes(T,nightLights);let active=[];
     const buildingAreas=[],gardens=[],modeledBuildings=new Set();
+    const naturalSites=new Set(['Thác nước','Hang động','Đỉnh núi','Hồ','Vịnh','Bãi biển','Khu bảo tồn','Vườn quốc gia']);
+    const visitorSites=new Set(['Vườn cảnh','Công viên','Khảo cổ','Thành cổ','Lăng mộ','Đền chùa','Công trình tín ngưỡng','Di tích']);
+    function gardenRadius(site,extent){
+      if(site.gardenRadius)return site.gardenRadius;
+      const fallback=naturalSites.has(site.kind)?75:visitorSites.has(site.kind)?35:12;
+      // Use the shorter span so a long, narrow site does not clear entire
+      // neighbouring blocks. Large parks still keep their surrounding villages.
+      return extent?Math.min(120,Math.max(fallback,Math.min(...extent)*.5+8)):fallback;
+    }
     function reserveBuildingArea(site,localRing){
       const ring=localRing.map(([u,v])=>new T.Vector2(site.x+u*site.c+v*site.s,site.z-u*site.s+v*site.c));
       buildingAreas.push({ring,bounds:new T.Box2().setFromPoints(ring)});
@@ -1015,6 +1024,7 @@ window.VietnamLandmarks=(()=>{
       buildingAreas.length=gardens.length=0;modeledBuildings.clear();
       if(!graph)return;
       for(const site of active){
+        gardens.push({x:site.x,z:site.z,r:gardenRadius(site.data,[site.data.width,site.data.depth])});
         if(site.data.surveyed)continue;
         const {data}=site,extra=data.id==='cathedral'?8:data.id==='turtle'?12:2;
         const rectangle=(x,z,w,d)=>reserveBuildingArea(site,[[x-w,z-d],[x+w,z-d],[x+w,z+d],[x-w,z+d]]);
@@ -1026,16 +1036,13 @@ window.VietnamLandmarks=(()=>{
         }
         const ref=(data.map||data.source||'').match(/openstreetmap\.org\/(way|relation)\/(\d+)\/?$/);
         if(ref)modeledBuildings.add(ref[1][0]+ref[2]);
-        if(data.gardenRadius)gardens.push({x:site.x,z:site.z,r:data.gardenRadius});
       }
       const precinct=graph.point(105.7956,20.5528);
       if(Math.hypot(precinct.x-cx,precinct.z-cz)<1500)gardens.push({...precinct,r:445});
-      // A catalogue pin without a surveyed outline only reserves its immediate
-      // surroundings against inferred buildings. Its mapped building remains visible.
       const [lon,lat]=graph.geo(cx,cz);
       for(const site of window.VietnamTourism?.nearby(lon,lat,900/graph.mx,900/graph.my)||[]){
         const p=graph.point(site.lon,site.lat);
-        if(Math.abs(p.x-cx)<900&&Math.abs(p.z-cz)<900)gardens.push({...p,r:12});
+        gardens.push({...p,r:gardenRadius(site,window.VietnamSightDetails?.[site.id]?.extent)});
       }
     }
     function trim(){

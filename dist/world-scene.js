@@ -239,7 +239,6 @@
       const localGround=(x,z)=>relief.ground(cx+x,cz+z);
       landmarks?.setOrigin(graph,cx,cz,relief.ground);
       grounds.prepare(graph,cx,cz,landmarks);
-      district.build(graph,cx,cz,landmarks,relief.ground,edges,grounds.mapped);
       const vistas=[];
       if(graph)for(const site of VietnamLandmarks.entries){
         const end=graph.point(site.lon,site.lat);if(Math.hypot(end.x-cx,end.z-cz)>1000)continue;
@@ -404,6 +403,10 @@
         const col=Math.floor((x-maskX)*maskScale),row=Math.floor((z-maskZ)*maskScale);
         return col>=0&&row>=0&&col<maskSize&&row<maskSize&&wetMask[(row*maskSize+col)*4+3]>100;
       }
+      function openGround(x,z){
+        return grounds.mapped(x,z)||Boolean(wetMask&&wet(x-cx,z-cz));
+      }
+      district.build(graph,cx,cz,landmarks,relief.ground,edges,openGround);
       function nearbyCell(x,z){return Math.floor(x/cellSize)+','+Math.floor(z/cellSize);}
       function bounds(seg,pad,fn){
         for(let ix=Math.floor((Math.min(seg.ax,seg.bx)-pad)/cellSize);ix<=Math.floor((Math.max(seg.ax,seg.bx)+pad)/cellSize);ix++)
@@ -701,7 +704,8 @@
               const x=hx+cx,z=hz+cz,w=width/2+.25,d=depth/2+.30,front=-sign*(depth/2+2);
               const ring=[[-w,front],[w,front],[w,sign*d],[-w,sign*d]].map(([u,v])=>new T.Vector2(x+s.fx*u+s.nx*v,z+s.fz*u+s.nz*v));
               const bounds=new T.Box2().setFromPoints(ring);
-              if(district.overlapsSight(landmarks,[ring],{minX:bounds.min.x,maxX:bounds.max.x,minZ:bounds.min.y,maxZ:bounds.max.y},true))continue;
+              if(ring.some(p=>openGround(p.x,p.y))||
+                district.overlapsSight(landmarks,[ring],{minX:bounds.min.x,maxX:bounds.max.x,minZ:bounds.min.y,maxZ:bounds.max.y}))continue;
             }
             const c={key:s.seed+':'+index+':'+sign,priority,s,sign,hx,hz,footprint,house,width,depth,type,random};
             candidates.push(c);
