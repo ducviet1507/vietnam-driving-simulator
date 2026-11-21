@@ -34,7 +34,7 @@ window.createDrivingFX = function (T, scene, renderer) {
   // Outlets in the authored model's local metres, with its nose pointing +Z.
   const outlets={
     supercar:{x:0,y:.32,z:-2.35,width:2.35,height:.78},
-    gt:{x:-.42,y:.249,z:-2.24,width:.48,height:.48},
+    'muscle-car':{x:-.56,y:.25,z:-2.34,width:.56,height:.56},
     rally:{x:-.50,y:.28,z:-2.02,width:.70,height:.70}
   };
   const exhaust=new T.Group(),jet=new T.Mesh(flameGeometry,flameMaterial);

@@ -46,7 +46,7 @@ Mỗi **Tuyến nổi bật** có bảng xếp hạng riêng. Thời gian tính 
 <details>
 <summary>Đổi xe, chỉnh đồ họa và ngắm địa danh</summary>
 
-- Trong **Xuyên Việt → Tùy chọn → Xe của bạn**, chọn sedan 5 chỗ hoặc SUV 7 chỗ nếu muốn ngồi cao hơn.
+- Trong **Xe của bạn**, GT điện và Muscle Car V8 có mặt ở cả Xuyên Việt và Đua Cúp. Để lái MPV gia đình 7 chỗ, mở **Xuyên Việt → Tùy chọn → Xe của bạn**.
 - Trong **Bố trí buồng lái → Chất lượng đồ họa**, giữ mức **Tự động** để game điều chỉnh theo tốc độ khung hình hoặc chọn **Thấp**, **Vừa**, **Cao**. Trình duyệt nhớ lựa chọn cho các lần lái sau.
 - Trong **Tùy chọn → Danh lam 3D**, tìm một địa danh rồi bấm **Đặt điểm xuất phát** và **Cầm lái**. Khi đến gần, mở **Ngắm địa danh 3D** để xoay góc nhìn. Những nơi có ảnh đối chiếu sẽ hiện nút **Xem ảnh thực địa**.
 

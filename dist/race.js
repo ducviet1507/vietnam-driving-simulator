@@ -11,39 +11,39 @@ function addShadow(parent){
  return mesh;
 }
 const playerShadow=addShadow(rig);
-const raceModels={supercar:'race-car',gt:'gt-coupe',rally:'rally-car'};
 let chosenCar='supercar';
-try{const saved=localStorage.getItem('taylai.garage');if(Object.hasOwn(raceModels,saved))chosenCar=saved;}catch{}
+try{const saved=localStorage.getItem('taylai.garage');if(Object.hasOwn(cupSetups,saved))chosenCar=saved;}catch{}
 const carMenu=document.getElementById('garage');
 carMenu.value=chosenCar;
 carMenu.onchange=()=>{try{localStorage.setItem('taylai.garage',carMenu.value);}catch{} location.reload();};
 const coupeAssets=new Map();
 const animatedCars=[];
 const cupFx=createDrivingFX(T,scene,renderer);
-async function fitCoupe(parent,paint,isPlayer,name,driver){
- if(!coupeAssets.has(name))coupeAssets.set(name,TrafficModels.load.loadAsync('streetscape/'+name+'.glb'));
+async function fitCoupe(parent,paint,isPlayer,kind,driver){
+ const name=worldGarage[kind].asset;
+ if(!coupeAssets.has(name))coupeAssets.set(name,TrafficModels.load.loadAsync(name));
  const {scene:template}=await coupeAssets.get(name),model=template.clone(true);
  const finish=new Map();
  model.traverse(part=>{
    if(!part.isMesh)return;
    part.castShadow=true;part.receiveShadow=true;
    const src=part.material;
-   if(!['paint','light_rear'].includes(src.name))return;
-   if(!finish.has(src.name)){
+   if(!['paint','paint_body','light_rear'].includes(src.name))return;
+   if(!finish.has(src)){
      const m=src.clone();
-     if(src.name==='paint'){m.color.set(paint);m.envMapIntensity=1.35;m.clearcoat=1;m.clearcoatRoughness=.11;}
+     if(src.name!=='light_rear'){m.color.set(paint);m.envMapIntensity=1.35;m.clearcoat=1;m.clearcoatRoughness=.11;}
      else{m.emissive.set(0xff1604);m.emissiveIntensity=.6;}
-     finish.set(src.name,m);
+     finish.set(src,m);
    }
-   part.material=finish.get(src.name);passSky?.registerFinish(part.material);
+   part.material=finish.get(src);passSky?.registerFinish(part.material);
  });
  model.rotation.y=Math.PI;
  parent.add(model);
  if(isPlayer)cupFx.mountExhaust(model,chosenCar);
- animatedCars.push({model,isPlayer,driver,wheels:['FL','FR','RL','RR'].map(id=>model.getObjectByName('wheel_'+id)),front:['FL','FR'].map(id=>model.getObjectByName('steer_'+id)),rear:finish.get('light_rear')});
+ animatedCars.push({model,isPlayer,driver,wheels:['FL','FR','RL','RR'].map(id=>model.getObjectByName('wheel_'+id)),front:['FL','FR'].map(id=>model.getObjectByName('steer_'+id)),rear:[...finish.values()].find(m=>m.name==='light_rear')});
 }
-fitCoupe(outer,0xcb331e,true,raceModels[chosenCar],null).then(()=>outer.remove(fallback)).catch(()=>loadSedan().catch(()=>{}));
-const cupBody={model:chosenCar};
+fitCoupe(outer,worldGarage[chosenCar].paint,true,chosenCar,null).then(()=>outer.remove(fallback)).catch(()=>loadSedan().catch(()=>{}));
+const cupBody={model:chosenCar,spec:worldGarage[chosenCar]};
 let crashTime=0,crashKind='';
 const rivals = [
   {name:'Bảy Bánh Mì',lane:-3.4,grid:16,pace:.99,cornerGrip:12,model:'gt',takesRamp:true,color:0xcaa14c},
@@ -57,7 +57,7 @@ for(const rival of rivals){
   rival.car=new T.Group();scene.add(rival.car);rival.shadow=addShadow(rival.car);
   const shell=new T.Mesh(new T.BoxGeometry(1.78,1.12,3.9),new T.MeshLambertMaterial({color:rival.color}));
   shell.position.y=.7;rival.car.add(shell);
-  fitCoupe(rival.car,rival.color,false,raceModels[rival.model],rival).then(()=>rival.car.remove(shell)).catch(()=>{});
+  fitCoupe(rival.car,rival.color,false,rival.model,rival).then(()=>rival.car.remove(shell)).catch(()=>{});
   const label=document.createElement('canvas');label.width=320;label.height=64;
   const ctx=label.getContext('2d');ctx.fillStyle='#202127';ctx.fillRect(0,0,320,64);
   ctx.fillStyle='#ffe079';ctx.font='bold 32px Arial';ctx.textAlign='center';ctx.fillText(rival.name,160,42);

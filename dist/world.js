@@ -588,7 +588,7 @@ function frame(now){
      if(ready&&!$('openingStill').hidden)$('openingStill').hidden=true;
    }
    if(mode==='drive'||mode==='sinking'){uiTick+=dt;if(uiTick>.13){uiTick=0;updateHud();}}
-   driveAudio.update({speed:Math.abs(car.speed)*3.6,boost:car.driving&&car.boost,slip:car.slip,offroad:car.offroad,throttle:held('w','arrowup'),braking:car.brake,signal:false,mode:mode==='drive'?'driving':mode==='grid'?'idling':'ready'});
+   driveAudio.update({electric:car.spec.electric,speed:Math.abs(car.speed)*3.6,boost:car.driving&&car.boost,slip:car.slip,offroad:car.offroad,throttle:held('w','arrowup'),braking:car.brake,signal:false,mode:mode==='drive'?'driving':mode==='grid'?'idling':'ready'});
  }
  if(toastTime>0&&(toastTime-=dt)<=0)$('callout').textContent='';
  requestAnimationFrame(frame);
@@ -683,7 +683,7 @@ async function begin(){
  if(car.opening){
    document.body.setAttribute('data-awaiting-motion','');
    if(!matchMedia('(pointer:coarse)').matches&&!duel)inform('Giữ W hoặc ↑ để lên ga',3);
-   driveAudio.ignition();
+   driveAudio.ignition(car.spec.electric);
  }
  else driveAudio.cue(true);
 }

@@ -41,10 +41,11 @@
 
     const engine = ctx.createOscillator();
     // An uneven four-cylinder exhaust pulse, muffled by the cabin.
-    engine.setPeriodicWave(ctx.createPeriodicWave(
+    const exhaustWave = ctx.createPeriodicWave(
       new Float32Array(9),
       Float32Array.of(0, .8, .54, .28, .09, .15, .05, .04, .025)
-    ));
+    );
+    engine.setPeriodicWave(exhaustWave);
     const intake = ctx.createBiquadFilter();
     intake.type = 'lowpass';
     intake.Q.value = .58;
@@ -83,7 +84,7 @@
     scrub.start();
     road.start();
 
-    return { ctx, output, engine, engineGain, intake, roadGain, tire, rush, rushGain, scrub, scrubGain };
+    return { ctx, output, engine, exhaustWave, electric:false, engineGain, intake, roadGain, tire, rush, rushGain, scrub, scrubGain };
   }
 
   function tone(frequency, endFrequency, length, volume, offset = 0, shape = 'sine') {
@@ -126,7 +127,7 @@
     if(enabled&&sound?.ctx.state!=='running')unlock();
   },{capture:true});
 
-  function update({ speed, throttle, braking, signal, mode, boost=false, slip=0, offroad=false }) {
+  function update({ speed, throttle, braking, signal, mode, boost=false, slip=0, offroad=false, electric=false }) {
     if(mode!=='driving'&&voiceLine)stopVoice();
     if (!enabled || sound?.ctx.state !== 'running') return;
     const { ctx, engine, engineGain, intake, roadGain, tire, rush, rushGain, scrub, scrubGain } = sound;
@@ -144,11 +145,22 @@
     rushGain.gain.setTargetAtTime(driving ? .61 * speedFraction ** 2 + (onBoost ? .94 : 0) : 0, now, .09);
     scrub.frequency.setTargetAtTime(520 + 315 * skid + Math.sin(now * 32) * 26, now, .04);
     scrubGain.gain.setTargetAtTime(skid ** 1.6 * .09, now, .05);
-    const kmhPerThousandRpm = velocity < 19 ? 8.4 : velocity < 37 ? 14 : velocity < 58 ? 22 : 30;
-    const rpm = Math.max(760, velocity / kmhPerThousandRpm * 1000) + load * 260;
-    engine.frequency.setTargetAtTime(rpm / 30 + Math.sin(now * 6.8) * .26, now, .12);
-    intake.frequency.setTargetAtTime(145 + rpm * .067 + load * 145 + (onBoost ? 240 : 0), now, .12);
-    engineGain.gain.setTargetAtTime(driving ? .068 + load * .038 : mode==='idling' ? .038 : 0, now, .14);
+    if (sound.electric !== electric) {
+      if (electric) engine.type = 'sine';
+      else engine.setPeriodicWave(sound.exhaustWave);
+      sound.electric = electric;
+    }
+    if (electric) {
+      engine.frequency.setTargetAtTime(85 + velocity * 3.8, now, .12);
+      intake.frequency.setTargetAtTime(1100, now, .12);
+      engineGain.gain.setTargetAtTime(driving ? .034 * load + .014 * speedFraction : 0, now, .14);
+    } else {
+      const kmhPerThousandRpm = velocity < 19 ? 8.4 : velocity < 37 ? 14 : velocity < 58 ? 22 : 30;
+      const rpm = Math.max(760, velocity / kmhPerThousandRpm * 1000) + load * 260;
+      engine.frequency.setTargetAtTime(rpm / 30 + Math.sin(now * 6.8) * .26, now, .12);
+      intake.frequency.setTargetAtTime(145 + rpm * .067 + load * 145 + (onBoost ? 240 : 0), now, .12);
+      engineGain.gain.setTargetAtTime(driving ? .068 + load * .038 : mode==='idling' ? .038 : 0, now, .14);
+    }
     tire.frequency.setTargetAtTime(offroad ? 230 + velocity * 2 : 260 + velocity * 8, now, .16);
     roadGain.gain.setTargetAtTime(driving ? velocity / 170 + (braking ? velocity / 340 : 0) : 0, now, .16);
     if (!driving || !signal) {
@@ -169,10 +181,11 @@
       tone(330, 294, .18, .072);
     }
   }
-  async function ignition() {
+  async function ignition(electric=false) {
     unlock();
     if (!enabled || !sound) return;
     try { await sound.ctx.resume(); } catch { return; }
+    if(electric){cue(true);return;}
     for (let i=0;i<4;i++) tone(48+i*3,32+i*5,.085,.12,i*.073,'triangle');
     tone(44,96,.20,.16,.27,'sawtooth');
     tone(92,36,.36,.13,.46,'triangle');

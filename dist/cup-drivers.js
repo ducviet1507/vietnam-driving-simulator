@@ -2,7 +2,8 @@
 
 const cupSetups={
   supercar:{power:8.1,top:46},
-  gt:{power:7.2,top:44},
+  gt:{power:8.3,top:44},
+  'muscle-car':{power:7.6,top:45},
   rally:{power:8.5,top:40}
 };
 
