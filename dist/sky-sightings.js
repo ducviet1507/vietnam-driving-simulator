@@ -84,13 +84,15 @@ function paintSkyProfile(g, kind, phase) {
   }
 }
 
-function createSkySightings(T, scene, random = Math.random) {
+function createSkySightings(T, scene, random = Math.random, ground = () => 0) {
   const kinds = ['saucer', 'dragon', 'phoenix', 'flyer', 'sword'];
   let timer, flight, lastKind, sprite, context, frame = -1;
+  let wish, dragonMap;
   function interval() { return 25 + random() * 15; }
   function reset() {
     timer = interval(); flight = null; lastKind = null;
     if (sprite) sprite.visible = false;
+    wish?.hide();
   }
   function launch(car, aspect) {
     const choices = kinds.filter(kind => kind !== lastKind);
@@ -114,18 +116,45 @@ function createSkySightings(T, scene, random = Math.random) {
     sprite.scale.set(flight.width, flight.width / 2, 1);
     sprite.material.map.repeat.x = sign; sprite.material.map.offset.x = sign < 0 ? 1 : 0;
   }
-  function update(dt, car, originX, originZ, aspect) {
-    if (!car.driving) { if (sprite) sprite.visible = false; return; }
+  function summon(car, aspect) {
+    const range = 520 + Math.max(0,car.speed)*10;
+    const bearing = car.yaw + (.025 + random()*.09)*Math.min(1,aspect);
+    const x = car.x+range*Math.sin(bearing), z = car.z-range*Math.cos(bearing);
+    const ridge = Math.max(car.y,ground(x,z),ground((car.x+x)/2,(car.z+z)/2));
+    flight = {kind:'shen-long', age:0, waiting:0, x,z, range, yaw:bearing, altitude:ridge+range*.235};
+    dragonMap ??= new T.TextureLoader().load('sky-shen-long.webp', undefined, undefined, () => {
+      dragonMap.dispose(); dragonMap=null;
+    });
+    dragonMap.colorSpace=T.SRGBColorSpace;
+  }
+  function update(dt, car, originX, originZ, aspect, sheltered) {
+    if (!car.driving || sheltered) {
+      if (sprite) sprite.visible = false;
+      wish?.hide();
+      return 0;
+    }
     if (!flight) {
-      if (Math.abs(car.speed) < 1 || (timer -= dt) > 0) return;
+      if (Math.abs(car.speed) < 1 || (timer -= dt) > 0) return 0;
       timer = interval();
-      if (random() >= .22) return;
-      launch(car, aspect);
+      const roll = random();
+      if (roll < .04) summon(car, aspect);
+      else if (roll < .26) launch(car, aspect);
+      else return 0;
     }
     const f = flight;
+    if (f.kind === 'shen-long') {
+      if (!dragonMap?.image) {
+        if (!dragonMap || (f.waiting+=dt)>8) flight=null;
+        return 0;
+      }
+      wish ??= createShenLong(T, scene, dragonMap);
+      f.age += dt;
+      if (f.age >= 16) { wish.hide(); flight=null; timer+=90; return 0; }
+      return wish.render(f, originX, originZ);
+    }
     f.age += dt;
     const progress = f.age / f.duration;
-    if (progress >= 1) { sprite.visible = false; flight = null; timer += 65; return; }
+    if (progress >= 1) { sprite.visible = false; flight = null; timer += 65; return 0; }
     const ahead = f.range + f.drift * f.age;
     const across = (2 * progress - 1) * f.span * f.sign;
     const sin = Math.sin(f.yaw), cos = Math.cos(f.yaw);
@@ -140,6 +169,7 @@ function createSkySightings(T, scene, random = Math.random) {
       paintSkyProfile(context, f.kind, nextFrame * .24);
       sprite.material.map.needsUpdate = true;
     }
+    return 0;
   }
   reset();
   return {update, reset};

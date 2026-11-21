@@ -10,7 +10,7 @@ function createWorldAtmosphere(T, scene, sun, loader, bearing=0, clearFog=.00078
   const morning = new T.Vector3(.94,.115,-.32).normalize();
   const uniforms = {
     panorama: {value:skyMap}, sunRay: {value:direction}, overcast: {value:0},
-    dusk: {value:0}, daylight: {value:1}, horizon: {value:scene.fog.color}
+    dusk: {value:0}, daylight: {value:1}, eclipse: {value:0}, horizon: {value:scene.fog.color}
   };
   const sky = new T.Mesh(new T.SphereGeometry(1,40,20), new T.ShaderMaterial({
     uniforms, side:T.BackSide, depthWrite:false,
@@ -24,7 +24,7 @@ function createWorldAtmosphere(T, scene, sun, loader, bearing=0, clearFog=.00078
     fragmentShader:`
       uniform sampler2D panorama;
       uniform vec3 sunRay, horizon;
-      uniform float overcast, dusk, daylight;
+      uniform float overcast, dusk, daylight, eclipse;
       varying vec3 ray;
       void main() {
         vec3 d=normalize(ray);
@@ -45,7 +45,7 @@ function createWorldAtmosphere(T, scene, sun, loader, bearing=0, clearFog=.00078
         float glow=exp(-separation*5.)*.30+exp(-separation*33.)*.96;
         vec3 sunlight=mix(vec3(1.,.89,.68),vec3(1.55,.62,.24),dusk);
         colour+=sunlight*(glow+5.*(1.-smoothstep(.005,.0085,separation)))*daylight*(1.-overcast);
-        gl_FragColor=vec4(colour,1.);
+        gl_FragColor=vec4(colour*mix(vec3(1.),vec3(.31,.45,.52),eclipse),1.);
         #include <tonemapping_fragment>
         #include <colorspace_fragment>
       }`
@@ -89,7 +89,8 @@ function createWorldAtmosphere(T, scene, sun, loader, bearing=0, clearFog=.00078
         cd*Math.cos(angle)*Math.sin(lat)-sd*Math.cos(lat)).applyAxisAngle(up,bearing);
     }
     direction.copy(solar).lerp(morning,dawn).normalize();
-    const day=T.MathUtils.smoothstep(direction.y,-.14,.08);
+    const eclipse=uniforms.eclipse.value;
+    const day=T.MathUtils.smoothstep(direction.y,-.14,.08)*(1-eclipse);
     const dusk=(1-T.MathUtils.smoothstep(direction.y,.10,.54))*day;
     uniforms.overcast.value+=(Math.max(cloud*.85,wet*.97,fog)-uniforms.overcast.value)*blend;
     const cover=uniforms.overcast.value;
@@ -102,7 +103,7 @@ function createWorldAtmosphere(T, scene, sun, loader, bearing=0, clearFog=.00078
     wetness.value+=(wet-wetness.value)*blend;
     lamps.value=Math.max(1-day,T.MathUtils.smoothstep(cover,.65,.98)*.24);
     mixColour.copy(clearAir).lerp(warmAir,dusk*.88).lerp(greyAir,cover).lerp(nightAir,1-day);
-    scene.fog.color.copy(mixColour);
+    scene.fog.color.copy(mixColour).multiplyScalar(1-.48*eclipse);
     scene.fog.density=Math.max(clearFog*(1.+dusk*.55+cover*.92),.010*fog,.0032*wetness.value);
     sun.color.copy(daySun).lerp(warmSun,dusk).lerp(greyAir,cover*.65).lerp(moon,1-day);
     sun.intensity=(.29+day*(3.25-.54*dusk))*(1.-.79*cover);
@@ -114,5 +115,5 @@ function createWorldAtmosphere(T, scene, sun, loader, bearing=0, clearFog=.00078
     sun.position.y=Math.max(.17,sun.position.y);
     sun.position.normalize().multiplyScalar(68).add(sun.target.position);
   }
-  return {update,setLocation,setHour,registerFinish,wetness,lamps};
+  return {update,setLocation,setHour,registerFinish,wetness,lamps,eclipse:uniforms.eclipse};
 }

@@ -12,6 +12,8 @@ let car={model:'supercar',spec:worldGarage.supercar,x:0,z:0,yaw:0,speed:0,steer:
 let scenicTrace=null;
 let activeTrip=false,loadRequest=null,openingCameraTime=0;
 const reduceMotion=matchMedia('(prefers-reduced-motion: reduce)');
+const vehicleLook=createVehicleLook($('lookAround'),$('world'),()=>mode==='drive');
+car.look=vehicleLook.view;
 function selectVehicle(model){
  if(!Object.hasOwn(worldGarage,model))return;
  car.model=model;car.spec=worldGarage[model];gfx?.preloadVehicle(model);
@@ -604,6 +606,7 @@ function frame(now){
    }
    if(mode!=='loading'&&roads&&!document.hidden&&now>=nextWeatherCheck){nextWeatherCheck=now+2000;gfx.weather.locate(...roads.geo(car.x,car.z));}
    car.driving=mode==='drive';car.showroom=mode==='grid';
+   vehicleLook.update(dt);
    if(mode!=='loading'&&mode!=='error'&&mode!=='map'&&!document.hidden){
      if((mode==='drive'&&Math.hypot(car.x-viewX,car.z-viewZ)>155)||(pendingDistrict&&mode!=='tour')){
        refreshView();

@@ -11,3 +11,11 @@
 @media(max-height:590px) and (orientation:landscape){.journey .grid{padding-top:48px;align-items:flex-start;overflow:auto}.journey .gridcopy{width:320px}.journey .gridcopy h1{font-size:39px;margin:0}.journey h1 br{display:none}.journey h1 i{margin-left:.18em}.journey .gridcopy>p{margin:3px 0}.launchpanel .extra{margin-top:4px}.launchpanel .hot{padding:7px}}
 .playModes{display:flex;gap:8px;margin:8px 0 4px}.launchpanel .playModes button{width:50%;margin:0}.playModes #challenge{color:var(--yellow);background:#22332de8;border-color:#799573}#duelInfo{color:#ffdc87;margin:3px 0}.launchpanel .playModes button:disabled{opacity:.58}
 #coverage{color:#b7c9bd;font-size:13px;margin:-4px 0 12px}.launchpanel #openMap b{max-width:65%;text-overflow:ellipsis;overflow:hidden;white-space:nowrap}
+#lookAround {
+ position:absolute; right:clamp(55px,16vw,180px); top:48%; pointer-events:auto;
+ display:grid; place-items:center; width:46px; height:46px; padding:0; border-radius:50%;
+ color:#f3f6e9; background:#142722df; border:1px solid #c2d5bd8c;
+ touch-action:none; user-select:none; -webkit-touch-callout:none; cursor:grab;
+}
+#lookAround[aria-pressed=true] {color:#16251c;background:#d2f477;cursor:grabbing}
+#world.looking {touch-action:none;cursor:grab}

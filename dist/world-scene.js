@@ -37,7 +37,6 @@
     scene.background=new T.Color(0xaec5d2);scene.fog=new T.FogExp2(0xc2d1d0,.00072);
     const markerPoint=new T.Vector3();
     const camera=new T.PerspectiveCamera(61,1,.14,28000);
-    const sightings=createSkySightings(T,scene);
     const breakfast=createBreakfastStall(T,scene);
     const skyLoader=new T.TextureLoader();
     function texture(file,tile=false){
@@ -195,6 +194,7 @@
     surfaces.weatheredAsphalt(material.asphalt,atmosphere.wetness,asphaltOrigin,waterSurface.reflection);
     for(const finish of [...Object.values(material),meadow,upland,waterSurface.material])atmosphere.registerFinish(finish);
     const relief=createVietnamRelief(T,scene,graphics.profile.id==='low',landscapes,tunnelCut);
+    const sightings=createSkySightings(T,scene,Math.random,relief.ground);
     const unitBox=new T.BoxGeometry(),unitPlane=new T.PlaneGeometry(),unitPole=new T.CylinderGeometry(.5,.5,1,8);
     const roofSection=new T.Shape();roofSection.moveTo(-.5,0);roofSection.lineTo(0,1);roofSection.lineTo(.5,0);roofSection.closePath();
     const gable=new T.ExtrudeGeometry(roofSection,{depth:1,bevelEnabled:false});gable.translate(0,0,-.5);
@@ -1213,6 +1213,7 @@
       }
     }
     const driveFx=createDrivingFX(T,scene,renderer);
+    const lookAxis=new T.Vector3(0,1,0),headTurn=new T.Euler(0,0,0,'YXZ');
     function render(car,traffic,dt,inside=false,now=performance.now(),prepareOnly=false){
       foliageEye.set(car.x-originX,car.z-originZ,car.sightView?0:1);
       if(!car||!Number.isFinite(car.x)||!Number.isFinite(car.z))return;
@@ -1281,6 +1282,12 @@
         eye.x+=(3.2-eye.x)*p;eye.y+=(1.22-eye.y)*p;eye.z+=((portrait?9.5:6.2)-eye.z)*p;
         look.x+=((portrait?-1.55:-2.7)-look.x)*p;look.y+=(1.12-look.y)*p;look.z+=(-3.1-look.z)*p;
       }
+      if(car.driving && car.look && (car.look.yaw || car.look.pitch)){
+        // Turn around the seat in the cabin, or around the car in chase view.
+        look.sub(eye).applyEuler(headTurn.set(car.look.pitch,-car.look.yaw,0,'YXZ'));
+        if(!inside)eye.applyAxisAngle(lookAxis,-car.look.yaw);
+        look.add(eye);
+      }
       eye.applyQuaternion(mirrorRotation).add(playerRig.position);look.applyQuaternion(mirrorRotation).add(playerRig.position);
       if(car.showroom&&car.departureView&&!inside){
         const v=car.departureView,offset=v.offset||0;
@@ -1338,10 +1345,10 @@
         if(!v?.enabled||v.fullWidth!==width||v.fullHeight!==height||v.offsetY!==shift)
           camera.setViewOffset(width,height,0,shift,width,height);
       }else if(camera.view?.enabled)camera.clearViewOffset();
-      sightings.update(dt,car,originX,originZ,camera.aspect);
       if(breakfast.update(car,dt))onBreakfastCall?.();
       atmosphere.setHour(car.sightView?.hour??car.scenicHour);
       const sheltered=!car.sightView&&car.edge&&sceneGraph?.tunnels.info(car.edge)?.bore;
+      atmosphere.eclipse.value=sightings.update(dt,car,originX,originZ,camera.aspect,sheltered);
       weather.render(camera,now,car.dawn||0,atmosphere.update,sheltered);
       headlight.intensity=car.flood?0:(sheltered?1:atmosphere.lamps.value)*2600;
       headlight.visible=headlight.intensity>3;
