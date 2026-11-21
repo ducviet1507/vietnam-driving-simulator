@@ -104,9 +104,8 @@ class Tailor:
     def shape(self, style):
         xyz = self.xyz.copy()
         x,y,z = xyz.T
-        if style in ("hust-tee","manchester-united","skt-t1","nobita","goku"):
-            shoe = self.parts=="boots"
-            y[shoe] *= .67
+        if style not in ("nobita","vegeta"):
+            return
         if style=="nobita":
             # Narrow the child's shoulders and shorten the shirt in proportion to his head.
             x *= 1-.16*np.clip((y-.9)/.45,0,1)
@@ -116,7 +115,7 @@ class Tailor:
         raw = self.array(self.attrs["POSITION"])
         # Edited positions can exceed the original signed-normalized quantization box.
         pos = (xyz-self.offset)/self.scale
-        if np.abs(pos).max()>1.00001:
+        if np.abs(pos).max()>1.0001:
             self.attrs["POSITION"] = self.attribute(pos,"VEC3",5126,min=pos.min(0).tolist(),max=pos.max(0).tolist())
         else:
             raw[:] = np.round(pos*32767).clip(-32767,32767)
@@ -196,9 +195,13 @@ class Tailor:
     def save(self, path, colour, scale=1.0):
         self.primitive["indices"] = self.attribute(self.faces.reshape(-1),"SCALAR",5123)
         image = io.BytesIO()
-        colour.save(image,"JPEG",quality=88,subsampling=0,optimize=True)
+        colour.resize((768,768),Image.Resampling.LANCZOS).save(image,"WEBP",method=6,quality=83)
         self.blocks[self.image["bufferView"]] = image.getvalue()
-        self.image["mimeType"] = "image/jpeg"
+        self.image["mimeType"] = "image/webp"
+        texture = self.doc["textures"][self.pbr["baseColorTexture"]["index"]]
+        texture.setdefault("extensions",{})["EXT_texture_webp"] = {"source":texture.pop("source")}
+        self.doc.setdefault("extensionsUsed",[]).append("EXT_texture_webp")
+        self.doc.setdefault("extensionsRequired",[]).append("EXT_texture_webp")
         self.mat["normalTexture"]["scale"] = .72
         spec = "KHR_materials_specular"
         self.doc.setdefault("extensionsUsed",[]).append(spec)

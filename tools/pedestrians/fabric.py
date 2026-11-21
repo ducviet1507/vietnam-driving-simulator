@@ -84,4 +84,7 @@ def paint(model, style, base):
     hair = pieces["hair"]
     tint = {"witch-cosplayer":"#735765","fox-cosplayer":"#825443"}.get(style,"#312c30")
     result[hair] = rgb(tint)+(baked[hair].mean(1)-48)[:,None]*.39
+    # Unused UV islands (the old helmet, vest and trousers) have no visible texels.
+    used=np.logical_or.reduce(list(pieces.values()))
+    result[~used]=[112,103,94]
     return Image.fromarray(np.uint8(result.clip(0,255)))

@@ -205,10 +205,12 @@ async function serveGameAsset(request, env, url) {
   if (roadTile) url.pathname = pathname.replace(/\.gz$/,".vrd.gz");
   const legacyTile = roadTile && url.searchParams.get("format") !== "packed";
   let response;
-  if (["GET","HEAD"].includes(request.method) && /^\/(streetscape|traffic)\/[^/]+\.glb$/.test(pathname)) {
+  const packedModel = /^\/(streetscape|traffic)\/[^/]+\.glb$/.test(pathname);
+  const packedScript = /^\/[^/]+\.js$/.test(pathname);
+  if (["GET","HEAD"].includes(request.method) && (packedModel || packedScript)) {
     url.pathname += ".gz";
     const input = new Headers(request.headers);
-    // Byte ranges on model URLs refer to the decoded GLB.
+    // Byte ranges on the public URL refer to the decoded asset.
     input.delete("Range");
     input.delete("If-Range");
     response = await env.ASSETS.fetch(new Request(url,{method:request.method,headers:input}));
@@ -217,7 +219,7 @@ async function serveGameAsset(request, env, url) {
       headers.delete("Content-Encoding");
       headers.delete("Content-Length");
       headers.delete("Content-Disposition");
-      headers.set("Content-Type","model/gltf-binary");
+      headers.set("Content-Type",packedModel ? "model/gltf-binary" : "text/javascript; charset=utf-8");
       headers.set("Accept-Ranges","bytes");
       const body = request.method === "HEAD" ? null : await RoadTileCodec.content(response);
       response = new Response(body,{headers});

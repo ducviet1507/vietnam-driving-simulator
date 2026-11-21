@@ -55,7 +55,7 @@ export async function bundleJourneyScripts(client) {
   await writeFile(index, chunks.join(""));
   // Repeated release builds may target the same generated client directory.
   for (const file of await readdir(client)) {
-    if (/^journey-[\da-f]{16}\.bundle\.js$/.test(file) && !bundles.has(file))
+    if (/^journey-[\da-f]{16}\.bundle\.js(?:\.gz)?$/.test(file) && !bundles.has(file.replace(/\.gz$/, "")))
       await unlink(path.join(client, file));
   }
 }

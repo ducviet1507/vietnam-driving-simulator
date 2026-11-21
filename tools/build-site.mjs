@@ -26,14 +26,16 @@ try {
   await rm(scratch,{recursive:true,force:true});
 }
 await Promise.all([packRoadAssets(client),prepareSightSurfaces(client)]);
-// Keep each model's public URL while storing just its compressed bytes.
+// The Worker serves the original bytes at each public URL.
+async function storeGzip(file) {
+  await writeFile(file+".gz",gzipSync(await readFile(file),{level:9}));
+  await rm(file);
+}
 for (const directory of ["streetscape","traffic"]) {
   const folder = path.join(client,directory);
   for (const name of await readdir(folder)) {
     if (!name.endsWith(".glb")) continue;
-    const model = path.join(folder,name);
-    await writeFile(model+".gz",gzipSync(await readFile(model),{level:9}));
-    await rm(model);
+    await storeGzip(path.join(folder,name));
   }
 }
 const pagePaths = await preparePageUrls(client);
@@ -64,6 +66,9 @@ if(featured.length!==Object.keys(guided).length || featured.some(r=>!Number.isIn
   throw new Error("Invalid or duplicate featured drive.");
 const body = await readFile(path.join(root,"worker/leaderboard.mjs"),"utf8");
 const roadCodec = await readFile(path.join(client,"road-tile-codec.js"),"utf8");
+for (const name of await readdir(client)) {
+  if (name.endsWith(".js")) await storeGzip(path.join(client,name));
+}
 // Sites accepts a single ES module as its Worker entry point.
 await writeFile(path.join(server,"index.js"),body
   .replace('import "../dist/road-tile-codec.js";',()=>roadCodec)
