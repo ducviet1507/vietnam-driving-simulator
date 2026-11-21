@@ -190,9 +190,12 @@ async function serveGameAsset(request, env, url) {
     }
   }
   const isPage = pagePaths.has(pathname);
+  const isText = pathname.endsWith(".txt");
   if (isPage) {
     const stem = pathname === "/" ? "index" : pathname.slice(1);
     url.pathname = "/page-content/" + stem + ".bin";
+  } else if (isText) {
+    url.pathname += ".bin";
   }
   if (/^\/sight-landscapes\/N\d{2}E\d{3}-\d+\.png$/.test(pathname)) {
     url.pathname = pathname.replace(/\.png$/,".surface.webp");
@@ -222,7 +225,7 @@ async function serveGameAsset(request, env, url) {
   } else {
     response = legacyTile ? await legacyRoadTile(request, env, url) : await env.ASSETS.fetch(new Request(url,request));
   }
-  if (response.ok && (isPage || pathname.endsWith(".txt"))) {
+  if (response.ok && (isPage || isText)) {
     const headers = new Headers(response.headers);
     headers.set("Content-Type", isPage ? "text/html; charset=utf-8" : "text/plain; charset=utf-8");
     headers.delete("Content-Disposition");

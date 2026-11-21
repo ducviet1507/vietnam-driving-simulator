@@ -47,6 +47,13 @@ for (const page of pagePaths) {
   const stem = page === "/" ? "index" : page.slice(1);
   await rename(path.join(client, stem + ".html"), path.join(documents, stem + ".bin"));
 }
+// A public .txt asset is served by Sites before the Worker can declare its charset.
+for (const name of await readdir(client, {recursive:true})) {
+  if (name.endsWith(".txt")) {
+    const file = path.join(client, name);
+    await rename(file, file + ".bin");
+  }
+}
 const stageScript = await readFile(path.join(client,"mountain-stages.js"),"utf8");
 const stages = JSON.parse(stageScript.slice(stageScript.indexOf("window.mountainStages=")+"window.mountainStages=".length).trim().replace(/;$/,""));
 const courses = {river:2240,pass:2480};
