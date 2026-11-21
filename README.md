@@ -32,6 +32,7 @@ Atlas có hơn 11.000 điểm tham quan trên 34 tỉnh, thành. Bạn có thể
 | Đánh lái | **A** sang trái, **D** sang phải |
 | Dùng nitro | Giữ **Shift** |
 | Đặt xe trở lại đường | Nhấn **U** |
+| Chụp ảnh cảnh | Bấm **nút máy ảnh** hoặc nhấn **F** khi đang lái hay ngắm địa danh để tải ảnh PNG theo góc nhìn hiện tại. |
 | Xem bản đồ | Nhấn **M** hoặc chạm bản đồ nhỏ. Kéo để xem xung quanh, dùng **+ / −** để thu phóng. Nhấn **M** hoặc **Esc** để lái tiếp. |
 
 Trên điện thoại, dùng các nút cảm ứng trên màn hình. Xuyên Việt lưu hành trình trong trình duyệt để lần sau bạn có thể lái tiếp.

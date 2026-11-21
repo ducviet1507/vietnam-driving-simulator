@@ -96,6 +96,11 @@ try {
     await page.locator('body[data-phase="drive"]').waitFor();
     await page.setViewportSize({width:390,height:844});
     await page.locator('#tourView').click();
+    const [photo]=await Promise.all([page.waitForEvent('download'),page.getByRole('button',{name:'Chụp ảnh cảnh'}).click()]);
+    assert.match(photo.suggestedFilename(),/^ViVu3D-.+\.png$/);
+    const png=await readFile(await photo.path());
+    assert.equal(png.subarray(0,8).toString('hex'),'89504e470d0a1a0a');
+    assert.ok(png.length>10000,'Expected scenery in the downloaded PNG');
     await page.locator('#secretOpen').click();
     for(let i=0;i<20 && !await page.locator('#secretCapture').isEnabled();i++){
       const hint=await page.locator('#secretDirection').innerText();

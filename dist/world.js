@@ -895,6 +895,31 @@ $('raceMode').onclick=()=>{
 $('resume').onclick=()=>{$('rest').close();mode='drive';keySet.clear();};
 $('reverse').onclick=()=>{$('resume').click();recover();};
 $('camera').onclick=()=>{inside=!inside;$('camera').textContent=inside?'Góc tài xế':'Góc sau xe';if(mode==='drive')updateHud();};
+const shutter=$('takePhoto');
+let savingPhoto=false;
+async function takeScenePhoto(){
+ if(savingPhoto||!gfx||document.querySelector('dialog[open]'))return;
+ if(mode!=='drive' && !(mode==='tour'&&car.sightView&&!$('backToCar').disabled))return;
+ savingPhoto=true;
+ try{
+   const place=mode==='tour'?car.sightView.data.name:$('street').textContent;
+   const locationName=place.normalize('NFC').replace(/[^\p{L}\p{N}]+/gu,'-').replace(/^-|-$/g,'');
+   const stamp=new Date().toISOString().replace(/[:.]/g,'-');
+   const image=await gfx.capturePhoto();
+   if(!image)throw Error('Empty photo');
+   const link=document.createElement('a');
+   link.download='ViVu3D-'+(locationName||'Xuyen-Viet')+'-'+stamp+'.png';
+   link.href=URL.createObjectURL(image);
+   document.body.append(link);link.click();link.remove();
+   setTimeout(()=>URL.revokeObjectURL(link.href),30000);
+   inform('Đã chụp ảnh cảnh.');
+ }catch{inform('Chưa lưu được ảnh. Hãy thử chụp lại.');}
+ finally{savingPhoto=false;}
+}
+// A second finger can press the shutter while the first holds the eye control.
+shutter.onpointerdown=e=>e.preventDefault();
+shutter.onpointerup=e=>{if(e.button===0)takeScenePhoto();};
+shutter.onclick=e=>{if(e.detail===0)takeScenePhoto();};
 function soundLabel(){
  $('sound').textContent=driveAudio.enabled?'Tắt âm':'Bật âm';
  $('sound').dataset.muted=String(!driveAudio.enabled);
@@ -904,6 +929,12 @@ soundLabel();$('sound').onclick=()=>{driveAudio.toggle();soundLabel();};
 $('rest').oncancel=e=>{e.preventDefault();$('resume').click();};
 window.addEventListener('keydown',e=>{
  const k=e.key.toLowerCase();
+ if(k==='f'&&!e.ctrlKey&&!e.metaKey&&!e.altKey&&(mode==='drive'||mode==='tour')&&
+    !e.target.closest?.('input,textarea,select,[contenteditable=true],dialog')){
+   if(!e.repeat)takeScenePhoto();
+   return;
+ }
+ if(k===' '&&e.target===shutter)return;
  if(k==='m'&&!e.ctrlKey&&!e.metaKey&&!e.altKey&&(mode==='drive'||mode==='map')){
    e.preventDefault();
    if(!e.repeat){if(mode==='map')$('drivingMap').close();else openDrivingMap();}

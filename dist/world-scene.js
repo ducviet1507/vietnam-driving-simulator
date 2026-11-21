@@ -1385,6 +1385,13 @@
     function prepareShaders(car,traffic){
       return render(car,traffic,0,false,performance.now(),true);
     }
+    function capturePhoto(){
+      if(renderer.getContext().isContextLost())throw Error('WebGL context lost');
+      // The browser may clear the WebGL buffer after presenting it. Redraw the
+      // displayed camera pose without advancing the drive or its sky events.
+      renderer.render(scene,camera);
+      return new Promise(resolve=>canvas.toBlob(resolve,'image/png'));
+    }
     function projectSummit(){
       const summit=scene.getObjectByName('chua-ngoc-tam-chuc');
       if(!summit?.visible)return null;
@@ -1393,6 +1400,6 @@
       markerPoint.project(camera);
       return markerPoint.z>0 && markerPoint.z<1 && Math.abs(markerPoint.x)<.92 && Math.abs(markerPoint.y)<.9 ? markerPoint : null;
     }
-    return {hitDashboardMap,refreshMap,prepareShaders,projectSummit,weather,streetLife,accessLane:grounds.accessLane,loadStructures:structures.load,preloadVehicle:loadModel,waterAt:(x,z,edge)=>{if(edge&&sceneGraph.tunnels.info(edge)?.bore&&tunnels.at(x,z,edge)!=null)return null;const wet=waterAt(x,z),deck=wet&&bridges?.at(x,z,edge);return wet&&deck!=null&&deck>=wet.level?null:wet;},terrainReady:relief.ready,grade:driveGrade,ground:driveGround,setRoads,render,resize:graphics.resize,contact,loadDistrict:async(g,x,z)=>(await Promise.all([district.load(g,x,z),osmBuildings.load(g,x,z),relief.loadLocal(g,x,z),landscapes.load(g,x,z),grounds.load(g,x,z),environment.load(g,x,z),amenities.load(g,x,z)])).some(Boolean),splash:(x,z,nx,nz,strength,level)=>driveFx.impact(x,z,nx,nz,strength,'water',level,.3),sightFootprint:district.footprint,nearLandmark:(x,z)=>landmarks?.nearest(x,z),reactToContact:roadsideImpact.react,impact:(x,z,nx,nz,s,k,h=0,g,edge)=>driveFx.impact(x,z,nx,nz,s,k,driveGround(x,z,edge)+h,g),scrape:(x,y,z,vx,vz,edge)=>driveFx.scrape(x,driveGround(x,z,edge)+y,z,vx,vz),resetFx(){driveFx.reset();roadsideImpact.reset();sightings.reset();}};
+    return {capturePhoto,hitDashboardMap,refreshMap,prepareShaders,projectSummit,weather,streetLife,accessLane:grounds.accessLane,loadStructures:structures.load,preloadVehicle:loadModel,waterAt:(x,z,edge)=>{if(edge&&sceneGraph.tunnels.info(edge)?.bore&&tunnels.at(x,z,edge)!=null)return null;const wet=waterAt(x,z),deck=wet&&bridges?.at(x,z,edge);return wet&&deck!=null&&deck>=wet.level?null:wet;},terrainReady:relief.ready,grade:driveGrade,ground:driveGround,setRoads,render,resize:graphics.resize,contact,loadDistrict:async(g,x,z)=>(await Promise.all([district.load(g,x,z),osmBuildings.load(g,x,z),relief.loadLocal(g,x,z),landscapes.load(g,x,z),grounds.load(g,x,z),environment.load(g,x,z),amenities.load(g,x,z)])).some(Boolean),splash:(x,z,nx,nz,strength,level)=>driveFx.impact(x,z,nx,nz,strength,'water',level,.3),sightFootprint:district.footprint,nearLandmark:(x,z)=>landmarks?.nearest(x,z),reactToContact:roadsideImpact.react,impact:(x,z,nx,nz,s,k,h=0,g,edge)=>driveFx.impact(x,z,nx,nz,s,k,driveGround(x,z,edge)+h,g),scrape:(x,y,z,vx,vz,edge)=>driveFx.scrape(x,driveGround(x,z,edge)+y,z,vx,vz),resetFx(){driveFx.reset();roadsideImpact.reset();sightings.reset();}};
   };
 })();
