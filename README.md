@@ -50,7 +50,7 @@ Bạn có thể bắt đầu ở Chợ Vinh (Nghệ An), Nhà cổ Tấn Ký (H�
 
 Atlas có hơn 11.000 điểm tham quan trên 34 tỉnh, thành. Tìm tên địa danh để khởi hành ở đoạn đường ô tô gần đó. Với các điểm nằm ngoài khơi hoặc trong rừng sâu, game hiển thị khoảng cách đường chim bay từ chỗ dừng xe. Trong **Góc ngắm**, bạn có thể chuyển giữa các điểm thuộc cùng quần thể và chọn ánh sáng buổi sáng, cuối chiều hoặc ban đêm. Những địa điểm có ảnh đã đối chiếu sẽ hiện nút **Xem ảnh thực địa**, kèm tên tác giả và giấy phép ngay dưới ảnh.
 
-Với **Cầu Vàng Bà Nà**, bấm **Ngắm Cầu Vàng Bà Nà** trong Atlas hoặc mở liên kết bên dưới để xem ngay góc **Hai bàn tay nâng cầu**. Trong **Góc ngắm**, bạn có thể chuyển xuống lối đi lát gỗ hoặc ngắm toàn cảnh từ sườn núi. Xe đỗ trên đường ô tô. Bấm **Trở lại xe** rồi **Cầm lái** để khởi hành. [Mở góc ngắm Cầu Vàng](https://vivu3d.com/?landmark=cau-vang-ba-na).
+Chọn **Cầu Vàng Bà Nà** làm điểm xuất phát để nhận xe ngay cạnh lối đi bộ phía ga Marseille. Bấm **Cầm lái** để đi xuống núi, hoặc **Ngắm địa danh 3D** để xem hai bàn tay nâng cầu. Với những danh thắng có đường tham quan mô phỏng, Atlas ghi rõ loại đường này. Bạn có thể lái từ đường chính tới điểm dừng hoặc chọn nơi đó làm điểm đi hay điểm đến của lộ trình. [Xuất phát ở Cầu Vàng Bà Nà](https://vivu3d.com/?landmark=cau-vang-ba-na).
 
 Các cảnh thác dùng hướng nước chảy của sông suối đã được lập bản đồ. Với cửa hang, góc nhìn dựa trên hướng cửa, đường mòn hoặc đoạn hang đã khảo sát. Hình dáng vách đá được ước dựng ở những nơi thiếu số đo. Tại Hoàng thành Thăng Long, bạn có thể chuyển từ Đoan Môn tới thềm rồng điện Kính Thiên. [Hoàng thành Thăng Long](https://vivu3d.com/?landmark=hoang-thanh-thang-long).
 

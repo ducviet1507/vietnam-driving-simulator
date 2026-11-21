@@ -80,5 +80,13 @@ globalThis.RoadTileCodec=(()=>{
   function tileURL(base,key){
     return base+key+'.gz'+(base==='vn-roads/'?'?format=packed':'');
   }
-  return {packed,decode,content,tileURL};
+  function roadRows(index){
+    const extra=new Set(index.sightAccess?.tiles),only=new Set(index.sightAccess?.only);
+    return async(key,base,read)=>{
+      if(!extra.has(key))return read(tileURL(base,key));
+      const [roads,access]=await Promise.all([only.has(key)?[]:read(tileURL(base,key)),read('vn-access/'+key+'.gz')]);
+      return roads.concat(access);
+    };
+  }
+  return {packed,decode,content,tileURL,roadRows};
 })();

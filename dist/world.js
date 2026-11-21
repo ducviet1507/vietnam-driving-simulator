@@ -117,7 +117,7 @@ async function startAt(place,restore=null,guided=null){
    departure?departure.caption:
    samePlace(place,baSaoDrive)?'Theo đường Điện Biên Phủ về phía Khả Phong, qua khu dân cư Ba Sao và chân núi.':
    scenicPasses.has(site?.id)?scenicPasses.get(site.id).description:
-   site?.visitOnArrival?'Xe đỗ trên đường ô tô, cách '+site.name+' khoảng '+atlasDistance(site.approachMeters/1000)+' theo đường chim bay.':
+   site?.accessRoad?'Xuất phát tại '+site.name+' · Đường tham quan mô phỏng.':
    site?.km?'Chinh phục '+fmt(site.km*1000)+' đường đèo.':[site?.kind,site?.city].filter(Boolean).join(' · ')||'Khám phá những con đường quanh điểm xuất phát.';
  if(guided){
    $('journeyTitle').textContent=guided.title;
@@ -134,7 +134,8 @@ async function startAt(place,restore=null,guided=null){
  try{
    const origin=Array.isArray(restore?.origin)&&restore.origin.length===2&&restore.origin.every(Number.isFinite)?restore.origin:place.slice(1);
    const graph=new VietnamRoads(indexData,...origin),start=graph.point(place[1],place[2]);await graph.load(start.x,start.z);
-   let nearest=graph.nearest(start.x,start.z);
+   const accessEdge=!restore&&!guided&&graph.edges.get(site?.accessRoad);
+   let nearest=accessEdge?graph.nearest(start.x,start.z,[accessEdge]):graph.nearest(start.x,start.z);
    if(!nearest||nearest.error>4000**2){await graph.load(start.x,start.z,true);nearest=graph.nearest(start.x,start.z);}
    if(token!==loadToken)return;
    if(!nearest||nearest.error>28000**2)throw Error('Chưa có đường ô tô gần điểm này. Hãy chọn điểm khác trên bản đồ.');
@@ -171,7 +172,6 @@ async function startAt(place,restore=null,guided=null){
    }else if(!await prepareWorld(graph,token))return;
    drawDepartureMap();mode='grid';
    $('challenge').disabled=guided;$('startGuided').disabled=false;$('launch').disabled=false;$('launch').textContent=restore?'Lái tiếp':'Cầm lái';
-   if(site?.visitOnArrival&&!restore&&!guided)await openTour(site);
  }catch(e){if(token===loadToken){$('startGuided').disabled=false;$('loadStatus').textContent=e.message;$('launch').textContent='Thử tải lại';$('launch').disabled=false;mode='error';pendingPlace=place;}}
 }
 async function stream(){
@@ -983,10 +983,10 @@ function choosePlace(place,focus=false){
  pendingPlace=place;const site=place[3];
  if(focus)focusedPin=place;
  activeResult=matches.findIndex(p=>samePlace(p,place));$('travel').disabled=!indexData||!!site?.islands;
- $('travel').textContent=atlasChoice?'Dùng làm '+atlasChoice.label:site?.visitOnArrival?'Ngắm '+site.name:'Đặt điểm xuất phát';
+ $('travel').textContent=atlasChoice?'Dùng làm '+atlasChoice.label:'Đặt điểm xuất phát';
  const raceLink=$('racePass');raceLink.hidden=!site?.km;
  if(site?.km)raceLink.href='cup.html?route='+encodeURIComponent(site.id);
- const approach=site?.approachMeters>=20?' · điểm dừng xe cách địa danh khoảng '+atlasDistance(site.approachMeters/1000)+' theo đường thẳng':'';
+ const approach=site?.accessRoad?' · đường tham quan mô phỏng':site?.approachMeters>=20?' · điểm dừng xe cách địa danh khoảng '+atlasDistance(site.approachMeters/1000)+' theo đường thẳng':'';
  $('picked').textContent=site?.islands?place[0]+' · '+site.province+', Việt Nam · Chỉ xem bản đồ':place[4]?[place[0],place[4].context].filter(Boolean).join(' · '):site?.km?site.name+' · '+site.km.toLocaleString('vi-VN')+' km trong Cúp':site?site.name+' · '+(site.province||site.city)+' · '+site.kind+approach:place[0]+' · '+place[2].toFixed(3)+'° B, '+place[1].toFixed(3)+'° Đ';
  for(const b of $('places').children){const selected=Number(b.dataset.index)===activeResult;b.setAttribute('aria-selected',selected);b.setAttribute('aria-pressed',selected);}
  const option=$('places').children[activeResult];
@@ -1162,6 +1162,16 @@ async function fetchJSON(path){const r=await fetch(path);if(!r.ok)throw Error('C
  try{
    const [roadIndex,trafficIndex]=await Promise.all([fetchJSON('vn-roads/index.json'),fetchJSON('vn-traffic/index.json').catch(()=>null)]);
    indexData=roadIndex;
+   const access=roadIndex.sightAccess;
+   if(access)for(const site of [...destinations,...tamChucParts]){
+     const stop=site.stops?.[0]||site;
+     const arrival=access.stops[stop.catalogId||stop.id];
+     if(!arrival)continue;
+     const [edge,x,y,dx,dy]=arrival,lon=x/1e5,lat=y/1e5,cos=Math.cos(lat*Math.PI/180);
+     site.start=[lon,lat];site.accessRoad=edge;
+     site.approachMeters=Math.hypot((site.lon-lon)*111320*cos,(site.lat-lat)*110900);
+     site.bearing=Math.atan2(dx*cos,dy)*180/Math.PI;
+   }
    if(trafficIndex?.graphSourceSha256===roadIndex.sourceSha256&&trafficIndex.osmTimestamp===roadIndex.osmTimestamp)indexData.trafficTiles=trafficIndex.tiles;
    $('coverage').textContent=indexData.roadKm.toLocaleString('vi-VN')+' km đường · Dữ liệu '+new Date(indexData.osmTimestamp).toLocaleDateString('vi-VN');
    $('openingAtlas').disabled=false;$('openMap').disabled=false;$('travel').disabled=false;
