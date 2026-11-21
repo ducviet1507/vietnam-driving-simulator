@@ -3,12 +3,11 @@ import {packJourneyData} from "./pack-journey-data.mjs";
 import {packRoadAssets} from "./pack-road-assets.mjs";
 import {prepareSightSurfaces} from "./prepare-sight-surfaces.mjs";
 import {preparePageUrls} from "./page-urls.mjs";
-import {execFileSync,spawn} from "node:child_process";
-import {mkdir,readFile,rename,writeFile} from "node:fs/promises";
+import {execFileSync} from "node:child_process";
+import {mkdir,mkdtemp,readFile,rename,rm,writeFile} from "node:fs/promises";
+import {tmpdir} from "node:os";
 import {fileURLToPath} from "node:url";
 import path from "node:path";
-import {pipeline} from "node:stream/promises";
-import {once} from "node:events";
 
 const root = fileURLToPath(new URL("../", import.meta.url));
 const client = path.join(root,"dist/client");
@@ -17,10 +16,14 @@ await mkdir(client,{recursive:true});
 await mkdir(server,{recursive:true});
 // Export the exact public asset tree of the revision being published. In particular,
 // no local config, test output, generated Worker or dotfiles from the checkout enter it.
-const archive = spawn("git",["archive","--format=tar","HEAD:dist"],{cwd:root,stdio:["ignore","pipe","inherit"]});
-const unpack = spawn(process.platform==="win32"?"tar.exe":"tar",["-xf","-","-C",client],{cwd:root,stdio:["pipe","inherit","inherit"]});
-const results = await Promise.all([once(archive,"close"),once(unpack,"close"),pipeline(archive.stdout,unpack.stdin)]);
-if(results[0][0]!==0||results[1][0]!==0) throw new Error("Could not export the game assets.");
+const scratch = await mkdtemp(path.join(tmpdir(),"vivu3d-export-"));
+try {
+  const archive = path.join(scratch,"assets.tar");
+  execFileSync("git",["archive","--format=tar","--output",archive,"HEAD:dist"],{cwd:root,stdio:"inherit"});
+  execFileSync(process.platform==="win32"?"tar.exe":"tar",["-xf",archive,"-C",client],{cwd:root,stdio:"inherit"});
+} finally {
+  await rm(scratch,{recursive:true,force:true});
+}
 await Promise.all([packRoadAssets(client),prepareSightSurfaces(client)]);
 const pagePaths = await preparePageUrls(client);
 await packJourneyData(client);
