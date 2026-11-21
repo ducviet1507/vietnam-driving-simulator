@@ -445,3 +445,7 @@ Mở rộng cụm địa danh Đà Nẵng & Quảng Nam cũ (14 công trình m�
 https://www.openstreetmap.org/copyright
 https://danangfantasticity.com/
 https://hoianheritage.net/
+
+Mở rộng cụm địa danh Huế (13 công trình mới) — Điện Thái Hòa, Hiển Lâm Các & Cửu Đỉnh, Cửa Hiển Nhơn, Lăng Minh Mạng, Lăng Tự Đức, Trường THPT Chuyên Quốc Học Huế, Nhà thờ chính tòa Phủ Cam, Nhà thờ Dòng Chúa Cứu Thế Huế, Chợ Đông Ba, Hổ Quyền, Chùa Từ Hiếu, Chùa Báo Quốc và Tàng Thư Lâu. Tọa độ OpenStreetMap (ODbL 1.0); mô hình 3D dựng thủ tục bằng Three.js.
+https://www.openstreetmap.org/copyright
+https://hueworldheritage.org.vn/
