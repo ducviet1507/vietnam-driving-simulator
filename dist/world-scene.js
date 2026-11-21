@@ -1101,8 +1101,14 @@
     const headlight=new T.SpotLight(0xffeccd,0,82,.49,.58,2);
     headlight.position.set(0,.73,-2.27);headlight.target.position.set(0,.08,-23);
     playerRig.add(headlight,headlight.target);
-    const cabin=window.buildDriverCabin?.(T,playerRig);
-    const cabinCourse={id:'world',name:'Việt Nam',crossing:-10000,finish:0};
+    const cabin=window.buildDriverCabin(T,playerRig,document.getElementById('map'));
+    const mapRay=new T.Raycaster(),mapPointer=new T.Vector2();
+    function hitDashboardMap(clientX,clientY){
+      const rect=canvas.getBoundingClientRect();
+      mapPointer.set((clientX-rect.left)/rect.width*2-1,1-(clientY-rect.top)/rect.height*2);
+      mapRay.setFromCamera(mapPointer,camera);
+      return mapRay.intersectObject(cabin.mapScreen,false).length>0;
+    }
     const mirrorRotation=new T.Quaternion(),eye=new T.Vector3(),look=new T.Vector3(),mirrorAdapter={
       getRenderTarget:()=>renderer.getRenderTarget(),
       setRenderTarget:t=>renderer.setRenderTarget(t),
@@ -1111,7 +1117,7 @@
         c.quaternion.premultiply(mirrorRotation);renderer.render(s,c);
       }
     };
-    let player=null,version=0,totalDriven=0;
+    let player=null,version=0;
     const players=new Map(),trafficItems=new Map(),pools=new Map();
     function pose(item,car,dt,near){
       const pitch=Math.atan(driveGrade(car.x,car.z,car.yaw)),bank=Math.atan(driveGrade(car.x,car.z,car.yaw+Math.PI/2));
@@ -1132,7 +1138,7 @@
       foliageEye.set(car.x-originX,car.z-originZ,car.sightView?0:1);
       if(!car||!Number.isFinite(car.x)||!Number.isFinite(car.z))return;
       if(car.sightView||car.flood)inside=false;
-      graphics.frame(now,car.driving);dt=Math.max(0,Math.min(.12,dt||0));version++;totalDriven+=Math.abs(car.speed||0)*dt;
+      graphics.frame(now,car.driving);dt=Math.max(0,Math.min(.12,dt||0));version++;
       waterSurface.update(now*.001,weather.rainfall);
       mappedLights.update(now*.001);
       const x=car.x-originX,z=car.z-originZ;
@@ -1155,8 +1161,7 @@
       playerRig.position.y+=car.spec.seatLift??0;
       playerRig.rotation.set(-player.root.rotation.x,-car.yaw,-player.root.rotation.z,'YXZ');
       mirrorRotation.copy(playerRig.quaternion);
-      cabinCourse.finish=Math.ceil(totalDriven);cabinCourse.name=car.roadName||'Việt Nam';
-      if(cabin)cabin.update(inside,Math.abs(car.speed||0)*3.6,car.steer||0,totalDriven,cabinCourse);
+      cabin.update(inside,Math.abs(car.speed||0)*3.6,car.steer||0);
       const closest=(traffic||[]).map(a=>({a,d:(a.x-car.x)**2+(a.z-car.z)**2})).filter(v=>v.d<360*360).sort((a,b)=>a.d-b.d);
       for(const [index,{a,d}] of closest.entries()){
         const kind=Object.hasOwn(trafficModels,a.kind)?a.kind:'sedan';
@@ -1185,7 +1190,8 @@
         eye.set(portrait?-5.6:-4.3,portrait?1.9:1.6,portrait?8.0:5.5);
         look.set(portrait?0:-1.38,.72,-.38);
       }else if(inside){
-        eye.set(-.31,1.1,.53);look.set(-.31,.6,-13);
+        const inset=cabin.seatInset(camera.aspect),seatX=-.31+inset;
+        eye.set(seatX,1.1,.53+inset*1.7);look.set(seatX,.6,-13);
       }else{
         const back=(camera.aspect<.85?7.55:6.35)+speed*.018;
         eye.set(-(car.steer||0)*.32,2.08+speed*.007,back);look.set(0,.9,-10);
@@ -1283,6 +1289,6 @@
       markerPoint.project(camera);
       return markerPoint.z>0 && markerPoint.z<1 && Math.abs(markerPoint.x)<.92 && Math.abs(markerPoint.y)<.9 ? markerPoint : null;
     }
-    return {projectSummit,weather,streetLife,accessLane:grounds.accessLane,loadStructures:structures.load,preloadVehicle:loadModel,waterAt:(x,z)=>waterAt(x,z),terrainReady:relief.ready,grade:driveGrade,ground:driveGround,setRoads,render,resize:graphics.resize,contact,loadDistrict:async(g,x,z)=>(await Promise.all([district.load(g,x,z),osmBuildings.load(g,x,z),relief.loadLocal(g,x,z),landscapes.load(g,x,z),grounds.load(g,x,z),environment.load(g,x,z),amenities.load(g,x,z)])).some(Boolean),splash:(x,z,nx,nz,strength,level)=>driveFx.impact(x,z,nx,nz,strength,'water',level,.3),sightFootprint:district.footprint,nearLandmark:(x,z)=>landmarks?.nearest(x,z),reactToContact:roadsideImpact.react,impact:(x,z,nx,nz,s,k,h=0,g)=>driveFx.impact(x,z,nx,nz,s,k,driveGround(x,z)+h,g),scrape:(x,y,z,vx,vz)=>driveFx.scrape(x,driveGround(x,z)+y,z,vx,vz),resetFx(){driveFx.reset();roadsideImpact.reset();sightings.reset();}};
+    return {hitDashboardMap,refreshMap:cabin.refreshMap,projectSummit,weather,streetLife,accessLane:grounds.accessLane,loadStructures:structures.load,preloadVehicle:loadModel,waterAt:(x,z)=>waterAt(x,z),terrainReady:relief.ready,grade:driveGrade,ground:driveGround,setRoads,render,resize:graphics.resize,contact,loadDistrict:async(g,x,z)=>(await Promise.all([district.load(g,x,z),osmBuildings.load(g,x,z),relief.loadLocal(g,x,z),landscapes.load(g,x,z),grounds.load(g,x,z),environment.load(g,x,z),amenities.load(g,x,z)])).some(Boolean),splash:(x,z,nx,nz,strength,level)=>driveFx.impact(x,z,nx,nz,strength,'water',level,.3),sightFootprint:district.footprint,nearLandmark:(x,z)=>landmarks?.nearest(x,z),reactToContact:roadsideImpact.react,impact:(x,z,nx,nz,s,k,h=0,g)=>driveFx.impact(x,z,nx,nz,s,k,driveGround(x,z)+h,g),scrape:(x,y,z,vx,vz)=>driveFx.scrape(x,driveGround(x,z)+y,z,vx,vz),resetFx(){driveFx.reset();roadsideImpact.reset();sightings.reset();}};
   };
 })();

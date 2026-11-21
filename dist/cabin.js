@@ -1,6 +1,7 @@
 ﻿/* Interior details use the dimensions and axes of the bundled sedan shell. */
-window.buildDriverCabin = function(T, rig) {
+window.buildDriverCabin = function(T, rig, mapCanvas) {
   const cabin=new T.Group();
+  cabin.visible=false;
   rig.add(cabin);
   cabin.scale.setScalar(.842);cabin.rotation.y=Math.PI;
   const black=new T.MeshStandardMaterial({color:0x151b1c,metalness:.18,roughness:.58});
@@ -117,24 +118,27 @@ window.buildDriverCabin = function(T, rig) {
   panel(dash,.398,.120,new T.MeshBasicMaterial({map:cluster.tex}),0,.008,.023);
   const center=new T.Group();center.rotation.y=Math.PI;center.position.set(-.095,1.044,.345);cabin.add(center);
   rounded(center,.303,.151,.012,black);
-  const nav=canvasTexture(480,240);const n=nav.ctx;
-  let navKey='';
+  const nav=canvasTexture(480,224), n=nav.ctx;
+  const mapScreen=panel(center,.287,.134,new T.MeshBasicMaterial({map:nav.tex,toneMapped:false}),0,0,.016);
+  let mapDirty=true;
   function navigation(distance,course){
-    const remaining=Math.max(0,Math.round(course.finish-distance));
-    const key=course.id+':'+remaining;if(navKey===key)return;navKey=key;
-    n.fillStyle='#16262a';n.fillRect(0,0,480,240);
-    n.fillStyle='#2c4244';
-    for(let x=-20;x<500;x+=55)for(let y=-32;y<192;y+=40)n.fillRect(x,y+Math.floor(distance)%40,43,29);
-    const crossing=130-(course.crossing-distance)*1.45;
-    n.strokeStyle='#627975';n.lineWidth=11;n.beginPath();n.moveTo(0,crossing);n.lineTo(480,crossing);n.stroke();
-    n.strokeStyle='#62d3b4';n.lineWidth=7;n.beginPath();n.moveTo(234,194);n.lineTo(234,0);n.stroke();
-    n.fillStyle='#f5f8ef';n.beginPath();n.moveTo(234,106);n.lineTo(249,145);n.lineTo(234,137);n.lineTo(219,145);n.fill();
-    n.fillStyle='#0d191d';n.fillRect(0,182,480,58);
-    n.fillStyle='#e2f3ee';n.font='600 24px sans-serif';n.textAlign='left';n.fillText(course.name,14,218);
-    n.fillStyle='#afdecc';n.textAlign='right';n.fillText(remaining+' m',461,218);
+    if(!mapDirty)return;
+    mapDirty=false;
+    const w=n.canvas.width,h=n.canvas.height,mapHeight=course?h-40:h;
+    const scale=Math.min(w/mapCanvas.width,mapHeight/mapCanvas.height);
+    const width=mapCanvas.width*scale,height=mapCanvas.height*scale;
+    n.fillStyle='#162825';n.fillRect(0,0,w,h);
+    n.drawImage(mapCanvas,(w-width)/2,(mapHeight-height)/2,width,height);
+    if(course){
+      n.fillStyle='#0d191d';n.fillRect(0,mapHeight,w,40);
+      n.font='600 23px sans-serif';n.textAlign='right';n.fillStyle='#afdecc';
+      const remaining=Math.max(0,Math.round(course.finish-distance))+' m';
+      n.fillText(remaining,w-10,h-11);
+      n.textAlign='left';n.fillStyle='#e2f3ee';
+      n.fillText(course.name,10,h-11,w-n.measureText(remaining).width-32);
+    }
     nav.tex.needsUpdate=true;
   }
-  panel(center,.287,.134,new T.MeshBasicMaterial({map:nav.tex}),0,0,.016);
   for(const vx of [-.45,.74]){
     const vent=new T.Group();vent.position.set(vx,.884,.316);vent.rotation.y=Math.PI;cabin.add(vent);
     const width=vx<0?.36:.18;
@@ -179,6 +183,10 @@ window.buildDriverCabin = function(T, rig) {
     cluster.tex.needsUpdate=true;
   }
   return {
+    mapScreen,
+    refreshMap(){mapDirty=true;},
+    // On narrow screens, sit a little farther back to keep the wheel and console in view.
+    seatInset(aspect){return T.MathUtils.clamp((1-aspect)*.40,0,.24);},
     prepare(renderer,scene,camera){
       if(!scene.environment||preparedEnvironment===scene.environment)return;
       preparedEnvironment=scene.environment;
@@ -194,6 +202,7 @@ window.buildDriverCabin = function(T, rig) {
       }finally{renderer.setRenderTarget(previous);}
     },
     update(interior,speed,steering,distance,course){
+      if(cabin.visible!==interior)document.body.toggleAttribute('data-dashboard-map',interior);
       cabin.visible=interior;
 
       wheel.rotation.z=interior?steering*.92:0;

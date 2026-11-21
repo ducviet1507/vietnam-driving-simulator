@@ -118,6 +118,7 @@
 .arcade .routeInfo span:empty {display: none}
 .arcade :is(#tourView, #scenicRadio) {min-height: 35px; color: #e8fbbd; border-color: #adcb896b}
 .arcade .navigationDock {width: var(--map-width)}
+.arcade[data-dashboard-map] .navigationDock #map {display:none}
 .arcade .telemetry {right: var(--right); min-width: 145px; padding: 10px 13px; color: #cadacf; font-size: 12px}
 .arcade .telemetry strong {font: var(--display); font-size: 50px; color: white}
 .arcade .telemetry label {line-height: 1.55; white-space: nowrap; gap: 7px}

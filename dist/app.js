@@ -239,7 +239,7 @@ let lastMapState='';
 function drawMap(){
   const position=Math.min(course.finish,Math.round(distance));
   const lane=Math.round(lateral);
-  const state=position+'/'+lane+'/'+stage;
+  const state=course.id+'/'+position+'/'+lane+'/'+stage;
   if(state===lastMapState)return;
   lastMapState=state;
   map.fillStyle='#20332b';map.fillRect(0,0,132,90);
@@ -259,6 +259,7 @@ function drawMap(){
   map.beginPath();map.moveTo(course.id==='works'?65:61,82);map.lineTo(61,74);map.lineTo(61,26);map.lineTo(course.id==='works'?61:66,11);map.stroke();
   const x=58+lane, y=82-position/course.finish*71;
   map.fillStyle='#fff';map.beginPath();map.moveTo(x,y-6);map.lineTo(x+4.7,y+4.5);map.lineTo(x,y+2.5);map.lineTo(x-4.7,y+4.5);map.fill();
+  window.refreshDriveMap?.();
   label(el('remaining'),(course.finish-position)+' m đến đích');
   el('travel').value=position;
   label(el('metres'),position+' / '+course.finish+' m');

@@ -579,7 +579,8 @@
   }
   const player=car(0xd8a652,true);
   const cabinRig=new T.Group();scene.add(cabinRig);
-  const driverCabin=window.buildDriverCabin(T,cabinRig);
+  const driverCabin=window.buildDriverCabin(T,cabinRig,document.getElementById('map'));
+  window.refreshDriveMap=driverCabin.refreshMap;
   // The compact fallback is immediately available while the full vehicle loads.
   async function loadPlayerSedan(){
     const response=await fetch('streetscape/sedan.json.gz');
@@ -660,8 +661,9 @@
       fov=47;
     }else if(view==='inside'){
       const sway=reducedMotion.matches?0:Math.min(speed/40,1)*.008*Math.sin(distance*1.25);
-      desiredOffset.set(-.31,1.095+sway,2.66);
-      desiredAim.set(-.31,-.40,-12);
+      const inset=driverCabin.seatInset(camera.aspect),seatX=-.31+inset;
+      desiredOffset.set(seatX,1.095+sway,2.66+inset*1.7);
+      desiredAim.set(seatX,-.40,-12);
       const c=Math.cos(vehicleYaw),sn=Math.sin(vehicleYaw);
       for(const local of [desiredAim,desiredOffset]){
         const x=local.x,z=local.z-2.13;

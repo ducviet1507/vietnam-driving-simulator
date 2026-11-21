@@ -501,6 +501,9 @@ function openDrivingMap(){
  drivingMap.open(nameOf(player.edge));
 }
 $('openDrivingMap').onclick=openDrivingMap;
+$('world').addEventListener('click',event=>{
+ if(mode==='drive'&&document.body.hasAttribute('data-dashboard-map')&&gfx.hitDashboardMap(event.clientX,event.clientY))openDrivingMap();
+});
 $('drivingMap').addEventListener('close',()=>{
  if(mode!=='map')return;
  mode='drive';keySet.clear();updateHud();
@@ -508,6 +511,9 @@ $('drivingMap').addEventListener('close',()=>{
 });
 function drawMini(landmark){
  const c=$('map'),g=c.getContext('2d'),scale=.43;
+ // The dashboard has room to show more road on either side of the car.
+ const width=inside&&!car.sightView&&!car.flood?320:188;
+ if(c.width!==width)c.width=width;
  g.clearRect(0,0,c.width,c.height);g.save();g.translate(c.width/2,c.height*.56);
  g.scale(scale,scale);g.rotate(-car.yaw);
  for(const e of nearby){
@@ -537,6 +543,7 @@ function drawMini(landmark){
  if(landmark){g.fillStyle='#ffe7a5';g.strokeStyle='#423c28';g.lineWidth=2;g.beginPath();g.arc(landmark.x-car.x,landmark.z-car.z,7,0,Math.PI*2);g.fill();g.stroke();}
  g.fillStyle='#ffbe68';for(const n of npcs){g.beginPath();g.arc(n.x-car.x,n.z-car.z,4,0,2*Math.PI);g.fill();}
  g.restore();g.fillStyle='#e5ff9b';g.beginPath();g.moveTo(c.width/2,c.height*.56-7);g.lineTo(c.width/2+5,c.height*.56+5);g.lineTo(c.width/2-5,c.height*.56+5);g.fill();
+ gfx.refreshMap();
 }
 let nextWeatherCheck=0;
 function frame(now){
@@ -841,7 +848,7 @@ $('raceMode').onclick=()=>{
 };
 $('resume').onclick=()=>{$('rest').close();mode='drive';keySet.clear();};
 $('reverse').onclick=()=>{$('resume').click();recover();};
-$('camera').onclick=()=>{inside=!inside;$('camera').textContent=inside?'Góc tài xế':'Góc sau xe';};
+$('camera').onclick=()=>{inside=!inside;$('camera').textContent=inside?'Góc tài xế':'Góc sau xe';if(mode==='drive')updateHud();};
 function soundLabel(){
  $('sound').textContent=driveAudio.enabled?'Tắt âm':'Bật âm';
  $('sound').dataset.muted=String(!driveAudio.enabled);

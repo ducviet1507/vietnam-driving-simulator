@@ -5,6 +5,9 @@
   background:#12231ee8; color:#edf7df; font-size:12px;
 }
 .journey .navigationDock kbd {font:inherit; font-weight:800}
+.journey[data-dashboard-map] #openDrivingMap {inset:0 var(--right) auto auto; width:auto; min-height:44px; padding:0 12px; place-content:center; background-image:none}
+.journey[data-dashboard-map] #openDrivingMap #map {display:none}
+.journey[data-dashboard-map] #openDrivingMap .mapHint {position:static; background:transparent; font-size:14px}
 .journey #drivingMap {
   padding:0; width:min(1040px,94vw); max-width:none; border:1px solid #779182;
   border-radius:14px; background:#192c25; color:#fbf8ed;

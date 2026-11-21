@@ -6,6 +6,7 @@ body[data-map-size=small] {--lesson-map: clamp(83px, 10vw, 120px)}
 body[data-map-size=large] {--lesson-map: clamp(116px, 17vw, 185px)}
 body[data-button-size=large] {--pedal-height: 57px}
 .lessonYard #view #map, .lessonRoad .view #map, .lessonStreet .screen .map canvas {width: var(--lesson-map)}
+.lessonRoad[data-dashboard-map] .view #map, .lessonStreet[data-dashboard-map] .screen .map canvas {display:none}
 .lessonYard .lessonPedals, .lessonYard .lessonSwitches {display: flex; flex-wrap: wrap; gap: 5px}
 .lessonYard .lessonPedals button, .lessonRoad .pedals button {font-weight: 650}
 .lessonYard [data-key=arrowup], .lessonRoad [data-key=arrowup], .lessonStreet .touch [data-key=arrowup] {background: #d2f477; color: #192a20; border-color: #d2f477}

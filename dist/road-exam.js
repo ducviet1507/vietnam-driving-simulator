@@ -558,7 +558,7 @@ if(passHeadlights){
   passHeadlights.position.set(0,.76,-2.2);passHeadlights.target.position.set(0,.09,-24);
   rig.add(passHeadlights,passHeadlights.target);
 }
-const cabin=buildDriverCabin(T,rig), outer=new T.Group();rig.add(outer);
+const cabin=buildDriverCabin(T,rig,$('map')), outer=new T.Group();rig.add(outer);
 const fallback=new T.Mesh(new T.BoxGeometry(1.8,1.1,4),new T.MeshStandardMaterial({color:0xcda05e}));fallback.position.y=.75;outer.add(fallback);
 async function loadSedan(){
  let model;
@@ -732,6 +732,7 @@ function mapDraw(){
    for(const r of rivals){const [x,y]=mapPoint(r.car.position.x,r.car.position.z);map.beginPath();map.arc(x,y,2.5,0,Math.PI*2);map.fill();}
  }
  const [x,y]=mapPoint(state.x,state.z);map.fillStyle='#ffcc65';map.beginPath();map.arc(x,y,4,0,Math.PI*2);map.fill();
+ cabin.refreshMap();
 }
 const yawQ=new T.Quaternion(),axisY=new T.Vector3(0,1,0),eye=new T.Vector3(),look=new T.Vector3();
 const mirrorAdapter={
@@ -753,8 +754,9 @@ function render(now){
  const focus=at(s.d+20);sun.target.position.set(Math.round(focus.x),Math.round(focus.y),Math.round(focus.z));sun.position.copy(sun.target.position);sun.position.x-=38;sun.position.y+=45;sun.position.z+=22;
  if(now-lastShadow>(s.mode==='drive'?graphics.profile.shadowMs:300)){renderer.shadowMap.needsUpdate=true;lastShadow=now;}
  outer.visible=!inside;cabin.update(inside,s.v*3.6,s.steer,s.d,route);
- eye.set(inside?-.31:0,inside?1.10:3.4,inside?.53:7.6).applyQuaternion(yawQ).add(rig.position);
- look.set(inside?-.31:0,inside?.02:.6,inside?-12:-6).applyQuaternion(yawQ).add(rig.position);camera.position.copy(eye);camera.lookAt(look);
+ const inset=cabin.seatInset(camera.aspect),seatX=inside?-.31+inset:0;
+ eye.set(seatX,inside?1.10:3.4,inside?.53+inset*1.7:7.6).applyQuaternion(yawQ).add(rig.position);
+ look.set(seatX,inside?.02:.6,inside?-12:-6).applyQuaternion(yawQ).add(rig.position);camera.position.copy(eye);camera.lookAt(look);
  if(arcade)raceCamera(dt,now);
  for(const c of traffic){const p=at(c.d,-2.8);c.model.position.set(p.x,p.y,p.z);c.model.rotation.set(Math.atan(roadGrade(c.d,p.h)),-p.h,0,'YXZ');}
  if(now>=nextWeatherCheck&&!document.hidden){
