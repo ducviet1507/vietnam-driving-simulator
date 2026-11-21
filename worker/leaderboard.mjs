@@ -1,5 +1,6 @@
 import departureIds from "./departure-ids.js";
 import pagePaths from "./page-paths.js";
+import trailerUrl from "./trailer-url.js";
 import courseLengths from "./course-lengths.js";
 import guidedLengths from "./guided-lengths.js";
 import "../dist/road-tile-codec.js";
@@ -188,6 +189,19 @@ async function serveGameAsset(request, env, url) {
       if (redirectPage) url.pathname = clean;
       if (redirectHttp) url.protocol = "https:";
       return Response.redirect(url.href, 301);
+    }
+    if (pathname === "/trailer/qua-mot-khuc-cua.mp4") {
+      const upstreamHeaders = new Headers({"Accept-Encoding":"identity"});
+      for (const name of ["Range","If-Range","If-None-Match","If-Modified-Since"]) {
+        if (request.headers.has(name)) upstreamHeaders.set(name,request.headers.get(name));
+      }
+      const media = await fetch(trailerUrl,{method:request.method,headers:upstreamHeaders});
+      const headers = new Headers();
+      for (const name of ["Accept-Ranges","Content-Range","Content-Length","ETag","Last-Modified","Cache-Control"]) {
+        if (media.headers.has(name)) headers.set(name,media.headers.get(name));
+      }
+      if (media.ok) headers.set("Content-Type","video/mp4");
+      return new Response(media.body,{status:media.status,headers});
     }
   }
   const isPage = pagePaths.has(pathname);

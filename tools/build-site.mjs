@@ -12,6 +12,8 @@ import path from "node:path";
 import {gzipSync} from "node:zlib";
 
 const root = fileURLToPath(new URL("../", import.meta.url));
+const revision = execFileSync("git",["rev-parse","HEAD"],{cwd:root,encoding:"utf8"}).trim();
+const trailerPath = "trailer/qua-mot-khuc-cua.mp4";
 const client = path.join(root,"dist/client");
 const server = path.join(root,"dist/server");
 await mkdir(client,{recursive:true});
@@ -26,6 +28,8 @@ try {
 } finally {
   await rm(scratch,{recursive:true,force:true});
 }
+// The public trailer streams from this exact GitHub revision through the Worker.
+await rm(path.join(client,trailerPath));
 await Promise.all([packRoadAssets(client),prepareSightSurfaces(client)]);
 // The Worker serves the original bytes at each public URL.
 async function storeGzip(file) {
@@ -74,6 +78,7 @@ for (const name of await readdir(client)) {
 }
 // Sites accepts a single ES module as its Worker entry point.
 await writeFile(path.join(server,"index.js"),body
+  .replace('import trailerUrl from "./trailer-url.js";',"const trailerUrl = "+JSON.stringify("https://raw.githubusercontent.com/tang-vu/vietnam-driving-simulator/"+revision+"/dist/"+trailerPath)+";")
   .replace('import "../dist/road-tile-codec.js";',()=>roadCodec)
   .replace('import departureIds from "./departure-ids.js";',"const departureIds = new Set("+JSON.stringify(departures.map(stop=>stop.id))+");")
   .replace('import pagePaths from "./page-paths.js";',"const pagePaths = new Set("+JSON.stringify(pagePaths)+");")
@@ -85,5 +90,4 @@ const wrangler = {
   d1_databases:[{binding:"DB",database_name:"taylai",database_id:"00000000-0000-4000-8000-000000000000"}],
 };
 await writeFile(path.join(server,"wrangler.json"),JSON.stringify(wrangler,null,2)+"\n");
-const sha = execFileSync("git",["rev-parse","--short","HEAD"],{cwd:root,encoding:"utf8"}).trim();
-console.log("Prepared "+Object.keys(courses).length+" race courses and static assets for "+sha);
+console.log("Prepared "+Object.keys(courses).length+" race courses and static assets for "+revision.slice(0,7));
