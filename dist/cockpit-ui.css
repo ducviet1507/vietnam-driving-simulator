@@ -137,6 +137,7 @@
   .arcade[data-map-side=right] .navigationDock {left: auto; right: var(--right)}
   .arcade[data-map-side=right] .telemetry {right: auto; left: var(--left)}
 }
+.journey .shutterLabel {display: none}
 @media (any-pointer: coarse), (max-width: 700px) {
   .arcade {--button-width: clamp(45px, 12vw, 65px); --map-width: clamp(84px, 24vw, 122px)}
   .arcade[data-button-size=large] {--button-width: clamp(53px, 15vw, 76px)}
@@ -173,10 +174,21 @@
   .arcade:not([data-phase=grid]) .tools .musicLabel {display: none}
   .arcade:not([data-phase=grid]) .tools #sound::before {width: 19px; height: 19px}
   .arcade:not([data-phase=grid]) #pause::before {content: ""; box-sizing: border-box; width: 11px; height: 15px; border-inline: 4px solid currentColor}
-  .arcade:not([data-phase=grid]) #camera::before {
-    content: ""; width: 21px; height: 21px; background: currentColor;
-    mask: var(--wheel-icon) center / contain no-repeat;
+  .arcade:not([data-phase=grid]) #camera {
+    flex-direction: column; width: 54px; gap: 2px; font-size: 12px; line-height: 1.15;
   }
+  .arcade:not([data-phase=grid]) #camera::before {
+    content: ""; width: 20px; height: 20px; background: currentColor;
+    mask: var(--view-icon, var(--wheel-icon)) center / contain no-repeat;
+  }
+  .arcade #camera[data-next-view=chase] {
+    --view-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m4 11 2.3-6h11.4l2.3 6M4 11h16v7H4zM5 18v2m14-2v2M6.5 14h2m7 0h2'/%3E%3C/svg%3E");
+  }
+  .journey #takePhoto {
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px;
+  }
+  .journey #takePhoto svg {width: 18px; height: 18px}
+  .journey #takePhoto .shutterLabel {display: block; font-size: 12px; line-height: 1.15}
   .arcade .hud [data-weather] {display: none}
   .arcade .osm-credit {font-size: 10px}
 }

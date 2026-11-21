@@ -123,7 +123,9 @@ function beginRace(){
    $('passAtlas').href='cung-duong.html#'+route.id;
  }
  if(cupRamp)$('raceIntro').textContent='Nhặt bánh mì để nạp nitro. Gần đích, rẽ vào nhánh trái để thử dốc bay.';
- parkCup();cupFx.reset();inside=false;placeRivals();$('routeName').textContent=route.name;$('progress').max=route.finish;
+ inside=false;
+ updateDriveViewButton($('camera'),inside);
+ parkCup();cupFx.reset();placeRivals();$('routeName').textContent=route.name;$('progress').max=route.finish;
  const choices=Object.keys(routes);$('next').href='?route='+choices[(choices.indexOf(route.id)+1)%choices.length];
  if(route.stage){
    const link=$('freePass'),light=scenicHour()===null?'':'&light='+query.get('light');
@@ -328,7 +330,11 @@ function pauseRace(){
 $('launch').onclick=startCountdown;$('pause').onclick=pauseRace;
 $('resume').onclick=()=>{$('rest').close();keys.clear();setMode(resumePhase);};
 $('again').onclick=()=>location.reload();
-$('camera').onclick=()=>{if(state.mode!=='grid')inside=!inside;};
+$('camera').onclick=()=>{
+ if(state.mode==='grid')return;
+ inside=!inside;
+ updateDriveViewButton($('camera'),inside);
+};
 function updateSoundButton(){
  $('sound').textContent=sound?'Tắt âm':'Bật âm';
  $('sound').dataset.muted=String(!sound);

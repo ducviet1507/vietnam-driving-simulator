@@ -230,7 +230,9 @@ async function startAt(place,restore=null,guided=null){
    if(!guided&&scenicPasses.has(site?.id))scenicTrace=createScenicTrace(mountainStages.find(stage=>stage.id===site.id),graph);
    nextWeatherCheck=0;roads=graph;water=null;player=nearest;source=place;distance=restore?.distance||0;hp=nitro=100;
    car.region=place[2]<10.8?'delta':place[2]>21.6||(place[1]>107&&place[2]>11&&place[2]<15)?'highlands':'city';
-   duel=null;passes=restore?.passes||0;inside=false;busy=false;npcs=[];parkOnRoad();
+   duel=null;passes=restore?.passes||0;busy=false;npcs=[];parkOnRoad();
+   inside=false;
+   updateDriveViewButton($('camera'),inside);
    if(Number.isFinite(restore?.yaw)){car.x=start.x;car.z=start.z;car.yaw=restore.yaw;trackRoad();}
    loadX=car.x;loadZ=car.z;streamRetry=0;
    departureWaterReady=null;
@@ -962,7 +964,11 @@ $('raceMode').onclick=()=>{
 };
 $('resume').onclick=()=>{$('rest').close();mode='drive';keySet.clear();};
 $('reverse').onclick=()=>{$('resume').click();recover();};
-$('camera').onclick=()=>{inside=!inside;$('camera').textContent=inside?'Góc tài xế':'Góc sau xe';if(mode==='drive')updateHud();};
+$('camera').onclick=()=>{
+ inside=!inside;
+ updateDriveViewButton($('camera'),inside);
+ if(mode==='drive')updateHud();
+};
 let postcardDialog;
 for(const button of document.querySelectorAll('[data-postcard]')){
  button.onclick=async()=>{

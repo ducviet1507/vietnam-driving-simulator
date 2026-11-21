@@ -1,4 +1,11 @@
 'use strict';
+function updateDriveViewButton(button, inside) {
+  button.dataset.nextView = inside ? 'chase' : 'cockpit';
+  button.textContent = inside ? 'Sau xe' : 'Trong xe';
+  button.title = inside ? 'Chuyển sang góc nhìn sau xe' : 'Chuyển sang góc nhìn trong xe';
+  button.setAttribute('aria-label', button.title);
+}
+
 // Keyboard and individual contacts own their input independently on hybrid devices.
 function createDriveInput() {
   const keyboard = new Set(), contacts = new Map(), active = new Set();

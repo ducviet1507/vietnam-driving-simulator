@@ -92,6 +92,15 @@ async function checkPhoneRotation(page, driving) {
 async function checkTouchPedals(page) {
   const client = await page.context().newCDPSession(page);
   await client.send('Emulation.setTouchEmulationEnabled',{enabled:true,maxTouchPoints:2});
+  const view = page.locator('#camera');
+  for (const [label, nextInside] of [['Trong xe',true], ['Sau xe',false]]) {
+    assert.equal(await view.innerText(),label);
+    assert.ok(await view.evaluate(button=>parseFloat(getComputedStyle(button).fontSize)>=12));
+    await view.click();
+    assert.equal(await page.evaluate(()=>inside),nextInside);
+  }
+  const brake = page.getByRole('button',{name:'Phanh và lùi'});
+  assert.equal((await brake.innerText()).replace(/\s+/g,' '),'Phanh Lùi');
   const point = async (selector,id) => {
     const box = await page.locator('#touch ' + selector).boundingBox();
     assert.ok(box, selector);
@@ -102,7 +111,7 @@ async function checkTouchPedals(page) {
   const nitro = await point('[data-key~=shift]',2);
   const touch = (type,...touchPoints) => client.send('Input.dispatchTouchEvent',{type,touchPoints});
   const expectInputs = (...keys) => page.waitForFunction(
-    expected=>['a','w','shift'].every(key=>held(key)===expected.includes(key)),keys,{timeout:10000});
+    expected=>['a','w','s','shift'].every(key=>held(key)===expected.includes(key)),keys,{timeout:10000});
   // Slide straight up and back with one thumb while the other thumb steers.
   const aboveGas = {...nitro,x:gas.x};
   await touch('touchStart',steer,gas);
@@ -117,6 +126,11 @@ async function checkTouchPedals(page) {
   await expectInputs('w','shift');
   await page.waitForFunction(()=>document.getElementById('nitro').value<99 && Number(document.getElementById('speed').textContent)>0);
   await touch('touchCancel');
+  await expectInputs();
+  await touch('touchStart',await point('[data-key=s]',2));
+  await expectInputs('s');
+  await page.waitForFunction(()=> (document.body.classList.contains('journey') ? car : cupBody).speed < -.4);
+  await touch('touchEnd');
   await expectInputs();
   await client.send('Emulation.setTouchEmulationEnabled',{enabled:false});
   await client.detach();
