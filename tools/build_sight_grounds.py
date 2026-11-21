@@ -26,6 +26,25 @@ WALLS = {"wall", "hedge", "city_wall"}
 GATES = {"gate", "entrance", "lift_gate", "swing_gate", "sliding_gate", "kissing_gate", "stile"}
 RESTRICTED = {"private", "no", "military", "forestry", "agricultural"}
 
+# These OSM ways cross a specific perimeter geometrically without sharing a node.
+# Museum driveway w602887554, mosque forecourt w165491090, and the four flights
+# of steps at Phú Diên (w1145070774, 777, 781, 783).
+MAPPED_GAPS = {
+    197995330: [(106.6611446, 10.8049553, 5.5)],
+    165491086: [(106.7046496, 10.7761398, 4)],
+    1145070775: [(107.7462677, 16.4957386, 2.8), (107.7460134, 16.4958224, 2.8),
+                 (107.7460917, 16.4956365, 2.8), (107.7461638, 16.4959048, 2.8)],
+}
+MAPPED_DRIVES = {602887554, 165491090}
+
+# Short, illustrative pedestrian entrances on the public frontage. Use the same
+# line for the ground finish and the opening in that site's wall.
+FRONT_WALKS = {
+    888629812: (3.2, [(105.8275619, 21.0079302), (105.8276098, 21.0080280)]),  # Chùa Bộc
+    683697174: (2.2, [(106.7058911, 10.7655729), (106.7059570, 10.7656002)]),  # Miếu Khánh An
+    1153199097: (3.4, [(106.6910790, 10.7795113), (106.6909649, 10.7796168)]),  # Tổng Giám mục
+}
+
 
 def visitor_way_width(tags):
     road = tags.get("highway")
@@ -87,14 +106,18 @@ def visitor_access(source):
     return openings, entrance_lanes, lane_ends
 
 
-def cut_openings(wall, nodes, openings):
-    cuts = []
-    for n in nodes:
+def cut_openings(wall, way, openings):
+    gaps = list(MAPPED_GAPS.get(way.id, ()))
+    if way.id in FRONT_WALKS:
+        width, coords = FRONT_WALKS[way.id]
+        entry = wall.intersection(LineString(coords))
+        if entry.geom_type == "Point" and not entry.is_empty:
+            gaps.append((entry.x, entry.y, width))
+    for n in way.nodes:
         if n.ref in openings and n.location.valid():
-            radius = openings[n.ref] / 2
-            circle = Point(n.lon, n.lat).buffer(1)
-            cuts.append(scale(circle, radius / (111320 * math.cos(math.radians(n.lat))), radius / 110900,
-                              origin=(n.lon, n.lat)))
+            gaps.append((n.lon, n.lat, openings[n.ref]))
+    cuts = [scale(Point(x, y).buffer(1), width / (2 * 111320 * math.cos(math.radians(y))),
+                  width / (2 * 110900), origin=(x, y)) for x, y, width in gaps]
     return wall.difference(union_all(cuts)) if cuts else wall
 
 
@@ -166,6 +189,7 @@ def pack(coords):
 
 def build(source, output):
     openings, entrance_lanes, lane_ends = visitor_access(source)
+    entrance_lanes.update(MAPPED_DRIVES)
     script = "global.window=global;require('./dist/tourism-catalog');console.log(JSON.stringify(VietnamTourism.entries.flatMap(s=>[[s.lon,s.lat],s.start])))"
     sites = json.loads(subprocess.check_output(["node","-e",script],cwd=ROOT))
     boxes = [box(x-.0048,y-.00455,x+.0048,y+.00455) for x,y in sites]
@@ -203,7 +227,7 @@ def build(source, output):
         if not len(nearby.query(shape,predicate="intersects")):
             continue
         if kind in WALLS:
-            shape = cut_openings(shape, obj.nodes, openings)
+            shape = cut_openings(shape, obj, openings)
             if shape.is_empty:
                 continue
         size = metres(obj.tags.get("height" if kind in {"wall","city_wall","hedge","flagpole","stele","stone","obelisk","tree","pine","palm","avenue"} else "width"))
@@ -231,6 +255,12 @@ def build(source, output):
                     tiles[i,j].append([kind,size,rings])
                     counts[kind]+=1
     # One request can serve several adjacent sight cells.
+    for width, coords in FRONT_WALKS.values():
+        cells = {(math.floor(x * GRID), math.floor(y * GRID)) for x, y in coords}
+        if len(cells) != 1:
+            raise ValueError("Frontage path must fit within one grounds cell")
+        tiles[cells.pop()].append(["walk", width, [pack(coords)]])
+        counts["walk"] += 1
     bundles = defaultdict(dict)
     for (i,j),rows in sorted(tiles.items()):
         bundles[f"{i//8}_{j//8}"][f"{i}_{j}"] = rows

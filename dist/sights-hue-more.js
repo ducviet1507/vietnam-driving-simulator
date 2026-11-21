@@ -336,9 +336,10 @@
     },
     {
       id: 'hien-lam-cac', name: 'Hiển Lâm Các & Cửu Đỉnh', city: 'Đại Nội Huế', province: 'Huế',
-      lon: 107.575450, lat: 16.468580, yaw: 0.623, width: 22, depth: 20,
-      start: [107.574870, 16.467910], viewDistance: 1200,
-      map: 'https://www.openstreetmap.org/#map=18/16.46858/107.57545',
+      lon: 107.577063, lat: 16.466738, yaw: -2.489, width: 22, depth: 20,
+      start: [107.5785552, 16.4658240], viewDistance: 1200, visitOnArrival: true,
+      arrivalNote: 'Xe dừng trên đường dẫn tới Ngọ Môn. Hiển Lâm Các và Cửu Đỉnh nằm trong khu Thế Miếu của Hoàng thành.',
+      catalogId: 'osm-way-172657564', map: 'https://www.openstreetmap.org/way/172657564',
       source: 'https://hueworldheritage.org.vn/',
       build: hienLamCac
     },

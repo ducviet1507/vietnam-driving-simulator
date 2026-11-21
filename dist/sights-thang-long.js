@@ -348,7 +348,8 @@
       tree(T,kit,side*8.5,-2.8,9.5,3.5);
     }
   }
-  register('khue-van-cac',702185155,{name:'Khuê Văn Các',lon:105.835890,lat:21.028583,start:[105.836391,21.028603],approachMeters:52,
+  register('khue-van-cac',702185155,{name:'Khuê Văn Các',lon:105.835890,lat:21.028583,start:[105.8353754,21.0273187],approachMeters:null,
+    visitOnArrival:true,arrivalNote:'Xe dừng trên phố Quốc Tử Giám, trước cổng chính Văn Miếu. Khuê Văn Các nằm bên trong, qua Đại Trung Môn.',
     yaw:-.353,width:6.6,depth:6.55,source:'https://www.vanmieu.gov.vn/vi/visit/architecture/khue-van-pavilion',photo:'https://www.vanmieu.gov.vn/vi/visit/architecture/khue-van-pavilion',
     boundary:[[-3.4,-3.4],[3.4,-3.4],[3.4,3.4],[-3.4,3.4]],reserve:(x,z,p)=>Math.abs(x)<8+p&&Math.abs(z)<14+p,
     solids:[[-2.18,-2.18,.52,.52],[-2.18,2.18,.52,.52],[2.18,-2.18,.52,.52],[2.18,2.18,.52,.52],[-9.3,0,6.1,.18],[9.3,0,6.1,.18]],

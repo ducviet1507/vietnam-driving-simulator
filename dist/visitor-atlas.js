@@ -4,7 +4,22 @@
 (()=>{
   const atlas=window.VietnamTourism,grid=32,cells=new Map();
   atlas.byId=new Map();
+  // Start on the public street at the turn for each visitor entrance.
+  const arrivals=new Map([
+    ['osm-way-197995330',[106.6612130,10.8049114],'Xe dừng ở đường Thăng Long. Đường vào bảo tàng rẽ từ đây đến sân trưng bày.'],
+    ['osm-way-165491089',[106.7047032,10.7761032],'Từ đường Đông Du, lối vào sân thánh đường dẫn đến chân bậc thềm.'],
+    ['osm-node-7372895085',[107.7470527,16.4954238],'Xe dừng ở đầu đường đi bộ. Theo lối mòn đến cầu thang phía đông để ngắm tháp bên dưới.'],
+    ['osm-way-888629812',[105.8275619,21.0079302],'Xe dừng trên phố Chùa Bộc. Lối đi bộ từ vỉa hè vào sân chùa được mô phỏng theo mặt tiền.'],
+    ['osm-way-683697174',[106.7058911,10.7655729],'Xe dừng trong hẻm 42 Hoàng Diệu. Lối đi bộ ngắn vào miếu được mô phỏng ở phía hẻm.'],
+    ['osm-way-1156119270',[106.6910790,10.7795113],'Xe dừng trên đường Nguyễn Đình Chiểu. Lối đi bộ vào sân được mô phỏng ở mặt tiền số 180.']
+  ].map(([id,start,note])=>[id,{start,note}]));
   function index(site){
+    const arrival=arrivals.get(site.id);
+    if(arrival){
+      const {start,note}=arrival,east=(start[0]-site.lon)*111320*Math.cos(site.lat*Math.PI/180);
+      Object.assign(site,{start,arrivalNote:note,visitOnArrival:true,
+        approachMeters:Math.round(Math.hypot(east,(start[1]-site.lat)*110900))});
+    }
     atlas.byId.set(site.id,site);
     const key=Math.floor(site.lon*grid)+','+Math.floor(site.lat*grid);
     if(!cells.has(key))cells.set(key,[]);

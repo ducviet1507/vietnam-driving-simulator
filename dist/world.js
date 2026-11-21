@@ -120,7 +120,7 @@ async function startAt(place,restore=null,guided=null){
    samePlace(place,baSaoDrive)?'Theo đường Điện Biên Phủ về phía Khả Phong, qua khu dân cư Ba Sao và chân núi.':
    scenicPasses.has(site?.id)?scenicPasses.get(site.id).description:
    site?.accessRoad?'Xuất phát tại '+site.name+' · Đường tham quan mô phỏng.':
-   site?.visitOnArrival?'Xe đỗ trên đường ô tô, cách '+site.name+' khoảng '+atlasDistance(site.approachMeters/1000)+' theo đường chim bay.':
+   site?.visitOnArrival?site.arrivalNote||'Xe đỗ trên đường ô tô, cách '+site.name+' khoảng '+atlasDistance(site.approachMeters/1000)+' theo đường chim bay.':
    site?.km?'Chinh phục '+fmt(site.km*1000)+' đường đèo.':[site?.kind,site?.city].filter(Boolean).join(' · ')||'Khám phá những con đường quanh điểm xuất phát.';
  if(guided){
    $('journeyTitle').textContent=guided.title;
@@ -711,7 +711,8 @@ function showMonument(monument,viewIndex=0){
  car.sightView={monument,data,x:monument.x+east,z:monument.z+south,height:view?.height??monument.height,
    angle,elevation:data.viewElevation??.27,zoom:1,hour:$('tourLight').value===''?null:Number($('tourLight').value)};
  $('tourZoom').value='1';sightPhotos.select(monument.data);
- $('tourDescription').textContent=data.description||'';$('tourDescription').hidden=!data.description;
+ const description=[data.description,data.arrivalNote].filter(Boolean).join(' ');
+ $('tourDescription').textContent=description;$('tourDescription').hidden=!description;
  $('tourTitle').textContent=monument.data.name;$('tourCamera').hidden=false;
  const visit=visitsByStop.get(monument.data.id);
  $('complexStopLabel').hidden=!(views||data.complex||visit);
@@ -964,8 +965,9 @@ function catalogStop(id){
  return legacyDestinations.get(id)||modeledStops.get(key)||catalogById.get(key);
 }
 function useSightEntrance(site){
- if(site.accessRoad)return;
- const stop=site.stops?.[0]||site,arrival=indexData?.sightAccess?.stops[stop.catalogId||stop.id];
+ const stop=site.stops?.[0]||site;
+ if(site.accessRoad||stop.arrivalNote)return;
+ const arrival=indexData?.sightAccess?.stops[stop.catalogId||stop.id];
  if(!arrival)return;
  const [edge,x,y,dx,dy]=arrival,lon=x/1e5,lat=y/1e5,cos=Math.cos(lat*Math.PI/180);
  site.start=[lon,lat];site.accessRoad=edge;
