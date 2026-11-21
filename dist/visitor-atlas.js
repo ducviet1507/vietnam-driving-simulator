@@ -46,7 +46,7 @@
       const response=await fetch(file);
       if(!response.ok)throw Error('Chưa tải được dữ liệu địa danh. Hãy thử lại.');
       const added=[];
-      for(const [site,detail] of await response.json()){
+      for(const [site,detail] of RoadTileCodec.decode(await RoadTileCodec.content(response))){
         if(atlas.byId.has(site.id))continue;
         if(detail)window.VietnamSightDetails[site.id]=detail;
         index(site);atlas.entries.push(site);added.push(site);

@@ -2,6 +2,7 @@ import {createHash} from 'node:crypto';
 import {mkdir, readFile, readdir, unlink, writeFile} from 'node:fs/promises';
 import path from 'node:path';
 import {createContext, runInContext} from 'node:vm';
+import {gzipSync} from 'node:zlib';
 
 // Run the same registrations as the source game. This keeps model entrances,
 // compound visits and legacy OSM IDs available before the national Atlas loads.
@@ -16,10 +17,12 @@ export async function packJourneyData(client) {
   const generated = new Set();
   await mkdir(directory, {recursive:true});
   async function asset(name, content, extension) {
-    const hash = createHash('sha256').update(content).digest('hex').slice(0,16);
-    const file = name + '-' + hash + '.' + extension;
+    const compressed = extension === 'json';
+    const data = compressed ? gzipSync(content, {level:9}) : content;
+    const hash = createHash('sha256').update(data).digest('hex').slice(0,16);
+    const file = name + '-' + hash + '.' + extension + (compressed ? '.gz' : '');
     generated.add(file);
-    await writeFile(path.join(directory, file), content);
+    await writeFile(path.join(directory, file), data);
     return 'journey-data/' + file;
   }
   for (const name of scripts.slice(scripts.indexOf('sight-details.js'), scripts.indexOf('vietnam-landmarks.js') + 1)) {
@@ -84,6 +87,6 @@ export async function packJourneyData(client) {
   html = html.replace('<script src="central-arch.js"></script>', '$&<script src="' + registrations + '"></script>');
   await writeFile(index, html);
   for(const name of await readdir(directory)){
-    if(/-[0-9a-f]{16}\.(json|m?js)$/.test(name)&&!generated.has(name))await unlink(path.join(directory,name));
+    if(/-[0-9a-f]{16}\.(json(?:\.gz)?|m?js)$/.test(name)&&!generated.has(name))await unlink(path.join(directory,name));
   }
 }
