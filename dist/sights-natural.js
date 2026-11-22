@@ -156,3 +156,9 @@ window.VietnamSightCoasts.push({lon:105.7792825,lat:20.6090699,holes:[],ring:[
   [105.7772428,20.6068793],[105.7784841,20.6080422],[105.7796855,20.6091412],
   [105.7797560,20.6091700],[105.7795473,20.6093864]
 ]});
+
+// Chùa Âng. A roughly four-metre moat surrounds the monastic enclosure.
+// Keep the inner court dry, including the hall south of the pond.
+window.VietnamSightCoasts.push({lon:106.30346,lat:9.91596,bankSpacing:2,
+  ring:[[106.3028737,9.9162647],[106.3038379,9.9164184],[106.3040062,9.9156225],[106.3030532,9.9154469]],
+  holes:[[[106.3029175,9.9162351],[106.3038093,9.9163773],[106.3039628,9.9156512],[106.3030813,9.9154887]]]});

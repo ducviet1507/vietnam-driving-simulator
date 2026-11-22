@@ -3,6 +3,7 @@
 // Clues belong to the tour camera. The little scenes in the reveals are original
 // keepsakes inspired by the place, including the imagined voices and movements.
 window.sightSecretStories = {
+  'chua-ang-tu-hao-nuoc-den-chanh-dien':['arch','Qua hào vào sân chùa','Từ lối vượt hào tới chánh điện, phải đi lên mấy bậc nền chính?','Nền đá xanh bên ngoài cao 1,4 m. Qua sân lát gạch còn một nền thứ hai cao thêm 0,6 m, nâng gian thờ lên phía trên hai vòng rào.'],
   'ao-ba-om-qua-go-cat-va-bo-nuoc':['leaf','Đường rễ trên gò cát','Từ mặt ao đi vào dưới rừng cây có thể thấy phần nào của những cây cổ thụ nổi hẳn lên?','Các bộ rễ lớn nhô khỏi nền cát. Có đoạn rễ vươn ngang rồi lại cắm xuống đất, tạo thành khoảng trống ở chân cây.'],
   'vung-chua-tu-bai-xe-len-san-vieng':['leaf','Trên sườn núi Thọ','Trước khi tới sân viếng, từ đường đi bộ có thể nhìn thấy mái của công trình nào?','Giữa sườn cây là hai tầng mái của tháp chuông. Con đường lát đá vòng lên phía trên, nơi Đại tướng và phu nhân an nghỉ.'],
   'vung-chua-tu-hang-phi-lao-ra-dao-yen':['shell','Hòn Nồm ngoài cửa vũng','Hòn đảo xanh đối diện dải cát Vũng Chùa còn có tên nào?','Hòn Nồm là tên khác của Đảo Yến. Đứng ở bãi cát nhìn qua tán phi lao có thể nhận ra sườn bắc cao và mũi phía nam thấp hơn.'],

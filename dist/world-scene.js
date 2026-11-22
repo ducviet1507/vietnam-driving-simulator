@@ -370,7 +370,10 @@
 
       const cellSize=32,cutoff=graphics.profile.districtRadius,detailRadius=graphics.profile.scenery;
       // A small occupancy mask lets each generated building test its footprint in constant time.
-      const maskScale=.25,maskSize=Math.ceil((2*cutoff*maskScale+8)/16)*16;
+      // The narrow surveyed moat at Chùa Âng needs two samples across its
+      // four-metre channel for both the water mesh and the immersion query.
+      const fineBank=water?.some(f=>f.bankSpacing===2&&f.points.some(p=>Math.max(Math.abs(p.x-cx),Math.abs(p.z-cz))<cutoff+16));
+      const maskScale=fineBank?.5:.25,maskSize=Math.ceil((2*cutoff*maskScale+8)/16)*16;
       // Raster cells are aligned in world metres across render-origin shifts.
       const maskX=Math.floor((cx-cutoff)/4)*4-cx,maskZ=Math.floor((cz-cutoff)/4)*4-cz;
       let wetMask=null;

@@ -424,6 +424,22 @@
       mappedEntrance:true,visitOnArrival:true,approachMeters:Math.round(Math.hypot((lon-start[0])*111320*Math.cos(lat*Math.PI/180),(lat-start[1])*110900)),
       ...(model?{viewOf:[model,index]}:{}),map:map||precincts[anchor].map||'https://www.openstreetmap.org/'+osm.split('-').slice(1).join('/')});
   }
+  const ang=atlas.entries.find(p=>p.id==='osm-way-288574348');
+  if(ang){
+    Object.assign(ang,{city:'Nguyệt Hóa',formerProvince:'Trà Vinh',mappedEntrance:true,visitOnArrival:true});
+    for(const [id,name,lon,lat,index] of [
+      ['chua-ang-hao-nuoc','Lối qua hào nước chùa Âng',106.3029877,9.9157989,1],
+      ['chua-ang-hanh-lang','Hành lang và ba cấp mái chùa Âng',106.3038469,9.9156893,2],
+      ['chua-ang-dau-hoi','Đầu hồi chạm gỗ chánh điện chùa Âng',106.3037212,9.9158208,3],
+      ['chua-ang-toan-canh','Toàn cảnh khuôn viên chùa Âng',106.3034999,9.9158874,4],
+    ]){
+      if(existing.has(id))continue;
+      atlas.entries.push({...ang,id,name,lon,lat,city:'Nguyệt Hóa',formerProvince:'Trà Vinh',kind:'Điểm ngắm cảnh',
+        locality:'Wat Angkor Raig Borei, Trà Vinh',source:'https://vinhlong.gov.vn/du-khach-old/di-tich-lich-su',
+        approachMeters:Math.round(Math.hypot((lon-ang.start[0])*109650,(lat-ang.start[1])*110900)),mappedEntrance:true,
+        visitOnArrival:true,viewOf:['chua-ang-tra-vinh',index]});
+    }
+  }
   // The pond is in the water layer. Add its public shore visits to the Atlas.
   const baOmStart=[106.3056618,9.9178216],baOmSource='https://vietnamtourism.vn/index.php/tourism/items/1395';
   for(const [id,name,kind,lon,lat,index] of [

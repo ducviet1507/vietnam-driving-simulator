@@ -94,10 +94,11 @@ function createVietnamRelief(T,scene,compact,landscapes,tunnelCut,landWidth,cave
   const hoanKiem=graph?.point?.(105.8521,21.02865);
   const plaza=graph?.point?.(105.83560,21.03695);
   const ao=graph?.point?.(106.30403,9.91766);
+  const ang=graph?.point?.(106.30346,9.91596);
   let pondStage,pondEdges;
   function localDatum(x,z,surface){
     if(!hoanKiem)return surface-base;
-    if(Math.abs(x-ao.x)<250&&Math.abs(z-ao.z)<215){
+    if(Math.abs(x-ao.x)<250&&z-ao.z>-215&&z-ao.z<320){
       // Copernicus measures the crowns around Ao Bà Om. Estimate the pond
       // stage from five open-water pixels, then grade the surrounding sandy rise.
       if(!pondEdges){
@@ -111,8 +112,17 @@ function createVietnamRelief(T,scene,compact,landscapes,tunnelCut,landWidth,cave
       const edge=Math.max(...pondEdges.map(e=>(x-e.x)*e.nx+(z-e.z)*e.nz));
       if(edge<80){
         const formation=pondStage+1.5*T.MathUtils.smoothstep(edge,15,43);
-        return formation+(surface-formation)*T.MathUtils.smoothstep(edge,43,80)-base;
+        surface=formation+(surface-formation)*T.MathUtils.smoothstep(edge,43,80);
       }
+      // The hall and moat sit on the same sandy rise. Keep roof and canopy
+      // returns out of the terrace, and meet the original grade beyond the moat.
+      const u=x-ang.x,v=z-ang.z;
+      const court=Math.max(Math.abs(.982*u-.189*v)-56,Math.abs(.189*u+.982*v)-46);
+      if(court<35){
+        const formation=pondStage+1.65+T.MathUtils.clamp((surface-pondStage)*.025,0,.35);
+        surface=formation+(surface-formation)*T.MathUtils.smoothstep(court,1,35);
+      }
+      return surface-base;
     }
     // The 1:500 public square plan (1086/QĐ-TTg, p. 10) records existing
     // lawns at 7.80–8.15 m. A surface raster includes the adjacent rooftops.

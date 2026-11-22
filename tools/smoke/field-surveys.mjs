@@ -15,6 +15,26 @@ for(const name of scripts.slice(scripts.indexOf('sight-details.js'),scripts.inde
 const {VanMieuSurvey:survey,VietnamLandmarks,VietnamTourism,NatureFieldCaptures,VietnamHydrography}=context;
 const roadIndex=JSON.parse(readFileSync(file('vn-roads/index.json'),'utf8'));
 const access=roadIndex.sightAccess.stops;
+// The enclosure outline of Chùa Âng is not a single solid roof. The surveyed
+// four-metre moat must also leave the 24 by 36 metre temple terrace on dry land.
+const ang=VietnamLandmarks.entries.find(s=>s.catalogId==='osm-way-288574348');
+const moat=context.VietnamSightCoasts.find(s=>Math.hypot(s.lon-ang.lon,s.lat-ang.lat)<.001);
+assert.deepEqual([ang.width,ang.depth],[24,36]);
+assert.equal(moat.holes.length,1);
+function insideRing(lon,lat,ring){
+  let inside=false,a=ring.at(-1);
+  for(const b of ring){
+    if((a[1]>lat)!==(b[1]>lat)&&lon<(b[0]-a[0])*(lat-a[1])/(b[1]-a[1])+a[0])inside=!inside;
+    a=b;
+  }
+  return inside;
+}
+assert.ok(insideRing(ang.lon,ang.lat,moat.holes[0]));
+for(let i=0;i<moat.ring.length;i++){
+  const a=moat.ring[i],b=moat.ring[(i+1)%4],c=moat.holes[0][i],d=moat.holes[0][(i+1)%4];
+  const width=Math.hypot((a[0]+b[0]-c[0]-d[0])*109650/2,(a[1]+b[1]-c[1]-d[1])*110900/2);
+  assert.ok(width>3.8&&width<4.2&&moat.bankSpacing<=width*.53,'Resolve both banks of the temple moat');
+}
 for(const site of [...VietnamLandmarks.entries,...VietnamTourism.entries]){
   if(site.mappedEntrance)assert.ok(!access[site.catalogId||site.id],site.name+' still has a generated access road');
   if(site.viewOf){

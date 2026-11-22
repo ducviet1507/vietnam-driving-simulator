@@ -37,6 +37,8 @@ GRAPHIC = re.compile(r"(?:^|[ _-])(logo|locator|brochure|floor plan|plan of|coat
 
 # Audited Commons file pages for sites without a specific upstream photograph.
 REVIEWED = {
+    "osm-way-288574348": "File:Chính điện chùa Âng.jpg",
+    "chua-ang-hanh-lang": "File:Chùa Âng.jpg",
     "osm-way-76041615": "File:Cổ thụ ở ao Bà Ôm.jpg",
     "ao-ba-om-mat-nuoc": "File:Ao Bà Om, Trà Vinh.jpg",
     "ao-ba-om-loi-cat": "File:Vui chơi ở ao Bà Ôm.jpg",

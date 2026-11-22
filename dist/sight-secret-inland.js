@@ -1,6 +1,7 @@
 'use strict';
 
 Object.assign(window.sightSecretStories, {
+  'chua-ang-tra-vinh':['arch','Mảng chạm trên mái','Nhìn vào giữa đầu hồi phía đông. Màu gì nằm sau những nét chạm vàng?','Phía sau những nét chạm vàng là nền xanh lục. Mảng gỗ hình tam giác nằm giữa hai bờ mái dốc.'],
   'mieu-ba-chua-xu-nui-sam': ['ridge', 'Ba vành ngói xanh', 'Từ sân miếu, hãy đếm những lần mái ngói xanh rút vào bên trên chánh điện.', 'Một vành mái che cả hàng cột; vành tiếp theo lọt vào trong, vành trên cùng hứng nắng. Ba mép ngói cùng in lên nền trời Châu Đốc.'],
   'ao-ba-om':['leaf','Vòm rễ ở Ao Vuông','Ở gốc cổ thụ, khoảng sáng phía dưới rễ có hình gì?','Một nhánh rễ đi ngang từ thân rồi hạ xuống cát, tạo thành một vòm thấp. Những cây sao, dầu quanh ao có nhiều dáng rễ khác nhau.'],
   'khu-mo-vo-nguyen-giap':['leaf','Tiếng chuông ở Vũng Chùa','Quả chuông treo dưới hai tầng mái có tên gì?','Vũng Chùa Hồng Chung là bốn chữ trên quả chuông đồng gần khu mộ. Dưới sườn núi Thọ là vũng biển nhìn ra Đảo Yến.'],
