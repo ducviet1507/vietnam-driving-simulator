@@ -13,6 +13,11 @@ run('mountain-stages.js');
 for(const file of scripts(html.match(/<template id="secretAssets">([\s\S]*?)<\/template>/)[1])) run(file);
 const {sightSecretStories:stories, VietnamLandmarks, VietnamTourism} = context;
 const visits = runInContext('heritageVisits',context);
+for(const id of new Set(['tam-chuc',...VietnamLandmarks.entries.map(place=>place.id)])) {
+  const image = readFileSync(new URL('../../dist/landmark-previews/'+id+'.webp',import.meta.url));
+  assert.ok(image.length>20 && image.toString('ascii',0,4)==='RIFF' &&
+    image.toString('ascii',8,12)==='WEBP','Missing or invalid model preview for '+id);
+}
 const stopIds=new Set([...VietnamTourism.entries.map(s=>s.id),...VietnamLandmarks.entries.map(s=>s.id)]);
 for(const [id,,stops] of visits)for(const stop of stops)
   assert.ok(stopIds.has(stop)||stopIds.has(VietnamTourism.aliases[stop]),id+' contains an unknown stop '+stop);

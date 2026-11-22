@@ -9,26 +9,48 @@
   const {batch,boulder,grotto,river,finish,walkway}=globalThis.VietnamKarst;
   const register=(node,settings,build)=>globalThis.VietnamKarst.register(sites,node,settings,build);
 
-  // Rào Thương enters this mapped mouth from the south (OSM w874635531)
-  // and continues northwest underground (w1150913681). Oxalis describes a
-  // small river entrance below the sunlit chamber, and a beach on its bank.
-  register(6358064546,{source:oxalis+'cave/hang-en-cave',yaw:0,width:62,depth:63,
+  // w874635531 follows the visible river to the southern, active entrance.
+  // w1150913681 gives only the bearing to the distant outlet. The first bend
+  // is interpreted here; the expedition's large sunlit campsite is farther in.
+  const enSections=[[0,0,10.2,7.7,-.32],[5,-1.4,11.4,9.5,-.34],[13,-5.4,13.2,12.9,-.36],
+    [22,-11.7,13.5,15.3,-.37],[33,-21.6,12.7,13.9,-.39],[42,-31,10.2,11.4,-.40]];
+  function enChannel(z){
+    if(z>=0)return z<22.7?.30*z/22.7:.30+(z-22.7)*1.1/16.7;
+    const d=-z,i=enSections.findIndex(row=>row[0]>=d);
+    if(i<0)return enSections.at(-1)[1];
+    const a=enSections[Math.max(0,i-1)],b=enSections[i];
+    return a[1]+(b[1]-a[1])*(d-a[0])/Math.max(.01,b[0]-a[0]);
+  }
+  const enWidth=z=>4.05+.83*Math.cos(.103*z)+.42*Math.sin(.27*z);
+  register(6358064546,{source:oxalis+'cave/hang-en-cave/',yaw:0,width:73,depth:89,
+    caveOpening:{sections:enSections,approach:43},foundationAt:[.08,5.2],
     mappedEntrance:true,arrivalNote:'Xe đỗ trên đường ô tô, cách Hang Én khoảng 2,6 km theo đường thẳng. Góc ngắm đưa bạn tới cửa hang bên dòng Rào Thương.',
-    shots:[['Rào Thương vào hang',0,0,11,39,.21,.13],['Bãi cát bên sông ngầm',-2,-6,8,16,.31,.10]],
-    description:'Rào Thương len dưới vòm đá rồi đổi hướng về tây bắc. Một dải cát nằm sát mép nước trong vùng sáng gần cửa Hang Én.'},
+    shots:[['Rào Thương vào cửa thấp',0,-.6,12.7,30,.13,.12],['Theo mép cát vào vòm đá',-4.1,-11,8.3,16,.31,.065]],
+    description:'Ở cửa thấp của Hang Én, Rào Thương chảy từ lòng thung lũng vào dưới vòm đá vôi. Qua bãi cát và cuội ven bờ, dòng sông tiếp tục về tây bắc trong núi. Cửa lớn đón nắng nằm sâu hơn trên hành trình.'},
     (T,kit)=>{
       const rock=batch(T);
-      grotto(rock,[[0,0,9.8,5.4,0],[6,-1,11,10,0],[14,-5,15,17,0],[24,-12,14,15,0],[31,-17,7,9,0]],30,25,.7,true);
-      river(T,kit.group,[-28,26],z=>z<0?z*.48:.032*z,z=>4.2+1.3*Math.cos(z*.11));
-      rock.grid(12,21,(u,t)=>{
-        const z=-19+25*t,x=Math.min(0,z*.48)+3.2+u*(3.8+1.6*Math.sin(t*Math.PI));
-        return [x,.14+1.28*Math.sin(u*Math.PI*.7)*Math.sin(t*Math.PI),z,0xd2bb8c,.90+.08*Math.cos(2*z)];
+      grotto(rock,enSections,34,28,.7);
+      river(T,kit.group,[-42,42],enChannel,enWidth,false,32);
+      for(const side of [-1,1])rock.grid(28,64,(u,t)=>{
+        const z=-40+t*84,w=enWidth(z),outer=z<0?Math.min(12,12+z*.035):23+.25*z;
+        const x=enChannel(z)+side*(w-.84+u*(outer-w+.84));
+        const bank=(.51+.45*Math.cos(.10*z+.71*side))*Math.sin(Math.min(1,u*2.3)*Math.PI*.49);
+        const bar=side===1?1.19*Math.exp(-(((z+6)/12)**2))*Math.sin(u*Math.PI):0;
+        const grain=.038*Math.sin(3.6*x+1.8*z)+.022*Math.cos(5*z+.8*x);
+        return [x,-.13+bank+bar+grain,z,u<.17?0xa89c73:side===1?0xc1ab82:0xa59d80,
+          (.40+.53/(1+Math.exp((-z-7)*.16)))*(.90+.09*Math.cos(1.7*x-.3*z))];
       });
-      for(let i=0;i<22;i++){
-        const z=-4+kit.random()*25,side=i%2?1:-1,sz=.3+kit.random()*1.35;
-        boulder(rock,side*(5+kit.random()*5),0,z,sz*1.7,sz,sz*1.3,i);
+      for(let i=0;i<57;i++){
+        const z=-27+kit.random()*54,side=i%2?1:-1,sz=.13+kit.random()**2*1.08;
+        const edge=enWidth(z)+.1+kit.random()*(side===1?2.3:4.0);
+        boulder(rock,enChannel(z)+side*edge,.30,z,sz*1.57,sz*.86,sz*1.21,i);
       }
-      finish(T,kit,rock);
+      // Keep one fluvial datum through both banks, throat and underground
+      // river. Beyond the banks the outer aprons meet the uncut valley sides.
+      finish(T,kit,rock,(ground,x,z)=>{
+        const outside=Math.abs(x-enChannel(z))-(z<0?14:9),t=Math.min(1,Math.max(0,outside/(z<0?19:14)));
+        return .0027*Math.max(-42,Math.min(42,z))+t*t*(3-2*t)*ground(x,z);
+      });
     });
 
   register(3157796075,{source:oxalis+'vi/tour/tham-hiem-son-doong-4n3d/',yaw:.32,width:38,depth:25,
