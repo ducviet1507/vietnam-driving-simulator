@@ -22,6 +22,19 @@ for(const site of [...VietnamLandmarks.entries,...VietnamTourism.entries]){
   }
 }
 const ids=new Set([...VietnamLandmarks.entries,...VietnamTourism.entries].map(s=>s.id));
+// Keep the two cross-province homonyms separate, and the Hương Sơn approach
+// at the coach station even when a direct link selects a stop up the mountain.
+const huongSon=runInContext("heritageVisits.find(v=>v[0]==='chua-huong-huong-son')[2]",context);
+const coachStation=[105.7877197,20.614076];
+for(const catalogId of huongSon){
+  const pin=VietnamTourism.entries.find(site=>site.id===catalogId);
+  const model=VietnamLandmarks.entries.find(site=>site.catalogId===catalogId);
+  assert.equal(model?.province,'Hà Nội',catalogId);
+  assert.deepEqual([...pin.start],coachStation,pin.name);
+  assert.deepEqual([...model.start],coachStation,model.name);
+}
+for(const [id,province] of [['chua-giai-oan','Quảng Ninh'],['chua-huong-tich-ha-tinh','Hà Tĩnh']])
+  assert.equal(VietnamLandmarks.entries.find(site=>site.id===id)?.province,province);
 const shelters=survey.features.filter(f=>f.steleRows);
 assert.equal(shelters.flatMap(f=>f.steleRows).length,82);
 assert.equal(new Set(shelters.map(f=>survey.refStops.get(f.ref))).size,10);

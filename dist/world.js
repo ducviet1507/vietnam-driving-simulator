@@ -829,6 +829,11 @@ function frameAboveTourControls(){
 }
 const tourLayout=new ResizeObserver(frameAboveTourControls);
 tourLayout.observe($('tourCamera'));tourLayout.observe($('world'));
+const tourInfo=$('tourInfo'),tourSummary=tourInfo.querySelector('summary');
+const narrowTour=matchMedia('(max-width:720px) and (orientation:portrait)');
+function fitTourNotes(){tourInfo.open=!narrowTour.matches;}
+fitTourNotes();narrowTour.addEventListener('change',fitTourNotes);
+tourSummary.onclick=e=>{if($('tourDescription').hidden)e.preventDefault();};
 function showMonument(monument,viewIndex=0,collection=null){
  const views=monument.data.views,view=views?.[viewIndex];
  const data=view?{...monument.data,...view,id:monument.data.id,name:monument.data.name}:monument.data;
@@ -841,7 +846,9 @@ function showMonument(monument,viewIndex=0,collection=null){
  $('tourZoom').value='1';sightPhotos.select(monument.data);
  fieldViews.select(monument.data,collection||visit);
  const description=[data.description,data.arrivalNote].filter(Boolean).join(' ');
- $('tourDescription').textContent=description;$('tourDescription').hidden=!description;
+ $('tourDescription').textContent=description;$('tourDescription').hidden=!description&&!view?.photoCredit;
+ tourSummary.tabIndex=$('tourDescription').hidden?-1:0;
+ tourSummary.setAttribute('aria-disabled',String($('tourDescription').hidden));
  if(view?.photoCredit){
    const link=document.createElement('a');link.href='landmark-scans/CREDITS.txt';link.target='_blank';link.rel='noopener';
    link.textContent=view.photoCredit;$('tourDescription').append(' ',link);
@@ -971,6 +978,7 @@ $('complexStop').onchange=async e=>{
  }catch{
    $('complexStop').value=car.sightView.data.id;
    $('tourDescription').hidden=false;$('tourDescription').textContent='Chưa tải được cảnh. Hãy chọn lại công trình hoặc trở lại xe.';
+   tourSummary.tabIndex=0;tourSummary.setAttribute('aria-disabled','false');tourInfo.open=true;
  }finally{loadingStop(false);}
 };
 async function closeTour(){
@@ -1180,7 +1188,7 @@ const regionalVisits=heritageVisits.map(([id,name,ids])=>{
  if(!stops.length)return null;
  const first=stops[0],visit={id,name,kind:'Quần thể',city:first.city,province:first.province,region:first.region,
    start:first.start,lon:first.lon,lat:first.lat,approachMeters:first.approachMeters,visitOnArrival:true,
-   arrivalNote:'Xe dừng ở điểm đầu tuyến. Chọn một trong '+stops.length+' điểm dừng ở mục Góc ngắm.',
+   arrivalNote:(first.arrivalNote||'Xe dừng ở điểm đầu tuyến.')+' Chọn một trong '+stops.length+' điểm dừng ở mục Góc ngắm.',
    stops,searchNames:stops.map(s=>s.name).join(' ')};
  for(const stop of stops)visitsByStop.set(stop.id,visit);
  return visit;

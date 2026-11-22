@@ -2,6 +2,10 @@
 // Anchor a regional visit on an existing road arrival. Each stop keeps its own
 // coordinates and the camera can move out to an island while the car stays parked.
 const heritageVisits=[
+  // https://thanglong.baochinhphu.vn/ung-dung-cong-nghe-de-le-hoi-chua-huong-ngay-cang-an-toan-van-minh-va-hien-dai-10324120923332171.htm
+  ['chua-huong-huong-son','Chùa Hương – từ suối Yến đến động Hương Tích',[
+    'osm-node-7173617332','osm-node-2089305124','osm-node-2835735216','osm-node-2089305122',
+  ]],
   // https://dsvh.gov.vn/di-tich-kien-truc-nghe-thuat-khu-den-thap-my-son-2943
   ['my-son','Thánh địa Mỹ Sơn',[
     'bao-tang-my-son','my-son-thap-cong-k','osm-way-198804483','my-son-nhom-h',

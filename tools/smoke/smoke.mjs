@@ -320,6 +320,18 @@ try {
     assert.ok(bay.atLookout<1&&bay.fromMarker>2000&&bay.photos>=4,'Lan Hạ tour must open on Cát Dứa and keep its offshore Atlas pin');
     console.log('PASS Lan Hạ island lookout and photographic views');
 
+    await page.setViewportSize({width:320,height:568});
+    await go('/?landmark=osm-node-2089305122&view=tour');
+    const panel=page.locator('#tourCamera'),notes=page.locator('#tourInfo summary');
+    await panel.waitFor({state:'visible'});
+    assert.equal(await page.locator('#tourTitle').innerText(),'Động Hương Tích');
+    assert.ok((await panel.boundingBox()).height<284,'Keep at least half the small portrait screen for the cave');
+    await notes.focus();await notes.press('Enter');
+    assert.match(await page.locator('#tourDescription').innerText(),/chợ Đục Khê/);
+    assert.equal(await page.locator('#tourInfo').evaluate(e=>e.open),true);
+    await page.setViewportSize({width:640,height:480});
+    console.log('PASS Hương Tích cave and expandable sightseeing notes on a small phone');
+
     await go('/cup');
     await page.locator('#launch').click();
     await page.locator('body[data-phase="drive"]').waitFor();

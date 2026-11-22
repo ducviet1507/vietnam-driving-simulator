@@ -139,6 +139,15 @@
 @media(max-width:550px){#tourCamera{width:94vw;gap:8px;padding:8px;flex-wrap:wrap}#tourCamera>div{flex:1 1 40%}#tourZoom{width:70px}}
 .placeShortcuts{display:flex;align-items:center;justify-content:flex-end;flex-wrap:wrap;gap:4px 12px}
 #tourDescription{max-width:42ch;font-size:.88rem;line-height:1.4;margin:.3rem 0;color:#ecf1e8}
+#tourInfo summary{cursor:pointer;width:fit-content;max-width:100%;overflow-wrap:anywhere}
+#tourInfo summary::marker{font-size:.75em;color:#afead2}
+#tourCamera #tourInfo summary strong{display:inline}
+#tourInfo summary[aria-disabled=true]{list-style:none;cursor:default}
+#tourInfo summary:focus-visible{outline:2px solid #afead2;outline-offset:3px}
+@media(max-width:720px) and (orientation:portrait){
+  #tourInfo summary{padding-block:7px}
+  #tourInfo #tourDescription{max-height:min(22dvh,9.8em);overflow-y:auto;overscroll-behavior:contain}
+}
 #complexStop,#tourLight{display:block;max-width:100%;margin-top:3px;padding:6px;color:#f3f5ed;background:#233632;border:1px solid #889e91;border-radius:4px}
 @media(min-width:721px){
   #tourCamera:not([hidden]):not([data-finding]){display:grid;width:min(94vw,1040px);grid-template-columns:minmax(240px,1fr) auto auto auto;

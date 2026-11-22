@@ -18,6 +18,7 @@
     ['osm-way-1424042953','Hành cung Vũ Lâm'],
     ['osm-node-4387487189','Suối Nước Moọc'],
     ['osm-node-3887715188','Hang Trinh Nữ'],
+    ['osm-node-2669659389','Đền Trình Ngũ Nhạc'],
   ]);
   for (const site of atlas.entries) {
     if (names.has(site.id)) site.name = names.get(site.id);
@@ -29,8 +30,19 @@
   const mySonGate=[108.10911,15.77344];
   // Phố Cái Bèo (w62343792) meets the visitor car park at this point.
   const benBeo=[107.057865,20.731873];
+  // Road w974572929 beside Hương Sơn coach station w768420575 (chợ Đục Khê).
+  // Hanoi's festival traffic plan keeps visitor cars outside the boat landing.
+  const huongSonParking=[105.7877197,20.614076];
   const tuanChau=[106.9894,20.91974];
   const precincts={
+    'osm-node-2089305124':{locality:'Hương Sơn',start:huongSonParking,mappedEntrance:true,visitOnArrival:true,
+      arrivalNote:'Xe dừng cạnh bến xe Hương Sơn ở chợ Đục Khê. Từ Bến Yến, đi đò đến bến Trò rồi đi bộ lên chùa Thiên Trù.'},
+    'osm-node-2089305122':{locality:'Hương Sơn',start:huongSonParking,mappedEntrance:true,visitOnArrival:true,
+      arrivalNote:'Xe dừng cạnh bến xe Hương Sơn ở chợ Đục Khê. Đi bộ hoặc xe điện đến Bến Yến, đi đò đến bến Trò rồi lên núi.'},
+    'osm-node-2669659389':{locality:'Hương Sơn',start:huongSonParking,mappedEntrance:true,visitOnArrival:true,
+      arrivalNote:'Xe dừng cạnh bến xe Hương Sơn ở chợ Đục Khê. Từ Bến Yến, đền nằm ở chặng đầu của tuyến suối Yến.'},
+    'osm-node-2835735216':{locality:'Hương Sơn',start:huongSonParking,mappedEntrance:true,visitOnArrival:true,
+      arrivalNote:'Xe dừng cạnh bến xe Hương Sơn. Chùa Giải Oan nằm trên đường núi từ Thiên Trù lên động Hương Tích.'},
     'osm-node-3887715188':{
       start:tuanChau,mappedEntrance:true,visitOnArrival:true,
       arrivalNote:'Xe dừng ở cảng Tuần Châu. Hang Trinh Nữ nằm trên đảo Bồ Hòn.'},
@@ -93,6 +105,16 @@
     [1504768248,'Đền Trung – Hùng Vương Tổ miếu','Phú Thọ','Hùng Sơn',105.3240986,21.3690193,105.322450,21.369750,189,'https://denhung.vn/tin-tuc/den-trung'],
   ];
   const existing = new Set(atlas.entries.map(site => site.id));
+  if(!existing.has('osm-node-7173617332'))atlas.entries.push({
+    id:'osm-node-7173617332',name:'Bến Yến (Chùa Hương)',region:'Bắc Bộ',province:'Hà Nội',city:'Hà Nội',locality:'Hương Sơn',
+    kind:'Bến tàu',lon:105.7792825,lat:20.6090699,start:huongSonParking,approachMeters:1040,mappedEntrance:true,visitOnArrival:true,
+    source:'https://hanoigo.hanoi.gov.vn/place/quan-the-huong-son-chua-huong-ctv-sa2nx5',
+    map:'https://www.openstreetmap.org/node/7173617332',
+    description:'Bến Yến nằm bên đường làng Yến Vỹ. Đò từ đây đi về phía tây nam theo suối Yến rồi vòng qua các dãy núi để đến bến Trò.',
+    arrivalNote:'Xe dừng trên đường cạnh bến xe Hương Sơn, phía chợ Đục Khê. Từ đó đi bộ hoặc xe điện tới bến đò.',
+    views:[{name:'Dọc bến đò làng Yến Vỹ',offset:[-11,6],viewAngle:1.01,viewRadius:58,viewElevation:.34,height:3},
+      {name:'Suối Yến về phía núi',offset:[-85,83],viewAngle:2.39,viewRadius:115,viewElevation:.31,height:5}]
+  });
   if(!existing.has('osm-node-778791182'))atlas.entries.push({
     id:'osm-node-778791182',name:'Bến Bèo',region:'Bắc Bộ',province:'Hải Phòng',city:'Hải Phòng',locality:'Cát Bà',
     kind:'Bến tàu',lon:107.0589122,lat:20.732131,start:benBeo,approachMeters:113,mappedEntrance:true,visitOnArrival:true,
