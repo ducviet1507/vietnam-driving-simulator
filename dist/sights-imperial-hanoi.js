@@ -15,7 +15,7 @@
     description:'Ba tầng đế vuông nâng thân Kỳ Đài lên khỏi những tán cây ven đường Điện Biên Phủ. Trên tám mặt của thân cột, ánh sáng lọt qua những ô hoa và khe hẹp lên đến lầu bát giác.',
     views:[{name:'Từ phía đường Điện Biên Phủ',viewAngle:.28,viewRadius:80,viewElevation:.14,height:39},
       {name:'Ô hoa trên thân bát giác',viewAngle:.69,viewRadius:20,viewElevation:.14,height:45},
-      {name:'Ba tầng đế vuông',viewAngle:-.81,viewRadius:58,viewElevation:.48,height:15}]},(T,k)=>{
+      {name:'Ba tầng đế vuông',viewAngle:-.81,viewRadius:58,viewElevation:.48,height:15}]},function*(T,k){
     const brick=0x986e58,brick2=0xa07b62,stone=0x918779;
     k.palette({brick:[brick,brick2],stone});
     let level=0;
@@ -37,11 +37,13 @@
     }
     // Cut the light openings through the eight tapering faces of the shaft.
     const rise=18.2,bottom=2.51,top=1.96,slope=(top-bottom)/rise;
-    for(let face=0;face<8;face++){
-      const angle=face*Math.PI/4,shape=new T.Shape(),half=r=>r*Math.tan(Math.PI/8);
+    const faces=[];
+    for(let pattern=0;pattern<2;pattern++){
+      yield;
+      const shape=new T.Shape(),half=r=>r*Math.tan(Math.PI/8);
       shape.moveTo(-half(bottom),0);shape.lineTo(half(bottom),0);shape.lineTo(half(top),rise);shape.lineTo(-half(top),rise);shape.closePath();
       for(let row=0;row<6;row++){
-        const y=1.6+row*2.85+face%2*.26,hole=new T.Path();
+        const y=1.6+row*2.85+pattern*.26,hole=new T.Path();
         if(row<5){
           for(let i=0;i<=40;i++){
             const a=i*Math.PI/20,r=.23+.065*Math.cos(8*a),x=r*Math.cos(a),v=y+r*Math.sin(a);
@@ -52,7 +54,12 @@
       }
       const g=new T.ExtrudeGeometry(shape,{depth:.2,bevelEnabled:false}),p=g.attributes.position;
       for(let i=0;i<p.count;i++)p.setZ(i,p.getZ(i)+bottom+slope*p.getY(i)-.20);
-      g.computeVertexNormals();k.stamp(g,brick2,0,level,0,1,1,1,angle);g.dispose();
+      g.computeVertexNormals();faces.push(g);
+    }
+    for(let face=0;face<8;face++){
+      yield;
+      const angle=face*Math.PI/4;
+      k.stamp(faces[face%2],brick2,0,level,0,1,1,1,angle);
       k.place(0,0,angle,()=>{
         // Each observation window is open between the eight corner piers.
         k.box(brick,1.02,31.72,2.42,.37,3.27,.43);
@@ -60,6 +67,7 @@
         k.box(stone,0,33.1,2.44,2.18,.39,.49);
       });
     }
+    for(const face of faces)face.dispose();
     const crown=new T.CylinderGeometry(2.86,2.86,.26,8);k.stamp(crown,stone,0,33.43,0,1,1,1,Math.PI/8);crown.dispose();
     k.stamp(k.round,0x788284,0,37.34,0,.09,7.85,.09);k.wavingFlag(6,4,.09,41.17,0);
   });
@@ -96,7 +104,7 @@
     source:'https://hoangthanhthanglong.vn/lau-tinh-bac-hau-lau/',
     description:'Hậu Lâu còn có tên là Lầu Tĩnh Bắc, dựng thời Minh Mạng. Từ sân nhìn lên có thể thấy ba tầng gạch, những đầu mái cong và lầu nhỏ nhô lên giữa nóc.',
     views:[{name:'Ba tầng nhìn từ sân',viewAngle:.34,viewRadius:29,viewElevation:.15,height:12},
-      {name:'Các đầu đao và lầu giữa',viewAngle:-.81,viewRadius:20,viewElevation:.33,height:19}]},(T,k)=>{
+      {name:'Các đầu đao và lầu giữa',viewAngle:-.81,viewRadius:20,viewElevation:.33,height:19}]},function*(T,k){
     k.palette({plaster:[ochre,trim,weathered],stone:[0x918575],timber:[0x506659]});
     k.box(0x918575,0,.24,0,18.2,.48,9.9);
     k.box(ochre,0,2.27,0,17.75,3.62,9.35);
@@ -109,6 +117,7 @@
     k.box(trim,0,3.46,4.8,2.84,.18,.19);
     k.box(weathered,0,4.13,0,18.03,.36,9.65);
     for(const x of [-6.38,6.38]){
+      yield;
       k.box(ochre,x,5.72,-.23,4.58,3.09,8.25);
       shutters(k,x,5.63,3.91,1.25,1.76,0x506659);
       arch.curvedRoof(T,k,x,7.27,-.23,5.25,8.88,1.28,tiles,0x85806a,trim,.18);
@@ -124,9 +133,11 @@
     k.box(ochre,0,9.5,3.4,8.16,.65,.56);
     k.box(0x8f8472,0,5.01,3.46,7.9,.12,.12);
     for(let i=-8;i<=8;i++)k.box(0x8f8472,i*.45,4.65,3.46,.055,.72,.07);
+    yield;
     arch.curvedRoof(T,k,0,9.83,-.05,9.02,8.95,2.03,tiles,0x777063,trim,.25);
     k.box(ochre,0,11.89,-.05,3.72,1.45,3.52);
     for(const x of [-.93,.93])k.box(0x514a41,x,11.96,1.73,.56,.68,.08);
+    yield;
     arch.curvedRoof(T,k,0,12.66,-.05,4.83,4.4,.97,tiles,0x777063,trim,.22);
   });
   stop('osm-way-185535416',{...entrance,yaw:-.096,width:43.02,depth:20.85,

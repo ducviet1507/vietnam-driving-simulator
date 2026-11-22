@@ -3,8 +3,11 @@
 // Unit-height assets are rooted at the collision pivot. Identical trees share
 // geometry and materials across a batch, including the simpler distance meshes.
 let roadsideTreeAtlas;
+const treeGeometryTemplates=new WeakMap();
 function createTreeModels(T){
   const cache=new Map();
+  if(!treeGeometryTemplates.has(T))treeGeometryTemplates.set(T,new Map());
+  const templates=treeGeometryTemplates.get(T);
   let distantMaterial;
   const atlas=roadsideTreeAtlas??=new T.TextureLoader().load('streetscape/tree-canopies.webp');
   atlas.colorSpace=T.SRGBColorSpace;
@@ -73,6 +76,12 @@ function createTreeModels(T){
   function geometry(kind,compact=false,variant=0){
     const key=kind+(compact?' grove ':' roadside ')+variant;
     if(cache.has(key))return cache.get(key);
+    // Each landmark owns its mesh buffers. Decode and triangulate the same
+    // scanned tree only once, even when its previous owner has been evicted.
+    if(templates.has(key)){
+      const copy=templates.get(key).clone();
+      cache.set(key,copy);return copy;
+    }
     const positions=[],normals=[],colors=[],uv=[],indices=[],shade=new T.Color(),tau=Math.PI*2;
     function vertex(x,y,z,nx,ny,nz,tile,u,v,tint,exposure=1){
       const inv=1/(Math.hypot(nx,ny,nz)||1);
@@ -178,6 +187,7 @@ function createTreeModels(T){
     g.setAttribute('normal',new T.Float32BufferAttribute(normals,3));
     g.setAttribute('uv',new T.Float32BufferAttribute(uv,2));
     g.setAttribute('color',new T.Float32BufferAttribute(colors,3));g.setIndex(indices);
+    templates.set(key,g.clone());
     cache.set(key,g);return g;
   }
   function grove(group,stems,compact=true){

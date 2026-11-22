@@ -995,9 +995,13 @@ window.VietnamLandmarks=(()=>{
     }
     cube.dispose();round.dispose();group.name=id;
     if(!positions.length)return group;
+    yield;
     const geometry=new T.BufferGeometry();
     geometry.setIndex(indices);
-    for(const [name,values] of [['position',positions],['normal',normals],['color',colours]])geometry.setAttribute(name,new T.Float32BufferAttribute(values,3));
+    for(const [name,values] of [['position',positions],['normal',normals],['color',colours]]){
+      geometry.setAttribute(name,new T.Float32BufferAttribute(values,3));
+      if(values.length>65536)yield;
+    }
     geometry.setAttribute('uv',new T.Float32BufferAttribute(uvs,2));geometry.computeBoundingSphere();
     geometry.setAttribute('finishKind',new T.Uint8BufferAttribute(finishKinds,1));
     const finish=createLandmarkMaterial(T,id,addition?.plasterStain??.18);
@@ -1101,6 +1105,7 @@ window.VietnamLandmarks=(()=>{
         if(additions.has(data.id)&&!data.build)continue;
         const {x,z}=graph.point(data.lon,data.lat);if(Math.hypot(x-cx,z-cz)>(data.viewDistance??1050))continue;
         if(!cached.has(data.id)){
+          yield;
           const mesh=yield* model(T,data.id);
           finishes.apply(mesh);mesh.userData.height=new T.Box3().setFromObject(mesh).max.y*(data.scale?.[1]||1);
           mesh.visible=false;scene.add(mesh);cached.set(data.id,mesh);

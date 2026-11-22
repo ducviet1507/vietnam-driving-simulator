@@ -25,7 +25,7 @@
   }
   // Four gently hollow roof planes meet on raised hips. Rows are baked per face so
   // terracotta remains visible across the small curved margins as well as the ridge.
-  function tiledRoof(T,{stamp},x,z,halfX,halfZ,eaves,rise,colour,trim,ridgeHalf){
+  function* tiledRoof(T,{stamp},x,z,halfX,halfZ,eaves,rise,colour,trim,ridgeHalf){
     const ridge=ridgeHalf??Math.max(.16,halfX-halfZ+.23),lift=Math.min(.64,halfZ*.16),colourFace=new T.Color(colour);
     const edges=[[[-halfX,-halfZ],[halfX,-halfZ],[-ridge,0],[ridge,0]],
       [[halfX,-halfZ],[halfX,halfZ],[ridge,0],[ridge,0]],
@@ -38,19 +38,29 @@
         z+lerp(lerp(c[1],d[1],u),lerp(a[1],b[1],u),v)];
     }
     for(const edge of edges){
+      yield;
       const cols=Math.max(8,Math.ceil(Math.hypot(edge[1][0]-edge[0][0],edge[1][1]-edge[0][1])/.29)),rows=7;
       const groups=[[],[],[],[]],underside=[],fascia=[],lower=p=>[p[0],p[1]-.11,p[2]];
-      for(let i=0;i<cols;i++)for(let j=0;j<rows;j++){
-        const a=at(edge,i/cols,j/rows),b=at(edge,(i+1)/cols,j/rows),c=at(edge,(i+1)/cols,(j+1)/rows),d=at(edge,i/cols,(j+1)/rows);
-        groups[(i*13+j*3+Math.floor(i/4))%4].push(...a,...b,...c,...a,...c,...d);
-        underside.push(...lower(a),...lower(c),...lower(b),...lower(a),...lower(d),...lower(c));
-        if(j===rows-1)fascia.push(...d,...c,...lower(c),...d,...lower(c),...lower(d));
+      const column=i=>Array.from({length:rows+1},(_,j)=>at(edge,i/cols,j/rows));
+      let left=column(0);
+      for(let i=0;i<cols;i++){
+        const right=column(i+1);
+        for(let j=0;j<rows;j++){
+          const a=left[j],b=right[j],c=right[j+1],d=left[j+1];
+          groups[(i*13+j*3+Math.floor(i/4))%4].push(...a,...b,...c,...a,...c,...d);
+          const la=lower(a),lb=lower(b),lc=lower(c),ld=lower(d);
+          underside.push(...la,...lc,...lb,...la,...ld,...lc);
+          if(j===rows-1)fascia.push(...d,...c,...lc,...d,...lc,...ld);
+        }
+        left=right;
       }
       for(let k=0;k<4;k++){
+        yield;
         const geom=new T.BufferGeometry();geom.setAttribute('position',new T.Float32BufferAttribute(groups[k],3));geom.computeVertexNormals();
         stamp(geom,colourFace.clone().multiplyScalar([.89,1,.93,1.04][k]).getHex(),0,0,0);geom.dispose();
       }
       for(const [vertices,tint] of [[underside,0x78533e],[fascia,trim]]){
+        yield;
         const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(vertices,3));g.computeVertexNormals();
         stamp(g,tint,0,0,0);g.dispose();
       }
@@ -140,9 +150,9 @@
     loft.absarc(0,1.03,1.17,Math.PI,0,true);loft.lineTo(1.17,0);loft.lineTo(3.75,0);loft.lineTo(3.75,2.8);loft.lineTo(-3.75,2.8);loft.closePath();
     for(const z of [3.28,8.63])profile(loft,plaster,0,10.7,z,.32);
     for(const x of [-3.62,3.62])box(plaster,x,12.08,6.13,.32,2.77,5.55);
-    tiledRoof(T,kit,0,6.12,4.72,3.66,13.41,1.36,0x8d634c,0x665b51);
-    yield;
-    box(plaster,0,14.65,6.12,4.92,.48,3.35);tiledRoof(T,kit,0,6.12,3.58,2.63,14.82,1.47,0x99715a,0x655b51);
+    yield* tiledRoof(T,kit,0,6.12,4.72,3.66,13.41,1.36,0x8d634c,0x665b51);
+    box(plaster,0,14.65,6.12,4.92,.48,3.35);
+    yield* tiledRoof(T,kit,0,6.12,3.58,2.63,14.82,1.47,0x99715a,0x655b51);
     stamp(round,0x9d9681,0,18,6.12,.055,3.65,.055);wavingFlag(1.72,1.04,0,19.8,6.12);
     for(const side of [-1,1])tree(T,kit,side*26,-13,10.4,4.6);
   }
@@ -280,7 +290,7 @@
       {name:'Đầu rồng đá năm 1467',offset:[.83,14.76],height:2.1,viewRadius:4.2,viewElevation:.11,viewAngle:1.08},
       {name:'Nền điện và hai thềm đá',offset:[0,0],height:5.6,viewRadius:42,viewElevation:.48,viewAngle:.62}],
     description:'Từ cổng 19C Hoàng Diệu, qua Đoan Môn tới thềm rồng. Hai thành rồng đá và hai thành mây hóa rồng từ năm 1467 chia thềm nam thành ba lối. Thềm nhỏ thời Lê Trung hưng nằm ở góc tây bắc nền điện.'},terrace);
-  function pavilion(T,kit){
+  function* pavilion(T,kit){
     const {box,stamp,profile,sign}=kit,grey=0xd7d3c6,trim=0xbdb9aa,red=0x9f4934,wood=0x884332,lacquer=0xb35c40;
     kit.palette({timber: wood});
     for(const [w,y,h] of [[6.55,.105,.21],[6.18,.32,.22],[5.84,.51,.16]])box(0x9f9283,0,y,0,w,h,w);
@@ -330,9 +340,9 @@
     }
     for(const x of [-1.90,1.90])for(const z of [-1.90,1.90])box(lacquer,x,5.52,z,.22,2.46,.22);
     box(wood,0,6.69,0,4.39,.18,4.39);
-    tiledRoof(T,kit,0,0,3.32,3.15,6.71,1.04,0xa8694d,0x8f6c5c,1.91);
+    yield* tiledRoof(T,kit,0,0,3.32,3.15,6.71,1.04,0xa8694d,0x8f6c5c,1.91);
     box(0x805444,0,7.51,0,3.87,.53,2.56);
-    tiledRoof(T,kit,0,0,2.66,1.99,7.71,1.00,0xaf7457,0x957565,1.74);
+    yield* tiledRoof(T,kit,0,0,2.66,1.99,7.71,1.00,0xaf7457,0x957565,1.74);
     const carved=0xb8a18b;
     for(const sx of [-1,1])for(const sz of [-1,1]){
       cord(T,stamp,carved,[[sx*3.04,7.07,sz*2.88],[sx*3.38,7.24,sz*3.22],[sx*3.42,7.52,sz*3.34],[sx*3.30,7.65,sz*3.25],[sx*3.25,7.49,sz*3.16]],.060,12);
@@ -350,7 +360,7 @@
     views:[{name:'Gác Khuê Văn',height:9.0,viewRadius:13,viewAngle:-.11,viewElevation:.075},{name:'Cửa sổ sao Khuê',height:12.0,viewRadius:7.5,viewAngle:-.17,viewElevation:.07}],
     description:'Bốn trụ gạch đỡ gác gỗ hai tầng mái giữa Văn Miếu. Bốn cửa sổ tròn có các thanh gỗ tỏa như tia sáng của sao Khuê. Gác được dựng năm 1805.'},pavilion);
 
-  function onePillar(T,kit){
+  function* onePillar(T,kit){
     const {box,stamp,round,random}=kit,stone=0xb5b3a1,light=0xc4bcab,wood=0x624733,dark=0x493b2c;
     kit.palette({stone, timber: wood});
     // Linh Chiểu pond (w697326497) and the mapped south-west flight (w697326492).
@@ -404,7 +414,7 @@
     box(0xbb8762,0,3.53,-1.06,1.24,.35,.54);ellipse(T,stamp,0xb99b53,0,4.06,-.92,.22,.34,.19);
     for(const x of [-1.80,1.80])box(dark,x,5.09,0,.22,.22,4.22);
     for(const z of [-1.83,1.83])box(wood,0,5.10,z,4.23,.25,.22);
-    tiledRoof(T,kit,0,0,2.76,2.72,5.20,1.58,0x956f58,0x8d8b78,1.08);
+    yield* tiledRoof(T,kit,0,0,2.76,2.72,5.20,1.58,0x956f58,0x8d8b78,1.08);
     for(const sx of [-1,1]){
       cord(T,stamp,0xabaa96,[[sx*.17,6.94,0],[sx*.38,7.14,0],[sx*.57,7.23,0],[sx*.70,6.96,0],[sx*.92,6.91,0],[sx*1.14,7.13,0]],.055);
       for(const sz of [-1,1]){
