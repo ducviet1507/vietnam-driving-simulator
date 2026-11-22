@@ -478,9 +478,9 @@
         return col>=0&&row>=0&&col<maskSize&&row<maskSize&&wetMask[(row*maskSize+col)*4+3]>100;
       }
       function openGround(x,z){
-        return grounds.mapped(x,z)||Boolean(wetMask&&wet(x-cx,z-cz));
+        return grounds.memorialAt(x,z)||grounds.mapped(x,z)||Boolean(wetMask&&wet(x-cx,z-cz));
       }
-      yield* district.buildSteps(graph,cx,cz,landmarks,terrain.ground,edges,openGround,Math.min(620,cutoff),terrain.revision);
+      yield* district.buildSteps(graph,cx,cz,landmarks,terrain.ground,edges,openGround,Math.min(620,cutoff),terrain.revision,grounds.memorialAt);
       const contact=(...args)=>regionContact(obstacleCells,cx,cz,graph,tunnels,landmarks,district,...args);
       function nearbyCell(x,z){return Math.floor(x/cellSize)+','+Math.floor(z/cellSize);}
       function bounds(seg,pad,fn){
@@ -743,7 +743,7 @@
           let last=null;
           for(let station=9;station<end-4;station+=spacing){
             const px=s.ax+s.fx*station+s.nx*(s.w+1.7),pz=s.az+s.fz*station+s.nz*(s.w+1.7);
-            if(blocked(px,pz,.45)||(s.w>6&&grounds.nearFixture(px,pz,spacing*.8,'lamp'))){last=null;continue;}
+            if(grounds.memorialAt(px+cx,pz+cz)||blocked(px,pz,.45)||(s.w>6&&grounds.nearFixture(px,pz,spacing*.8,'lamp'))){last=null;continue;}
             const pole=registerObstacle({id:s.seed+':pole:'+station,kind:'pole',x:px,z:pz,radius:.12,parts:[]});
             instance('concrete',unitPole,px,3.65,pz,.17,7.3,.17,0,null,pole);
             const rot=Math.atan2(s.nx,s.nz);
@@ -783,7 +783,7 @@
             if(cover===1||house&&cover>178||landClass===80||landClass===95)continue;
             if(house&&(structures.covered(graph,hx+cx,hz+cz)||(landClass!=null&&landClass!==50)))continue;
             if(!house&&[40,60,70,90].includes(landClass)&&random()>.09)continue;
-            if(blocked(hx,hz,footprint)||onApproach(hx+cx,hz+cz)||house&&district.mappedBlock(hx+cx,hz+cz))continue;
+            if(blocked(hx,hz,footprint)||onApproach(hx+cx,hz+cz)||house&&(grounds.memorialAt(hx+cx,hz+cz)||district.mappedBlock(hx+cx,hz+cz)))continue;
             if(house){
               const x=hx+cx,z=hz+cz,w=width/2+.25,d=depth/2+.30,front=-sign*(depth/2+2);
               const ring=[[-w,front],[w,front],[w,sign*d],[-w,sign*d]].map(([u,v])=>new T.Vector2(x+s.fx*u+s.nx*v,z+s.fz*u+s.nz*v));
@@ -1153,7 +1153,7 @@
       showPeople();showSigns();
       mappedLights.rebuild(graph,edges,cx,cz,signGround,(x,z)=>cells.get(nearbyCell(x,z))||[],
         (x,z,y,edge)=>!contact(x,z,.45,y,edge));
-      breakfast.place(graph,cx,cz,segments,(x,z,r)=>!blocked(x,z,r)&&!contact(x+cx,z+cz,r),driveGround);
+      breakfast.place(graph,cx,cz,segments,(x,z,r)=>!grounds.memorialAt(x+cx,z+cz)&&!blocked(x,z,r)&&!contact(x+cx,z+cz,r),driveGround);
       centralStreetscapes?.place(graph,cx,cz,segments,(x,z,r)=>!blocked(x,z,r)&&!contact(x+cx,z+cz,r),driveGround,district.streetFronts,streetLife.places);
       roadsideImpact.rebase(cx,cz);for(const o of obstacles)roadsideImpact.register(o);
       shadowStamp=-1000;
@@ -1408,7 +1408,7 @@
         if(player.modelReady&&!player.detail)player.loading=false;
         player.request();player.root.visible=true;
       }
-      pose(player,car,dt,true);player.outside.visible=!inside;
+      pose(player,car,dt,true);player.root.visible=!car.sightView;player.outside.visible=!inside;
       driveFx.mountExhaust(player.detail?.children[0],kind);
       player.shadow.visible=!car.flood;for(const shadow of player.axleShadows)shadow.visible=!car.flood;
       player.outside.rotation.set(-(car.pitch||0),0,-(car.roll||0));
@@ -1418,7 +1418,8 @@
       mirrorRotation.copy(playerRig.quaternion);
       if(inside)cabin??=window.buildDriverCabin(T,playerRig,document.getElementById('map'));
       cabin?.update(inside,(car.speed||0)*3.6,car.steer||0);
-      const closest=(traffic||[]).map(a=>({a,d:(a.x-car.x)**2+(a.z-car.z)**2})).filter(v=>v.d<360*360).sort((a,b)=>a.d-b.d);
+      const visibleTraffic=car.sightView?.data.memorialVisit?[]:traffic||[];
+      const closest=visibleTraffic.map(a=>({a,d:(a.x-car.x)**2+(a.z-car.z)**2})).filter(v=>v.d<360*360).sort((a,b)=>a.d-b.d);
       for(const [index,{a,d}] of closest.entries()){
         const kind=Object.hasOwn(trafficModels,a.kind)?a.kind:'sedan';
         let item=trafficItems.get(a.id);
@@ -1509,7 +1510,8 @@
       }
       // Fit the facade on a narrow screen without backing the eye into a tree.
       const fixedView=car.sightView?.data.viewRadius;
-      const fov=fixedView?T.MathUtils.radToDeg(2*Math.atan(Math.tan(T.MathUtils.degToRad(57/2))/Math.min(1,camera.aspect))):
+      const tourFov=car.sightView?.data.viewFov??57;
+      const fov=fixedView?T.MathUtils.radToDeg(2*Math.atan(Math.tan(T.MathUtils.degToRad(tourFov/2))/Math.min(1,camera.aspect))):
         (inside?64:car.openingPose?57+Math.min(15,speed*.28)-9*car.openingPose:car.showroom?47:57+Math.min(15,speed*.28))+driveFx.boostFov(car.driving&&car.boost,inside);
       if(Math.abs(fov-camera.fov)>.05){
         camera.fov=car.showroom||car.sightView?.data.views?fov:camera.fov+(fov-camera.fov)*(1-Math.exp(-dt*7));

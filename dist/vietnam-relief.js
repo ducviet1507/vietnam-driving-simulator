@@ -76,8 +76,20 @@ function createVietnamRelief(T,scene,compact,landscapes,tunnelCut,landWidth){
   nodes.fill(NaN);
   const base=graph&&pixels?elevation(...uvAt(0,0,graph)):0;
   const hoanKiem=graph?.point?.(105.8521,21.02865);
+  const plaza=graph?.point?.(105.83560,21.03695);
   function localDatum(x,z,surface){
     if(!hoanKiem)return surface-base;
+    // The 1:500 public square plan (1086/QĐ-TTg, p. 10) records existing
+    // lawns at 7.80–8.15 m. A surface raster includes the adjacent rooftops.
+    const dx=x-plaza.x,dz=z-plaza.z;
+    if(Math.abs(dx)<235&&Math.abs(dz)<335){
+      const edge=Math.max(Math.abs(.196*dx-.981*dz)-219,Math.abs(.981*dx+.196*dz)-100);
+      if(edge<70){
+        const formation=T.MathUtils.clamp(8+(surface-8)*.035,7.80,8.15);
+        const blend=1-T.MathUtils.smoothstep(edge,0,70);
+        return surface+(formation-surface)*blend-base;
+      }
+    }
     const east=(x-hoanKiem.x)/340,south=(z-hoanKiem.z)/525;
     if(Math.abs(east)>=1.55||Math.abs(south)>=1.55)return surface-base;
     // Hanoi H1-1B, decision 1360/QĐ-UBND §4.5.2.2: ground formation 8.4–11.5 m.

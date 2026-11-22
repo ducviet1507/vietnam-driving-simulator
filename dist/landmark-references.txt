@@ -305,8 +305,9 @@ https://www.openstreetmap.org/node/9331310775
 Hà Tĩnh và Quảng Trị
 
 Tháp Chuông Ngã ba Đồng Lộc, Can Lộc
-Tháp chuông bát giác bảy tầng mái ngói đỏ và đại hồng chung trên nền đồi lát đá tại khu di tích Ngã ba Đồng Lộc.
-https://baovanhoa.vn/van-hoa/di-san/nga-ba-dong-loc
+Tháp cao 36,6 m, gồm bảy tầng với tám mái ngói. Đại hồng chung cao 3,7 m, đường kính 1,95 m được treo ở tầng bảy.
+https://bvhttdl.gov.vn/ha-tinh-khanh-thanh-thap-chuong-dong-loc-1514.htm
+https://congdoanvietnam.vn/quy-tam-long-vang/thap-chuong-dong-loc-cong-trinh-cua-long-tri-an-46569.tld
 https://www.openstreetmap.org/node/4409284591
 
 Khu lưu niệm Đại thi hào Nguyễn Du, Nghi Xuân
@@ -325,9 +326,10 @@ https://vinwonders.com/vi/wonderpedia/news/cau-hien-luong-song-ben-hai/
 https://www.openstreetmap.org/node/1016631030
 
 Thành cổ Quảng Trị, Quảng Trị
-Cổng thành gạch cổ lỗ châu mai cùng Đài tưởng niệm trung tâm hình bát giác tri ân 81 ngày đêm.
-https://vinwonders.com/vi/wonderpedia/news/thanh-co-quang-tri/
-https://www.openstreetmap.org/way/1189797496
+Đài tưởng niệm mang hình nấm mộ chung với bốn lối lên tầng dâng hương và cây đèn thờ. Cổng Tiền mở về phía nam, có vòm gạch và vọng lâu. Đài và cổng có vị trí riêng trên bản đồ.
+https://dsvh.gov.vn/di-tich-lich-su-thanh-co-quang-tri-va-nhung-dia-diem-luu-niem-su-kien-81-ngay-dem-nam-1972-2975
+https://www.openstreetmap.org/node/3141269667
+https://www.openstreetmap.org/way/1137794040
 
 Chứng tích Nhà thờ Tam Tòa, Đồng Hới
 Tháp chuông gạch đỏ kiến trúc Bồ Đào Nha và tàn tích tường giáo đường bên bờ sông Nhật Lệ.
@@ -450,6 +452,19 @@ Cầu Vàng Bà Nà, Lăng Chủ tịch Hồ Chí Minh và Nhà thờ Đức Bà
 https://danangfantasticity.com/en/cau-vang-thuong-hieu-moi-cua-du-lich-da-nang
 https://btllang.mod.gov.vn/tin-tuc/tin-tu-bo-tu-lenh-lang/4161-qua-trinh-xay-dung-lang-chu-tich-ho-chi-minh-cong-trinh-dac-biet-co-y-nghia-chinh-tri-van-hoa.html
 https://tgpsaigon.net/bai-viet/vuong-cung-thanh-duong-duc-ba-sai-gon-37259
+
+Quảng trường Ba Đình và mặt chính Lăng Chủ tịch Hồ Chí Minh
+Ảnh chụp từ quảng trường cho thấy đoạn hàng rào hoa sắt trước thảm cỏ và các trụ đá nối dây xích quanh bồn hoa cột cờ. Tỷ lệ hoa văn, tán cây và bồn hoa trong cảnh được dựng theo ảnh. Ranh thảm cỏ và các lối đi lấy từ bản đồ, chiều rộng lối ngang dọc theo tư liệu của đơn vị quản lý.
+https://commons.wikimedia.org/wiki/File:L%C4%83ng_B%C3%A1c_-_NKS.jpg
+https://thanglong.baochinhphu.vn/le-thuong-co-dac-biet-trong-sang-quoc-khanh-tai-quang-truong-ba-dinh-103260902113729279.htm
+https://btllang.mod.gov.vn/tu-lieu/quang-truong-ba-dinh.html
+Thuyết minh quy hoạch kèm Quyết định 1086/QĐ-TTg ghi cao độ các ô cỏ hiện có khoảng 7,80–8,15 m. Địa hình mô phỏng dùng khoảng này để loại ảnh hưởng mái nhà trong dữ liệu độ cao, chuyển tiếp dần sang đường phố xung quanh.
+https://datafiles.chinhphu.vn/cpp/files/vbpq/2025/6/doc062025-06202025053320.pdf
+https://btllang.mod.gov.vn/tin-tuc/tin-tu-bo-tu-lenh-lang/565-quang-truong-ba-dinh-va-lang-chu-tich-ho-chi-minh-khong-gian-thieng-lieng-cua-thu-do-ha-noi-va-cua-ca-nuoc.html
+
+Khuôn viên tưởng niệm và nghĩa trang
+Các ranh khuôn viên công cộng có trong bộ dữ liệu memorial-grounds-data.js lấy từ OpenStreetMap (ODbL 1.0). Từng bản ghi lưu mã đối tượng và phiên bản. Đường, cây và nhà có dữ liệu riêng vẫn theo bản đồ.
+https://www.openstreetmap.org/copyright
 
 Mở rộng cụm địa danh Nghệ An (15 công trình mới) — Quảng trường Hồ Chí Minh (TP. Vinh), Bảo tàng Xô Viết Nghệ Tĩnh, Cửa Tả và Cửa Hữu Thành cổ Vinh, Đền thờ Hoàng đế Quang Trung, Chùa Đại Tuệ, Khu lăng mộ Bà Hoàng Thị Loan, Quê ngoại Hoàng Trù, Đền Cờn, Cầu Cửa Hội, Cầu Bến Thủy, Nhà thờ chính tòa Xã Đoài, Đình Trung Cần, Khu di tích Truông Bồn và Bảo tàng Quân khu 4. Tọa độ OpenStreetMap (ODbL 1.0); mô hình 3D dựng thủ tục bằng Three.js.
 https://www.openstreetmap.org/copyright

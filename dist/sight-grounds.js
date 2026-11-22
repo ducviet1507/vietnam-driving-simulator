@@ -1,4 +1,38 @@
 'use strict';
+// Only unrecorded scenery uses these outlines. Paths, trees and buildings
+// surveyed inside a memorial continue to use their normal rendering paths.
+let memorialOutlines;
+function memorialGroundsNear(graph,cx,cz){
+  if(!graph)return ()=>false;
+  memorialOutlines??=(window.MemorialGroundRings||[]).map(([, ,paths])=>{
+    let west=Infinity,south=Infinity,east=-Infinity,north=-Infinity;
+    const rings=paths.map(path=>{
+      const ring=[];let x=0,y=0;
+      for(let i=0;i<path.length;i+=2){
+        x+=path[i];y+=path[i+1];const lon=x/1e7,lat=y/1e7;
+        west=Math.min(west,lon);south=Math.min(south,lat);east=Math.max(east,lon);north=Math.max(north,lat);
+        ring.push([lon,lat]);
+      }
+      return ring;
+    });
+    return {west,south,east,north,rings};
+  });
+  const [lon,lat]=graph.geo(cx,cz),dx=1000/graph.mx,dy=1000/graph.my;
+  const nearby=memorialOutlines.filter(p=>p.east>=lon-dx&&p.west<=lon+dx&&p.north>=lat-dy&&p.south<=lat+dy)
+    .map(p=>({nw:graph.point(p.west,p.north),se:graph.point(p.east,p.south),rings:p.rings.map(r=>r.map(v=>graph.point(...v)))}));
+  return (x,z)=>nearby.some(({nw,se,rings})=>{
+    if(x<nw.x||x>se.x||z<nw.z||z>se.z)return false;
+    let inside=false;
+    for(const ring of rings){
+      let a=ring[ring.length-1];
+      for(const b of ring){
+        if((a.z>z)!==(b.z>z)&&x<(b.x-a.x)*(z-a.z)/(b.z-a.z)+a.x)inside=!inside;
+        a=b;
+      }
+    }
+    return inside;
+  });
+}
 // Metre-scale ground finishes follow the mapped rings (including holes) and
 // pedestrian ways. The relief mesh supplies their elevation and doesn't need
 // another layer of nearly coplanar triangles.
@@ -19,6 +53,8 @@ function createSightGrounds(T,small,source){
   }));
   const occupiedCells=new Map();
   let mask,fixtures=[],streetFurniture=[],originX=0,originZ=0;
+  let memorialAt=()=>false;
+  let fenceModels=[];
   async function loadLayer(layer,graph,x,z){
     const {base,states,cache}=layer;
     const [lon,lat]=graph.geo(x,z),reach=span*.5+180;
@@ -102,11 +138,19 @@ function createSightGrounds(T,small,source){
         if(surface==4.)tint=vec3(.29,.19,.12);
         if(surface==5.)tint*=vec3(1.12,.65,.49);
         if(surface==6.)tint*=vec3(.87,.94,1.);
+        // A narrow concrete path blended against grass must never decode as
+        // asphalt or dirt where the two categorical IDs mix at a texel edge.
+        if(sampleGround.b>=.501){
+          float pathCoverage=smoothstep(.21,.78,(sampleGround.b*255.-128.)/127.);
+          tint=mix(vec3(.118,.214,.065),vec3(.34,.33,.30),pathCoverage);
+        }
         diffuseColor.rgb=mix(diffuseColor.rgb,tint*grain,sampleGround.a*(1.-bankWet)*.92);
       }`);
   }
   function prepare(graph,cx,cz,landmarks){
     originX=cx;originZ=cz;fixtures=[];mask=null;uniforms.visitorActive.value=0;
+    memorialAt=memorialGroundsNear(graph,cx,cz);
+    fenceModels=(landmarks?.active||[]).filter(site=>site.data.replacesFence);
     occupiedCells.clear();streetFurniture=[];
     for(const [kind,id,lon,lat,height,diameter,tags] of datasets[1].states.get(graph)?.rows||[]){
       const point=graph.point(lon/1e7,lat/1e7),x=point.x-cx,z=point.z-cz;
@@ -121,6 +165,9 @@ function createSightGrounds(T,small,source){
     const layers=[];
     const survey=window.VanMieuSurvey,surveyOrigin=survey&&graph.point(...survey.origin);
     const treePositions=new Set();
+    if(landmarks?.active?.some(site=>site.data.id==='lang-chu-tich-ho-chi-minh')){
+      for(const position of window.BaDinhLandscape?.modeledTrees||[])treePositions.add(position);
+    }
     if(surveyOrigin&&Math.hypot(surveyOrigin.x-cx,surveyOrigin.z-cz)<1050){
       for(const f of survey.features){
         if(!['tree','courtyard','grass'].includes(f.kind))continue;
@@ -173,6 +220,7 @@ function createSightGrounds(T,small,source){
       if((!code||['steps','orchard','tea'].includes(kind))&&!(kind==='steps'&&modeledSteps.has(wayId)))
         fixtures.push({kind,size,ring,rings,finish,detail});
     }
+    window.BaDinhLandscape?.prepareGround(layers,graph,cx,cz);
     if(!layers.length)return;
     pen.setTransform(ratio,0,0,ratio,canvas.width/2,canvas.height/2);
     pen.clearRect(-half,-half,span,span);pen.lineCap=pen.lineJoin='round';
@@ -182,14 +230,14 @@ function createSightGrounds(T,small,source){
       for(let i=1;i<points.length;i++)pen.lineTo(...points[i]);
       if(closed)pen.closePath();
     }
-    function pigment(code,finish){
-      return 'rgb('+Math.round(code*255/8)+' '+Math.round((surfaces[finish]||0)*255/8)+' 0)';
+    function pigment(code,finish,coverageByte=0){
+      return 'rgb('+Math.round(code*255/8)+' '+Math.round((surfaces[finish]||0)*255/8)+' '+coverageByte+')';
     }
-    for(const {code,rings,finish} of layers){
+    for(const {code,rings,finish,coverageByte} of layers){
       if(code>=4)continue;
       pen.beginPath();
       for(const ring of rings)trace(ring,true);
-      pen.fillStyle=pigment(code,finish);pen.fill('evenodd');
+      pen.fillStyle=pigment(code,finish,coverageByte);pen.fill('evenodd');
     }
     // Detailed architectural models already include paving and landscaping.
     pen.globalCompositeOperation='destination-out';
@@ -198,7 +246,7 @@ function createSightGrounds(T,small,source){
     }
     pen.globalCompositeOperation='source-over';
     // An approach can run through a modeled gate and into its courtyard.
-    for(const {kind,code,rings,size,finish} of layers){
+    for(const {kind,code,rings,size,finish,coverageByte} of layers){
       if(code===4){
         pen.beginPath();
         for(const ring of rings)trace(ring,true);
@@ -209,7 +257,7 @@ function createSightGrounds(T,small,source){
       pen.beginPath();
       for(const ring of rings)trace(ring,false);
       pen.lineWidth=Math.min(14,size||(kind==='drive'?4:kind==='trail'?1.5:2.4));
-      pen.strokeStyle=pigment(code,finish);pen.stroke();
+      pen.strokeStyle=pigment(code,finish,coverageByte);pen.stroke();
     }
     mask=pen.getImageData(0,0,canvas.width,canvas.height).data;
     texture.image.data=new Uint8Array(mask.buffer,mask.byteOffset,mask.byteLength);
@@ -394,6 +442,10 @@ function createSightGrounds(T,small,source){
         const fx=dx/len,fz=dz/len;
         for(let j=0;j<n;j++){
           const t=j/n,u=(j+1)/n,x=ax+dx*t,z=az+dz*t,xx=ax+dx*u,zz=az+dz*u,mx=(x+xx)/2,mz=(z+zz)/2;
+          if(fence&&fenceModels.some(site=>{
+            const dx=mx+originX-site.x,dz=mz+originZ-site.z;
+            return site.data.replacesFence(dx*site.c-dz*site.s,dx*site.s+dz*site.c);
+          }))continue;
           if(Math.hypot(mx,mz)>reach||(kind==='avenue'?blocked:mappedBlocked)(mx,mz,.16,kind==='pier'||kind==='retaining_wall'))continue;
           const a=ground(x,z),b=ground(xx,zz);
           if(kind==='avenue'){
@@ -455,7 +507,7 @@ function createSightGrounds(T,small,source){
       infill.castShadow=infill.receiveShadow=true;group.add(infill);
     }
   }
-  return {load,prepare,shade,nearFixture,get streetFurniture(){return streetFurniture;},
+  return {load,prepare,shade,nearFixture,get memorialAt(){return memorialAt;},get streetFurniture(){return streetFurniture;},
     createView:()=>createSightGrounds(T,small,{datasets,projections,fenceMaterials,grain}),uniforms,
     display(view){displayed.visitorMap.value=view.uniforms.visitorMap.value;displayed.visitorOrigin.value.copy(view.uniforms.visitorOrigin.value);displayed.visitorActive.value=view.uniforms.visitorActive.value;},
     mapped:(x,z)=>groundCode(x,z)>0,accessLane:(x,z)=>groundCode(x,z)===codes.drive,build};

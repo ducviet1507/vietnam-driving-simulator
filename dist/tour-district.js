@@ -523,7 +523,7 @@ function createTourDistrict(T,scene,plaster,structures,osmBuildings,nightLights)
     for(const mesh of [...group.children]){group.remove(mesh);mesh.geometry.dispose();}
     cells.clear();blocks.clear();streetFronts.length=0;
   }
-  function* buildSteps(graph,cx,cz,landmarks,ground=()=>0,edges=[],openGround=()=>false,radius=620,terrainRevision){
+  function* buildSteps(graph,cx,cz,landmarks,ground=()=>0,edges=[],openGround=()=>false,radius=620,terrainRevision,memorialAt=()=>false){
     clear();if(!graph)return;
     const pieces=parts.rows(graph,cx,cz);
     const replaced=new Set(pieces.flatMap(row=>[row[6]?.parent,row[6]?.sourceId]).filter(Boolean));
@@ -677,7 +677,7 @@ function createTourDistrict(T,scene,plaster,structures,osmBuildings,nightLights)
       if(Math.hypot(x-cx,z-cz)>radius+Math.hypot(maxX-minX,maxZ-minZ)/2)continue;
       const original=surveyedIds.has(id);
       if(overlapsModel(landmarks,rings,box))continue;
-      const visitorArea=overlapsGarden(landmarks,rings,box);
+      const visitorArea=overlapsGarden(landmarks,rings,box)||memorialAt(x,z);
       if(!original){
         if(visitorArea||outer.some(p=>openGround(p.x,p.y))||(openGround(x,z)&&insideBuilding(x,z,rings)))continue;
         if(overlapsMapped(rings,box)||obstructsRoad(rings,box,x,z))continue;

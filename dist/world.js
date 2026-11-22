@@ -830,7 +830,7 @@ const tourLayout=new ResizeObserver(frameAboveTourControls);
 tourLayout.observe($('tourCamera'));tourLayout.observe($('world'));
 function showMonument(monument,viewIndex=0,collection=null){
  const views=monument.data.views,view=views?.[viewIndex];
- const data=view?{...monument.data,...view}:monument.data;
+ const data=view?{...monument.data,...view,id:monument.data.id}:monument.data;
  const portraitOverview=monument.data.id==='tam-chuc'&&innerWidth<innerHeight;
  const angle=portraitOverview?data.yaw-.27:(data.viewAngle??(data.yaw+.23));
  const [east,south]=view?.offset??[0,0];
@@ -926,7 +926,7 @@ $('tourView').onclick=()=>{
  const monument=visitTarget();if(monument)return openTour(monument.data);
 };
 async function openTour(site){
- mode='tour';keySet.clear();
+ mode='tour';keySet.clear();inform('',0);
  document.body.dataset.phase='tour';$('grid').hidden=true;
  const target=site.id==='tam-chuc'?tamChucOverview:site;
  loadingStop(true);
@@ -1449,11 +1449,16 @@ async function fetchJSON(path){const r=await fetch(path);if(!r.ok)throw Error('C
    if((stopId&&!findStop(stopId))||(!stopId&&savedId&&!findStop(savedId)))await VietnamTourism.loadAll();
    const landmark=stopId&&findStop(stopId)||(collection&&tamChuc);
    if(landmark||stage){
-     const view=params.get('view'),direct=landmark&&(view==='field'||view==='plan');
+     const view=params.get('view'),direct=landmark&&['field','plan','tour'].includes(view);
      const place=tourPlace(landmark||stage);
      if(direct)place[3]={...place[3],visitOnArrival:true};
      await startAt(place);
-     if(direct&&mode==='tour'){
+     if(view==='tour'&&mode==='tour'&&params.has('goc')){
+       const monument=car.sightView?.monument;
+       const index=monument?.data.views?.findIndex(v=>v.id===params.get('goc'));
+       if(index>=0)showMonument(monument,index);
+     }
+     if(direct&&mode==='tour'&&view!=='tour'){
        const button=$(view==='plan'?'sitePlan':'fieldView');
        if(!button.hidden)button.click();
      }

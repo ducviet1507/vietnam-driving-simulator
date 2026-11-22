@@ -1087,6 +1087,7 @@ window.VietnamLandmarks=(()=>{
         }
         const ref=(data.map||data.source||'').match(/openstreetmap\.org\/(way|relation)\/(\d+)\/?$/);
         if(ref)modeledBuildings.add(ref[1][0]+ref[2]);
+        for(const id of data.modeledBuildings||[])modeledBuildings.add(id);
       }
       const precinct=graph.point(105.7956,20.5528);
       if(Math.hypot(precinct.x-cx,precinct.z-cz)<1500)gardens.push({...precinct,r:445});

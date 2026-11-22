@@ -42,12 +42,20 @@ for(let i=0;i<300&&horizon.position.x!==512;i++)relief.update(512,0);
 assert.equal(horizon.position.x,512);checkEdge(-1024,64);
 const noSurvey=relief.prepare(graph,{elevation:()=>null});
 close(noSurvey.ground(17,-13),0);
-const lakeside=relief.prepare({...graph,point:()=>({x:0,z:0})},
+const hanoi={geo:(x,z)=>[105.8521+x/104000,21.02865-z/110900],
+  point:(lon,lat)=>({x:(lon-105.8521)*104000,z:(21.02865-lat)*110900})};
+const lakeside=relief.prepare(hanoi,
   {elevation:(x,z)=>19+.10*x,elevationWeight:()=>1});
 const lakeStreet=lakeside.altitude(0,0);
 assert.ok(lakeStreet>=8.4&&lakeStreet<=11.5);
 assert.ok(Math.abs(lakeside.grade(0,0,Math.PI/2))<.02);
 close(lakeside.altitude(1000,0),119);
+const plaza=hanoi.point(105.83560,21.03695);
+const square=relief.prepare(hanoi,{elevation:(x,z)=>16+.04*(x-plaza.x),elevationWeight:()=>1});
+for(const [x,z] of [[0,0],[45,70],[-65,-85]]){
+  const altitude=square.altitude(plaza.x+x,plaza.z+z);
+  assert.ok(altitude>=7.80&&altitude<=8.151);
+}
 vm.runInContext(readFileSync(new URL('../../dist/drivetrain.js',import.meta.url),'utf8'),context);
 const body={reverseDelay:0},downhill={grade:-.16,top:35,power:8,reverse:true};
 let speed=1.2;

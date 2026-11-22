@@ -59,6 +59,7 @@ window.sightSecretStories = {
   'nga-ba-dong-loc': ['leaf', 'Một cành lá ở ngã ba', 'Giữa những lối rẽ Đồng Lộc, có khoảng lặng dành để nhớ.', 'Một cành lá nhỏ đặt trên trang ghi hai chữ Đồng Lộc. Khoảng giấy dưới tên địa danh dành để tưởng nhớ mười nữ thanh niên xung phong.'],
   'hien-luong': ['sail', 'Hai bờ một dòng', 'Đường nước Bến Hải đi qua dưới cầu bằng bao nhiêu nét?', 'Một nét mực xanh nối bóng đôi bờ dưới cầu Hiền Lương. Nét bút đi từ bờ này đến bờ kia trong một hơi.'],
   'thanh-co-quang-tri': ['drop', 'Giọt nước thành cổ', 'Một giọt nước bên Thạch Hãn sẽ giữ được ký ức gì?', 'Một gợn nước nhỏ chạm bờ rồi lặng xuống. Trang sổ dành riêng một dòng để ghi nhớ những người đã ngã xuống ở Thành cổ Quảng Trị.'],
+  'cong-tien-thanh-co-quang-tri': ['arch', 'Vòm cửa Nam', 'Từ đầu cầu qua hào, nhìn lên phía trên vòm gạch.', 'Đường qua cầu dẫn đến cổng Tiền của Thành cổ Quảng Trị. Vọng lâu nằm ngay trên vòm cửa.'],
   'cau-rong': ['dragon', 'Chiếc vảy nhìn ra biển', 'Con rồng thép trên sông Hàn để rơi chút nắng nào?', 'Một vệt nắng trượt từ đuôi qua ba nhịp vòm vàng. Tới đầu rồng, nó cuộn lại thành chiếc vảy nhỏ nhìn ra biển.'],
   'cau-vang-ba-na': ['arch', 'Sợi chỉ giữa hai tay', 'Hai bàn tay Bà Nà đang chuyền cho nhau thứ gì?', 'Một sợi nắng mắc giữa hai đầu ngón tay đá. Sợi chỉ cong dần thành dáng Cầu Vàng, đủ cho một bóng mây đi ngang.'],
   'hai-van-quan': ['ridge', 'Mây qua cửa ải', 'Một áng mây cần tấm vé nào để qua Hải Vân Quan?', 'Mây lọt qua vòm cửa, ra phía bên kia mang theo một viền núi. Dưới mép tranh đèo Hải Vân vẫn còn màu biển.'],

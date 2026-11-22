@@ -27,7 +27,12 @@
       m.onBeforeCompile=s=>{
         const varying='varying vec3 civicP; varying vec3 civicN;\n';
         s.vertexShader=varying+s.vertexShader.replace('#include <begin_vertex>','#include <begin_vertex>\n civicP=position; civicN=normal;');
-        s.fragmentShader=varying+s.fragmentShader.replace('#include <color_fragment>',`#include <color_fragment>
+        const graniteNoise=granite?`float civicMineral(vec2 p){
+          vec2 i=floor(p),f=fract(p); f=f*f*(3.-2.*f);
+          vec4 h=fract(sin(dot(i,vec2(17.7,93.7))+vec4(0.,17.7,93.7,111.4))*43758.54);
+          return mix(mix(h.x,h.y,f.x),mix(h.z,h.w,f.x),f.y);
+        }\n`:'';
+        s.fragmentShader=varying+graniteNoise+s.fragmentShader.replace('#include <color_fragment>',`#include <color_fragment>
           vec2 plane=abs(civicN.y)>.6?civicP.xz:vec2(abs(civicN.x)>.63?civicP.z:civicP.x,civicP.y);
           vec2 unit=plane/vec2(${granite?'1.87,1.06':'.266,.085'});
           unit.x+=.5*mod(floor(unit.y),2.);
@@ -36,11 +41,124 @@
           float fade=1.-smoothstep(.25,.88,max(aa.x,aa.y));
           float grain=fract(sin(dot(floor(unit),vec2(17.7,93.7)))*43758.54)-.5;
           diffuseColor.rgb*=1.+grain*${granite?'.12':'.21'}*fade;
+          ${granite?`vec2 slab=plane+grain*11.;
+            float dark=civicMineral(slab*vec2(2.3,1.7));
+            float mineral=civicMineral(slab*8.+dark*2.6);
+            float streak=civicMineral(slab*vec2(8.2,.72));
+            vec2 flake=slab*83.;float distant=smoothstep(.15,1.1,max(fwidth(flake).x,fwidth(flake).y));
+            float mica=fract(sin(dot(floor(flake),vec2(53.7,29.2)))*15378.31);
+            diffuseColor.rgb*=1.+fade*(.21*(dark-.5)+.20*(mineral-.5)+.14*(streak-.5)+(mica-.5)*.32*(1.-distant));`:''}
           diffuseColor.rgb=mix(diffuseColor.rgb,${granite?'diffuseColor.rgb*.63':'vec3(.39,.23,.145)'},(1.-joint.x*joint.y)*fade*.78);`);
       };
       const mesh=new T.Mesh(g,m);mesh.castShadow=mesh.receiveShadow=true;group.add(mesh);
     }
     return {face,block,finish};
+  }
+
+  // Public garden details visible in the NKSTTSSHNVN photograph (Oct 2022)
+  // and the Government News flag ceremony photographs (2 September 2026).
+  // The rail represents the photographed stretch along the outer lawn.
+  const lawnRail={x:2,z:177.6,bays:24,pitch:2.65};
+  const flagGarden={x:2,z:73.5,halfWidth:6.3,halfDepth:4.9};
+
+  function gardenRail(T,group){
+    const {x,z,bays,pitch}=lawnRail;
+    const iron=0x29382e,edge=0x455447;
+    const bars=[],cube=new T.BoxGeometry(),pose=new T.Object3D();
+    const bar=(x,y,w,h,d,colour=iron)=>bars.push([x,y,w,h,d,colour]);
+    for(let bay=0;bay<bays;bay++){
+      const mid=x+(bay+.5-bays/2)*pitch;
+      for(const h of [.16,.92])bar(mid,h,pitch,.047,.064);
+      bar(mid,.54,.044,.76,.056);
+      for(const direction of [-1,1]){
+        const motif=[[.40,.92],[.40,.80],[.99,.80],[.99,.30],[.36,.30],[.36,.63],[.78,.63],[.78,.44],[.58,.44]];
+        for(let j=1;j<motif.length;j++){
+          const [a,b]=motif[j-1],[c,d]=motif[j];
+          bar(mid+direction*(a+c)/2,(b+d)/2,Math.abs(c-a)+.037,Math.abs(d-b)+.037,.048);
+        }
+      }
+    }
+    for(let bay=0;bay<=bays;bay++){
+      const px=x+(bay-bays/2)*pitch;
+      bar(px,.50,.15,1,.15);
+      bar(px,.095,.228,.19,.228,edge);
+      bar(px,.965,.215,.063,.215);bar(px,1.025,.175,.060,.175);
+      bar(px,1.083,.245,.066,.245,edge);
+    }
+    const mesh=new T.InstancedMesh(cube,new T.MeshStandardMaterial({roughness:.62,metalness:.26}),bars.length);
+    mesh.name='ba-dinh-lawn-ironwork';mesh.castShadow=mesh.receiveShadow=true;group.add(mesh);
+    const colour=new T.Color();
+    bars.forEach((v,i)=>mesh.setColorAt(i,colour.setHex(v[5])));
+    function followGround(ground){
+      // Hold each post plumb. The horizontal bars follow the slope of their bay.
+      for(const [i,[px,py,w,h,d]] of bars.entries()){
+        const floor=ground(px,z),slope=w>.3?(ground(px+w/2,z)-ground(px-w/2,z))/w:0;
+        pose.position.set(px,py+floor,z);pose.rotation.z=Math.atan(slope);
+        pose.scale.set(w*Math.hypot(1,slope),h,d);pose.updateMatrix();mesh.setMatrixAt(i,pose.matrix);
+      }
+      mesh.instanceMatrix.needsUpdate=true;mesh.computeBoundingSphere();
+    }
+    followGround(()=>0);return followGround;
+  }
+
+  function flowerBed(T){
+    const {halfWidth:w,halfDepth:d}=flagGarden;
+    // UVs track the horizontal planting plan, including the sloping outer faces.
+    const rings=[[w-.34,d-.34,.13],[w-.34,d-.34,.32],[w-.94,d-.94,.55],[w-1.26,d-1.26,.55],
+      [w-1.75,d-1.75,.77],[w-2.65,d-2.65,.82]];
+    const pos=[],uv=[],indices=[];
+    for(const [a,b,h] of rings){for(const [x,z] of [[-a,b],[a,b],[a,-b],[-a,-b]]){
+      pos.push(x,h,z);uv.push(.5+x/(2*w),.5-z/(2*d));
+    }}
+    for(let i=1;i<rings.length;i++)for(let j=0;j<4;j++){
+      const a=(i-1)*4+j,b=(i-1)*4+(j+1)%4;indices.push(a,b,b+4,a,b+4,a+4);
+    }
+    const top=(rings.length-1)*4;indices.push(top,top+1,top+2,top,top+2,top+3);
+    const geometry=new T.BufferGeometry();geometry.setAttribute('position',new T.Float32BufferAttribute(pos,3));
+    geometry.setAttribute('uv',new T.Float32BufferAttribute(uv,2));geometry.setIndex(indices);geometry.computeVertexNormals();
+    const canvas=document.createElement('canvas');canvas.width=768;canvas.height=600;
+    const ctx=canvas.getContext('2d');ctx.fillStyle='#384e32';ctx.fillRect(0,0,768,600);
+    let seed=16452;
+    const random=()=>{seed=(Math.imul(seed,1664525)+1013904223)>>>0;return seed/4294967296;};
+    const purple=['#8055a0','#a879bc','#9867b2','#b383c6'],yellow=['#e5ae13','#f4c429','#edba15','#f5cb35'];
+    const red=['#982437','#bc2847','#d43c52','#a42339'];
+    for(let j=0;j<24500;j++){
+      const x=random()*768,y=random()*600,margin=Math.min(w*(1-Math.abs(x/384-1)),d*(1-Math.abs(y/300-1)));
+      const palette=margin<.81||margin>1.71&&margin<2.22?purple:margin>2.68?red:yellow;
+      const r=1.4+random()*2.5;
+      ctx.fillStyle=palette[Math.floor(random()*palette.length)];ctx.beginPath();ctx.ellipse(x,y,r*1.13,r,random()*3,0,Math.PI*2);ctx.fill();
+    }
+    const map=new T.CanvasTexture(canvas);map.colorSpace=T.SRGBColorSpace;map.anisotropy=4;
+    const mesh=new T.Mesh(geometry,new T.MeshStandardMaterial({map,roughness:.94,side:T.DoubleSide}));
+    mesh.name='ba-dinh-flower-terraces';mesh.receiveShadow=true;return mesh;
+  }
+
+  function flagFlowerGarden(T,group){
+    const garden=new T.Group(),{x,z,halfWidth:w,halfDepth:d}=flagGarden;
+    garden.name='ba-dinh-flag-garden';garden.position.set(x,0,z);group.add(garden);garden.add(flowerBed(T));
+    const stone=new T.MeshStandardMaterial({color:0xa6906f,roughness:.9}),posts=[];
+    const corners=[[-w,-d],[w,-d],[w,d],[-w,d]];
+    corners.forEach(([x0,z0],i)=>{
+      const [x1,z1]=corners[(i+1)%4],n=i%2?4:5;
+      for(let j=0;j<n;j++)posts.push([x0+(x1-x0)*j/n,z0+(z1-z0)*j/n]);
+    });
+    const pose=new T.Object3D(),post=new T.InstancedMesh(new T.BoxGeometry(),stone,posts.length*3);
+    const linksPerSpan=24,link=new T.InstancedMesh(new T.TorusGeometry(1,.17,4,8),
+      new T.MeshStandardMaterial({color:0x685d46,roughness:.54,metalness:.43}),posts.length*linksPerSpan);
+    posts.forEach(([px,pz],i)=>{
+      [[.32,.64,.15],[.65,.06,.13],[.72,.08,.165]].forEach(([y,h,s],k)=>{
+        pose.position.set(px,y,pz);pose.rotation.set(0,0,0);pose.scale.set(s,h,s);pose.updateMatrix();post.setMatrixAt(i*3+k,pose.matrix);
+      });
+      const [nx,nz]=posts[(i+1)%posts.length],dx=nx-px,dz=nz-pz,span=Math.hypot(dx,dz);
+      for(let k=0;k<linksPerSpan;k++){
+        const t=(k+.5)/linksPerSpan,slope=.88*(2*t-1)/span;
+        pose.position.set(px+dx*t,.62-.88*t*(1-t),pz+dz*t);
+        pose.rotation.set(0,-Math.atan2(dz,dx),Math.atan(slope),'YXZ');pose.rotateX(k%2?1.04:.12);
+        pose.scale.set(span/linksPerSpan*.64,.036,.032);pose.updateMatrix();link.setMatrixAt(i*linksPerSpan+k,pose.matrix);
+      }
+    });
+    for(const mesh of [post,link]){mesh.castShadow=mesh.receiveShadow=true;garden.add(mesh);}
+    return garden;
   }
 
   function mausoleum(T,{group,box,tapered,stamp,wavingFlag}){
@@ -54,11 +172,11 @@
     }
     b(0x9da29e,1.8,6.27,13.42,7.00,2.90,7.94);
     b(0x797e7a,1.8,2.40,11.01,6.99,4.8,1.24);
-    box(0x454038,1.8,2.38,11.68,4.25,4.56,.20);
-    for(const dx of [-.91,.91]){
-      box(0x78492d,1.8+dx,2.38,11.82,1.75,4.33,.11);
-      for(const strip of [-.48,0,.48])box(0x98613c,1.8+dx+strip,2.37,11.90,.035,4.21,.04);
-    }
+    b(0x80665e,1.8,2.29,11.69,4.60,4.56,.18);
+    b(0x674e4a,1.8,1.99,11.83,3.10,3.96,.19);
+    box(0x96633f,1.8,1.89,11.96,2.71,3.74,.10);
+    box(0x2f2928,1.8,1.84,12.02,2.48,3.60,.045);
+    for(const side of [-1,1])box(0x79503b,1.8+side*1.12,1.84,12.08,.15,3.58,.35,side*.26);
     // The upper hall stands above a double setback and behind twenty piers.
     b(0x929794,1.43,8.55,-3.05,27.2,1.7,25.8);
     b(0x8a908d,1.63,9.89,-3.15,23.1,1,22.5);
@@ -75,18 +193,20 @@
     b(0x90958e,1.52,20.66,-2.98,16.62,.38,16.45);
     b(0x9a9d93,1.38,21.19,-3.04,12.75,.88,12.90);
     stone.finish();
-    const plate=document.createElement('canvas');plate.width=1024;plate.height=256;
-    const ctx=plate.getContext('2d');ctx.fillStyle='#613d47';ctx.textAlign='center';ctx.textBaseline='middle';
-    ctx.font='600 61px Arial';ctx.fillText('CHỦ TỊCH',512,59);
-    ctx.font='600 102px Arial';ctx.fillText('HỒ - CHÍ - MINH',512,178,1000);
-    const lettering=new T.CanvasTexture(plate);lettering.colorSpace=T.SRGBColorSpace;
-    const text=new T.Mesh(new T.PlaneGeometry(10.7,1.60),new T.MeshStandardMaterial({map:lettering,transparent:true,alphaTest:.34,roughness:.73}));
-    text.position.set(1.46,19.61,7.49);group.add(text);
-    box(0x9b968c,1.8,.26,14.97,40.3,.52,8.29);
+    const plate=document.createElement('canvas');plate.width=1536;plate.height=256;
+    const ctx=plate.getContext('2d');ctx.fillStyle='#5f3741';ctx.textAlign='center';ctx.textBaseline='middle';
+    for(const [line,font,y,width] of [['CHỦ TỊCH',78,58,498],['HỒ - CHÍ - MINH',117,179,1370]]){
+      ctx.font='bold '+font+'px Arial';ctx.setTransform(width/ctx.measureText(line).width,0,0,1,768,0);ctx.fillText(line,0,y);
+    }
+    const lettering=new T.CanvasTexture(plate);lettering.colorSpace=T.SRGBColorSpace;lettering.anisotropy=4;
+    const text=new T.Mesh(new T.PlaneGeometry(10.7,1.90),new T.MeshStandardMaterial({map:lettering,transparent:true,alphaTest:.02,roughness:.78}));
+    text.position.set(1.46,19.60,7.50);group.add(text);
+    const apron=new T.Mesh(new T.BoxGeometry(40.3,.52,8.29),new T.MeshStandardMaterial({color:0x9b968c,roughness:.90}));
+    apron.position.set(1.8,.26,14.97);apron.receiveShadow=true;group.add(apron);
     for(let j=0;j<5;j++)box(0x96948c,1.8,.07+j*.049,21.04-j*.50,40.9-j*.15,.14+j*.098,.72);
     // Stone planters and clipped trees at the public forecourt.
     const leaves=new T.IcosahedronGeometry(1,1);
-    for(const side of [-1,1])for(const [offset,z,scale] of [[11.8,19.1,.58],[19.5,18.7,.91]]){
+    for(const side of [-1,1])for(const [offset,z,scale] of [[8.8,21.2,.68],[15.4,22.3,.91]]){
       const x=1.7+side*offset;
       box(0xbdb6a6,x,.57,z,2.25*scale,.52,2.06*scale);
       tapered(0xcfc6b2,x,.99,z,1.32*scale,1.12*scale,.60,.85,4);
@@ -95,10 +215,24 @@
         (1.57-j*.25)*scale,(.66-j*.04)*scale,(1.2-j*.20)*scale,.47*j);
     }
     leaves.dispose();
-    // Country flag on the surveyed 25 m mast (already represented by a bare
-    // default fixture). The reserve disk below prevents a second mast.
-    tapered(0xb2b5af,2.0,12.50,73.5,.15,.073,25,1,12);
-    wavingFlag(6.5,4.33,2.0,24.72,73.5);
+    const fitPlanting=window.BaDinhLandscape?.addPlanting(T,{group,stamp,tapered,box});
+    const fitRail=gardenRail(T,group),garden=flagFlowerGarden(T,group);
+    const mast=new T.Mesh(new T.CylinderGeometry(.073,.15,25,12),new T.MeshStandardMaterial({color:0xb2b5af,metalness:.48,roughness:.46}));
+    mast.position.y=12.50;garden.add(mast);
+    // The cloth and the mast share the flower bed's ground datum on the square.
+    wavingFlag(6.5,4.33,0,24.72,0);garden.add(group.children[group.children.length-1]);
+    const feet=apron.geometry.attributes.position,rest=feet.array.slice();
+    group.userData.fitGround=ground=>{
+      fitPlanting?.(ground);
+      const heights=new Map();
+      fitRail((x,z)=>{if(!heights.has(x))heights.set(x,ground(x,z));return heights.get(x);});
+      garden.position.y=ground(flagGarden.x,flagGarden.z);
+      for(let i=0;i<feet.count;i++)if(rest[3*i+1]<0){
+        const floor=ground(apron.position.x+rest[3*i],apron.position.z+rest[3*i+2]);
+        feet.setY(i,Math.min(rest[3*i+1],floor-apron.position.y-.22));
+      }
+      feet.needsUpdate=true;apron.geometry.computeBoundingSphere();
+    };
   }
 
   function cathedral(T,{palette, group,box,stamp,tapered,outline}){
@@ -264,17 +398,23 @@
   }
 
   const mausId='osm-way-37625751',churchId='osm-way-801950766';
+  const publicGardenSolids=[[flagGarden.x,flagGarden.z,flagGarden.halfWidth+.083,flagGarden.halfDepth+.083],
+    [lawnRail.x,lawnRail.z,lawnRail.bays*lawnRail.pitch/2+.123,.123]];
   // Boundary points are the actual OSM building rings, in metres in each
   // site's façade frame. Adjacent mapped buildings keep their own meshes.
   (window.VietnamSights??=[]).push({
     ...sites.get(mausId),id:'lang-chu-tich-ho-chi-minh',catalogId:mausId,yaw:1.373,width:42,depth:38,
+    memorialVisit:true,modeledBuildings:['w1213801282','w697161892','w697161893','w1092549155:part','w1092549156:part','w1092549157:part','w1092549158:part'],
     boundary:[[18.4,9],[22.4,9],[22.4,17.4],[-18.8,17.4],[-18.8,9.6],[-14.5,9.5],[-14.6,-19],[18.4,-19]],
-    solids:[[1.9,-4.7,16.5,14.3],[1.8,13.4,20.6,4.0],[2,73.5,.23,.23]],
-    reserve:(x,z,p)=>Math.abs(x-1.9)<21+p&&z> -20-p&&z<22+p||Math.hypot(x-2,z-73.5)<1.2+p,
-    viewAngle:1.67,viewElevation:.14,viewRadius:62,
-    views:[{name:'Mặt chính nhìn từ quảng trường',height:22,viewAngle:1.64,viewElevation:.13,viewRadius:64},
-      {name:'Trục cột cờ Ba Đình',height:24,viewAngle:1.76,viewElevation:.10,viewRadius:117}],
-    description:'Lăng nhìn ra Quảng trường Ba Đình. Trên bệ đá tam cấp, hai mươi cột vuông bao quanh khối đá hồng. Dòng chữ đá ngọc màu mận chín nằm trên diềm mái mặt chính.',
+    solids:[[1.9,-4.7,16.5,14.3],[1.8,13.4,20.6,4.0],...publicGardenSolids],
+    replacesFence:(x,z)=>Math.abs(x-lawnRail.x)<=lawnRail.bays*lawnRail.pitch/2&&Math.abs(z-lawnRail.z)<1.5,
+    reserve:(x,z,p=0)=>Math.abs(x-1.9)<21+p&&z> -20-p&&z<22+p||
+      publicGardenSolids.some(([cx,cz,w,d])=>Math.abs(x-cx)<w+p&&Math.abs(z-cz)<d+p),
+    viewAngle:1.56,viewElevation:-.114,viewRadius:141,viewFov:34,
+    views:[{name:'Bồn hoa cột cờ và mặt chính Lăng',height:29,viewAngle:1.56,viewElevation:-.114,viewRadius:141},
+      {id:'hang-rao-tham-co',name:'Qua hàng rào thảm cỏ Ba Đình',height:20,viewAngle:1.49,viewElevation:-.068,viewRadius:193,viewFov:23},
+      {name:'Bậc thềm và hàng cột đá',height:22,viewAngle:1.57,viewElevation:-.105,viewRadius:61,viewFov:36}],
+    description:'Từ Quảng trường Ba Đình, có thể nhìn qua hàng rào sắt hoa văn ô vuông ở mép thảm cỏ về phía Lăng. Quanh chân cột cờ là bồn hoa viền dây xích. Phía sau hai cây đại, hai mươi cột vuông bao quanh khối đá hồng. Dòng chữ đá ngọc màu mận chín nằm trên diềm mái mặt chính.',
     source:'https://btllang.mod.gov.vn/tin-tuc/tin-tu-bo-tu-lenh-lang/4161-qua-trinh-xay-dung-lang-chu-tich-ho-chi-minh-cong-trinh-dac-biet-co-y-nghia-chinh-tri-van-hoa.html',
     photo:window.VietnamSightDetails?.[mausId]?.photo??'https://commons.wikimedia.org/wiki/File:L%C4%83ng_B%C3%A1c_-_NKS.jpg',build:mausoleum
   },{
