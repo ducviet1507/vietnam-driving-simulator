@@ -18,7 +18,7 @@ function createSightPhotos(){
       const photos=await index;
       if(sequence!==token)return;
       const ref=data.map?.match(/openstreetmap\.org\/(node|way|relation)\/(\d+)/);
-      const photo=photos[data.catalogId||data.id]||ref&&photos['osm-'+ref[1]+'-'+ref[2]];
+      const photo=photos[data.photoCatalogId||data.catalogId||data.id]||ref&&photos['osm-'+ref[1]+'-'+ref[2]];
       if(!photo)return;
       current={name:data.name,photo};link.href=photo.page;link.textContent='Xem ảnh thực địa';
       link.setAttribute('aria-haspopup','dialog');link.hidden=false;

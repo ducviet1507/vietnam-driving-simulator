@@ -13,7 +13,21 @@ window.NatureFieldCaptures=(()=>{
   function video(name,id,credit,scope){
     return {name,url:'https://www.youtube-nocookie.com/embed/'+id,source:'https://www.youtube.com/watch?v='+id,credit,scope};
   }
+  function goThap(name,scene,scope){
+    const url='https://smarttravel-vr.mobifone.vn/vr-tour/khu-di-tich-go-thap/'+scene;
+    return {name,url,source:url,credit:'Khu di tích Gò Tháp · Smart Travel MobiFone Khu vực 9',scope};
+  }
   return {
+    'osm-node-8459780109':[
+      goThap('Toàn cảnh Gò Tháp','64c1dfd73ac0811fa5dbafcc','Nhìn từ trên cao xuống giồng đất, các mái nhà và đồng ruộng bao quanh khu di tích.'),
+      goThap('Nền đền Vishnu ở Gò Tháp Mười','64c7810b3ac0811fa5dbb038','Quan sát phế tích gạch tại điểm khai quật.'),
+      goThap('Hiện vật đá văn hóa Óc Eo','64c782223ac0811fa5dbb03a','Xem các khối đá kiến trúc được trưng bày tại di tích.'),
+      goThap('Đền thần Mặt Trời phía nam chùa Tháp Linh','64c7d0573ac0811fa5dbb043','Xem nền đền ở phía nam khuôn viên chùa.'),
+      goThap('Chánh điện chùa Tháp Linh','64c7d37f3ac0811fa5dbb065','Nhìn quanh không gian thờ Phật trong chánh điện.'),
+      goThap('Đền Shiva ở Gò Minh Sư','64c7d0573ac0811fa5dbb047','Xem các lớp gạch còn lại tại Gò Minh Sư.'),
+      goThap('Tượng Thiên hộ Võ Duy Dương','64c7d37f3ac0811fa5dbb060','Điểm chụp trong khu đền tưởng niệm nghĩa quân Gò Tháp.'),
+      goThap('Chánh điện Miếu Bà Chúa Xứ','64c7d37f3ac0811fa5dbb05e','Xem không gian thờ Bà phía trong tiền điện.')
+    ],
     'osm-relation-21425134':[{
       name:'Tham quan trưng bày thường xuyên',url:'https://3d.vnfam.vn/vi',source:'https://3d.vnfam.vn/vi',
       credit:'Bảo tàng Mỹ thuật Việt Nam',scope:'Đi qua các phòng trưng bày trên ba tầng và chọn hiện vật để nghe thuyết minh.'

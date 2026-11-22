@@ -44,6 +44,7 @@ DAK_NONG = "https://bdt.daknong.gov.vn/documents/10184/58882285/1_6%20SU%20KIEN%
 # Height, width, morphology, source. Width of flowing water changes with the
 # season; the Dray Sáp profile represents the documented dry-season state.
 DOCUMENTED = {
+    "osm-node-6215416985": (None, None, "limestone-steps", "https://csdl.vietnamtourism.gov.vn/dest/?item=1015"),
     "osm-node-3093994368": (57, 30, "plunge", "https://lamdong.gov.vn/sites/book/diemhen2000/bai7.htm"),
     "osm-node-3266893772": (54, 20, "overhang", "https://nhandan.vn/ve-dep-ky-vi-thac-hang-en-post659631.html"),
     "osm-node-2440165325": (40, None, "plunge", "https://sapa-tourism.com/golden-stream-and-love-waterfall-an-easy-trip-in-the-middle-of-the-forest/"),

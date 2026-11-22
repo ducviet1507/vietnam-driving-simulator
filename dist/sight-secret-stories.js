@@ -3,6 +3,7 @@
 // Clues belong to the tour camera. The little scenes in the reveals are original
 // keepsakes inspired by the place, including the imagined voices and movements.
 window.sightSecretStories = {
+  'suoi-cham-thac-hieu-pu-luong':['drop','Nước về bản','Ở Chiềng Lau, nước suối theo đường nào mới tới ruộng?','Dọc mương, những ống tre trên vành guồng múc nước lên cao rồi đổ vào máng dẫn về ruộng. Ở bản Hiêu, nước từ vùng núi đá vôi chảy tự nhiên qua các bậc thác.'],
   'chua-thay-tay-phuong':['arch','Hai ngôi chùa xứ Đoài','Ở chùa Thầy và chùa Tây Phương, hai con đường dẫn người xem tới các tòa chùa khác nhau thế nào?','Chùa Thầy nhìn ra hồ Long Trì với thủy đình và hai cầu ngói. Đến Tây Phương, đường bậc đá ong lên đỉnh đồi dẫn tới ba tòa chùa song song.'],
   'dinh-va-thac-bach-ma':['drop','Từ lầu ngắm tới dòng suối','Sau khi ngắm núi ở Hải Vọng Đài, nước hiện ra dưới những dạng nào trên tuyến?','Ở Ngũ Hồ, nước tụ trong các lòng hồ và tràn qua ghềnh đá. Tới Đỗ Quyên, dòng thác đổ xuống vách núi.'],
   'dat-ngap-nuoc-tram-chim':['leaf','Nhìn Tràm Chim từ hai độ cao','Từ đài quan sát xuống bến khách, tầm mắt thay đổi ra sao?','Ở trên đài có thể nhìn qua tán tràm và các khoảng cỏ. Xuống gần mặt nước, bờ kênh và những thân tràm hai bên hiện rõ hơn.'],

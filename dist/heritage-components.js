@@ -34,7 +34,26 @@
   // Hanoi's festival traffic plan keeps visitor cars outside the boat landing.
   const huongSonParking=[105.7877197,20.614076];
   const tuanChau=[106.9894,20.91974];
+  // The tower footprint and the park boundary lead to the same visitor tour.
+  atlas.aliases['osm-way-1228794103']='osm-relation-15805643';
   const precincts={
+    // w686360197 follows the stream through the waterfall pin. Visitors leave
+    // their cars on the approach road and walk the last stretch into Bản Hiêu.
+    'osm-node-6215416985':{name:'Thác Hiêu – Pù Luông',locality:'Bản Hiêu',start:[105.21903,20.46099],
+      mappedEntrance:true,visitOnArrival:true,photo:'https://dantoctongiao.vn/den-pu-luong-chiem-nguong-thac-hieu-va-cam-nhan-van-hoa-thai-1784326501147.htm',
+      arrivalNote:'Xe dừng trên đường vào bản Hiêu. Đường bộ tới thác dài khoảng 800 m.',
+      views:[{name:'Bậc đá nhìn từ hạ lưu',height:1.7,viewAngle:-.15,viewRadius:15,viewElevation:.22,
+        description:'Suối Hiêu bắt nguồn từ hang đá vôi. Trong chuỗi thác dài khoảng 800 m, cảnh này tái hiện một đoạn ngắn có các vũng nước và gờ đá vôi nối tiếp nhau.'},
+        {name:'Dòng nước qua sườn đá',height:1.7,viewAngle:.72,viewRadius:17,viewElevation:.39,
+          description:'Từ bờ suối nhìn chếch qua các bậc nước. Tim suối bám theo bản đồ. Bề rộng dòng chảy và hình dáng từng gờ đá được ước dựng.'}]},
+    'osm-relation-15805643':{locality:'Vồ Dơi',start:[104.9594476,9.1976786],mappedEntrance:true,visitOnArrival:true,
+      arrivalNote:'Xe dừng trước cổng Vồ Dơi ở đường vào từ ĐT.985C. Tuyến tham quan bên trong vườn dài khoảng 3 km tới đài quan sát.'},
+    'osm-node-5227610721':{locality:'Sa Đéc',start:[105.7685973,10.2940567],mappedEntrance:true,visitOnArrival:true,
+      arrivalNote:'Xe dừng trên đường Nguyễn Huệ, trước lối qua sân vào nhà cổ Huỳnh Thủy Lê.'},
+    'osm-node-8459780109':{locality:'Đốc Binh Kiều',start:[105.828311,10.603885],mappedEntrance:true,visitOnArrival:true,
+      source:'https://dsvh.gov.vn/di-tich-khao-co-va-kien-truc-nghe-thuat-go-thap-2966',
+      description:'Giữa Đồng Tháp Mười, các nền đền bằng gạch của văn hóa Óc Eo nằm gần chùa Tháp Linh và các đền, miếu tiếp tục đón khách hành hương. Mở cảnh thực 360° để đến từng điểm.',
+      arrivalNote:'Xe dừng bên đường xuyên khu di tích. Từ đây đi bộ vào mái che phế tích đền Vishnu.'},
     // At Thạch Động the OSM monument pin is on the adjacent hill. The cave
     // model is at Tiên Sơn Tự, at the independent geological survey tower.
     'osm-node-2327003316':{name:'Thạch Động – Hà Tiên',kind:'Hang động',locality:'Hà Tiên',
@@ -124,6 +143,14 @@
     [1504768248,'Đền Trung – Hùng Vương Tổ miếu','Phú Thọ','Hùng Sơn',105.3240986,21.3690193,105.322450,21.369750,189,'https://denhung.vn/tin-tuc/den-trung'],
   ];
   const existing = new Set(atlas.entries.map(site => site.id));
+  // The water wheels beside the rice fields have a separate pin from the reserve
+  // boundary and the bamboo raft landing. The approach ends on village road w888275965.
+  if(!existing.has('osm-node-13508679485'))atlas.entries.push({
+    id:'osm-node-13508679485',name:'Guồng nước suối Chàm – Pù Luông',region:'Trung Bộ',province:'Thanh Hóa',city:'Thanh Hóa',locality:'Chiềng Lau',
+    kind:'Điểm tham quan',lon:105.2108098,lat:20.3813461,start:[105.2107981,20.3802488],approachMeters:130,mappedEntrance:true,visitOnArrival:true,
+    map:'https://www.openstreetmap.org/node/13508679485',source:'https://nhandan.vn/tre-chieng-lau-post789295.html',
+    arrivalNote:'Xe dừng trên đường làng phía nam cánh đồng. Từ đây đi bộ theo bờ ruộng tới cụm guồng nước.'
+  });
   if(!existing.has('osm-node-7173617332'))atlas.entries.push({
     id:'osm-node-7173617332',name:'Bến Yến (Chùa Hương)',region:'Bắc Bộ',province:'Hà Nội',city:'Hà Nội',locality:'Hương Sơn',
     kind:'Bến tàu',lon:105.7792825,lat:20.6090699,start:huongSonParking,approachMeters:1040,mappedEntrance:true,visitOnArrival:true,

@@ -32,14 +32,14 @@
        diffuseColor.rgb*=mix(vec3(.65,.73,.68),vec3(1.12,1.06,.99),smoothstep(.028,.095,oxidation));`);};
     return m;
   }
-  function waterMaterial(T,fall){
+  function waterMaterial(T,fall,limestone=false){
     // Use the normal renderer lighting; moving highlights are visible on the
     // sheets and the downstream pool even when viewed from the riverbank.
     const m=new T.MeshPhongMaterial({vertexColors:true,side:T.DoubleSide,specular:0xa3bdb9,shininess:fall?19:54,
       transparent:true,depthWrite:false});
     const clock={value:0},quiet=matchMedia('(prefers-reduced-motion: reduce)');
     m.onBeforeRender=()=>{clock.value=quiet.matches?0:(performance.now()%600000)*.001;};
-    m.customProgramCacheKey=()=>fall?'hydro-falling-water':'hydro-pool-water';
+    m.customProgramCacheKey=()=>fall?'hydro-falling-water':limestone?'hydro-shallow-stream':'hydro-pool-water';
     m.onBeforeCompile=s=>{
       s.uniforms.streamClock=clock;
       const vary='varying vec2 streamUV; varying float waterCoverage;\n';
@@ -63,7 +63,7 @@
            float eddy=sin(r*6.1-streamClock*3.7+drift*4.);
            float nearFall=exp(-r*.17);
            float light=pow(max(0.,mix(ripple,eddy,nearFall)),5.);
-           diffuseColor.rgb+=vec3(.08,.13,.12)*light*(1.-smoothstep(.12,.63,fwidth(r)));
+           diffuseColor.rgb+=vec3(.08,.13,.12)*light*${limestone?'.22':'1.'}*(1.-smoothstep(.12,.63,fwidth(r)));
            diffuseColor.a=waterCoverage*(.79+.16*drift);`));
     };
     return m;
@@ -168,6 +168,85 @@
         if(z>=a[1]&&z<=b[1])return a[0]+(b[0]-a[0])*(z-a[1])/(b[1]-a[1]);
       }
       return pts.at(-1)[0];
+    };
+  }
+  // A short reach of the mapped Hiêu stream. The DEM sets the fall between
+  // successive pools. The width and shapes of the encrusted sills are estimated.
+  function limestoneSteps(T,group,p){
+    const parts=[],centre=watercourse(p),levels=[-20,-14.2,-8.5,-1.1,4.8,12.1,20];
+    const rock=surface(T,group,parts,rockMaterial(T)),pool=surface(T,group,parts,waterMaterial(T,false,true));
+    const whitewater=surface(T,group,parts,waterMaterial(T,true));
+    const width=z=>p.width*(.88+.21*Math.sin(z*.49)+.12*Math.cos(z*.73+.4));
+    const bend=(x,z)=>.83*Math.sin(.68*x+.14*z)+.26*Math.cos(1.5*x-.12*z);
+    const fade=z=>clamp((20-Math.abs(z))/2,0,1);
+    rock.grid(32,128,(u,v)=>{
+      const z=40*v-20,bank=u*2-1,half=width(z),x=bank*(half+2.4);
+      const edge=Math.abs(bank),ripple=Math.cos(x*2.1+z*.91)*Math.sin(z*1.5-x);
+      const shoulder=clamp((Math.abs(x)-half*.68)/1.2,0,1);
+      const station=z-bend(x,z),moss=.5+.5*Math.sin(x*1.3+.3*z)*Math.sin(z*.94-x*.4);
+      let sill=0;
+      for(let i=1;i<levels.length;i++){
+        const lip=levels[i]-(levels[i]-levels[i-1])*.36;
+        sill=Math.max(sill,Math.exp(-((station-lip)**2)*2.1));
+      }
+      const y=(-.16+shoulder*(.24+.33*ripple)+.16*ripple+sill*(.23+.34*moss))*(1-edge**6)-.24*edge**6;
+      const colour=tint(tint(0x807257,0xa19673,shoulder),0x626b38,moss*(.44+.51*sill));
+      return [centre(z)+x,y,z,x*.53,z*.54,colour,fade(z)*(1-edge**5)];
+    });
+    pool.grid(28,128,(u,v)=>{
+      const z=40*v-20,across=u*2-1,x=across*width(z);
+      const edge=Math.abs(across),opacity=fade(z)*clamp((1-edge)*5,0,1);
+      const mineral=.48+.22*Math.sin(x*1.3+z*.42)+.21*Math.cos(z*.73-x*.82);
+      return [centre(z)+x,.035,z,x,z,tint(0x385d4b,0x8d9667,mineral+.22*edge),fade(z),opacity*.83];
+    });
+    for(let i=1;i<levels.length;i++){
+      const length=levels[i]-levels[i-1];
+      for(let run=0;run<5;run++){
+        whitewater.grid(4,12,(u,v)=>{
+          const station=levels[i-1]+length*(.57+v*.42);
+          const across=-.89+(run+u*.85)*.36,x=across*width(station);
+          const z=station+bend(x,station);
+          const strength=Math.sin(v*Math.PI)*(.35+.58*Math.sin(u*Math.PI))*(.72+.28*Math.cos(2*x+i));
+          return [centre(z)+x,.075,z,x,-z,0xceebdb,fade(z),fade(z)*strength];
+        });
+      }
+    }
+    const roots=[],ridges=[];
+    for(let i=0;i<36;i++){
+      const z=-19+(i*13.81)%38,side=i%2?1:-1,phase=i*2.39996;
+      const x=centre(z)+side*(width(z)+.6+1.1*Math.cos(phase));
+      const radius=.42+.67*(.5+.5*Math.sin(phase));
+      ridges.push([x,z,radius*1.35,radius*(.53+.28*Math.cos(z)),radius]);
+      roots.push([x+side*(1.1+radius),.06,z,.72+.49*Math.sin(z*.31)**2,0]);
+    }
+    stones(rock,ridges,1.39);
+    rock.finish();pool.finish();whitewater.finish();bankFerns(T,group,parts,roots,1.39);
+    // Woodland closes over the upper reach in field photographs. Leave the
+    // downstream bank open for both visitor cameras.
+    const woods=[[-7.4,-10,8.6],[8.6,-8.5,10],[-9,-16.7,11.2],[6.4,-18,8.8],
+      [1.6,-22.6,9.3],[-4.1,-25,11.4],[12,-19,9.5],[-12,-4.6,8.8],[-8.2,4.3,6.6]];
+    const firstTree=group.children.length;
+    window.CentralArch.trees(T,{group},woods.map(([x,z,h])=>({x:centre(z)+x,z,h,width:h*.83})));
+    const trees=group.children.slice(firstTree);
+    group.userData.fitGround=ground=>{
+      for(const {position} of trees)position.y=ground(position.x,position.z);
+      const heights=levels.map(z=>ground(centre(z),z));
+      for(const {g,ys,weight} of parts){
+        const pos=g.attributes.position;
+        for(let i=0;i<pos.count;i++){
+          const x=pos.getX(i),z=pos.getZ(i),mix=weight[i];
+          if(mix===0){pos.setY(i,ground(x,z)+ys[i]);continue;}
+          const station=clamp(z-bend(x-centre(z),z),levels[0],levels.at(-1));
+          let reach=1;
+          while(reach<levels.length-1&&station>levels[reach])reach++;
+          const t=(station-levels[reach-1])/(levels[reach]-levels[reach-1]);
+          const face=clamp((t-.58)/.36,0,1),drop=.18*t+.82*face*face*(3-2*face);
+          const waterline=heights[reach-1]+drop*(heights[reach]-heights[reach-1])+.34;
+          const base=mix===1?waterline:ground(x,z)*(1-mix)+waterline*mix;
+          pos.setY(i,base+ys[i]);
+        }
+        pos.needsUpdate=true;g.computeVertexNormals();g.computeBoundingSphere();
+      }
     };
   }
   function waterfall(T,group,p,seed){
@@ -399,6 +478,7 @@
     (window.VietnamSights??=[]).push({...site,id,catalogId:id,surveyed:true,source:p.reference??(p.way?'https://www.openstreetmap.org/way/'+p.way:site.map),
       photo:reference[id]?.photo??site.photo,width:span,depth:span*.82,solids:[],yaw:p.yaw,
       reserve(x,z,pad=0){
+        if(p.form==='limestone-steps')return Math.abs(z)<20+pad&&Math.abs(x)<p.width+pad;
         const across=(isCave?p.width*.62:p.width*.65+1.7)+pad;
         const along=(isCave?1.5:Math.min(19,p.width*.34+p.height*.15+2))+pad;
         return (x/across)**2+(z/along)**2<1;
@@ -406,6 +486,7 @@
       viewAngle:p.yaw+viewOffset,viewElevation,viewRadius:Math.max(isCave?7:13,span*.95,p.height*1.95),
       description:axisText+heightText+widthText+seasonal+(isCave?' Hình dáng vách đá ở cửa hang được ước dựng.':' Các bậc đá và dòng nước được ước dựng theo địa hình.'),
       build(T,{group}){
+        if(p.form==='limestone-steps'){limestoneSteps(T,group,p);return;}
         if(isCave)cave(T,group,p,seed);else waterfall(T,group,p,seed);
         // Feather decorative rock returns into the terrain before the mapped
         // driving approach. Leave the measured opening and cascade untouched.

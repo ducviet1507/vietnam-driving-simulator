@@ -64,6 +64,29 @@ for(const name of readdirSync(file('landmark-scans/')).filter(f=>f.endsWith('.gl
 }
 const three=createRequire(import.meta.url)('../../dist/three.min.js');
 const T={...three,TextureLoader:class{load(){return new three.Texture();}}};
+// The Hiêu terraces follow a long, shallow reach even after terrain is reloaded.
+// A generic waterfall at this pin produces a tall isolated wall.
+const hieu=VietnamLandmarks.entries.find(s=>s.id==='osm-node-6215416985');
+const cascade=new T.Group();
+context.atob=atob;
+for(const renderer of ['tree-scan-data.js','tree-models.js'])runInContext(readFileSync(file(renderer),'utf8'),context);
+hieu.build(T,{group:cascade});
+const bed=cascade.children.find(mesh=>mesh.material.customProgramCacheKey()==='hydro-shallow-stream');
+assert.ok(bed,hieu.name);
+const slope=(x,z)=>.02*x-.195*z;
+cascade.userData.fitGround(slope);
+const flow=bed.geometry.attributes.position;
+let upper=-Infinity,lower=Infinity;
+for(let i=0;i<flow.count;i++){
+  const x=flow.getX(i),z=flow.getZ(i),height=flow.getY(i);
+  assert.ok(Math.abs(height-slope(x,z))<2,'A step rises too far above the streambed');
+  if(z<-18)upper=Math.max(upper,height);
+  if(z>18)lower=Math.min(lower,height);
+}
+assert.ok(Number.isFinite(upper-lower)&&upper-lower>6,'The sampled reach should descend downstream');
+const previous=flow.getY(0);
+cascade.userData.fitGround((x,z)=>slope(x,z)+2.5);
+assert.ok(Math.abs(flow.getY(0)-previous-2.5)<.002,'The river must move with the updated terrain');
 runInContext(readFileSync(file('tour-district.js'),'utf8'),context);
 const draw=context.createVanMieuArchitecture(T);
 const project={point:(lon,lat)=>({x:(lon-survey.origin[0])*103900,z:(survey.origin[1]-lat)*110900})};

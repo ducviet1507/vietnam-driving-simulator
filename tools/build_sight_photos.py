@@ -37,6 +37,9 @@ GRAPHIC = re.compile(r"(?:^|[ _-])(logo|locator|brochure|floor plan|plan of|coat
 
 # Audited Commons file pages for sites without a specific upstream photograph.
 REVIEWED = {
+    "osm-node-2669659389": "File:Chua Huong 069.jpg",
+    "osm-node-8459780109": "File:Ruins of Go Thap Muoi, Go Thap archaeological site.jpg",
+    "osm-node-5227610721": "File:La maison de Huynh Thuy Le (Sa Dec, Vietnam) (6662996139).jpg",
     "osm-node-2326969109": "File:Lăng Tổng Trấn Hà Tiên - Mạc Cửu (52352815996).jpg",
     "osm-node-2326969092": "File:Phù Dung Cổ Tự - Hà Tiên (52352816716).jpg",
     "osm-node-2327003316": "File:Thach Dong pagoda.jpg",
