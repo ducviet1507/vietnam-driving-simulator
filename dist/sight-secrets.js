@@ -5,6 +5,7 @@ function createSightSecrets(getView, playChime) {
   const glint = el('secretGlint'), capture = el('secretCapture'), direction = el('secretDirection');
   const journal = el('stampJournal'), prefix = 'vivu.sight-stamp.v1.';
   const records = new Map();
+  const modelIds = new Map(window.VietnamLandmarks.entries.filter(p=>p.catalogId).map(p=>[p.catalogId,p.id]));
   const tolerance = .14;
   const gestures = {turtle:'Chạm mặt nước', sail:'Đón gió', shell:'Áp tai nghe', drop:'Chạm giọt nước',
     lotus:'Mở cánh sen', wing:'Thả cánh chim', leaf:'Lật chiếc lá', dragon:'Đánh thức nét rồng',
@@ -59,14 +60,16 @@ function createSightSecrets(getView, playChime) {
     return records.get(id);
   }
   function remember() {
-    const existing = readRecord(site.id);
-    if (existing) return;
+    if (savedStamp(site)) return;
     const record = {id:site.id, name: site.name, location: site.locality || site.province || site.city || '',
       motif: stamp.motif, title: stamp.title, seed: stamp.seed, reveal: stamp.reveal,
       coordinates:stamp.coordinates, time: Date.now()};
     records.set(site.id, record);
     try { localStorage.setItem(prefix + site.id, JSON.stringify(record)); }
     catch { persistent = false; }
+  }
+  function savedStamp(place) {
+    return readRecord(place.id) || (place.catalogId && place.catalogId!==place.id && readRecord(place.catalogId));
   }
   function changeMode(next) {
     if (next === 'idle' && duskView) { duskView.hour = originalHour; duskView = null; }
@@ -91,7 +94,7 @@ function createSightSecrets(getView, playChime) {
     const seed = identity(place.id), side = seed % 2 ? 1 : -1;
     target = (view.data.viewAngle ?? view.data.yaw ?? 0) + side * (.45 + (seed % 80) / 100);
     el('secretOpen').disabled = false;
-    el('secretOpen').textContent = readRecord(site.id) ? 'Xem lại dấu ẩn' : 'Tìm dấu ẩn';
+    el('secretOpen').textContent = savedStamp(site) ? 'Xem lại dấu ẩn' : 'Tìm dấu ẩn';
     el('secretPlace').textContent = site.name;
     changeMode('idle');
   }
@@ -104,7 +107,7 @@ function createSightSecrets(getView, playChime) {
     if (!site || !view || (view.angle === previousAngle && view.zoom === previousZoom)) return;
     previousAngle = view.angle; previousZoom = view.zoom;
     const gap = difference(), aligned = Math.abs(gap) <= tolerance;
-    field.hidden = mode === 'idle' && (Math.abs(gap) > .36 || records.has(site.id));
+    field.hidden = mode === 'idle' && (Math.abs(gap) > .36 || records.has(site.id) || records.has(site.catalogId));
     if (field.hidden) return;
     const position = 50 + Math.max(-1, Math.min(1, gap / 1.15)) * 40;
     glint.style.left = position.toFixed(2) + '%';
@@ -133,15 +136,15 @@ function createSightSecrets(getView, playChime) {
   function reveal() {
     if (!site || tour.getAttribute('aria-busy') === 'true') return;
     if (mode === 'hunt' && capture.disabled) return;
-    const prior = !!readRecord(site.id);
+    const prior = savedStamp(site);
     remember();
     el('secretOpen').textContent = 'Xem lại dấu ẩn';
     el('secretTitle').textContent = stamp.title;
     el('secretStory').textContent = stamp.reveal;
     el('secretSaved').textContent = persistent ? (prior ? 'Dấu trong sổ tay' : 'Đã đóng vào sổ tay') : 'Đã giữ trong phiên chơi';
-    el('secretPrint').replaceChildren(window.createSightSecretArt(stamp.motif, stamp.seed, site.id, stamp.coordinates));
+    el('secretPrint').replaceChildren(window.createSightSecretArt(stamp.motif, stamp.seed, prior?.id || site.id, stamp.coordinates));
     el('secretApparition').dataset.motif = stamp.motif;
-    el('secretApparition').replaceChildren(window.createSightSecretGlyph(stamp.motif, stamp.seed, site.id));
+    el('secretApparition').replaceChildren(window.createSightSecretGlyph(stamp.motif, stamp.seed, prior?.id || site.id));
     apparitionAngle = getView().angle;
     changeMode('found');
     playChime(stamp.motif);
@@ -157,8 +160,9 @@ function createSightSecrets(getView, playChime) {
       return;
     } finally { if (site === place) el('secretOpen').disabled = false; }
     if (site !== place || tour.getAttribute('aria-busy') === 'true') return;
-    stamp = story(place);
-    if (readRecord(site.id)) return reveal();
+    const saved = savedStamp(site);
+    stamp = saved || story(place);
+    if (saved) return reveal();
     el('secretOpen').textContent = 'Tìm dấu ẩn';
     el('secretClue').textContent = stamp.clue;
     capture.textContent = gestures[stamp.motif] || 'Đóng dấu';
@@ -229,7 +233,12 @@ function createSightSecrets(getView, playChime) {
         if (key?.startsWith(prefix)) readRecord(key.slice(prefix.length));
       }
     } catch { /* Show the stamps discovered in this session. */ }
-    journalRows = [...records.values()].sort((a,b) => b.time - a.time);
+    const places = new Map();
+    for(const record of records.values()){
+      const id=modelIds.get(record.id)||record.id;
+      if(!places.has(id)||record.id===id)places.set(id,record);
+    }
+    journalRows = [...places.values()].sort((a,b) => b.time - a.time);
     if (journalRows.length) {
       try { await loadAssets(); }
       catch { el('stampCount').textContent = 'Chưa tải được hình con dấu. Hãy đóng và mở lại sổ.'; return; }

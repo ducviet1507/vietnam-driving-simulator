@@ -131,50 +131,51 @@
     ]);
   }
 
-  // 3. Đàn Tế Nam Giao Thành Nhà Hồ (Vĩnh Lộc, Thanh Hóa) — UNESCO 3-tier interlocking green limestone Sky Altar + King's Well
+  // The upper stone platform and the well sit on separate grades. Their
+  // relative positions follow the visible remains on the Đốn Sơn hillside.
   function danTeNamGiaoTayDo(T, kit) {
-    const { box, stamp, round } = kit;
-    const blueStone = 0x7c8682, darkStone = 0x5c6662, paleStone = 0x9aa39e, grass = 0x4b7440;
-    kit.palette({stone: [blueStone, darkStone, paleStone]});
-
-    // Vast grassy UNESCO archaeological precinct
-    box(grass, 0, 0.12, 0, 38, 0.24, 38);
-
-    // Tier 1: Outer interlocking Tây Đô green limestone terrace wall
-    box(blueStone, 0, 0.55, 0, 31.0, 1.1, 31.0);
-    box(0x88928d, 0, 1.12, 0, 29.2, 0.14, 29.2);
-    for (const s of [-1, 1]) {
-      box(darkStone, s * 15.2, 1.45, 0, 0.85, 0.85, 31.0);
-      box(darkStone, 0, 1.45, s * 15.2, 31.0, 0.85, 0.85);
+    const stone=[0x9b9b8a,0xa7a594,0x888f80,0xa4a28e],turf=0x818c5e;
+    const {fixture,building,walk,stairs}=createTempleFoundations(T,kit);
+    const {box,stamp,round}=kit;
+    kit.palette({stone});
+    // The battered terrace edges leave a break for the processional axis.
+    for(const [z,half,h] of [[63,46,.48],[21,46,.63],[-18,41,.72],[-48,32,.85]]){
+      const count=Math.ceil((half-3.3)/2.3),length=(half-3.3)/count;
+      for(const side of [-1,1])for(let i=0;i<count;i++){
+        const x=side*(3.3+(i+.5)*length);
+        fixture(ground=>ground(x,z),()=>box(stone[i%4],x,h/2-.16,z,length-.025,h+.3,.75));
+      }
     }
-
-    // Tier 2: Middle green-limestone platform stepping up toward Đốn Sơn hill
-    box(blueStone, 0, 1.75, -1.2, 21.8, 1.35, 21.8);
-    box(paleStone, 0, 2.48, -1.2, 20.4, 0.16, 20.4);
-    // 4 grand axial monolithic green-stone stairways
-    A.steps(kit, 0, 16.4, 5.2, 2.0, 4, 0.28, 0.48, darkStone);
-    A.steps(kit, 0, 10.6, 4.6, 2.0, 4, 0.32, 0.45, darkStone);
-
-    // Tier 3: Sacred upper Viên Đàn circular stone foundation ring & sacrificial Heaven Altar
-    box(blueStone, 0, 3.15, -2.0, 13.4, 1.25, 13.4);
-    stamp(round, paleStone, 0, 3.92, -2.0, 5.4, 0.42, 5.4);
-    box(darkStone, 0, 4.55, -2.4, 2.8, 1.15, 1.55);
-    stamp(round, 0x5c4f3d, 0, 4.42, 0.2, 0.58, 0.95, 0.58);
-
-    // Iconic square monolithic stone King's Well (Giếng Vua — Thành Nhà Hồ) in the SE corner!
-    const wx = 11.2, wz = 10.2;
-    box(0x285f6b, wx, 1.18, wz, 3.2, 0.22, 3.2);
-    for (const s of [-1, 1]) {
-      box(darkStone, wx, 1.42, wz + s * 1.9, 4.4, 0.72, 0.62);
-      box(darkStone, wx + s * 1.9, 1.42, wz, 0.62, 0.72, 3.2);
-    }
-
-    A.plaque(T, kit, 'ĐÀN TẾ NAM GIAO - THÀNH NHÀ HỒ', 0, 1.62, 16.2, 8.6, 0.92, { bg: '#384b46', fg: '#f4df8d' });
-    A.trees(T, kit, [
-      { x: -16.8, z: -15.6, h: 11.2, kind: 'pine' },
-      { x: 16.8, z: -15.6, h: 11.4, kind: 'pine' },
-      { x: -16.8, z: 14.8, h: 9.8, kind: 'pine' }
-    ]);
+    walk(5.2,141,0,11);
+    const altar=building(2.5,-64.6,0,19.1,18.65,()=>{
+      box(turf,0,.25,0,18.9,.5,18.45);
+      for(const side of [-1,1]){
+        box(stone[2],side*9.35,.40,0,.4,.8,18.65);
+        box(stone[1],0,.40,side*9.12,18.65,.8,.41);
+      }
+      stamp(round,stone[1],0,.70,0,2.375,.4,2.375);
+    });
+    stairs(altar,2.5,-55.3,2.5,-50,3.4,.5,6);
+    const wx=45,wz=36.3;
+    fixture(ground=>Math.max(...[-6.5,6.5].flatMap(dx=>[-6.5,6.5].map(dz=>ground(wx+dx,wz+dz)))),()=>{
+      // From the square outer curb, three ledges descend into the round shaft.
+      for(let tier=0;tier<3;tier++){
+        const half=6.5-tier*.80,run=.81,top=1.38-tier*.43;
+        for(const side of [-1,1]){
+          box(stone[tier],wx+side*(half-run/2),top/2-.04,wz,run,top+.08,half*2);
+          box(stone[(tier+1)%4],wx,top/2-.04,wz+side*(half-run/2),half*2-2*run,top+.08,run);
+        }
+      }
+      const edge=a=>4.12/Math.max(Math.abs(Math.sin(a)),Math.abs(Math.cos(a)));
+      const point=(a,r)=>new T.Vector2(Math.sin(a)*r,-Math.cos(a)*r);
+      for(let k=0;k<40;k++){
+        const a=k*Math.PI/20,b=(k+1)*Math.PI/20;
+        const shape=new T.Shape([point(a,3.25),point(a,edge(a)),point(b,edge(b)),point(b,3.25)]);
+        const block=new T.ExtrudeGeometry(shape,{depth:.34,bevelEnabled:false});
+        block.rotateX(-Math.PI/2);stamp(block,stone[k%4],wx,-.03,wz);block.dispose();
+      }
+      stamp(round,0x34554b,wx,.025,wz,3.25,.045,3.25);
+    });
   }
 
   // 4. Nhà thờ Chính tòa Thanh Hóa (1926) — Historic ochre-and-stone Gothic cathedral with soaring central bell spire
@@ -492,13 +493,17 @@
     },
     {
       id: 'dan-te-nam-giao-tay-do', name: 'Đàn Tế Nam Giao Thành Nhà Hồ', city: 'Vĩnh Lộc', province: 'Thanh Hóa', region: 'Trung Bộ',
-      lon: 105.622850, lat: 20.046050, start: [105.622960, 20.045620], yaw: 0.237,
-      width: 38, depth: 38,
-      solids: [[0, -2.0, 7.0, 7.0], [11.2, 10.2, 2.4, 2.4]],
-      description: 'Di sản Văn hóa Thế giới thuộc quần thể Thành Nhà Hồ (xây năm 1402 dưới chân núi Đốn Sơn), gồm ba cấp nền đá xanh xếp khối, đường thần đạo và Giếng Vua đá vuông cổ kính.',
-      photo: 'https://thanhnhaho.vn/',
-      source: 'https://vi.wikipedia.org/wiki/%C4%90%C3%A0n_t%E1%BA%BF_Nam_Giao_(nh%C3%A0_H%E1%BB%93)',
-      map: 'https://www.openstreetmap.org/?mlat=20.04605&mlon=105.62285#map=17/20.04605/105.62285',
+      lon:105.622368,lat:20.046259,start:[105.6218263,20.0455050],yaw:-.49,width:108,depth:168,
+      solids:[[2.5,-64.6,9.55,9.32],[45,36.3,6.5,6.5]],
+      description:'Từ chân núi Đốn Sơn, linh đạo dẫn qua các nền đàn lên Viên đàn. Phía đông nam còn Giếng Vua với khung đá vuông và lòng giếng tròn.',
+      views:[
+        {name:'Linh đạo dưới chân Đốn Sơn',viewAngle:-.19,viewRadius:155,viewElevation:.48,height:7},
+        {name:'Viên đàn',offset:[32.62,-55.82],viewAngle:-.12,viewRadius:29,viewElevation:.49,height:3},
+        {name:'Giếng Vua',offset:[22.62,53.24],viewAngle:-.75,viewRadius:16,viewElevation:.67,height:2.6}
+      ],
+      photo:'https://visitthanhhoa.com/vi/ve-xu-thanh-tham-quan-dan-nam-giao-nha-ho-6511',
+      source:'https://thanhnhaho.vn/NewsDetail.aspx?Id=22105',
+      map:'https://www.openstreetmap.org/?mlat=20.046259&mlon=105.622368#map=18/20.046259/105.622368',
       build: danTeNamGiaoTayDo
     },
     {

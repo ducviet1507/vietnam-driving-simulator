@@ -1,9 +1,19 @@
 'use strict';
 
-// OSM node numbers identify the individual surveyed stops, including the
-// separate entrances of the same cave. The miniatures are original fiction.
+// OSM identifiers distinguish individual stops, including separate cave
+// entrances. The miniature stories are original fiction.
 (()=>{
   const notes=[
+    [10821152105,'arch','Khe sáng dưới Đỉnh Hương','Mặt nước vừa lộ ra ở đâu dưới chân hòn đá?','Trên tem, thủy triều rút khỏi chân Đỉnh Hương. Một khe sáng mở ra giữa hai chân đá, vừa đủ cho con sóng giấy lướt qua.'],
+    [994065796,'shell','Vòng xoắn ở Mê Cung','Đường vào mê cung nào nằm gọn trên đầu ngón tay?','Chiếc vỏ ốc nhỏ ở cửa động lần lượt mở từng vòng xoắn trên trang giấy. Nét cuối quay về đúng chỗ khởi đầu.'],
+    [3494811567,'sail','Khung đá Bồ Nâu','Qua tấm rèm đá, cánh buồm nào vừa sang bờ sáng?','Từ trong vòm hang, những đầu nhũ sẫm màu viền quanh mặt vịnh. Một cánh buồm đỏ nhỏ như nét bút lướt qua khung ấy.'],
+    [3560283504,'drop','Một chèo qua Hang Luồn','Làm sao nối hai khoảng trời bằng một mái chèo?','Ngoài cửa là vịnh, bên kia là áng nước. Mái chèo kéo một nét bạc qua vòm thấp, nối hai khoảng trời vào nhau.'],
+    [5147203123,'shell','Một lớp nền Tiên Ông','Vệt trắng nào dưới chân khối nhũ đã ở đó từ lâu?','Nhìn sát nền hang trên tem thấy một vỏ nhỏ nằm trong lớp đất. Trang sổ khép lại vẫn chừa một khe sáng cho mép vỏ.'],
+    [3157796075,'leaf','Làn gió Sơn Đoòng','Chiếc lá nào vừa đổi hướng trước khe đá?','Một chiếc lá trên tem xoay ngang rồi khựng lại ở miệng hang. Luồng gió từ trong khe lật nó lên, để lộ đường gân bạc.'],
+    [3499399985,'echo','Tiếng ngân sau rèm đá','Âm cuối nấp ở nếp nào trong rèm nhũ?','Một gợn âm chạy dọc nếp đá Tiên Sơn. Khi gợn âm tắt, trên tem còn những đường song song như khuông nhạc.'],
+    [5063396623,'ink','Một nét sông Chày','Thử lần theo bóng tay vịn trên mặt nước.','Vệt bóng dưới lối gỗ kéo thành nét mực xanh. Tới chỗ nước khuất dưới vòm Hang Tối, nét mực đổi sang màu than.'],
+    [5353612634,'leaf','Lá bên bậc đá','Làn khói hương dừng lại ở mép lá nào?','Bên cửa Hang Tám Cô, một chiếc lá nghiêng trên bậc đá. Trên trang sổ còn nét khói mảnh và một khoảng lặng.'],
+    [4387487189,'drop','Một vòng nước Moọc','Viên sỏi dưới cầu đang giữ chiếc vòng nào?','Dưới cầu tre, nước ôm lấy hòn sỏi rồi tỏa sang hai bên. Một vòng gợn nhỏ đọng lại trên con dấu Suối Nước Moọc.'],
     [10220706855,'ink','Nét mực khuất ở Hoa Lư','Một con đường vừa đi đâu mất giữa trang?','Lối mòn bằng mực đi đến Dông hoàng hô thì chui qua một nếp gấp. Lật nếp giấy lên, nét đường còn nối tiếp.'],
     [10239352348,'echo','Tiếng khô ở Hang Ken','Âm nào gõ vào giấy mà chẳng làm nhòe mực?','Ở cửa Hang Ken Dry, một tiếng cốc nảy qua ba vệt đá vẽ chì. Mép sổ hứng trọn tiếng cuối.'],
     [10239352351,'star','Đốm nắng Hang Sun','Mẩu nắng đi lạc dưới vòm sẽ trốn vào đâu?','Qua miệng hang trên tem, mẩu nắng rút nhỏ thành một chấm sao. Nó rọi vừa đủ chữ Sun.'],
@@ -129,5 +139,8 @@
   ];
   Object.assign(window.sightSecretStories,Object.fromEntries(
     notes.map(([node,motif,title,clue,reveal])=>['osm-node-'+node,[motif,title,clue,reveal]])
-  ));
+  ),{
+    'osm-way-207178342':['leaf','Bóng mành bên ao','Chiếc lá nhìn qua mành tre thấy mặt ao thành mấy dải?','Một chiếc lá nép vào mành. Nắng qua từng khe, in lên lá những dòng kẻ mảnh như bóng hàng hiên trên ao cá.'],
+    'osm-way-37629143':['lotus','Cánh sen của bảo tàng','Có thể gấp một cánh sen bằng bóng đổ không?','Ánh chiều kéo bóng một khối bê tông trắng qua bậc đá. Trên tờ tem, đường gấp ấy vừa khít một cánh sen.']
+  });
 })();

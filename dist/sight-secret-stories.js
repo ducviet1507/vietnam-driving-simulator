@@ -3,6 +3,16 @@
 // Clues belong to the tour camera. The little scenes in the reveals are original
 // keepsakes inspired by the place, including the imagined voices and movements.
 window.sightSecretStories = {
+  'cot-co-ha-noi':['star','Ô hoa của Kỳ Đài','Dọc theo thân bát giác, ánh sáng đi qua những ô cửa hình gì?','Một ô hoa lọt lên trang giấy. Phía trên nó, lá cờ vẫn đang mở ra trong gió.'],
+  'bac-mon-thang-long':['arch','Một ô phố qua Cửa Bắc','Đứng từ phố Phan Đình Phùng, em thấy gì phía trên vòm cổng?','Nét vòm ôm lấy bóng phố. Ba chữ trên biển đá nằm ngay dưới mái vọng lâu.'],
+  'osm-way-185531692':['lantern','Đầu đao Hậu Lâu','Nhìn qua khung cửa trên lầu, em thấy mái nào cao hơn?','Từ bờ mái thấp, nét vẽ lần theo góc đao rồi dừng lại ở lầu nhỏ giữa nóc.'],
+  'osm-way-185535416':['leaf','Một mái nhà dưới tán xanh','Những ô chớp bên hành lang bắt lấy màu gì?','Một góc lá lọt vào ô cửa xanh của nhà D67. Mái hiên đổ bóng dài trên trang vở.'],
+  'osm-relation-21404421':['ink','Dưới mái che Hoàng Diệu','Giữa nền đất khai quật, dấu tích nào khép lại thành vòng?','Các hàng móng vuông dừng bên vòng gạch của giếng cổ. Nét chì lần theo từng lớp gạch trên trang.'],
+  'thanh-nha-ho':['arch','Bốn ngả về Tây Đô','Mặt thành nào có ba khoảng trời dưới đá?','Ba vòm cửa Nam mở thành ba ô nhỏ trên trang sổ. Ba cổng còn lại mỗi cổng giữ một ô trời riêng.'],
+  'cong-bac-thanh-ho':['arch','Một vệt nắng ở cửa Bắc','Mạch đá nào dẫn mắt từ chân tường lên nóc cổng?','Nét bút lần qua những hàng đá nhỏ rồi dừng trên nền lầu cũ. Một vệt nắng hẹp vừa qua khỏi vòm.'],
+  'cong-dong-thanh-ho':['echo','Tiếng bước dưới vòm Đông','Một tiếng bước chân đi được bao xa dưới trần đá?','Âm vang chạy theo từng khoanh đá ghép, tới ngưỡng bên kia mới tan vào cánh đồng.'],
+  'cong-tay-thanh-ho':['ridge','Vai đá cổng Tây','Chỗ nào trên cổng còn giữ đường cong sau khi những phiến lát nóc đã mất?','Một nét cong in giữa hai vai tường thấp. Bên dưới, con đường làng lọt qua khuôn dấu.'],
+  'la-thanh-tay-do':['leaf','Sống đất giữa đồng','Lần theo đường cỏ nào sẽ thấy lũy ngoài của Tây Đô?','Cánh đồng ngắt quãng ở một dải đất cao. Dọc sống lũy, ngọn cỏ để lại một đường xanh trên giấy.'],
   'van-mieu-quoc-tu-giam': ['ink', 'Nét mực bên giếng', 'Cửa sổ tròn của gác Khuê Văn soi xuống đâu?', 'Trên trang giấy hiện một vòng tròn đỏ. Bóng gác chạm mặt giếng Thiên Quang, giữa hai dãy nhà bia.'],
   'turtle': ['turtle', 'Bọt tăm Hồ Gươm', 'Ai vừa làm bóng Tháp Rùa rung lên?', 'Một chiếc mai nhỏ nổi lên giữa bóng tháp. Nó lặn mất, để lại ba vòng nước cứ rộng dần.'],
   'cathedral': ['wing', 'Chú gà đón gió', 'Trên nền hồng có ai biết gió từ đâu tới?', 'Chú gà trên đỉnh tháp xoay mỏ về phía sông Hàn. Một chiếc lông đồng lấp lánh trên nền trời.'],

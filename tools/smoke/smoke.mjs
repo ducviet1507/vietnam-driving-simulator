@@ -265,6 +265,15 @@ try {
       return typeof stop.build==='function';
     });
     assert.ok(hasModel);
+    const invalidPacks=await page.evaluate(async()=>{
+      const packs=await Promise.all(VietnamTourism.modelGroups.map(async({file,sites})=>{
+        const {default:loaded}=await import('./'+file);
+        return loaded.length===sites.length&&loaded.every((s,i)=>
+          s.id===sites[i].id&&s.lon===sites[i].lon&&s.lat===sites[i].lat&&typeof s.build==='function')?null:file;
+      }));
+      return packs.filter(Boolean);
+    });
+    assert.deepEqual(invalidPacks,[],'Regional model registrations must match their Atlas entries');
     console.log('PASS nationwide Atlas search and regional model loading');
 
     await go('/cup');

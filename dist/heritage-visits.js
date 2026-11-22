@@ -26,9 +26,15 @@ const heritageVisits=[
   // https://dsvh.gov.vn/danh-lam-thang-canh-trang-an-tam-coc-bich-dong-2946
   // https://sodulich.ninhbinh.gov.vn/vi/tai-nguyen-du-lich-van-hoa/co-do-hoa-lu-kinh-do-cua-nha-nuoc-phong-kien-tap-quyen-dau-tien-23.html
   ['quan-the-trang-an','Quần thể danh thắng Tràng An',[
-    'ben-thuyen-trang-an','osm-node-13399339701','osm-way-1362974362','osm-way-772041809',
+    'ben-thuyen-trang-an','ben-thuyen-tam-coc','osm-way-1362974362','osm-way-772041809',
     'osm-way-772041801','osm-node-4424766405','osm-node-1540779110','osm-way-772057039','osm-node-4738232630',
     'osm-node-13388919549','osm-way-1424042953',
+  ]],
+  // The inner citadel, outer earthen rampart and altar are the three inscribed
+  // components. https://whc.unesco.org/en/list/1358/maps/
+  ['thanh-nha-ho','Thành Nhà Hồ',[
+    'cong-nam-thanh-ho','cong-bac-thanh-ho','cong-dong-thanh-ho','cong-tay-thanh-ho',
+    'osm-way-242169982','la-thanh-tay-do','dan-te-nam-giao-tay-do'
   ]],
   // https://phongnhakebang.vn/du-lich/du-lich-vuon-quoc-gia-phong-nha-ke-bang
   ['phong-nha-ke-bang','Phong Nha – Kẻ Bàng',[
@@ -44,6 +50,7 @@ const heritageVisits=[
   // https://hoangthanhthanglong.vn/khu-di-tich-trung-tam-hoang-thanh-thang-long/
   ['hoang-thanh-thang-long','Hoàng thành Thăng Long',[
     'osm-way-696389268','osm-way-1497572243','osm-way-185535416','osm-relation-21404421','osm-way-185531692',
+    'bac-mon-thang-long','cot-co-ha-noi',
   ]],
   // https://btllang.mod.gov.vn/cum-di-tich-lich-su-van-hoa-ba-dinh/lang-chu-tich-ho-chi-minh.html
   ['quang-truong-ba-dinh','Quảng trường Ba Đình và các di tích lân cận',[

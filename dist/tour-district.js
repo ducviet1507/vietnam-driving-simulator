@@ -773,6 +773,25 @@ function createTourDistrict(T,scene,plaster,structures,osmBuildings,nightLights)
           const p=flat[k];vertex(batches[1],p.x,bottom,p.y,0,0,concrete);
         }
       }
+      if(use==='roof'){
+        // A mapped roof covers open ground. Only its supports obstruct the car.
+        b.solids=[];
+        const fascia=bottom>0?Math.max(bottom,eave-.22):eave-.22;
+        for(const ring of rings)for(let j=0;j<ring.length;j++){
+          const a=ring[j],c=ring[(j+1)%ring.length];
+          quad(batches[0],a,c,fascia,eave,roofColor,0,0);
+          if(bottom>0)continue;
+          const spans=Math.max(1,Math.ceil(a.distanceTo(c)/12));
+          for(let k=0;k<spans;k++){
+            const p=a.clone().lerp(c,k/spans),r=.16;
+            const post=[[-r,-r],[r,-r],[r,r],[-r,r]].map(([u,v])=>new T.Vector2(p.x+u,p.y+v));
+            const foot=ground(p.x,p.y)-baseY-.22;
+            for(let n=0;n<4;n++)quad(batches[0],post[n],post[(n+1)%4],foot,eave,concrete,0,0);
+            b.solids.push([post]);
+          }
+        }
+        continue;
+      }
       for(let ri=0;ri<rings.length;ri++)for(let j=0;j<rings[ri].length;j++){
         const ring=rings[ri],profile=profiles[ri];
         const a=ring[j],c=ring[(j+1)%ring.length],length=a.distanceTo(c);

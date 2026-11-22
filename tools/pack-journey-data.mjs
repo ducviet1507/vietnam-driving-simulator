@@ -8,7 +8,7 @@ import {gzipSync} from 'node:zlib';
 // compound visits and legacy OSM IDs available before the national Atlas loads.
 export async function packJourneyData(client) {
   const index = path.join(client, 'index.html');
-  let html = await readFile(index, 'utf8');
+  const html = await readFile(index, 'utf8');
   const scripts = [...html.matchAll(/<script src="([^"]+)"><\/script>/g)].map(m => m[1]);
   const context = createContext({});
   context.window = context;
@@ -29,14 +29,20 @@ export async function packJourneyData(client) {
     const code = await readFile(path.join(client, name), 'utf8');
     const previous = context.VietnamSights?.length || 0;
     runInContext(code, context, {filename:name});
-    if (code.includes('const A = window.CentralArch;')) {
+    // These scripts only register models. Keep sights-natural eager because
+    // it also supplies the coast masks and materials shared by other layers.
+    if (name.startsWith('sights-') && name !== 'sights-natural.js') {
       const sites = context.VietnamSights.slice(previous);
       if (!sites.length || sites.some(s => typeof s.build !== 'function')) throw Error('Missing models in ' + name);
-      // These independent regional packs register into a private array at import.
-      const module = 'const window = {CentralArch:globalThis.CentralArch};\n' + code + '\nexport default window.VietnamSights;\n';
+      // Isolate registrations on import, while reading the same Atlas, shared
+      // materials and architecture helpers as a classic script in the game.
+      const module = 'const window = Object.create(globalThis);\nwindow.VietnamSights = [];\n' + code + '\nexport default window.VietnamSights;\n';
       const file = await asset(name.slice(0,-3), module, 'mjs');
-      groups.push({file, sites});
-      html = html.replace('<script src="' + name + '"></script>', '');
+      const slot = groups.length;
+      groups.push({file,sites:sites.map(({solids,boundary,modeledBuildings,...entry})=>entry)});
+      // The small registration stubs are bundled in their original parser
+      // positions. This preserves ordering and overrides between model packs.
+      await writeFile(path.join(client,name),'(window.VietnamSights??=[]).push(...VietnamTourism.modelGroups['+slot+'].sites);\n');
     }
   }
   const atlas = context.VietnamTourism, details = context.VietnamSightDetails;
@@ -76,16 +82,11 @@ export async function packJourneyData(client) {
   const files = {};
   for (const [key, rows] of tiles) files[key] = await asset(key, JSON.stringify(rows), 'json');
   const all = await asset('atlas', JSON.stringify(rest), 'json');
-  const manifest = {metadata:atlas.metadata, aliases:atlas.aliases, entries, files, all, tileScale,
+  const manifest = {metadata:atlas.metadata, aliases:atlas.aliases, entries, files, all, tileScale,modelGroups:groups,
     provinces:[...new Set(atlas.entries.map(s => s.province))]};
   const origin = '// © OpenStreetMap contributors. ODbL 1.0. See VietnamTourism.metadata.\n';
   await writeFile(path.join(client, 'tourism-catalog.js'), origin + 'window.VietnamTourism=' + JSON.stringify(manifest) + ';\n');
   await writeFile(path.join(client, 'sight-details.js'), 'window.VietnamSightDetails=' + JSON.stringify(initialDetails) + ';\n');
-  const register = 'VietnamTourism.modelGroups=' + JSON.stringify(groups) + ';\n' +
-    'for(const group of VietnamTourism.modelGroups)(window.VietnamSights??=[]).push(...group.sites);\n';
-  const registrations = await asset('regional-models', register, 'js');
-  html = html.replace('<script src="central-arch.js"></script>', '$&<script src="' + registrations + '"></script>');
-  await writeFile(index, html);
   for(const name of await readdir(directory)){
     const sourceName=name.replace(/(\.m?js)\.gz$/,'$1');
     if(/-[0-9a-f]{16}\.(json(?:\.gz)?|m?js)$/.test(sourceName)&&!generated.has(sourceName))

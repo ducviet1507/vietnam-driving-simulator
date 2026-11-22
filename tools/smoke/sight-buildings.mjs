@@ -40,12 +40,16 @@ function row(id,use,x,z){
   return [id,use,0,0,[packed],''];
 }
 inferred=[row('g1','yes',77,0),row('g2','yes',160,0),row('g3','yes',200,0)];
-surveyed=[row('w1','yes',30,0),row('w2','house',50,0)];
+surveyed=[row('w1','yes',30,0),row('w2','house',50,0),row('w3','roof',125,0)];
 // The water edge reaches one corner of g3. The centre is on dry ground.
 district.build(graph,0,0,landmarks,()=>0,[],(x,z)=>x>201&&z>1);
 for(const [x,id] of [[30,'w1'],[50,'w2'],[77,undefined],[160,'g2'],[200,undefined]]){
   assert.equal(district.contact(x,0,.5)?.id,id);
 }
+const canopy=district.footprint({map:'https://www.openstreetmap.org/way/3'},125,0);
+assert.equal(district.contact(125,0,1),undefined,'visitors can pass under the shelter');
+const corner=canopy.rings[0][0];
+assert.equal(district.contact(corner.x,corner.y,.25)?.id,'w3','the canopy post remains solid');
 const walls=scene.getObjectByName('OSM building footprints').children[0].geometry.attributes;
 function hasWindowBays(x){
   for(let i=0;i<walls.position.count;i++){

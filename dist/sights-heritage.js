@@ -46,37 +46,6 @@
     for(const side of [-1,1])for(const p of [-1.6,0,1.6])box(wood,side*2.64,2.12,-3.62+p,.11,1.13,.84);
   }
 
-  function citadel(T,{outline,profile,box}){
-    const colours=[0x939084,0xaaa597,0x898b80,0x9e9c90,0x807f74,0xaaa89a];
-    for(const [bay,cx,r,spring,top] of [[0,-11,2.55,2.45,7.6],[1,0,3.32,2.92,9.1],[2,11,2.55,2.45,7.6]]){
-      const shape=new T.Shape();
-      shape.moveTo(-5.5,0);shape.lineTo(-r,0);shape.lineTo(-r,spring);
-      shape.absarc(0,spring,r,Math.PI,0,true);shape.lineTo(r,0);shape.lineTo(5.5,0);
-      shape.lineTo(5.5,top-.27);shape.lineTo(0,top);shape.lineTo(-5.5,top-.22);shape.closePath();
-      profile(shape,0x817f75,cx,0,-7.4,14.8);
-      for(const face of [-1,1]){
-        const z=7.4*face;
-        for(let row=0;row*.89+.89<top;row++){
-          const y=row*.89,outer=r+.66;
-          const gap=y<=spring?outer:Math.sqrt(Math.max(0,outer*outer-(y-spring)**2));
-          const ranges=gap? [[-5.5,-gap],[gap,5.5]]:[[-5.5,5.5]];
-          for(const [l,h] of ranges){
-            const n=Math.ceil((h-l)/(2.55+((row+bay)%2)*.62));
-            for(let j=0;j<n;j++){
-              const length=(h-l)/n;
-              box(colours[(row*3+bay+j)%6],cx+l+(j+.5)*length,y+.444,z+face*.043,length-.045,.84,.12);
-            }
-          }
-        }
-        for(let j=0;j<13;j++){
-          const a=j*Math.PI/13+.01,b=(j+1)*Math.PI/13-.01,point=(q,t)=>[q*Math.cos(t),q*Math.sin(t)];
-          outline([point(r,a),point(r+.68,a),point(r+.68,b),point(r,b)],colours[(j+bay)%6],cx,spring,z+(face<0?-.23:.03),.2);
-        }
-        for(const side of [-1,1])for(let j=0;j<3;j++)box(colours[(j+bay+2)%6],cx+side*(r+.33),(j+.5)*spring/3,z+face*.11,.64,spring/3-.04,.23);
-      }
-    }
-  }
-
   function phoMinh(T,{palette, tapered,box,outline}){
     const stone=0x918d7e,brick=[0x867363,0x8a7566,0x786b60],lip=0x655e53;
     const square=(c,y,h,b,t)=>tapered(c,0,y+h/2,0,b/Math.SQRT2,t/Math.SQRT2,h);
@@ -142,7 +111,6 @@
 
   (window.VietnamSights??=[]).push(
     {id:'chua-cau',name:'Chùa Cầu',city:'Hội An',lon:108.326026,lat:15.877148,yaw:-.085,width:19.5,depth:15,start:[108.325448,15.876197],solids:[[-6.7,-.23,2.68,.22],[6.7,-.23,2.68,.22],[0,-.23,3.8,.17],[-6.7,5.03,2.68,.22],[6.7,5.03,2.68,.22],[0,5.03,3.8,.17],[0,-3.62,2.62,2.98]],photo:'https://en.baodanang.vn/new-appearance-of-the-japanese-covered-bridge-3139049.html',source:'https://www.openstreetmap.org/way/631074476',build:coveredBridge},
-    {id:'cong-nam-thanh-ho',name:'Cổng Nam Thành Nhà Hồ',city:'Thanh Hóa',lon:105.606637,lat:20.074586,yaw:.55,width:33,depth:14.8,start:[105.60725,20.073616],solids:[[-15.03,0,1.47,7.4],[-5.92,0,2.56,7.4],[5.92,0,2.56,7.4],[15.03,0,1.47,7.4]],photo:'https://vinwonders.com/vi/wonderpedia/news/thanh-nha-ho-thanh-hoa/',source:'https://whc.unesco.org/en/list/1358/',build:citadel},
     {id:'pho-minh',name:'Tháp Phổ Minh',city:'Nam Định',lon:106.16316,lat:20.45434,yaw:.32,width:9,depth:10,start:[106.162367,20.454008],solids:[[0,0,2.95,2.95],[-3.65,4.2,.46,.46],[3.65,4.2,.46,.46]],photo:'https://dantri.com.vn/doi-song/thap-pho-minh-dau-tich-hao-khi-dong-a-20171212070120584.htm',source:'https://www.openstreetmap.org/way/1151575774',build:phoMinh},
     {id:'phuoc-duyen',name:'Tháp Phước Duyên',city:'Huế',lon:107.54503,lat:16.45239,yaw:.28,width:14,depth:21,start:[107.545547,16.45216],solids:[[0,0,4.28,4.28],...[-6.1,-3.65,3.65,6.1].map(x=>[x,9.5,.45,.45])],photo:'https://timtour.vn/kham-pha-chua-thien-mu-net-dep-tam-linh-va-van-hoa-o-hue',source:'https://www.openstreetmap.org/way/205795043',build:phuocDuyen}
   );

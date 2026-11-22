@@ -22,6 +22,8 @@ Ghé Hồ Gươm rồi bấm **Tạm dừng → Viết bưu thiếp từ đây**
 
 ## Khám phá địa danh
 
+Trong **Góc ngắm**, chọn tên công trình để đi tiếp trong cùng quần thể. Ở Thành Nhà Hồ, bạn có thể lần theo bốn cổng đá, ra lũy đất La Thành rồi đến Giếng Vua ở đàn Nam Giao. Ở Hạ Long, xe đỗ tại cảng Tuần Châu khi bạn chuyển góc nhìn ra các hang và đảo. [Ghé Thành Nhà Hồ](https://vivu3d.com/?landmark=thanh-nha-ho&view=tour) · [Thăm vịnh Hạ Long và Cát Bà](https://vivu3d.com/?landmark=vinh-ha-long-cat-ba&view=tour) · [Đi dọc Hoàng thành Thăng Long](https://vivu3d.com/?landmark=hoang-thanh-thang-long&view=tour).
+
 Ở Văn Miếu, mở **Ngắm địa danh 3D** rồi chọn **Sơ đồ quần thể** để tìm từng nhà bia, giếng Thiên Quang hay lầu Chuông. Ở Mỹ Sơn, chọn **Xem bản quét 3D** để xoay phế tích và chuyển sang tháp G4 trước trùng tu. Trong đền Ngọc Sơn, màu sắc của nội thất đến từ các điểm ảnh chụp năm 2017. [Ghé Văn Miếu](https://vivu3d.com/?landmark=van-mieu-quoc-tu-giam&view=plan) · [Khám phá Mỹ Sơn](https://vivu3d.com/?landmark=my-son&view=field) · [Vào đền Ngọc Sơn](https://vivu3d.com/?landmark=osm-way-178995262&view=field) · [Tác giả và giấy phép](dist/landmark-scans/CREDITS.txt).
 
 Mỗi điểm ngắm có một con dấu bí mật. Ở Tháp Rùa, hãy để ý ánh lóe trên mặt hồ. Mở **Ngắm địa danh 3D**, chọn **Tìm dấu ẩn**, rồi kéo cảnh hoặc dùng hai phím mũi tên để đưa ánh lóe vào khung. Một số nét khắc chỉ hiện khi lấy nét gần. Xe đang dừng cạnh địa danh cũng có thể **Dò đài FM** để nghe manh mối. Mở **Tùy chọn → Sổ dấu hành trình** để xem lại các dấu đã tìm thấy trên trình duyệt này. [Ghé Tháp Rùa](https://vivu3d.com/?landmark=turtle).

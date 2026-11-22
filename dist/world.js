@@ -821,23 +821,25 @@ function frameAboveTourControls(){
  if(!car.sightView)return;
  const canvas=$('world'),panel=$('tourCamera');
  const width=canvas.clientWidth,height=canvas.clientHeight;
- $('secretField').style.setProperty('--secret-dock',Math.max(0,height-panel.getBoundingClientRect().top)+'px');
- car.sightView.viewport=width<=720&&height>width&&!panel.hidden?{
-   width,height,shift:Math.round(Math.min(height*.17,panel.offsetHeight*.44))
- }:null;
+ const covered=panel.hidden?0:Math.max(0,canvas.getBoundingClientRect().bottom-panel.getBoundingClientRect().top);
+ $('secretField').style.setProperty('--secret-dock',covered+'px');
+ // Centre the monument in the space above the caption and tour controls.
+ const shift=Math.round(clamp((covered-48)/2,0,height*.23));
+ car.sightView.viewport=shift?{width,height,shift}:null;
 }
 const tourLayout=new ResizeObserver(frameAboveTourControls);
 tourLayout.observe($('tourCamera'));tourLayout.observe($('world'));
 function showMonument(monument,viewIndex=0,collection=null){
  const views=monument.data.views,view=views?.[viewIndex];
- const data=view?{...monument.data,...view,id:monument.data.id}:monument.data;
+ const data=view?{...monument.data,...view,id:monument.data.id,name:monument.data.name}:monument.data;
  const portraitOverview=monument.data.id==='tam-chuc'&&innerWidth<innerHeight;
  const angle=portraitOverview?data.yaw-.27:(data.viewAngle??(data.yaw+.23));
  const [east,south]=view?.offset??[0,0];
  car.sightView={monument,data,x:monument.x+east,z:monument.z+south,height:view?.height??monument.height,
    angle,elevation:data.viewElevation??.27,zoom:1,hour:$('tourLight').value===''?null:Number($('tourLight').value)};
+ const visit=visitsByStop.get(monument.data.id);
  $('tourZoom').value='1';sightPhotos.select(monument.data);
- fieldViews.select(monument.data,collection);
+ fieldViews.select(monument.data,collection||visit);
  const description=[data.description,data.arrivalNote].filter(Boolean).join(' ');
  $('tourDescription').textContent=description;$('tourDescription').hidden=!description;
  if(view?.photoCredit){
@@ -846,7 +848,6 @@ function showMonument(monument,viewIndex=0,collection=null){
  }
  $('tourTitle').textContent=view?.title||monument.data.name;$('tourCamera').hidden=false;
  sightSecrets.select(collection||monument.data);
- const visit=visitsByStop.get(monument.data.id);
  $('complexStopLabel').hidden=!(views||data.complex||visit);
  const select=$('complexStop');
  if(views){
@@ -878,7 +879,7 @@ async function frameStop(stop){
    drawDistrict(tourGraph,tourWater,x,z,tourGraph.nearby(x,z,560));tourCenter={x,z};
  }
  if(stop===tamChucOverview)return showMonument({data:stop,x,z,height:75});
- const authored=gfx.nearLandmark(x,z);
+ const authored=gfx.nearLandmark(x,z,stop.id);
  const approach=roads.point(...stop.start),dx=approach.x-x,dz=approach.z-z;
  const distance=Math.hypot(dx,dz),yaw=distance>2?Math.atan2(dx,dz):authored?.data.yaw||0;
  function surroundings(width,depth,height){
@@ -902,10 +903,10 @@ async function frameStop(stop){
  const c=Math.abs(Math.cos(yaw)),s=Math.abs(Math.sin(yaw));
  const width=clamp(ew*c+ns*s,13,440),depth=clamp(ew*s+ns*c,13,440);
  const height=footprint?.h||Math.min(wide?18:12,Math.max(3,Math.min(width,depth)*.14));
- const description=[tags.start_date?'Niên đại ghi trên bản đồ là năm '+tags.start_date+'.':'',
+ const description=[stop.description,tags.start_date?'Niên đại ghi trên bản đồ là năm '+tags.start_date+'.':'',
    tags.architect?'Thiết kế của '+tags.architect+'.':''].filter(Boolean).join(' ');
  const data={...stop,width,depth,yaw,viewAngle:yaw,viewElevation:wide?.53:.39,description};
- data.views=[{name:'Toàn cảnh địa điểm'},surroundings(width,depth,height)];
+ data.views=stop.views?[...stop.views]:[{name:'Toàn cảnh địa điểm'},surroundings(width,depth,height)];
  if(footprint?.stelae?.length){
    data.views[0]={name:'Toàn cảnh nhà bia',viewAngle:footprint.stelae[0].viewAngle,viewElevation:.14};
    const metres=n=>n.toLocaleString('vi-VN',{minimumFractionDigits:2,maximumFractionDigits:2})+' m';

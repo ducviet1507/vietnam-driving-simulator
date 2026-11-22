@@ -1123,9 +1123,10 @@ window.VietnamLandmarks=(()=>{
       for(const site of active){site.place();site.mesh.visible=true;}
       displayed=view;trim();
     }
-    function nearest(x,z,maxMeters=650){
+    function nearest(x,z,maxMeters=650,id){
       let best=null;
       for(const site of active){
+        if(id&&site.data.id!==id)continue;
         const distance=Math.hypot(x-site.x,z-site.z);
         if(distance<=maxMeters&&(!best||best.distance>distance))best={data:site.data,distance,x:site.x,z:site.z,height:site.mesh.userData.height};
       }

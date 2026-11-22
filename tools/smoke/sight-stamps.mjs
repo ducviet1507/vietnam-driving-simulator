@@ -13,6 +13,11 @@ run('mountain-stages.js');
 for(const file of scripts(html.match(/<template id="secretAssets">([\s\S]*?)<\/template>/)[1])) run(file);
 const {sightSecretStories:stories, VietnamLandmarks, VietnamTourism} = context;
 const visits = runInContext('heritageVisits',context);
+const stopIds=new Set([...VietnamTourism.entries.map(s=>s.id),...VietnamLandmarks.entries.map(s=>s.id)]);
+for(const [id,,stops] of visits)for(const stop of stops)
+  assert.ok(stopIds.has(stop)||stopIds.has(VietnamTourism.aliases[stop]),id+' contains an unknown stop '+stop);
+const pier=VietnamLandmarks.entries.find(s=>s.id==='ben-thuyen-tam-coc');
+assert.equal(pier.catalogId,'osm-node-4567308091','Tam Cốc tour opens the Văn Lâm boat pier');
 const motifs = new Set('turtle lantern lotus sail wing echo beacon leaf ink star shell arch gear drop dragon ridge'.split(' '));
 const covered = new Set();
 for(const {id,name} of VietnamTourism.entries) {

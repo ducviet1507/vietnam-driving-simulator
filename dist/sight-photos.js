@@ -9,11 +9,10 @@ function createSightPhotos(){
   async function select(data){
     const token=++sequence;
     current=null;
-    const authored=!data.id.startsWith('osm-')&&data.photo;
-    const fallback=authored||data.map||data.source;
+    const fallback=data.photo||data.map||data.source;
     link.hidden=!fallback;
     link.href=fallback||'#';link.removeAttribute('aria-haspopup');
-    link.textContent=authored?'Ảnh tham khảo ↗':'Bản đồ địa điểm ↗';
+    link.textContent=data.photo?'Ảnh tham khảo ↗':data.map?'Bản đồ địa điểm ↗':'Tư liệu địa danh ↗';
     try{
       index??=fetch('sight-photos/index.json').then(r=>{if(!r.ok)throw Error(r.status);return r.json();}).catch(e=>{index=null;throw e;});
       const photos=await index;

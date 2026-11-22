@@ -1,5 +1,5 @@
 import {createHash} from 'node:crypto';
-import {readFile,writeFile} from 'node:fs/promises';
+import {readFile,readdir,unlink,writeFile} from 'node:fs/promises';
 import path from 'node:path';
 import {runInNewContext} from 'node:vm';
 
@@ -20,6 +20,9 @@ export async function prepareJourneyOpening(client) {
   const css = sheets.map(sheet => sheet.replace(/^\uFEFF/,'')).join('\n'), hash = createHash('sha256').update(css).digest('hex').slice(0,16);
   const bundle = 'journey-' + hash + '.css';
   await writeFile(path.join(client,bundle),css);
+  for(const name of await readdir(client)){
+    if(/^journey-[\da-f]{16}\.css$/.test(name)&&name!==bundle)await unlink(path.join(client,name));
+  }
   for (const [i,tag] of tags.entries()) html = html.replace(tag[0], i === 0 ? '<link rel="stylesheet" href="'+bundle+'">' : '');
   await writeFile(file,html);
   return runInNewContext(stops + '\njourneyStops');

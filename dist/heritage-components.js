@@ -5,6 +5,7 @@
   // Vietnamese visitor names published by Hội An's heritage centre, the
   // Tràng An management board and the national parks (references in heritage-visits.js).
   const names = new Map([
+    ['osm-way-242169982','Nội thành Tây Đô (Thành Nhà Hồ)'],
     ['osm-node-3560283504','Hang Luồn'],
     ['osm-node-6474418794','Động Trung Trang'],
     ['osm-way-631074714','Bảo tàng Văn hóa Dân gian Hội An'],
@@ -20,6 +21,24 @@
   for (const site of atlas.entries) {
     if (names.has(site.id)) site.name = names.get(site.id);
   }
+  // Several stops describe an entire precinct. Frame its actual mapped sights
+  // instead of looking at the empty centre of the boundary polygon.
+  const precincts={
+    'osm-way-242169982':{
+      description:'Từ cổng Nam, con đường chạy chéo qua cánh đồng trong thành đến cổng Bắc. Bốn cổng đá nối với nhau bằng các đoạn tường thành giữa đồng ruộng Vĩnh Lộc.',
+      views:[{name:'Trục đường qua nội thành',offset:[105,180],viewAngle:.54,viewRadius:480,viewElevation:.59,height:9},
+        {name:'Nhìn từ trong thành ra cổng Nam',offset:[228,382],viewAngle:-2.61,viewRadius:64,viewElevation:.16,height:11}]},
+    'osm-way-1362974362':{
+      description:'Hai đền vua Đinh và vua Lê nằm dưới chân núi ở vùng lõi Cố đô Hoa Lư. Từ trên cao có thể nhận ra hai quần thể sân và nhà thờ nằm cách nhau một quãng ngắn.',
+      views:[{name:'Hai đền vua giữa Hoa Lư',offset:[380,-277],viewAngle:1.36,viewRadius:234,viewElevation:.65,height:14},
+        {name:'Trước sân đền vua Đinh',offset:[353,-196],viewAngle:.98,viewRadius:76,viewElevation:.33,height:11},
+        {name:'Nhìn sang đền vua Lê',offset:[414,-368],viewAngle:1.18,viewRadius:79,viewElevation:.33,height:11}]},
+    'osm-relation-21401560':{
+      description:'Những ô cỏ trên Quảng trường Ba Đình trải dài trước mặt Lăng Chủ tịch Hồ Chí Minh. Cột cờ nằm trên trục nhìn từ quảng trường về chính giữa hàng cột đá của Lăng.',
+      views:[{name:'Các ô cỏ trước Lăng',viewAngle:1.49,viewRadius:139,viewElevation:.42,height:8},
+        {name:'Dọc theo quảng trường',viewAngle:2.85,viewRadius:151,viewElevation:.24,height:13}]}
+  };
+  for(const site of atlas.entries)if(precincts[site.id])Object.assign(site,precincts[site.id]);
   // Three named member polygons of https://www.openstreetmap.org/relation/21218176
   // © OpenStreetMap contributors, ODbL. Each pin is the polygon's interior
   // representative_point(); starts use tools/build_vn_tourism.py road_approaches.
