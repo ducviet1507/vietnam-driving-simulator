@@ -153,7 +153,7 @@ async function finish(request, db, body, now) {
 
 // Existing clients read gzip-compressed JSON at the original tile URL. New
 // clients request the smaller binary representation with ?format=packed.
-async function legacyRoadTile(request, env, url) {
+async function legacyRoadTile(request, env, url, matrix=false) {
   const input = new Headers(request.headers);
   for (const key of ["Range","If-Range","If-Match","If-None-Match","If-Modified-Since"]) input.delete(key);
   const source = await env.ASSETS.fetch(new Request(url, {headers:input}));
@@ -163,7 +163,7 @@ async function legacyRoadTile(request, env, url) {
   headers.delete("Content-Encoding");
   headers.set("Content-Type","application/gzip");
   const original = headers.get("ETag");
-  if (original) headers.set("ETag",original.replace(/"$/,'.json"'));
+  if (original) headers.set("ETag",original.replace(/"$/,matrix?'.i32"':'.json"'));
   const match = request.headers.get("If-None-Match");
   if (match === "*" || (match && match.split(",").some(tag=>tag.trim()===headers.get("ETag")))) {
     await source.body?.cancel();
@@ -174,7 +174,7 @@ async function legacyRoadTile(request, env, url) {
     return new Response(null,{headers});
   }
   const raw = await RoadTileCodec.content(source);
-  const content = RoadTileCodec.packed(raw) ? JSON.stringify(RoadTileCodec.decode(raw)) : raw;
+  const content = matrix ? RoadTileCodec.routeCosts(raw) : RoadTileCodec.packed(raw) ? JSON.stringify(RoadTileCodec.decode(raw)) : raw;
   const body = new Blob([content]).stream().pipeThrough(new CompressionStream("gzip"));
   return new Response(body,{headers});
 }
@@ -238,7 +238,9 @@ async function serveGameAsset(request, env, url) {
   const roadTile = (request.method === "GET" || request.method === "HEAD")
     && /^\/vn-roads\/\d+_\d+(?:_\d+_\d+)?\.gz$/.test(pathname);
   if (roadTile) url.pathname = pathname.replace(/\.gz$/,".vrd.gz");
-  const legacyTile = roadTile && url.searchParams.get("format") !== "packed";
+  const matrix = (request.method==="GET" || request.method==="HEAD") && /^\/route-network\/costs-\d+\.gz$/.test(pathname);
+  if (matrix) url.pathname = pathname.replace(/\.gz$/,".vrc.gz");
+  const legacyTile = (roadTile || matrix) && url.searchParams.get("format") !== "packed";
   let response;
   const packedModel = /^\/(streetscape|traffic)\/[^/]+\.glb$/.test(pathname);
   const packedScript = /^\/[^/]+\.js$/.test(pathname) ||
@@ -265,7 +267,7 @@ async function serveGameAsset(request, env, url) {
       response = new Response(body,{headers});
     }
   } else {
-    response = legacyTile ? await legacyRoadTile(request, env, url) : await env.ASSETS.fetch(new Request(url,request));
+    response = legacyTile ? await legacyRoadTile(request, env, url, matrix) : await env.ASSETS.fetch(new Request(url,request));
   }
   if (response.ok && (isPage || isText)) {
     const headers = new Headers(response.headers);

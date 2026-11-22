@@ -6,10 +6,10 @@ class RouteError extends Error {
 }
 
 async function readAsset(url,binary=false){
-  const response=await fetch(url);
+  const response=await fetch(binary?url+'?format=packed':url);
   if(!response.ok)throw new RouteError('network','Chưa tải được dữ liệu đường. Hãy thử lại.');
   const bytes=await RoadTileCodec.content(response);
-  return binary ? new Int32Array(bytes.buffer) : RoadTileCodec.decode(bytes);
+  return binary ? RoadTileCodec.routeCosts(bytes) : RoadTileCodec.decode(bytes);
 }
 
 function cached(map,key,limit,load){

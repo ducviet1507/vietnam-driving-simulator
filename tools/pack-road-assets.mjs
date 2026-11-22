@@ -102,7 +102,27 @@ async function processTiles(directory,write){
 
 export async function packRoadAssets(client){
   if(path.resolve(client)!==path.resolve(clientPath))throw Error('Road packing requires the generated dist/client directory.');
-  return processTiles(path.join(client,'vn-roads'),true);
+  const result=await processTiles(path.join(client,'vn-roads'),true);
+  const matrixDir=path.join(client,'route-network');
+  for(const name of await readdir(matrixDir)){
+    if(!/^costs-\d+\.gz$/.test(name))continue;
+    const file=path.join(matrixDir,name),source=gunzipSync(await readFile(file));
+    if(source.length%4)throw Error('Invalid source route matrix '+name);
+    // VRC1 stores consecutive signed differences in four byte planes, so
+    // gzip can compress the long runs in their high bytes independently.
+    const count=source.length/4,planes=Buffer.allocUnsafe(source.length+5);
+    planes.write('VRC1',0);planes[4]=0;
+    let previous=0;
+    for(let i=0;i<count;i++){
+      const value=source.readInt32LE(i*4),delta=(value-previous)|0;
+      for(let byte=0;byte<4;byte++)planes[5+i+count*byte]=(delta>>>(8*byte))&255;
+      previous=value;
+    }
+    if(!source.equals(Buffer.from(RoadTileCodec.routeCosts(planes).buffer)))throw Error('Route costs changed in '+name);
+    await writeFile(file.replace(/\.gz$/,'.vrc.gz'),gzipSync(planes,{level:9}));
+    await unlink(file);
+  }
+  return result;
 }
 
 if(process.argv[1]&&import.meta.url===pathToFileURL(path.resolve(process.argv[1])).href){

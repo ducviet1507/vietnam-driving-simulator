@@ -88,5 +88,19 @@ globalThis.RoadTileCodec=(()=>{
       return roads.concat(access);
     };
   }
-  return {packed,decode,content,tileURL,roadRows};
+  function routeCosts(bytes){
+    if(bytes.length%4===0)return new Int32Array(bytes.buffer,bytes.byteOffset,bytes.length/4);
+    if(bytes.length%4!==1||bytes[0]!==86||bytes[1]!==82||bytes[2]!==67||bytes[3]!==49||bytes[4]!==0)
+      throw Error('Invalid route cost matrix.');
+    const count=(bytes.length-5)/4,values=new Int32Array(count);
+    let value=0;
+    for(let i=0;i<count;i++){
+      const p=5+i;
+      const delta=bytes[p]|(bytes[p+count]<<8)|(bytes[p+2*count]<<16)|(bytes[p+3*count]<<24);
+      value=(value+delta)|0;
+      values[i]=value;
+    }
+    return values;
+  }
+  return {packed,decode,content,tileURL,roadRows,routeCosts};
 })();

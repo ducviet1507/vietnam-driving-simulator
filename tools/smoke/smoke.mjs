@@ -275,6 +275,18 @@ try {
     });
     assert.deepEqual(invalidPacks,[],'Regional model registrations must match their Atlas entries');
     console.log('PASS nationwide Atlas search and regional model loading');
+    const sameCosts=await page.evaluate(async()=>{
+      const path='/route-network/costs-15.gz';
+      const [original,packed]=await Promise.all([path,path+'?format=packed'].map(async url=>{
+        const response=await fetch(url);
+        if(!response.ok)throw Error('Failed to load '+url);
+        return RoadTileCodec.content(response);
+      }));
+      const a=new Int32Array(original.buffer),b=RoadTileCodec.routeCosts(packed);
+      return a.length>0&&a.length===b.length&&a.every((value,i)=>value===b[i]);
+    });
+    assert.ok(sameCosts,'Public route matrix and packed routing costs must match');
+    console.log('PASS legacy and packed route costs');
     await page.locator('#tourFilter').selectOption('all');
     await page.locator('#findPlace').fill('Chùa Tây Phương');
     await page.waitForFunction(()=>document.querySelector('#places button')?.textContent.includes('Chùa Tây Phương – Thạch Xá'));
