@@ -60,6 +60,13 @@ const sites=context.VietnamLandmarks.entries;
 const memorial=sites.find(s=>s.id==='lang-chu-tich-ho-chi-minh');
 assert.ok(memorial.modeledBuildings.includes('w1213801282'),'the planter must replace its unclassified building mesh');
 assert.equal(memorial.views.length,3);
+const thoSon=sites.find(s=>s.id==='khu-mo-vo-nguyen-giap');
+const [bellX,bellZ]=thoSon.views[3].offset;
+assert.ok(thoSon.modeledBuildings.includes('w885335615'));
+// A generated roadside stall or tree on this apron obscures the real tower.
+for(const [x,z] of [[bellX-9,bellZ+11],[-90,80],[-62,47],[-81,0]])assert.ok(thoSon.reserve(x,z,1));
+assert.ok(!thoSon.reserve(54,83,1));
+assert.equal(thoSon.views[1].photoCatalogId,'vung-chua-bai-xe-khu-mo');
 for(const id of ['thanh-co-quang-tri','cong-tien-thanh-co-quang-tri','nga-ba-dong-loc'])
   assert.ok(sites.find(s=>s.id===id)?.build,id);
 console.log('PASS mapped memorial lawns, ceremonial building replacements and separate monuments');

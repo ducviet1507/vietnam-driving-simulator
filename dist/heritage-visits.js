@@ -2,6 +2,9 @@
 // Anchor a regional visit on an existing road arrival. Each stop keeps its own
 // coordinates and the camera can move out to an island while the car stays parked.
 const heritageVisits=[
+  ['vung-chua-tu-bai-xe-len-san-vieng','Vũng Chùa – từ bãi xe lên khu mộ Đại tướng Võ Nguyên Giáp',[
+    'vung-chua-bai-xe-khu-mo','vung-chua-loi-bo-khu-mo','osm-way-885335615','osm-node-2495002567','vung-chua-san-dang-huong',
+  ]],
   ['vung-chua-tu-hang-phi-lao-ra-dao-yen','Vũng Chùa – từ hàng phi lao đến Đảo Yến',[
     'osm-node-11563767582','osm-node-6841107787','vung-chua-tu-doi-tho-son','osm-way-61973139',
   ]],

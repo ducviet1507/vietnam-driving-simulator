@@ -3,6 +3,7 @@
 // Clues belong to the tour camera. The little scenes in the reveals are original
 // keepsakes inspired by the place, including the imagined voices and movements.
 window.sightSecretStories = {
+  'vung-chua-tu-bai-xe-len-san-vieng':['leaf','Trên sườn núi Thọ','Trước khi tới sân viếng, từ đường đi bộ có thể nhìn thấy mái của công trình nào?','Giữa sườn cây là hai tầng mái của tháp chuông. Con đường lát đá vòng lên phía trên, nơi Đại tướng và phu nhân an nghỉ.'],
   'vung-chua-tu-hang-phi-lao-ra-dao-yen':['shell','Hòn Nồm ngoài cửa vũng','Hòn đảo xanh đối diện dải cát Vũng Chùa còn có tên nào?','Hòn Nồm là tên khác của Đảo Yến. Đứng ở bãi cát nhìn qua tán phi lao có thể nhận ra sườn bắc cao và mũi phía nam thấp hơn.'],
   'deo-ngang-qua-hoanh-son-quan':['arch','Tấm biển phía bắc','Người đi theo bậc đá từ phía Hà Tĩnh sẽ gặp chi tiết gì trên cửa?','Qua hết bậc đá, nhìn lên giữa mặt cổng thấy tấm biển mang tên Hoành Sơn Quan. Ở mặt nam, phần tường trên vòm để trơn.'],
   'dau-tich-tuong-thanh-dong-hoi':['arch','Góc gấp của hào','Từ phía Quách Xuân Kỳ nhìn về thành, dòng nước rẽ ở đâu?','Đến mũi đông bắc, hào đổi hướng ôm theo hai cạnh của thành. Lối gạch đỏ trên bờ cũng gấp theo góc đó.'],

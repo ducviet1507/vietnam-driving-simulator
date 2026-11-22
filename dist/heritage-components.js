@@ -56,6 +56,8 @@
       description:'Từ phía tây vịnh nhìn về đông bắc, dọc theo bờ có Quốc lộ 29 đến khu di tích Bãi Chùa.'}]};
   const laVangGate=[107.1947094,16.7101806],laVangMap='https://maps.giolelavang.com/';
   const precincts={
+    'osm-node-2495002567':{name:'Khu mộ Đại tướng Võ Nguyên Giáp và phu nhân Đặng Bích Hà',city:'Phú Trạch',locality:'Vũng Chùa, Thọ Sơn, Quảng Đông',
+      formerProvince:'Quảng Bình',start:[106.4939762,17.9238382],mappedEntrance:true,visitOnArrival:true,source:'https://vietnamtourism.vn/index.php/tourism/items/2924'},
     'osm-node-11563767582':{name:'Vũng Chùa – Đảo Yến',city:'Phú Trạch',locality:'Thọ Sơn, Quảng Đông',formerProvince:'Quảng Bình',
       start:[106.4881775,17.9226739],visitOnArrival:true,mappedEntrance:true,source:'https://quangbinhtourism.vn/diem-du-lich/khac/vung-chua-dao-yen.html'},
     'osm-node-8250669293':{name:'Hoành Sơn Quan trên đỉnh Đèo Ngang',city:'Hoành Sơn',locality:'Đèo Ngang, giáp Hà Tĩnh và Quảng Trị',
@@ -371,6 +373,11 @@
   ];
   const existing = new Set(atlas.entries.map(site => site.id));
   const monumentStops=[
+    ['osm-node-2495002567','Khu mộ Đại tướng Võ Nguyên Giáp và phu nhân Đặng Bích Hà',106.4949861,17.9247684,'osm-node-2495002567',null,null],
+    ['vung-chua-bai-xe-khu-mo','Bãi xe và lối lên khu mộ Đại tướng Võ Nguyên Giáp',106.494083,17.923944,'osm-node-2495002567','khu-mo-vo-nguyen-giap',1,'https://www.openstreetmap.org/way/884243608'],
+    ['vung-chua-loi-bo-khu-mo','Lối đi bộ trên sườn núi Thọ đến sân viếng',106.494218,17.9247657,'osm-node-2495002567','khu-mo-vo-nguyen-giap',2,'https://www.openstreetmap.org/way/841553891'],
+    ['osm-way-885335615','Tháp chuông Vũng Chùa Hồng Chung',106.49474245,17.9246246,'osm-node-2495002567','khu-mo-vo-nguyen-giap',3],
+    ['vung-chua-san-dang-huong','Sân dâng hương tại khu mộ Đại tướng Võ Nguyên Giáp',106.494987,17.924743,'osm-node-2495002567','khu-mo-vo-nguyen-giap',4],
     ['osm-node-8250669293','Hoành Sơn Quan trên đỉnh Đèo Ngang',106.4696886,17.9563451,'osm-node-8250669293',null,null],
     ['deo-ngang-bac-da-thien-ly','Bậc đá đường thiên lý phía bắc Hoành Sơn Quan',106.469665,17.956568,'osm-node-8250669293','hoanh-son-quan',1],
     ['deo-ngang-mat-nam-hoanh-son-quan','Mặt nam và lối vòm qua Hoành Sơn Quan',106.469682,17.956304,'osm-node-8250669293','hoanh-son-quan',2],
@@ -409,13 +416,13 @@
     ['quang-tri-nha-trung-bay-vinh-moc','Nhà trưng bày bổ sung ở Vịnh Mốc',107.111735,17.073766,'osm-node-1016630618','dia-dao-vinh-moc',2],
     ['quang-tri-phong-ho-sinh-vinh-moc','Gian hộ sinh được trưng bày ở Vịnh Mốc',107.112718,17.073904,'osm-node-1016630618','dia-dao-vinh-moc',3],
   ];
-  for(const [id,name,lon,lat,anchor,model,index] of monumentStops){
+  for(const [id,name,lon,lat,anchor,model,index,map] of monumentStops){
     if(existing.has(id))continue;
     const {start,city,locality,formerProvince,source}=precincts[anchor];
     const osm=id.startsWith('osm-')?id:anchor;
     atlas.entries.push({id,name,lon,lat,start,city,locality,formerProvince,source,region:'Trung Bộ',province:precincts[anchor].province||'Quảng Trị',kind:'Di tích',
       mappedEntrance:true,visitOnArrival:true,approachMeters:Math.round(Math.hypot((lon-start[0])*111320*Math.cos(lat*Math.PI/180),(lat-start[1])*110900)),
-      ...(model?{viewOf:[model,index]}:{}),map:precincts[anchor].map||'https://www.openstreetmap.org/'+osm.split('-').slice(1).join('/')});
+      ...(model?{viewOf:[model,index]}:{}),map:map||precincts[anchor].map||'https://www.openstreetmap.org/'+osm.split('-').slice(1).join('/')});
   }
   const vungChua=precincts['osm-node-11563767582'];
   for(const [id,name,kind,lon,lat,index,map] of [
