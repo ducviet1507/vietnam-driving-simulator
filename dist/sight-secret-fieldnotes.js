@@ -4,6 +4,11 @@
 // entrances. The miniature stories are original fiction.
 (()=>{
   const notes=[
+    [5418467363,'ridge','Nếp gấp cây số không','Mở đầu con đường bằng dấu gì?','Một nếp gấp dựng đứng giữa trang thành trụ đá. Số không nằm ngay chân trụ, còn con đường chạy dài tới tận mép sổ.'],
+    [1490413978,'ink','Hàng cột trên sân cỏ','Một giọt mực vừa đi qua mấy hàng hiên?','Bóng cột nhà trưng bày kẻ những dòng ngắn trên bãi cỏ. Giọt mực lướt qua hàng cuối rồi nằm im dưới mái đón.'],
+    [13005765528,'ridge','Vân núi Các Mác','Đường vân nào đi từ mặt đá sang chiếc lá?','Một khe đá trên sườn núi thu nhỏ thành nét xám. Ở rìa tem nét ấy chạm cuống lá, đổi sang màu rêu.'],
+    [4527762070,'lotus','Cánh sen ngược','Cánh hoa nào nở từ trần hang xuống?','Giọt nước men theo một nếp nhũ ở Ngườm Ngao. Khi giọt rơi vào ô đá bậc thang, bóng đài sen lật lên trên mặt nước.'],
+    [13378657667,'arch','Khe đá Khuổi Ky','Vệt nắng nào đang đứng thay cho một cột nhà?','Nắng sớm lọt qua gầm sàn đá thành một vệt dài. Con dấu giữ vệt ấy ngay dưới mái ngói, sát chân cầu thang.'],
     [10821152105,'arch','Khe sáng dưới Đỉnh Hương','Mặt nước vừa lộ ra ở đâu dưới chân hòn đá?','Trên tem, thủy triều rút khỏi chân Đỉnh Hương. Một khe sáng mở ra giữa hai chân đá, vừa đủ cho con sóng giấy lướt qua.'],
     [994065796,'shell','Vòng xoắn ở Mê Cung','Đường vào mê cung nào nằm gọn trên đầu ngón tay?','Chiếc vỏ ốc nhỏ ở cửa động lần lượt mở từng vòng xoắn trên trang giấy. Nét cuối quay về đúng chỗ khởi đầu.'],
     [3494811567,'sail','Khung đá Bồ Nâu','Qua tấm rèm đá, cánh buồm nào vừa sang bờ sáng?','Từ trong vòm hang, những đầu nhũ sẫm màu viền quanh mặt vịnh. Một cánh buồm đỏ nhỏ như nét bút lướt qua khung ấy.'],
@@ -140,6 +145,9 @@
   Object.assign(window.sightSecretStories,Object.fromEntries(
     notes.map(([node,motif,title,clue,reveal])=>['osm-node-'+node,[motif,title,clue,reveal]])
   ),{
+    'osm-way-1376476251':['drop','Viên sỏi suối Lê Nin','Dưới màu xanh của nước có gì bắt sáng?','Một viên sỏi hiện rõ giữa lòng suối. Sợi sáng trên lưng sỏi cong đi khi chiếc lá chạm nước, rồi tự nối lại.'],
+    'osm-way-1372358286':['drop','Sợi nước Bản Giốc','Có thể lần riêng một sợi trong rèm thác không?','Một sợi nước ở thác phụ tách khỏi màn trắng. Tới chân gờ đá, nó uốn thành một vòng nhỏ trên con dấu Quây Sơn.'],
+    'osm-way-1415191977':['ridge','Góc mái Phia Nhằm','Nét cong nào vừa chạm vào đường núi?','Một góc mái chùa nhô lên trên trang. Qua khe giữa mái và sườn Phia Nhằm ló ra vệt nước trắng của thác Bản Giốc.'],
     'osm-way-207178342':['leaf','Bóng mành bên ao','Chiếc lá nhìn qua mành tre thấy mặt ao thành mấy dải?','Một chiếc lá nép vào mành. Nắng qua từng khe, in lên lá những dòng kẻ mảnh như bóng hàng hiên trên ao cá.'],
     'osm-way-37629143':['lotus','Cánh sen của bảo tàng','Có thể gấp một cánh sen bằng bóng đổ không?','Ánh chiều kéo bóng một khối bê tông trắng qua bậc đá. Trên tờ tem, đường gấp ấy vừa khít một cánh sen.']
   });

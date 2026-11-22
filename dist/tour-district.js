@@ -722,7 +722,7 @@ function createTourDistrict(T,scene,plaster,structures,osmBuildings,nightLights)
       const rise=parseFloat(detail?.['roof:height'])||detail?.['roof:levels']*3.3;
       const fallbackHeight=warehouse?5.4:3.7+(unclassified?0:seed%3*3);
       const h=Math.min(850,Math.max(bottom+.3,2,tagH||parseFloat(detail?.height)||(levels&&levels*3.3+(part&&rise||0))||structures.heightAt(graph,x,z)||fallbackHeight));
-      const b={id,h,bottom,parent:part?.parent,rings,...box,surveyed:original};
+      const b={id,h,bottom,baseY,parent:part?.parent,rings,...box,surveyed:original};
       const block=Math.floor(x/70)+','+Math.floor(z/70);blocks.set(block,(blocks.get(block)||0)+1);
       for(let i=Math.floor((minX-12)/cell);i<=Math.floor((maxX+12)/cell);i++)for(let j=Math.floor((minZ-12)/cell);j<=Math.floor((maxZ+12)/cell);j++){
         const key=i+','+j;if(!cells.has(key))cells.set(key,[]);cells.get(key).push(b);
@@ -851,7 +851,61 @@ function createTourDistrict(T,scene,plaster,structures,osmBuildings,nightLights)
     if(!['Công trình tín ngưỡng','Bảo tàng','Kiến trúc','Phòng trưng bày'].includes(site.kind))return null;
     return near.find(b=>b.surveyed&&insideBuilding(x,z,b.rings));
   }
-  return {group,clear,buildSteps,build(...args){for(const step of buildSteps(...args)){}},contact,footprint,overlapsSight:(landmarks,rings,box)=>overlapsModel(landmarks,rings,box)||overlapsGarden(landmarks,rings,box),
+  function footprintViews(b,x,z,approachX,approachZ,ground){
+    const ring=b.rings[0],extent=Math.hypot(b.maxX-b.minX,b.maxZ-b.minZ);
+    const cx=(b.maxX+b.minX)/2,cz=(b.maxZ+b.minZ)/2,faces=[];
+    // A mapped ring can be concave or wound in either direction. Sample just
+    // beyond each wall before accepting its outward normal.
+    for(let i=0;i<ring.length;i++){
+      const a=ring[i],v=ring[(i+1)%ring.length],dx=v.x-a.x,dz=v.y-a.y,len=Math.hypot(dx,dz);
+      if(len<1.3)continue;
+      const mx=(a.x+v.x)/2,mz=(a.y+v.y)/2;
+      let nx=dz/len,nz=-dx/len;
+      if(insideBuilding(mx+nx*.15,mz+nz*.15,b.rings)){nx=-nx;nz=-nz;}
+      const ax=approachX-mx,az=approachZ-mz;
+      faces.push({mx,mz,nx,nz,len,priority:len/Math.max(1,extent)+
+        .6*(nx*ax+nz*az)/Math.max(1,Math.hypot(ax,az))});
+    }
+    if(!faces.length)return null;
+    faces.sort((a,b)=>b.priority-a.priority);
+    const candidates=faces.slice(0,16);
+    function pick(close){
+      let best=null;
+      for(const face of candidates){
+        const {mx,mz,nx,nz,len}=face,tx=close?mx:cx,tz=close?mz:cz;
+        const height=close?b.h*.87:b.h;
+        const targetY=ground(tx,tz)+height*.46;
+        const run=close?Math.max(10,b.h*1.38,Math.min(36,len)*.98):
+          Math.max(18,extent*1.15,b.h*1.60);
+        const eyeX=tx+nx*run,eyeZ=tz+nz*run;
+        if(insideBuilding(eyeX,eyeZ,b.rings))continue;
+        let slope=close?.15:.36;
+        // Find the lowest unobstructed ray from the wall or overview target.
+        // Heights share the same terrain datum as the rendered district.
+        const steps=Math.min(100,Math.ceil(run/1.8));
+        for(let step=1;step<=steps;step++){
+          const along=run*step/steps,px=tx+nx*along,pz=tz+nz*along;
+          let ceiling=ground(px,pz)+1;
+          const near=cells.get(Math.floor(px/cell)+','+Math.floor(pz/cell))||[];
+          for(const other of near){
+            if((other!==b||close)&&insideBuilding(px,pz,other.rings))ceiling=Math.max(ceiling,other.baseY+other.h+.8);
+          }
+          slope=Math.max(slope,(ceiling-targetY)/along);
+        }
+        const score=face.priority-4*slope;
+        if(best&&score<=best.score)continue;
+        const compass=['nam','đông nam','đông','đông bắc','bắc','tây bắc','tây','tây nam'];
+        const angle=Math.atan2(nx,nz),side=compass[(Math.round(angle/(Math.PI/4))+8)%8];
+        const elevation=Math.atan(slope);
+        best={score,view:{name:close?'Mặt công trình phía '+side:'Toàn cảnh công trình',
+          offset:[tx-x,tz-z],height,viewAngle:angle,viewElevation:elevation,viewRadius:run/Math.cos(elevation)}};
+      }
+      return best?.view;
+    }
+    const overview=pick(false),detail=pick(true);
+    return overview&&detail?[overview,detail]:null;
+  }
+  return {group,clear,buildSteps,build(...args){for(const step of buildSteps(...args)){}},contact,footprint,footprintViews,overlapsSight:(landmarks,rings,box)=>overlapsModel(landmarks,rings,box)||overlapsGarden(landmarks,rings,box),
     streetFronts,builtUp:(x,z)=>cells.has(Math.floor(x/cell)+','+Math.floor(z/cell)),
     mappedBlock:(x,z)=>(blocks.get(Math.floor(x/70)+','+Math.floor(z/70))||0)>=3};
   }

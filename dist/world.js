@@ -906,7 +906,10 @@ async function frameStop(stop){
  const description=[stop.description,tags.start_date?'Niên đại ghi trên bản đồ là năm '+tags.start_date+'.':'',
    tags.architect?'Thiết kế của '+tags.architect+'.':''].filter(Boolean).join(' ');
  const data={...stop,width,depth,yaw,viewAngle:yaw,viewElevation:wide?.53:.39,description};
- data.views=stop.views?[...stop.views]:[{name:'Toàn cảnh địa điểm'},surroundings(width,depth,height)];
+ data.views=stop.views?[...stop.views]:
+   (footprint&&!footprint.stelae?.length?gfx.footprintViews(footprint,x,z,approach.x,approach.z):null)
+   ||(!footprint?landscapeTourViews(stop.kind,x,z,yaw,gfx.ground,gfx.waterAt):null)
+   ||[{name:'Toàn cảnh địa điểm'},surroundings(width,depth,height)];
  if(footprint?.stelae?.length){
    data.views[0]={name:'Toàn cảnh nhà bia',viewAngle:footprint.stelae[0].viewAngle,viewElevation:.14};
    const metres=n=>n.toLocaleString('vi-VN',{minimumFractionDigits:2,maximumFractionDigits:2})+' m';

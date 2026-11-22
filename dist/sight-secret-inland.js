@@ -1,6 +1,18 @@
 'use strict';
 
 Object.assign(window.sightSecretStories, {
+  'mieu-ba-chua-xu-nui-sam': ['ridge', 'Ba vành ngói xanh', 'Từ sân miếu, hãy đếm những lần mái ngói xanh rút vào bên trên chánh điện.', 'Một vành mái che cả hàng cột; vành tiếp theo lọt vào trong, vành trên cùng hứng nắng. Ba mép ngói cùng in lên nền trời Châu Đốc.'],
+  'chua-tay-an-nui-sam': ['shell', 'Đôi voi dưới mái vòm', 'Hai tượng voi đứng dưới chân lầu, mỗi con có bao nhiêu ngà?', 'Voi sẫm màu mang hai ngà, voi trắng mang sáu ngà. Sau lưng chúng, những vành vòm Tây An nhô lên trên thềm gạch.'],
+  'lang-thoai-ngoc-hau': ['ink', 'Khoảng sân Sơn Lăng', 'Qua cửa vòm trắng, hãy tìm ba ngôi mộ cùng quay mặt về phía cổng.', 'Mộ Thoại Ngọc Hầu ở giữa, hai bên là mộ hai phu nhân. Từ trên bậc đá, bạn nhìn thấy khoảng sân nối cả ba ngôi mộ.'],
+  'chua-hang-phuoc-dien': ['echo', 'Đôi rắn ở Phước Điền', 'Dưới vòm hang, bên bệ thờ có hai sắc màu nào?', 'Thanh xà kề bạch xà, một xanh một trắng. Cặp tượng nhắc lại câu chuyện dân gian về Bà Thợ tu hành trên sườn núi Sam.'],
+  'be-da-ba-ngu-nui-sam': ['star', 'Ô vuông đỉnh núi', 'Hãy cúi nhìn mặt sa thạch sẫm màu nơi Bà từng ngự.', 'Giữa bệ có một lỗ vuông. Nhìn từ mép ngoài, bạn thấy ánh sáng dừng lại ở thành hốc, để lòng đá tối màu hơn mặt trên.'],
+  'chua-khleang-soc-trang': ['leaf', 'Đôi cánh dưới diềm', 'Nhìn lên nơi đầu cột hành lang gặp mái chánh điện.', 'Đôi cánh Krud xòe ra dưới mép ngói. Men theo hàng cột, bạn gặp lại dáng cánh ấy dưới từng nhịp mái.'],
+  'chua-dat-set-soc-trang': ['ridge', 'Mười ba tầng đất', 'Thử đếm các vành nhỏ dần trên ngôi tháp Đa Bảo.', 'Từ chân tháp lên đến đỉnh có mười ba tầng. Người nặn tháp, ông Ngô Kim Tòng, làm cả những cửa tí hon dưới từng vành mái.'],
+  'lang-ca-co-tu-soc-trang': ['ink', 'Cánh cổng Lăng Ca', 'Đứng ngoài đường Tôn Đức Thắng, bạn đọc được chữ gì dưới mái cổng?', 'Bốn chữ Lăng Ca Cổ Tự nằm ở giữa tam quan. Qua khỏi bóng mái ngói thấp này, sân chùa mở ra trước cầu thang lên chánh điện.'],
+  'chua-som-rong': ['lotus', 'Bàn tay đỡ má', 'Nhìn từ sân lớn, Đức Phật nằm tựa đầu vào đâu?', 'Bàn tay phải nâng má, khuỷu tay đặt xuống bệ. Đường nếp áo dẫn mắt từ vai ra đến hai bàn chân ở đầu kia của sân.'],
+  'go-cay-thi-oc-eo': ['ink', 'Bốn ô trên gò A', 'Trong nền chính điện cũ, các tường gạch chia ra bao nhiêu ô lớn?', 'Một hàng gạch ngang gặp một hàng dọc. Dưới mái bảo tồn, bốn ô chữ nhật còn ghi lại cách người xưa chia gian thờ.'],
+  'nam-linh-son-oc-eo': ['drop', 'Lối nhỏ của dòng nước', 'Qua các nền gạch Nam Linh Sơn, hãy tìm hai vách hẹp đi song song.', 'Khoảng trống giữa hai vách là rãnh thoát nước. Sau bao lớp kiến trúc chồng lên nhau, đường nước vẫn hiện ra dưới nền cổ.'],
+  'linh-son-co-tu-ba-the': ['ink', 'Hai bia bên bệ thờ', 'Hai bên tượng bốn tay ở Linh Sơn có vật gì màu sẫm?', 'Hai tấm bia đá đứng cạnh bệ thờ. Từ ngưỡng cửa, màu đá trầm làm nổi rõ thân tượng màu vàng ở chính giữa.'],
   'phu-chu-tich-ha-noi': ['ink', 'Sắc vàng dưới hàng vòm', 'Đứng ngoài sân, hãy tìm hai hàng cửa cong nằm giữa hai khối nhà nhô ra.', 'Nắng đọng trên nét gờ vàng quanh từng ô cửa. Lên tới mái, hai hàng vòm nhường chỗ cho dải con tiện và lá cờ trên cao.'],
   'dai-tuong-niem-bac-son': ['ridge', 'Mái đình trong lòng đá', 'Đường cong óng vàng nào mở ra giữa tấm đá trắng ở Bắc Sơn?', 'Ánh sáng lướt xuống lòng mái đình khoét sâu vào thân đài. Qua khoảng trống giữa hai chân mái, bạn còn nhìn thấy một mảnh trời.'],
   'chua-hoa-yen': ['ridge', 'Dải mái Hoa Yên', 'Hãy lần theo mái hành lang chạy ngang sườn núi.', 'Sau lớp ngói trước sân là một dải mái hẹp nối các nếp nhà. Đứng lệch sang bên, bạn nhìn được cả khoảng trời giữa hai dải mái.'],

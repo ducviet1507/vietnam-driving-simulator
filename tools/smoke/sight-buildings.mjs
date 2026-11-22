@@ -51,6 +51,20 @@ assert.equal(district.contact(125,0,1),undefined,'visitors can pass under the sh
 const corner=canopy.rings[0][0];
 assert.equal(district.contact(corner.x,corner.y,.25)?.id,'w3','the canopy post remains solid');
 const walls=scene.getObjectByName('OSM building footprints').children[0].geometry.attributes;
+const museum=district.footprint({map:'https://www.openstreetmap.org/way/1'},32,1);
+// The Atlas point can sit a few metres off centre. The overview stays on the
+// mapped building and its detail looks at an exterior wall in either winding.
+const viewsFor=(building,approachX,approachZ)=>
+  district.footprintViews(building,32,1,approachX,approachZ,()=>0);
+const [overview,facade]=viewsFor(museum,30,25);
+assert.ok(Math.abs(32+overview.offset[0]-30)<1&&Math.abs(1+overview.offset[1])<1);
+assert.equal(facade.name,'Mặt công trình phía nam');
+assert.ok(facade.offset[1]>overview.offset[1]&&overview.viewRadius>facade.viewRadius);
+const reversed={...museum,rings:[museum.rings[0].slice().reverse()]};
+const reverseViews=viewsFor(reversed,30,25);
+assert.ok(Math.abs(reverseViews[1].viewAngle-facade.viewAngle)<1e-6);
+const obstructed=district.footprintViews(museum,32,1,30,25,(x,z)=>z>4?40:0);
+assert.ok(Math.cos(obstructed[1].viewAngle)<.1,'a ridge below the southern camera sends the detail to a clear side');
 function hasWindowBays(x){
   for(let i=0;i<walls.position.count;i++){
     if(Math.abs(walls.position.getX(i)-x)<5&&walls.bays.getX(i)>0)return true;
@@ -85,3 +99,15 @@ landmarks.setOrigin(project(fort),0,0);
 const courtyard=plot(85,0);
 assert.ok(district.overlapsSight(landmarks,courtyard.rings,courtyard.box),'mapped extent protects the fort grounds');
 console.log('PASS sight grounds, mapped buildings and waterside footprints');
+
+runInNewContext(readFileSync(new URL('../../dist/landscape-views.js',import.meta.url),'utf8'),context);
+for(const [pin,kind] of [[-16,'Hồ'],[25,'Bãi biển']]){
+  const [bank]=context.landscapeTourViews(kind,0,pin,0,()=>0,(x,z)=>z<0);
+  const target=pin+bank.offset[1],eye=target+Math.cos(bank.viewAngle)*bank.viewRadius*Math.cos(bank.viewElevation);
+  assert.ok(target<0&&eye>0,'the camera is on dry land looking out over mapped water');
+}
+const slope=context.landscapeTourViews('Đỉnh núi',0,0,0,(x,z)=>100-.4*x,()=>null);
+assert.match(slope[0].name,/phía đông$/);
+assert.ok(Math.abs(slope[0].offset[0]+Math.sin(slope[0].viewAngle)*slope[0].viewRadius*Math.cos(slope[0].viewElevation))<.01);
+assert.equal(context.landscapeTourViews('Đỉnh núi',0,0,0,()=>100,()=>null),null);
+assert.equal(context.landscapeTourViews('Hồ',0,0,0,()=>0,()=>null),null);

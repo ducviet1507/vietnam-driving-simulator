@@ -2,6 +2,32 @@
 // Anchor a regional visit on an existing road arrival. Each stop keeps its own
 // coordinates and the camera can move out to an island while the car stays parked.
 const heritageVisits=[
+  // https://condao.com.vn/vi/news/tai-nguyen-du-lich/nha-tu-con-dao-2750.html
+  ['di-tich-con-dao','Côn Đảo – từ Dinh Chúa Đảo đến Cầu tàu 914',[
+    'so-co-con-dao','dinh-chua-dao','bia-cau-tau-914','cau-tau-914',
+  ]],
+  ['cum-thap-hoa-lai','Cụm tháp Hòa Lai',[
+    'thap-bac-hoa-lai','thap-hoa-lai','thap-nam-hoa-lai',
+  ]],
+  // https://bvhttdl.gov.vn/binh-dinh-tu-bo-ton-tao-phat-huy-gia-tri-thap-champa-gan-voi-phat-trien-du-lich-20211015112439839.htm
+  ['thap-cham-binh-dinh','Bảy cụm tháp Chăm Bình Định',[
+    'thap-doi','thap-binh-lam','thap-banh-it','thap-canh-tien','thap-phu-loc','thap-thu-thien','thap-duong-long',
+  ]],
+  ['di-tich-pac-bo','Khu di tích Pác Bó',[
+    'osm-node-5418467363','osm-node-1490413978','osm-way-1376476251','osm-node-13005765528','hang-coc-bo',
+  ]],
+  ['ban-gioc-nguom-ngao','Bản Giốc – Khuổi Ky – Ngườm Ngao',[
+    'ban-gioc','osm-way-1372358286','osm-way-1415191977','osm-node-13378657667','osm-node-4527762070',
+  ]],
+  ['di-tich-nui-sam','Các di tích quanh Núi Sam',[
+    'osm-way-1159104301','osm-node-1814474832','osm-way-1159104315','osm-way-1189409894','osm-node-4293357289',
+  ]],
+  ['chua-soc-trang','Các ngôi chùa Sóc Trăng',[
+    'osm-way-225364168','osm-way-668640550','osm-way-668640522','osm-way-668649240','bat',
+  ]],
+  ['oc-eo-ba-the','Óc Eo – Ba Thê',[
+    'osm-way-1182462616','osm-way-1182462620','osm-way-1182462619',
+  ]],
   // https://halongbay.com.vn/vi/tours/25-hanh-trinh-vhl7-tham-quan-vinh-ha-long-theo-cac-hanh-trinh-vhl1-2-3-4
   // https://daison.haiphong.gov.vn/van-hoa-xa-hoi/hai-phong-ban-hanh-muc-phi-tham-quan-moi-doi-voi-di-tich-danh-thang-837039
   ['vinh-ha-long-cat-ba','Vịnh Hạ Long – quần đảo Cát Bà',[

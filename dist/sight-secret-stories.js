@@ -3,6 +3,18 @@
 // Clues belong to the tour camera. The little scenes in the reveals are original
 // keepsakes inspired by the place, including the imagined voices and movements.
 window.sightSecretStories = {
+  'dinh-chua-dao':['leaf','Bóng mát dưới hàng hiên','Ở Dinh Chúa Đảo, lớp mái nào che cho người đứng ngoài cửa?','Phía dưới mái chính còn một lớp ngói thấp che hàng hiên. Bóng cột vuông nằm dọc theo lan can.'],
+  'so-co-con-dao':['arch','Hai cánh cổng vàng','Hai bức tường trước Sở Cò dẫn mắt về đâu?','Theo đường cong của tường vàng, mắt gặp khoảng mở giữa hai trụ cổng rồi nhìn tới mái ngói phía trong.'],
+  'bia-cau-tau-914':['ink','Trang đá bên vịnh','Bia nằm ở đoạn nào trên đường từ phố ra biển?','Ngay đầu cầu phía bờ, người đến thăm có thể dừng lại trước bia để tưởng nhớ những người đã mất khi xây cầu.'],
+  'cau-tau-914':['sail','Bến đá giữa vịnh','Đi hết dải cầu hẹp, đường viền của bến thay đổi thế nào?','Hai mép đá mở rộng ở đầu ngoài. Nhìn từ đó về bờ, thân cầu thành một nét dài nối vịnh Côn Sơn với phố.'],
+  'di-tich-con-dao':['ink','Từ hiên dinh ra biển','Đứng ở đầu Cầu tàu 914 nhìn về đất liền sẽ gặp di tích nào?','Qua con đường ven vịnh và khoảng sân là Dinh Chúa Đảo. Những nơi ở rất gần nhau lưu giữ những phần khác nhau của lịch sử Côn Đảo.'],
+  'cum-thap-hoa-lai':['arch','Khoảng trống giữa hai tháp','Ở Hòa Lai, dấu vết tháp nào nằm thấp hơn hai tháp còn đứng?','Ở giữa tháp Bắc và tháp Nam là nền gạch của tháp Giữa. Nền thấp còn giữ vị trí của công trình trong hàng ba tháp.'],
+  'thap-cham-binh-dinh':['arch','Đếm bóng tháp','Từ Tháp Đôi tới Dương Long, đường chân trời đổi ra sao?','Hai tháp đứng cạnh nhau ở Quy Nhơn. Lên tới Dương Long, ba khối tháp lại in bóng trên nền trời.'],
+  'di-tich-pac-bo':['drop','Màu nước Pác Bó','Dòng nước nào đưa mắt từ chân núi về phía hang Cốc Bó?','Suối Lê Nin chảy dưới chân núi Các Mác. Bờ đá, mặt nước và vòm hang xuất hiện lần lượt trên đường tham quan.'],
+  'ban-gioc-nguom-ngao':['echo','Một miền đá vôi','Qua Khuổi Ky tới Ngườm Ngao, đá xuất hiện dưới những hình dáng nào?','Đá nằm trong tường nhà ở Khuổi Ky, rồi cao dần thành vách và vòm ở Ngườm Ngao. Phía Bản Giốc, dòng nước trắng đổ qua bậc đá.'],
+  'di-tich-nui-sam':['ridge','Nhìn lại từ Núi Sam','Quanh Núi Sam, hai góc nhìn nào cách nhau cả một sườn núi?','Sau khi ngắm các mái chùa và miếu ở chân núi, lên cao có thể nhìn xa qua đồng bằng Châu Đốc.'],
+  'chua-soc-trang':['leaf','Sổ ký họa Sóc Trăng','Nếu vẽ một chi tiết ở mỗi chùa, em sẽ chọn gì?','Trang dành cho Chùa Đất Sét giữ một nét riêng bên những trang vẽ chùa Khmer. Mỗi điểm dừng làm quyển sổ của Sóc Trăng dày thêm.'],
+  'oc-eo-ba-the':['ink','Nét nền dưới chân Ba Thê','Ở Gò Cây Thị, điều gì vẫn đọc được từ những lớp gạch thấp?','Đường viền nền gạch ghi lại hình dáng kiến trúc xưa. Từ gò sang Nam Linh Sơn là một trang khác của Óc Eo.'],
   'cot-co-ha-noi':['star','Ô hoa của Kỳ Đài','Dọc theo thân bát giác, ánh sáng đi qua những ô cửa hình gì?','Một ô hoa lọt lên trang giấy. Phía trên nó, lá cờ vẫn đang mở ra trong gió.'],
   'bac-mon-thang-long':['arch','Một ô phố qua Cửa Bắc','Đứng từ phố Phan Đình Phùng, em thấy gì phía trên vòm cổng?','Nét vòm ôm lấy bóng phố. Ba chữ trên biển đá nằm ngay dưới mái vọng lâu.'],
   'osm-way-185531692':['lantern','Đầu đao Hậu Lâu','Nhìn qua khung cửa trên lầu, em thấy mái nào cao hơn?','Từ bờ mái thấp, nét vẽ lần theo góc đao rồi dừng lại ở lầu nhỏ giữa nóc.'],

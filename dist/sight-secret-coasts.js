@@ -1,6 +1,12 @@
 'use strict';
 
 Object.assign(window.sightSecretStories, {
+  'thap-hoa-lai': ['ridge','Khoảng trống giữa hai tháp','Từ nền thấp giữa Hòa Lai, quay nhìn hai đầu trục tháp.','Hai ngọn tháp đứng ở hai mép trang. Ở khoảng trống giữa chúng, người vẽ chỉ đặt một nét vuông thấp bằng gạch, đúng nơi cuộc khai quật tìm thấy nền tháp Giữa.'],
+  'thap-bac-hoa-lai': ['leaf','Móc lá trên cột gạch','Lần theo dải lá cuộn giữa cột ốp của tháp Bắc.','Đầu một chiếc lá đổi chiều, khớp vào chiếc kế bên. Người vẽ đi hết dải móc gạch rồi khép nét thành bông hoa ở chân cột.'],
+  'thap-nam-hoa-lai': ['arch','Nét phác bên tiền sảnh','Quanh cửa đông tháp Nam, chỗ nào người thợ xưa mới phác dáng trên gạch?','Khối ốp dưới chân cột còn nét vuông của viên gạch. Nhìn lên một tầng, ô khám trên mái đã hiện đủ đường chạm.'],
+  'thap-thu-thien': ['ridge','Mũi lao trong vòm cửa','Đứng bên mặt tây Thủ Thiện, tìm những đầu vòm xếp lồng nhau.','Nét cửa giả trên giấy vút lên giữa hai đường cột trơn. Chẳng cần thêm hoa văn nào, trang sổ vẫn nhận ra dáng tháp giữa cánh đồng sông Kôn.'],
+  'thap-phu-loc': ['arch','Khoảng trời trên đồi Phú Lốc','Từ cửa phía đông, nhìn theo gờ dọc tới nơi dải đá trên mái bị đứt.','Đầu bút dừng ở chỗ mạch đá mất một đoạn. Qua khoảng hở giữa những viên gạch sẫm, một mẩu trời của đồi Phú Lốc lọt vào trang.'],
+  'thap-po-dam': ['star','Hai mái nhìn về nam','Nhìn hai cửa tháp nhỏ trên thềm núi Ông Xiêm. Mái nào giật thành từng nấc?','Một nét bậc thang, một nét mái thu dần. Hai hình khác nhau cùng quay về phía nam trên trang ký họa Pô Đam.'],
   'duc-ba-hoa-binh-sai-gon': ['drop','Quả địa cầu trước ngực','Từ giữa Công trường Công xã Paris, tìm cây thánh giá nhỏ nằm giữa hai bàn tay tượng.','Quả địa cầu chỉ vừa hai bàn tay bằng đá. Người ký họa chừa một nét trắng ở đỉnh quả cầu cho cây thánh giá, rồi ghi hai chữ Regina Pacis từ tấm bảng đồng dưới chân.'],
   'nha-co-phung-hung': ['sail','Cá chép dưới ban công','Con cá nào ở nhà Phùng Hưng quanh năm nép dưới hiên?','Một con cá chép bằng gỗ đỡ lấy ban công. Chỉ khi bóng nó chạm nền phố, con cá mới có dòng nước riêng để bơi.'],
   'nha-co-quan-thang': ['lantern','Quầng đèn Quân Thắng','Đứng giữa hai ngọn đèn, nhìn lên tấm biển nhỏ dưới hiên.','Hai quầng đỏ khép lại bên dòng chữ Quân Thắng. Trong trang ký họa, khoảng sáng ở giữa vừa bằng một cánh cửa mở hàng.'],
