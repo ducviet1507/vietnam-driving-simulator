@@ -129,7 +129,9 @@ function createWorldStreetLife(T,scene,small,environment,amenities,prepareActor)
     }
   }
   async function prepareDeparture(){
-    await Promise.all(paths.map(p=>walker(p).ready));
+    // render() has already requested every walker visible from the starting point.
+    const departure=small?walkers.values():paths.map(walker);
+    await Promise.all(Array.from(departure,item=>item.ready));
     return walkGroup;
   }
   return {activity,prepare,render,prepareDeparture,get places(){return places;}};

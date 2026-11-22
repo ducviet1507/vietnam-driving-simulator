@@ -121,7 +121,7 @@ function createMappedTrafficLights(T,scene,small){
   const material=new T.MeshLambertMaterial({color:0x353b3b});
   const poles=new T.InstancedMesh(new T.CylinderGeometry(.075,.095,1,7),material,capacity);
   const heads=new T.InstancedMesh(new T.BoxGeometry(.48,1.28,.34),material,capacity);
-  const bulbs=new T.InstancedMesh(new T.SphereGeometry(.156,10,8),new T.MeshBasicMaterial(),capacity*3);
+  const bulbs=new T.InstancedMesh(new T.SphereGeometry(.156,small?6:10,small?4:8),new T.MeshBasicMaterial(),capacity*3);
   const pose=new T.Object3D(),color=new T.Color();
   const objects=[poles,heads,bulbs],phases=['red','amber','green'];
   const lit=[0xff312a,0xffb825,0x2afb70],dim=[0x482221,0x45371f,0x183d2b];

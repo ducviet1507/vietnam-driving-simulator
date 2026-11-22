@@ -38,7 +38,8 @@ const DrivingRenderer = (() => {
   function get(canvas, options) {
     if (!renderer) {
       try {
-        renderer = new THREE.WebGLRenderer({canvas, antialias: true, ...options});
+        const antialias = !matchMedia('(pointer: coarse)').matches || document.body.dataset.graphics === 'high';
+        renderer = new THREE.WebGLRenderer({canvas, antialias, ...options});
       } catch {
         unavailable();
         return null;

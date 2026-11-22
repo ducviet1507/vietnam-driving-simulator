@@ -50,7 +50,8 @@ function createWorldAtmosphere(T, scene, sun, loader, bearing=0, clearFog=.00078
         #include <colorspace_fragment>
       }`
   }));
-  sky.frustumCulled=false; sky.renderOrder=-1000; scene.add(sky);
+  // The sky is at the far depth. Shade only the sky pixels left by opaque scenery.
+  sky.frustumCulled=false; sky.renderOrder=1000; scene.add(sky);
   const fill=new T.HemisphereLight(0xcde4ff,0x8c7761,1);
   scene.add(fill);
   const warmSun=new T.Color(0xffb065), daySun=new T.Color(0xfff0d6), moon=new T.Color(0x9cbeef);

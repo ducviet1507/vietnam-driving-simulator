@@ -2,10 +2,10 @@
 
 // Bent leaves share one small mesh. Vertex colours keep the roots in shade
 // while the thinner tips pick up light from the sky.
-function createVergeGrass(T){
+function createVergeGrass(T,blades=21){
   const verts=[], colours=[], bottom=new T.Color(0x56643a), tip=new T.Color(0xaba65e);
-  for(let i=0;i<21;i++){
-    const a=i*2.39996, spread=.53*Math.sqrt(i/21), dx=Math.cos(a), dz=Math.sin(a);
+  for(let i=0;i<blades;i++){
+    const a=i*2.39996, spread=.53*Math.sqrt(i/blades), dx=Math.cos(a), dz=Math.sin(a);
     const x=dx*spread,z=dz*spread,h=.32+.38*(.5+.5*Math.sin(7.1*i+1.7));
     const w=.012+.006*(i%4),lean=.21+.21*spread;
     const l=[x-dz*w,0,z+dx*w],r=[x+dz*w,0,z-dx*w];

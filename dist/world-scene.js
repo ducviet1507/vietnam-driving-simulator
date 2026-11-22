@@ -127,6 +127,7 @@
     }
     material.pavers=new T.MeshStandardMaterial({color:0xb5ada4,roughness:.91,side:T.DoubleSide});
     const grassClump=createVergeGrass(T);
+    const sparseGrass=small?createVergeGrass(T,7):grassClump;
     material.vergeGrass=new T.MeshLambertMaterial({vertexColors:true,side:T.DoubleSide});
     let temple;
     const curbStone=new T.MeshStandardMaterial({color:0x979388,roughness:.94,side:T.DoubleSide});
@@ -1083,9 +1084,11 @@
       for(const [mat,data] of aprons)yield* surface(data,mat,.001,mat===material.earth ? .48 : mat===material.pavers ? 1 : .25);
       yield* surface(yellow,material.yellow,.026,1);yield* surface(white,material.white,.026,1);
       yield* walks.buildSteps(roadGroup,surface,material.pavers,curbStone);const pavementLift=walks.liftAt;
-      scatterVergeGrass(segments,Math.min(320,detailRadius),
+      const lightScenery=small&&graphics.profile.id==='low';
+      const grass=lightScenery?sparseGrass:grassClump;
+      scatterVergeGrass(segments,Math.min(lightScenery?155:320,detailRadius),
         (x,z)=>!walks.liftAt(x,z)&&!blocked(x,z,.8),
-        (x,z,size,angle)=>instance('vergeGrass',grassClump,x,-.18,z,size,size,size,angle));
+        (x,z,size,angle)=>instance('vergeGrass',grass,x,-.18,z,size,size,size,angle));
       if(wires.length){
         for(let i=0;i<wires.length;i+=3)wires[i+1]+=localGround(wires[i],wires[i+2]);
         const lines=new T.BufferGeometry();lines.setAttribute('position',new T.Float32BufferAttribute(wires,3));
@@ -1251,6 +1254,7 @@
     const ctx=contactTexture.getContext('2d'),grad=ctx.createRadialGradient(32,32,9,32,32,31);
     grad.addColorStop(0,'rgba(10,13,15,.75)');grad.addColorStop(1,'rgba(10,13,15,0)');ctx.fillStyle=grad;ctx.fillRect(0,0,64,64);
     const contactMat=new T.MeshBasicMaterial({map:new T.CanvasTexture(contactTexture),transparent:true,depthWrite:false});
+    const trafficBody=new T.MeshLambertMaterial();
     const fallbackMats=colors.map(c=>new T.MeshStandardMaterial({color:c,metalness:.5,roughness:.28}));
     const tires=basic(0x212323),windows=new T.MeshStandardMaterial({color:0x35494e,metalness:.48,roughness:.17}),lamps=new T.MeshBasicMaterial({color:0xa83227});
     function loadModel(kind){
@@ -1308,6 +1312,16 @@
         block(s*wide*.34,high*.48,-len*.485,wide*.22,.1,.05,lamps);
         for(const side of [-1,1])block(s*wide*.47,.29,side*len*.31,.16,.38,.54,tires);
       }
+      }
+      // Small-screen traffic proxies can draw their body, windows and tyres in one pass.
+      if(small&&!player){
+        const panels=low.children.filter(mesh=>mesh.geometry===unitBox);
+        const body=new T.InstancedMesh(unitBox,trafficBody,panels.length);
+        panels.forEach((panel,i)=>{
+          panel.updateMatrix();body.setMatrixAt(i,panel.matrix);body.setColorAt(i,panel.material.color);
+          low.remove(panel);
+        });
+        low.add(body);
       }
       const item={root,outside,low,shadow,axleShadows:[],kind,idx,wheels:[],front:[],light:null,detail:null,loading:false};
       item.request=()=>{
@@ -1420,7 +1434,9 @@
       if(inside)cabin??=window.buildDriverCabin(T,playerRig,document.getElementById('map'));
       cabin?.update(inside,(car.speed||0)*3.6,car.steer||0);
       const visibleTraffic=car.sightView?.data.memorialVisit?[]:traffic||[];
-      const closest=visibleTraffic.map(a=>({a,d:(a.x-car.x)**2+(a.z-car.z)**2})).filter(v=>v.d<360*360).sort((a,b)=>a.d-b.d);
+      const lightTraffic=small&&graphics.profile.id==='low';
+      const trafficRange=lightTraffic?220:360,detailRange=lightTraffic?70:140;
+      const closest=visibleTraffic.map(a=>({a,d:(a.x-car.x)**2+(a.z-car.z)**2})).filter(v=>v.d<trafficRange**2).sort((a,b)=>a.d-b.d);
       for(const [index,{a,d}] of closest.entries()){
         const kind=Object.hasOwn(trafficModels,a.kind)?a.kind:'sedan';
         let item=trafficItems.get(a.id);
@@ -1433,7 +1449,7 @@
         for(const shadow of item.axleShadows)shadow.visible=!a.flood&&!recoil?.fallen;
         item.shadow.visible=!a.flood&&(recoil?.y||0)<3.2;
         // Keep nearby riders legible without loading every scooter on a busy street.
-        pose(item,a,dt,(index<graphics.profile.cars||kind==='scooter'&&d<35*35||!!recoil)&&d<140*140);
+        pose(item,a,dt,(index<graphics.profile.cars||kind==='scooter'&&d<35*35||!!recoil)&&d<detailRange**2);
       }
       for(const [id,item] of trafficItems)if(item.tick!==version){
         trafficItems.delete(id);item.root.visible=false;
@@ -1605,7 +1621,10 @@
     }
     async function warmScene(){
       const actors=new Map([[player.kind,player]]);
-      for(const item of trafficItems.values())if(!actors.has(item.kind))actors.set(item.kind,item);
+      for(const item of trafficItems.values()){
+        if(small&&!item.loading)continue;
+        if(!actors.has(item.kind))actors.set(item.kind,item);
+      }
       for(const item of actors.values())item.request();
       const [walkers]=await Promise.all([streetLife.prepareDeparture(),environmentReady,
         ...Array.from(actors.values(),item=>item.ready)]);

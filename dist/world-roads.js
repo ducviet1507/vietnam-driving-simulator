@@ -19,7 +19,7 @@ class VietnamRoads {
    this.tunnelData=index.tunnelData;
    this.mx=111320*Math.cos(lat*Math.PI/180);this.my=110900;
    this.cache=new Map();this.edges=new Map();this.nodes=new Map();this.buckets=new Map();
-   this.stamp=0;
+   this.turnOptions=new Map();this.stamp=0;
  }
  point(lon,lat){return {x:(lon-this.lon)*this.mx,z:(this.lat-lat)*this.my};}
  geo(x,z){return [this.lon+x/this.mx,this.lat-z/this.my];}
@@ -91,6 +91,7 @@ class VietnamRoads {
      for(const k of cells){if(!buckets.has(k))buckets.set(k,[]);buckets.get(k).push(edge);}
    }
    this.edges=fresh;this.nodes=nodes;this.buckets=buckets;
+   this.turnOptions.clear();this.lastNearby=null;
    this.bridges=buildBridgeProfiles(this,this.bridgeDetails);
    this.tunnels=buildTunnelProfiles(this,this.tunnelData);
    this.signature=tiles.some(tile=>tile.details===null)?null:signature;
@@ -99,11 +100,14 @@ class VietnamRoads {
  nearby(x,z,r){
    const left=Math.floor((x-r)/300),right=Math.floor((x+r)/300),top=Math.floor((z-r)/300),bottom=Math.floor((z+r)/300);
    if(left===right&&top===bottom)return this.buckets.get(left+','+top)||[];
+   const last=this.lastNearby;
+   if(last&&last.left===left&&last.right===right&&last.top===top&&last.bottom===bottom)return last.edges;
    const unique=new Set();
    for(let a=left;a<=right;a++)
      for(let b=top;b<=bottom;b++)
        for(const e of this.buckets.get(a+','+b)||[])unique.add(e);
-   return [...unique];
+   const edges=[...unique];
+   this.lastNearby={left,right,top,bottom,edges};return edges;
  }
  roadLevel(edge,s){
    return this.tunnels?.info(edge)?this.tunnels.lift(edge,s):this.bridges.lift(edge,s);
@@ -149,6 +153,10 @@ class VietnamRoads {
    return !mandatory||allowed;
  }
  options(c){
+   // Heading and turn restrictions depend on the incoming edge, direction and vehicle class.
+   const key=c.edge.id+':'+c.dir+(c.kind==='scooter'?':bike':'');
+   const cached=this.turnOptions.get(key);
+   if(cached)return cached;
    const node=c.dir>0?c.edge.end:c.edge.start,base=this.sample({...c,s:c.dir>0?c.edge.length:0}).yaw,list=[];
    for(const edge of this.nodes.get(node)||[])for(const dir of [1,-1]){
      if(dir<0&&edge.oneway||edge.id===c.edge.id&&dir===-c.dir)continue;
@@ -158,7 +166,8 @@ class VietnamRoads {
      const turn=this.sample(next).yaw-base;
      list.push({...next,angle:Math.atan2(Math.sin(turn),Math.cos(turn))});
    }
-   return list.sort((a,b)=>Math.abs(a.angle)-Math.abs(b.angle));
+   list.sort((a,b)=>Math.abs(a.angle)-Math.abs(b.angle));
+   this.turnOptions.set(key,list);return list;
  }
  advance(c,meters,choose){
    let moved=0;
