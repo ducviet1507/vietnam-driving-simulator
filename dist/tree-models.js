@@ -10,7 +10,7 @@ function createTreeModels(T){
   const templates=treeGeometryTemplates.get(T);
   let distantMaterial;
   if(!roadsideTreeAtlas){
-    const compact=globalThis.matchMedia?.('(pointer: coarse)').matches && document.body.dataset.graphics!=='high';
+    const compact=globalThis.matchMedia?.('(pointer: coarse)').matches && globalThis.document?.body?.dataset.graphics!=='high';
     roadsideTreeAtlas=new T.TextureLoader().load(compact?'streetscape/tree-canopies-mobile.webp':'streetscape/tree-canopies.webp');
   }
   const atlas=roadsideTreeAtlas;
