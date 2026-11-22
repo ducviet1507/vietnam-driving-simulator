@@ -1500,7 +1500,7 @@
         const front=Math.abs(Math.sin(angle))*v.data.width+Math.abs(Math.cos(angle))*v.data.depth;
         const radius=(v.data.viewRadius??(Math.max(span/Math.max(.35,camera.aspect),v.height)*1.10+front*.40))*v.zoom;
         const base=(modeledBridgeLengths[v.data.id]?bridges?.signatureHeight(v.x,v.z):null)??relief.ground(v.x,v.z);
-        const focus=base+v.height*.46;
+        const focus=v.data.focusAltitude??(base+v.height*.46);
         look.set(v.x-originX,focus,v.z-originZ);
         camera.position.set(look.x+Math.sin(v.angle)*radius*Math.cos(v.elevation),focus+radius*Math.sin(v.elevation),
           look.z+Math.cos(v.angle)*radius*Math.cos(v.elevation));

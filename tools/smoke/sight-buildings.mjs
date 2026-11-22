@@ -111,3 +111,5 @@ assert.match(slope[0].name,/phía đông$/);
 assert.ok(Math.abs(slope[0].offset[0]+Math.sin(slope[0].viewAngle)*slope[0].viewRadius*Math.cos(slope[0].viewElevation))<.01);
 assert.equal(context.landscapeTourViews('Đỉnh núi',0,0,0,()=>100,()=>null),null);
 assert.equal(context.landscapeTourViews('Hồ',0,0,0,()=>0,()=>null),null);
+const reservoir=context.landscapeTourViews('Hồ',0,20,0,()=>4,(x,z)=>z<0?{level:16}:null);
+assert.ok(reservoir[0].focusAltitude>16,'look above the water surface even when the terrain sample is the lake bed');

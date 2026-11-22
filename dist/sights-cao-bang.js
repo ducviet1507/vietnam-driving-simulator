@@ -14,6 +14,58 @@
   function star(n,r,inner){return Array.from({length:n*2},(_,i)=>{
     const a=Math.PI/2+i*Math.PI/n;return [(i%2?inner:r)*Math.cos(a),(i%2?inner:r)*Math.sin(a)];
   });}
+  // An individual floor remains level, even when the raster includes its roof.
+  // Steps meet the surveyed ground at their foot, and a short bank ties the
+  // platform into the hillside. Separate buildings may sit at different levels.
+  function terraces(T,kit){
+    const parts=[];
+    function place(x,z,a,w,d,stepsAt,foot,build){
+      const first=kit.vertexCount(),c=Math.cos(a),s=Math.sin(a),children=kit.place(x,z,a,build);
+      const project=(u,v)=>[x+u*c+v*s,z-u*s+v*c];
+      const strip=[],colors=[],indices=[],ref=[];
+      const bounds=[[-w,-d],[w,-d],[w,stepsAt],[-w,stepsAt]];
+      for(let j=0;j<4;j++){
+        const [ax,az]=bounds[j],[bx,bz]=bounds[(j+1)%4],n=Math.ceil(Math.hypot(bx-ax,bz-az)/2.4);
+        const from=strip.length/3;
+        for(let k=0;k<=n;k++)for(const lateral of [0,1]){
+          const u=ax+(bx-ax)*k/n,v=az+(bz-az)*k/n;
+          const [px,pz]=project(u*(1+lateral*3.5/w),v*(1+lateral*3.5/Math.max(d,stepsAt)));
+          strip.push(px,0,pz);ref.push([px,pz,lateral]);
+          const col=new T.Color(lateral?0x697654:0x879073).multiplyScalar(.97+.07*Math.sin(u+v));
+          colors.push(col.r,col.g,col.b);
+          if(k&&lateral){const i=from+k*2;indices.push(i-2,i-1,i,i,i-1,i+1);}
+        }
+      }
+      const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(strip,3));
+      g.setAttribute('color',new T.Float32BufferAttribute(colors,3));g.setIndex(indices);g.computeVertexNormals();
+      const land=new T.Mesh(g,new T.MeshStandardMaterial({vertexColors:true,roughness:1,side:T.DoubleSide}));land.receiveShadow=true;
+      kit.group.add(land);
+      parts.push({first,end:kit.vertexCount(),x,z,c,s,w,d,stepsAt,foot,children,land,ref,project,rest:children.map(m=>m.position.y)});
+    }
+    let original;
+    kit.group.userData.fitGround=ground=>{
+      const baked=kit.group.children.find(m=>m.geometry?.hasAttribute('finishKind'));
+      if(!baked)return;
+      const g=baked.geometry,p=g.attributes.position;
+      original??=p.array.slice();
+      for(const b of parts){
+        const corner=[[-.72,.62],[.72,.62],[0,-.28]].map(([u,v])=>ground(...b.project(u*b.w,v*b.d)));
+        const level=(ground(b.x,b.z)+Math.min(...corner))*.5;
+        const bottom=ground(...b.project(0,b.foot)),delta=bottom-level;
+        for(let i=b.first;i<b.end;i++){
+          const x=original[i*3],y=original[i*3+1],z=original[i*3+2],v=(x-b.x)*b.s+(z-b.z)*b.c;
+          const t=Math.max(0,Math.min(1,(v-b.stepsAt)/(b.foot-b.stepsAt))),step=delta*t*t*(3-2*t);
+          const h=level+y+step;p.setY(i,y<.025?Math.min(h,ground(x,z)-.15):h);
+        }
+        b.children.forEach((m,i)=>{m.position.y=b.rest[i]+level;});
+        const geom=b.land.geometry,pos=geom.attributes.position;
+        b.ref.forEach(([x,z,outer],i)=>pos.setY(i,outer?ground(x,z)-.06:level+.035));
+        pos.needsUpdate=true;geom.computeVertexNormals();geom.computeBoundingSphere();
+      }
+      p.needsUpdate=true;g.computeVertexNormals();g.computeBoundingBox();g.computeBoundingSphere();
+    };
+    return place;
+  }
   const monumentSource='https://thoibaotaichinhvietnam.vn/dau-tu-3250-ty-dong-nang-cap-duong-ho-chi-minh-doan-pac-bo-cao-bang-202840.html';
   stop('osm-node-5418467363',{name:'Biểu tượng Km 0 đường Hồ Chí Minh',locality:'Trường Hà',kind:'Di tích',
     lon:106.051847,lat:22.97722,yaw:-1.73,width:17,depth:26,start:[106.0514418,22.977326],
@@ -55,6 +107,7 @@
   (T,kit)=>{
     const {box,place}=kit,walls=0xe2e0d3,wood=0x915b44,stone=0x9d9d91,tile=0xae5946,ridge=0xdbd6c7;
     kit.palette({tile,stone,timber:wood,plaster:walls});
+    terraces(T,kit)(0,0,0,22.5,14.9,14.3,21.7,()=>{
     box(stone,0,.36,-2,43.8,.72,25.8);box(walls,0,4.62,-4.5,42.5,7.8,19.8);
     for(const x of [-18,-12,-6,6,12,18]){
       for(const y of [2.5,6.55]){
@@ -76,9 +129,12 @@
     });
     box(stone,0,2.22,11.43,13.8,4.44,7.90);
     for(const x of [-6.35,-2.2,2.2,6.35])box(stone,x,6.95,14.62,.54,5.04,.54);
-    A.curvedRoof(T,kit,0,9.54,10.16,16.7,13.26,2.50,tile,ridge,wood,.25);
+    kit.outline([[-8.15,0],[0,3.14],[8.15,0]],walls,0,9.43,15.27,.12);
+    A.gabledRoof(T,kit,0,9.57,10.16,16.7,13.26,3.15,tile,ridge,{overhang:.4});
+    box(wood,0,9.30,15.69,16.61,.34,.26);
     for(let i=0;i<19;i++){const h=(19-i)*.233;box(stone,0,h/2,15.45+i*.33,11.22,h,.34);}
     for(const side of [-1,1])A.strut(T,kit,ridge,side*5.80,5.04,15.28,side*5.80,.80,21.70,.12);
+    });
   });
 
   // Cross sections of the two banks of OSM water polygon w1430562102.
@@ -94,20 +150,30 @@
   stop('osm-way-1376476251',{name:'Suối Lê Nin',lon:106.049385,lat:22.987784,locality:'Trường Hà',kind:'Suối',
     width:25,depth:35,source:pacBo,start:pacBoRoad,solids:[],gardenRadius:18,
     arrivalNote:'Xe dừng cuối đường vào Hang Cốc Bó. Từ đây lối đi bộ men theo bờ suối.',
-    shots:[['Bờ đá bên suối xanh',-18,7,7.0,27,-2.47,.14],['Nhìn lên đầu nguồn',34,-36,12,39,-.68,.16]],
+    shots:[['Bờ đá bên suối xanh',4,-7,6.4,26,-1.34,.13],['Nhìn lên đầu nguồn',39,-45,8.0,23,-1.99,.17]],
     description:'Dưới chân núi Các Mác, nước đầu nguồn đi qua những vũng xanh trong, vòng qua bãi đá và rễ cây. Hai bờ trong cảnh chạy theo đoạn đầu suối trên bản đồ.'},
   (T,kit)=>{
-    const r=K.batch(T),w=K.batch(T);
-    w.grid(24,110,(u,t)=>{
-      const [x,z]=bankPoint(t,u),shore=Math.min(u,1-u)*2,glint=Math.sin(2.9*x+.24*z)*Math.cos(z*1.22);
-      return [x,.14+.011*glint,z,shore<.18?0x8c9c78:shore<.42?0x539987:0x387f70,.94+.08*Math.sin(x*.18+z*.29)+.036*glint];
+    const r=K.batch(T),w=K.batch(T),shallow=new T.Color(0x8c9473),deep=new T.Color(0x396f62),waterTint=new T.Color();
+    function onViewingPath(x,z){
+      return [[-21.2,-1,4,-7],[18,-54,39,-45]].some(([ax,az,bx,bz])=>{
+        const dx=bx-ax,dz=bz-az,t=Math.max(0,Math.min(1,((x-ax)*dx+(z-az)*dz)/(dx*dx+dz*dz)));
+        return Math.hypot(x-ax-t*dx,z-az-t*dz)<6.1;
+      });
+    }
+    w.grid(28,135,(u,t)=>{
+      const bias=(1-Math.sin(Math.PI*u))*(.014*Math.sin(81*t)+.009*Math.cos(173*t));
+      const [x,z]=bankPoint(t,u+bias),shore=Math.sin(Math.PI*u)**.58,glint=Math.sin(2.9*x+.24*z)*Math.cos(z*1.22);
+      waterTint.copy(shallow).lerp(deep,Math.max(0,Math.min(1,shore+.075*Math.sin(x*.28+z*.41))));
+      return [x,.14+.011*glint,z,waterTint.getHex(),.94+.075*Math.sin(x*.18+z*.29)+.036*glint];
     });
-    w.add(kit.group,new T.MeshPhongMaterial({vertexColors:true,specular:0x96b5a7,shininess:57}));
+    w.add(kit.group,new T.MeshPhongMaterial({vertexColors:true,specular:0x364d42,shininess:31,transparent:true,opacity:.91,depthWrite:false}));
     for(let n=0;n<156;n++){
       const t=kit.random(),side=n%2,u=side?1.06+kit.random()*.14:-.06-kit.random()*.14,[x,z]=bankPoint(t,u);
       const sz=.24+kit.random()**2*1.62;K.boulder(r,x,-.12,z,sz,sz*(.50+kit.random()*.38),sz*.83,n,true);
       if(n%5===0)r.ferns.push([x,.22,z,1.28,n*.72]);
-      if(n%8===0){const [tx,tz]=bankPoint(t,side?1.4:-.4);r.trees.push([tx,-.08,tz,4.4,6.5+n%3,n*1.3]);}
+      if(n%4===0){const [tx,tz]=bankPoint(t,side?1.4:-.4);
+        if(!onViewingPath(tx,tz))r.trees.push([tx,-.08,tz,4.4,6.5+n%3,n*1.3]);
+      }
     }
     K.finish(T,kit,r);
   });
@@ -220,7 +286,8 @@
       const x=w*.5-.15;
       for(let i=0;i<12;i++){const step=(12-i)*.216;box(granite,x,step/2,wallZ+1.13+i*.34,1.72,step,.35);}
     }
-    for(const [i,[x,z,w,d,a]] of houses.entries())place(x,z,a,()=>facade(w,i?2.87:3.74,d,!i));
+    const seat=terraces(T,kit);
+    for(const [i,[x,z,w,d,a]] of houses.entries())seat(x,z,a,w*.50,d*.51,d*.49,d*.50+5.0,()=>facade(w,i?2.87:3.74,d,!i));
   });
 
   const pagodaYaw=-2.453;
@@ -262,9 +329,10 @@
       for(let i=0;i<6;i++){const h2=(6-i)*.23;box(stone,0,h2/2,d*.5+.5+i*.34,w*.42,h2,.35);}
     }
     kit.palette({timber:wood,stone,plaster:0xd4c7a1});
-    hall(31.2,10.9,4.06,7,3.65);
-    place(-22.8,12.9,Math.PI/2,()=>hall(21.8,9.6,3.29,5,2.95));
-    place(.9,17.7,0,()=>hall(12.8,8.6,2.91,3,2.51));
+    const seat=terraces(T,kit);
+    seat(0,0,0,16.3,6.1,5.85,7.85,()=>hall(31.2,10.9,4.06,7,3.65));
+    seat(-22.8,12.9,Math.PI/2,11.65,5.4,5.2,7.05,()=>hall(21.8,9.6,3.29,5,2.95));
+    seat(.9,17.7,0,7.1,4.8,4.74,6.51,()=>hall(12.8,8.6,2.91,3,2.51));
   });
   stop('osm-node-13005765528',{name:'Núi Các Mác',yaw:-2.49,width:60,depth:37,start:pacBoRoad,source:pacBo,solids:[],gardenRadius:14,
     arrivalNote:'Xe dừng ở đầu đường đi bộ. Từ bờ suối Lê Nin có thể ngước nhìn sườn núi.',
@@ -292,7 +360,7 @@
   stop('osm-node-4527762070',{name:'Động Ngườm Ngao',yaw:1.95,width:43,depth:38,start:[106.7056284,22.8466923],
     source:'https://csdl.vietnamtourism.gov.vn/dest/?item=564',solids:[],
     arrivalNote:'Xe dừng ở đường nối bãi đỗ Ngườm Ngao. Góc tham quan đưa bạn vào khoang đá.',
-    shots:[['Đài sen úp ngược',0,-13,12.8,12.6,.17,-.025],['Bậc canxi trên nền động',2.5,-10.3,4.8,6.7,.72,.13]],
+    shots:[['Đài sen úp ngược',-2.8,-14.3,14.2,8.3,.14,-.025],['Bậc canxi trên nền động',2.5,-10.3,4.8,6.7,.72,.13]],
     description:'Đài sen úp ngược và cột đá đứng bên cạnh là hai hình nhũ đặc trưng của Ngườm Ngao. Dưới chân chúng, các bờ canxi nhỏ chia nền hang thành những ô tựa ruộng bậc thang. Cảnh tái hiện các hình nhũ tiêu biểu trong hang.'},
   (T,kit)=>{
     const r=K.batch(T);K.grotto(r,[[0,0,5.6,7.1,.10],[6,-.75,9.3,11.6,.10],[16,0,11.2,15.2,.04],[25,-1.7,8.9,11.3,.08],[33,-4.5,5.1,6.5,.08]],20,18.8,.92);

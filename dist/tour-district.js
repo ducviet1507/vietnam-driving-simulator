@@ -874,7 +874,7 @@ function createTourDistrict(T,scene,plaster,structures,osmBuildings,nightLights)
       for(const face of candidates){
         const {mx,mz,nx,nz,len}=face,tx=close?mx:cx,tz=close?mz:cz;
         const height=close?b.h*.87:b.h;
-        const targetY=ground(tx,tz)+height*.46;
+        const targetY=b.baseY+height*.46;
         const run=close?Math.max(10,b.h*1.38,Math.min(36,len)*.98):
           Math.max(18,extent*1.15,b.h*1.60);
         const eyeX=tx+nx*run,eyeZ=tz+nz*run;
@@ -888,7 +888,7 @@ function createTourDistrict(T,scene,plaster,structures,osmBuildings,nightLights)
           let ceiling=ground(px,pz)+1;
           const near=cells.get(Math.floor(px/cell)+','+Math.floor(pz/cell))||[];
           for(const other of near){
-            if((other!==b||close)&&insideBuilding(px,pz,other.rings))ceiling=Math.max(ceiling,other.baseY+other.h+.8);
+            if((other.id!==b.id||close)&&insideBuilding(px,pz,other.rings))ceiling=Math.max(ceiling,other.baseY+other.h+.8);
           }
           slope=Math.max(slope,(ceiling-targetY)/along);
         }
@@ -898,7 +898,7 @@ function createTourDistrict(T,scene,plaster,structures,osmBuildings,nightLights)
         const angle=Math.atan2(nx,nz),side=compass[(Math.round(angle/(Math.PI/4))+8)%8];
         const elevation=Math.atan(slope);
         best={score,view:{name:close?'Mặt công trình phía '+side:'Toàn cảnh công trình',
-          offset:[tx-x,tz-z],height,viewAngle:angle,viewElevation:elevation,viewRadius:run/Math.cos(elevation)}};
+          offset:[tx-x,tz-z],height,focusAltitude:targetY,viewAngle:angle,viewElevation:elevation,viewRadius:run/Math.cos(elevation)}};
       }
       return best?.view;
     }

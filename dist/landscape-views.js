@@ -25,9 +25,12 @@ function landscapeTourViews(kind,x,z,yaw,ground,waterAt){
       if(wet(dx*land,dz*land)||!wet(dx*water,dz*water)||!wet(dx*(edge+13*inward),dz*(edge+13*inward)))continue;
       const towardLand=angle+(startWet?0:Math.PI),score=-edge+4*Math.cos(towardLand-yaw);
       if(best&&best.score>=score)continue;
+      const level=waterAt(x+dx*water,z+dz*water)?.level;
+      const focus=(level??ground(x+dx*water,z+dz*water))+.75;
+      const rise=Math.max(3.8,ground(x+dx*land,z+dz*land)+2.6-focus);
       best={score,views:[
-        {name:'Nhìn từ bờ ra mặt nước',offset:[dx*water,dz*water],height:1.7,
-          viewRadius:Math.hypot(34,4.8),viewAngle:towardLand,viewElevation:Math.atan2(4.8,34)},
+        {name:'Nhìn từ bờ ra mặt nước',offset:[dx*water,dz*water],height:1.7,focusAltitude:focus,
+          viewRadius:Math.hypot(34,rise),viewAngle:towardLand,viewElevation:Math.atan2(rise,34)},
         {name:'Đường bờ và mặt nước',offset:[dx*edge,dz*edge],height:3,
           viewRadius:105,viewAngle:towardLand+.69,viewElevation:.50}
       ]};
@@ -45,7 +48,7 @@ function landscapeTourViews(kind,x,z,yaw,ground,waterAt){
       const compass=['nam','đông nam','đông','đông bắc','bắc','tây bắc','tây','tây nam'];
       const direction=compass[(Math.round(angle/(Math.PI/4))%8+8)%8];
       best={score,views:[
-        {name:'Theo sườn dốc về phía '+direction,offset:[run*dx,run*dz],height:2/.46,
+        {name:'Theo sườn dốc về phía '+direction,offset:[run*dx,run*dz],height:2/.46,focusAltitude:target,
           viewRadius:Math.hypot(run,eye-target),viewAngle:angle+Math.PI,viewElevation:Math.atan2(eye-target,run)},
         {name:'Toàn cảnh sườn núi',offset:[0,0],height:3,viewRadius:144,viewAngle:angle,viewElevation:.40}
       ]};
