@@ -37,6 +37,10 @@ GRAPHIC = re.compile(r"(?:^|[ _-])(logo|locator|brochure|floor plan|plan of|coat
 
 # Audited Commons file pages for sites without a specific upstream photograph.
 REVIEWED = {
+    "osm-node-2326969109": "File:Lăng Tổng Trấn Hà Tiên - Mạc Cửu (52352815996).jpg",
+    "osm-node-2326969092": "File:Phù Dung Cổ Tự - Hà Tiên (52352816716).jpg",
+    "osm-node-2327003316": "File:Thach Dong pagoda.jpg",
+    "osm-node-11353153265": "File:Trên núi Đá Dựng.jpg",
     "osm-node-3294335517": "File:The Museum of Dien Bien Phu Victory (front, 2022).jpg",
     "osm-node-5602133184": "File:Interior of Tam Thanh Cave - Lang Son - Vietnam - 03 (48141751071).jpg",
     "osm-node-9485080592": "File:Nhà tù Sơn La - panoramio.jpg",

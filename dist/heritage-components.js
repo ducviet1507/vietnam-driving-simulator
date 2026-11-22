@@ -35,6 +35,25 @@
   const huongSonParking=[105.7877197,20.614076];
   const tuanChau=[106.9894,20.91974];
   const precincts={
+    // At Thạch Động the OSM monument pin is on the adjacent hill. The cave
+    // model is at Tiên Sơn Tự, at the independent geological survey tower.
+    'osm-node-2327003316':{name:'Thạch Động – Hà Tiên',kind:'Hang động',locality:'Hà Tiên',
+      start:[104.47545,10.410973],mappedEntrance:true,visitOnArrival:true,
+      arrivalNote:'Xe dừng trên đường vào dưới chân núi. Lối bậc dẫn lên chùa Tiên Sơn trong Thạch Động.'},
+    'osm-node-2326969109':{name:'Đền thờ họ Mạc (Trung Nghĩa Từ)',kind:'Đền',locality:'Hà Tiên',
+      start:[104.4835338,10.3854001],mappedEntrance:true,visitOnArrival:true,
+      arrivalNote:'Xe dừng trên đường Mạc Cửu, trước lối vào đền. Từ chân núi Bình San, bậc đá dẫn lên khu mộ họ Mạc.'},
+    'osm-node-2326969092':{name:'Chùa Phù Dung',kind:'Chùa',locality:'Hà Tiên',
+      start:[104.482885,10.388893],mappedEntrance:true,visitOnArrival:true,
+      arrivalNote:'Xe dừng trên đường Phù Dung phía bắc khuôn viên chùa.'},
+    'osm-node-11353153265':{name:'Núi Đá Dựng',locality:'Hà Tiên',start:[104.4777594,10.4273828],
+      mappedEntrance:true,visitOnArrival:true,
+      source:'https://apc.angiang.gov.vn/m/164/1373/Nhung-dia-diem-du-lich-nao-duoc-yeu-thich-nhat-o-Kien-Giang.html',
+      description:'Khối núi đá vôi đứng riêng giữa đồng bằng Hà Tiên. Từ sườn phía nam nhìn xuống, có thể nhận ra hai mặt hồ cách nhau một quãng đồng.',
+      arrivalNote:'Xe dừng trên đường phía nam núi, tại lối rẽ vào chân núi Đá Dựng. Từ đây khách đi bộ.',
+      // The southern ponds are OSM water polygons w940338140 and w934560370.
+      views:[{name:'Mặt núi phía nam',offset:[-12,41],viewAngle:-.31,viewRadius:295,viewElevation:-.14,height:4},
+        {name:'Từ sườn núi nhìn xuống hồ',offset:[-92,243],viewAngle:2.78,viewRadius:232,viewElevation:.34,height:3}]},
     'osm-node-2089305124':{locality:'Hương Sơn',start:huongSonParking,mappedEntrance:true,visitOnArrival:true,
       arrivalNote:'Xe dừng cạnh bến xe Hương Sơn ở chợ Đục Khê. Từ Bến Yến, đi đò đến bến Trò rồi đi bộ lên chùa Thiên Trù.'},
     'osm-node-2089305122':{locality:'Hương Sơn',start:huongSonParking,mappedEntrance:true,visitOnArrival:true,

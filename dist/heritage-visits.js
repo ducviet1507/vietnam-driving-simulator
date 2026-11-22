@@ -6,6 +6,9 @@ const heritageVisits=[
   ['chua-huong-huong-son','Chùa Hương – từ suối Yến đến động Hương Tích',[
     'osm-node-7173617332','osm-node-2089305124','osm-node-2835735216','osm-node-2089305122',
   ]],
+  ['binh-san-thach-dong-ha-tien','Hà Tiên – núi Bình San, Thạch Động và Đá Dựng',[
+    'osm-node-2326969109','osm-node-2326969092','osm-node-2327003316','osm-node-11353153265',
+  ]],
   // https://dsvh.gov.vn/di-tich-kien-truc-nghe-thuat-khu-den-thap-my-son-2943
   ['my-son','Thánh địa Mỹ Sơn',[
     'bao-tang-my-son','my-son-thap-cong-k','osm-way-198804483','my-son-nhom-h',

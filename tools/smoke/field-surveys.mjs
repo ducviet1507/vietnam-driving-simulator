@@ -35,6 +35,20 @@ for(const catalogId of huongSon){
 }
 for(const [id,province] of [['chua-giai-oan','Quảng Ninh'],['chua-huong-tich-ha-tinh','Hà Tĩnh']])
   assert.equal(VietnamLandmarks.entries.find(site=>site.id===id)?.province,province);
+// The original Thạch Động pin is on the neighbouring hill. A raw Atlas link
+// must still select the temple in the surveyed tower and park on the access road.
+const thachDongPin=VietnamTourism.entries.find(site=>site.id==='osm-node-2327003316');
+const thachDong=VietnamLandmarks.entries.find(site=>site.catalogId===thachDongPin.id);
+assert.equal(thachDong.id,'thach-dong-ha-tien');
+assert.ok(Math.hypot((thachDong.lon-104.475072)*109500,(thachDong.lat-10.4108219)*110900)<10);
+assert.deepEqual([...thachDong.start],[104.47545,10.410973]);
+const haTien=runInContext("heritageVisits.find(v=>v[0]==='binh-san-thach-dong-ha-tien')[2]",context);
+const photographs=JSON.parse(readFileSync(file('sight-photos/index.json'),'utf8'));
+for(const id of haTien){
+  const pin=VietnamTourism.entries.find(site=>site.id===id);
+  assert.ok(pin.mappedEntrance,pin.name);
+  assert.ok(readFileSync(file('sight-photos/'+photographs[id].file)).length>0,pin.name);
+}
 const shelters=survey.features.filter(f=>f.steleRows);
 assert.equal(shelters.flatMap(f=>f.steleRows).length,82);
 assert.equal(new Set(shelters.map(f=>survey.refStops.get(f.ref))).size,10);

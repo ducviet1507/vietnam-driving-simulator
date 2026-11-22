@@ -934,7 +934,9 @@ async function frameStop(stop){
        photoCredit:stone.year===1442?'Ảnh mặt bia của Ngokhong · CC BY-SA 3.0':null,arrivalNote:''});
    }
  }
- if(distance>=22&&distance<=350)data.views.push({name:'Từ phía đường ô tô',viewAngle:yaw,
+ // A surveyed set may look from another elevation than the arrival road.
+ // Orbiting the summit at road distance would label an aerial view as a road view.
+ if(!(stop.mappedEntrance&&stop.views?.length)&&distance>=22&&distance<=350)data.views.push({name:'Từ phía đường ô tô',viewAngle:yaw,
    viewRadius:distance,viewElevation:.065,height:Math.min(8,height)});
  showMonument({data,x,z,height},0,collection);
 }
