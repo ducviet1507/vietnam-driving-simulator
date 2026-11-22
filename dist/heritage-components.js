@@ -23,7 +23,22 @@
   }
   // Several stops describe an entire precinct. Frame its actual mapped sights
   // instead of looking at the empty centre of the boundary polygon.
+  // The whole-property pin is at the centre of the UNESCO boundary. Its
+  // cameras look southeast at the temples. Cars stay on the road by the gate.
+  const mySonGate=[108.10911,15.77344];
   const precincts={
+    'osm-way-198804451':{
+      name:'Tháp A10 – Mỹ Sơn',start:mySonGate,mappedEntrance:true,visitOnArrival:true,
+      arrivalNote:'Xe dừng ở cổng khu di tích Mỹ Sơn.',viewOf:['my-son-nhom-a',1]},
+    'osm-node-2088919707':{
+      name:'Tháp A11 – Mỹ Sơn',start:mySonGate,mappedEntrance:true,visitOnArrival:true,
+      arrivalNote:'Xe dừng ở cổng khu di tích Mỹ Sơn.',viewOf:['my-son-nhom-a',2]},
+    'osm-way-198804483':{
+      name:'Toàn cảnh thung lũng Mỹ Sơn',start:mySonGate,mappedEntrance:true,visitOnArrival:true,
+      arrivalNote:'Xe dừng tại cổng khu di tích. Từ đây tuyến tham quan đi sâu vào thung lũng Mỹ Sơn.',
+      description:'Các cụm đền tháp Chăm nằm rải trong thung lũng. Từ trên cao có thể thấy nhóm B và C sát nhau, cùng hai nhà dài của nhóm D về phía đông.',
+      views:[{name:'Ba nhóm tháp B, C và D',offset:[195,270],viewAngle:.86,viewRadius:102,viewElevation:.57,height:7},
+        {name:'Nhìn qua hai nhà dài về nhóm B',offset:[200,278],viewAngle:1.43,viewRadius:68,viewElevation:.24,height:6}]},
     'osm-way-242169982':{
       description:'Từ cổng Nam, con đường chạy chéo qua cánh đồng trong thành đến cổng Bắc. Bốn cổng đá nối với nhau bằng các đoạn tường thành giữa đồng ruộng Vĩnh Lộc.',
       views:[{name:'Trục đường qua nội thành',offset:[105,180],viewAngle:.54,viewRadius:480,viewElevation:.59,height:9},
@@ -38,7 +53,13 @@
       views:[{name:'Các ô cỏ trước Lăng',viewAngle:1.49,viewRadius:139,viewElevation:.42,height:8},
         {name:'Dọc theo quảng trường',viewAngle:2.85,viewRadius:151,viewElevation:.24,height:13}]}
   };
-  for(const site of atlas.entries)if(precincts[site.id])Object.assign(site,precincts[site.id]);
+  for(const site of atlas.entries){
+    const precinct=precincts[site.id];
+    if(!precinct)continue;
+    Object.assign(site,precinct);
+    if(precinct.start)site.approachMeters=Math.round(Math.hypot(
+      (site.lon-site.start[0])*111320*Math.cos(site.lat*Math.PI/180),(site.lat-site.start[1])*110900));
+  }
   // Mapped components omitted from the national import, including three member
   // ways of OSM relation 21218176. © OpenStreetMap contributors, ODbL.
   const source = 'https://dulichbacninh.gov.vn/kham-pha/vung-dat-con-nguoi-bac-ninh/quan-the-di-tich-yen-tu-vinh-nghiem-con-son-kiep-bac-di-san-van-hoa-the-gioi-1096.html';

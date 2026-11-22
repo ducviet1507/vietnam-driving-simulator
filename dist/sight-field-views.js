@@ -23,6 +23,8 @@ function createSightFieldViews(onVisit){
     ],
     'osm-way-178995262':[['Bên trong đền Ngọc Sơn · 2017','den-ngoc-son','Adam Cigler','cb5b4f68f93b41cf94a6d8e0d2c896a4']]
   };
+  const [ruins,g4]=scans['my-son'];
+  scans['my-son-nhom-g']=[g4,ruins];
   const cyark={
     'cung-an-dinh':[['Cung An Định','fd6df65eae404a7dbf006f68e7857a2e']],
     'lang-tu-duc':[['Điện Hòa Khiêm','ed319997b5354c1eb9b8dbf810044295'],['Bi đình · từ mặt đất','55b9ce7e35524473bbbe7620102a3811'],['Bi đình · từ trên cao','7194d6083f0142dcb7a047a0082a5d71']]
@@ -37,7 +39,7 @@ function createSightFieldViews(onVisit){
     currentId=data.id;
     plan.hidden=!ids.some(id=>survey.panoramaNodes.has(id));
     views=[];
-    const scan=scans[data.id]||scans[data.catalogId];
+    const scan=scans[data.id]||scans[data.catalogId]||scans[collection?.id];
     for(const [name,file,author,uid] of scan||[]){
       views.push({name,file:'landmark-scans/'+file+'.glb',credit:author+' · CC BY 4.0',source:'https://sketchfab.com/3d-models/'+uid});
     }

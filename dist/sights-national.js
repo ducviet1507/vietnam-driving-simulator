@@ -203,49 +203,6 @@
     photo:'https://plo.vn/trai-nghiem-di-thuyen-10-km-ngam-ky-quan-de-nhat-dong-phong-nha-tien-son-post832221.html',
     description:'Thuyền theo sông Son vào cửa động thấp dưới vách đá vôi. Vòm đá thu dần vào bóng tối, phía trên là sườn núi phủ cây.'},cave);
 
-  function mySon(T,{palette, box,tapered,outline,random}){
-    const brick=0x9b573d,red=0xa4664f,shadow=0x58473a,sandstone=0xb4a18a;
-    palette({brick, stone: sandstone});
-    function shrine(x,z,w,d,h){
-      box(shadow,x,.37,z,w+1.3,.74,d+1.4);box(red,x,.96,z,w+.8,.55,d+.85);
-      box(brick,x,1.2+h*.33,z,w,h*.66,d);
-      for(const side of [-1,1]){
-        for(let j=-2;j<=2;j++){
-          box(red,x+side*w*.506,1.1+h*.33,z+j*d*.19,w*.069,h*.64,d*.077);
-          if(Math.abs(j)===2)box(red,x+j*w*.205,1.1+h*.33,z+side*d*.5,w*.088,h*.64,.43);
-        }
-      }
-      for(let j=0;j<3;j++){
-        const f=1-j*.23,y=1.2+h*(.66+j*.112);
-        box(red,x,y,z,w*f+.92,.52,d*f+.92);
-        tapered(brick,x,y+h*.061,z,w*f*.70,w*f*.56,h*.12,d/w);
-        for(const s of [-1,1])for(const t of [-1,1])tapered(red,x+s*w*f*.41,y+h*.067,z+t*d*f*.4,w*f*.11,w*f*.041,h*.13);
-      }
-      const door=w*.33,dh=h*.42;
-      box(shadow,x,1.19+dh*.48,z+d*.51,door,dh,.33);
-      for(const side of [-1,1])box(sandstone,x+side*door*.54,1.18+dh*.43,z+d*.54,.43,dh*.88,.67);
-      box(sandstone,x,1.25+dh*.87,z+d*.54,door+1.2,.44,.76);
-      for(let k=0;k<3;k++)outline([[-door*.72,0],[-door*.46,.48],[0,door*.70],[door*.46,.48],[door*.72,0]],
-        k%2?brick:red,x,dh+1.10+k*.43,z+d*.51-k*.23,.52);
-    }
-    shrine(-7,-4,8.6,9.2,15.6);shrine(8,-9,6,6.9,9.4);shrine(-13,7.8,4.4,4.6,6.1);
-    // B5's long mandapa-like silhouette ends in the characteristic saddle roof.
-    box(red,9,.53,7.5,7.6,1.06,13.4);box(brick,9,4,7.5,6.8,6.5,12.6);
-    for(let i=0;i<7;i++)for(const s of [-1,1])box(red,9+s*3.42,4.15,2+i*1.8,.48,6.1,.44);
-    for(let j=0;j<16;j++){
-      const f=j/15,up=2.2*(2*f-1)**2;
-      tapered(red,9,8.3+up*.55,1.4+j*.81,5,2,2.4+up,.15);
-    }
-    for(let i=0;i<55;i++){
-      const x=(random()-.5)*34,z=16+random()*5;
-      box(i%3?brick:sandstone,x,.26+random()*.19,z,.65+random(),.55+random()*.36,.7+random(),random()*2);
-    }
-  }
-  stop('my-son','osm-way-198804483',{width:49,depth:47,yaw:1.53,viewElevation:.25,gardenRadius:46,
-    solids:[[-7,-4,4.4,4.7],[8,-9,3.1,3.5],[-13,7.8,2.3,2.4],[9,7.5,3.5,6.5]],
-    photo:'https://whc.unesco.org/en/list/949/gallery/',
-    description:'Cụm tháp Chăm nổi bật với các trụ ốp bằng gạch, cửa bằng sa thạch và mái giật cấp. Tháp dài có hai đầu mái vút lên như yên ngựa.'},mySon);
-
   function palace(T,{palette, box,stamp,round,wavingFlag,group}){
     const ivory=0xe9e0cb,edge=0xc4bda9,slate=0x666b61,glass=0x405354,wood=0x715545;
     palette({glass, timber: wood});

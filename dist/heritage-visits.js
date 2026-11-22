@@ -2,6 +2,12 @@
 // Anchor a regional visit on an existing road arrival. Each stop keeps its own
 // coordinates and the camera can move out to an island while the car stays parked.
 const heritageVisits=[
+  // https://dsvh.gov.vn/di-tich-kien-truc-nghe-thuat-khu-den-thap-my-son-2943
+  ['my-son','Thánh địa Mỹ Sơn',[
+    'bao-tang-my-son','my-son-thap-cong-k','osm-way-198804483','my-son-nhom-h',
+    'my-son-nhom-b','my-son-nhom-c','my-son-nhom-d','my-son-nhom-a','osm-way-198804451','osm-node-2088919707',
+    'my-son-nhom-g','my-son-nhom-e','my-son-nhom-f',
+  ]],
   ['chua-thay-tay-phuong','Chùa Thầy và chùa Tây Phương',[
     'chua-thay-sai-son','thuy-dinh-ho-long-tri','osm-way-550537566','chua-cao-sai-son','chua-mot-mai-boi-am','chua-tay-phuong-thach-xa',
   ]],

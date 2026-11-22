@@ -58,7 +58,7 @@ window.sightSecretStories = {
   'pongour': ['echo', 'Bảy phím Pongour', 'Dòng nước sẽ chơi bản gì trên bảy bậc đá?', 'Bảy bậc thác thành bảy phím đàn xòe rộng. Dòng nước lướt một lượt từ trên xuống, bỏ lại nốt cuối trong lòng sông.'],
   'dray-nur': ['drop', 'Đường chỉ Sêrêpốk', 'Màn nước Dray Nur để lọt màu gì qua kẽ trắng?', 'Giữa thác trắng, một đường đá sẫm hiện ra. Chớp mắt, dòng Sêrêpốk đã kéo sợi nước mới qua chỗ hở.'],
   'phong-nha': ['echo', 'Một mái chèo, hai tiếng nước', 'Sông Son mang vào động một âm thanh. Có mấy âm thanh trở ra?', 'Mái chèo khua nước ngay cửa Phong Nha. Vòm đá trả lại một tiếng khua nhỏ hơn, như có chiếc thuyền thứ hai trong bóng tối.'],
-  'my-son': ['arch', 'Khung trời Mỹ Sơn', 'Nếu chỉ giữ lại một ô trời Mỹ Sơn, màu nào sẽ làm khung?', 'Một vòm cửa sa thạch đóng khung mẩu trời xanh. Quanh khung, từng lớp gạch tháp Chăm còn ấm màu đất.'],
+  'my-son': ['arch', 'Dấu tháp trong thung lũng', 'Ở nhóm A, còn dấu nào cho thấy người xưa xây tháp ngay trên nền gạch này?', 'Trên nền A1 còn dấu hai cửa theo trục đông – tây. Đi tiếp sang A10 có thể nhìn thấy đài thờ bằng sa thạch.'],
   'dinh-doc-lap': ['leaf', 'Bóng trúc bằng đá', 'Có hàng trúc nào ở Dinh Độc Lập đứng yên cả khi gió thổi?', 'Rèm hoa đá mặt dinh in một dãy đốt trúc lên sàn. Nắng nhích đi một chút, cả hàng bóng cùng bước.'],
   'ke-ga': ['beacon', 'Vệt sáng tám cạnh', 'Tám cạnh tháp Kê Gà chia nhau một vòng trời thế nào?', 'Ngọn đèn quay một vòng trên tháp đá. Vệt sáng thu nhỏ lại, xếp thành tám nếp quanh một con sóng.'],
   'hon-trong-mai': ['wing', 'Hai chiếc bóng chạm mỏ', 'Giữa hai hòn đá còn vừa một khoảng trời bằng bao nhiêu?', 'Hai bóng đá trên mặt vịnh nghiêng về nhau. Một con sóng khép khoảng trống giữa hai chiếc mỏ lại rồi mở ra.'],

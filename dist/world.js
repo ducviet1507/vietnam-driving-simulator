@@ -879,6 +879,10 @@ async function frameStop(stop){
    drawDistrict(tourGraph,tourWater,x,z,tourGraph.nearby(x,z,560));tourCenter={x,z};
  }
  if(stop===tamChucOverview)return showMonument({data:stop,x,z,height:75});
+ if(stop.viewOf){
+   const [modelId,view]=stop.viewOf,site=gfx.nearLandmark(x,z,modelId);
+   if(site?.data.views?.[view])return showMonument(site,view,collection);
+ }
  const authored=gfx.nearLandmark(x,z,stop.id);
  const approach=roads.point(...stop.start),dx=approach.x-x,dz=approach.z-z;
  const distance=Math.hypot(dx,dz),yaw=distance>2?Math.atan2(dx,dz):authored?.data.yaw||0;

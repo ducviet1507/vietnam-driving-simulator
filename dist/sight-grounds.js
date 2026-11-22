@@ -54,7 +54,7 @@ function createSightGrounds(T,small,source){
   const occupiedCells=new Map();
   let mask,fixtures=[],streetFurniture=[],originX=0,originZ=0;
   let memorialAt=()=>false;
-  let fenceModels=[];
+  let fenceModels=[],wallModels=[];
   async function loadLayer(layer,graph,x,z){
     const {base,states,cache}=layer;
     const [lon,lat]=graph.geo(x,z),reach=span*.5+180;
@@ -151,6 +151,7 @@ function createSightGrounds(T,small,source){
     originX=cx;originZ=cz;fixtures=[];mask=null;uniforms.visitorActive.value=0;
     memorialAt=memorialGroundsNear(graph,cx,cz);
     fenceModels=(landmarks?.active||[]).filter(site=>site.data.replacesFence);
+    wallModels=(landmarks?.active||[]).filter(site=>site.data.replacesWall);
     occupiedCells.clear();streetFurniture=[];
     for(const [kind,id,lon,lat,height,diameter,tags] of datasets[1].states.get(graph)?.rows||[]){
       const point=graph.point(lon/1e7,lat/1e7),x=point.x-cx,z=point.z-cz;
@@ -428,6 +429,7 @@ function createSightGrounds(T,small,source){
         continue;
       }
       const fence=kind==='fence'||kind==='railing';
+      const replacements=fence?fenceModels:kind==='wall'?wallModels:null;
       const closedFence=['wall','brick','dry_stone','stone','concrete','concrete_block','sheet'].includes(skin);
       let along=0;
       for(let i=1;i<ring.length;i++){
@@ -442,9 +444,10 @@ function createSightGrounds(T,small,source){
         const fx=dx/len,fz=dz/len;
         for(let j=0;j<n;j++){
           const t=j/n,u=(j+1)/n,x=ax+dx*t,z=az+dz*t,xx=ax+dx*u,zz=az+dz*u,mx=(x+xx)/2,mz=(z+zz)/2;
-          if(fence&&fenceModels.some(site=>{
+          if(replacements?.some(site=>{
             const dx=mx+originX-site.x,dz=mz+originZ-site.z;
-            return site.data.replacesFence(dx*site.c-dz*site.s,dx*site.s+dz*site.c);
+            const replaces=fence?site.data.replacesFence:site.data.replacesWall;
+            return replaces(dx*site.c-dz*site.s,dx*site.s+dz*site.c);
           }))continue;
           if(Math.hypot(mx,mz)>reach||(kind==='avenue'?blocked:mappedBlocked)(mx,mz,.16,kind==='pier'||kind==='retaining_wall'))continue;
           const a=ground(x,z),b=ground(xx,zz);

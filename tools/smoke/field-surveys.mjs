@@ -13,8 +13,13 @@ for(const name of scripts.slice(scripts.indexOf('sight-details.js'),scripts.inde
 }
 const {VanMieuSurvey:survey,VietnamLandmarks,VietnamTourism,NatureFieldCaptures,VietnamHydrography}=context;
 const access=JSON.parse(readFileSync(file('vn-roads/index.json'),'utf8')).sightAccess.stops;
-for(const site of VietnamLandmarks.entries){
+for(const site of [...VietnamLandmarks.entries,...VietnamTourism.entries]){
   if(site.mappedEntrance)assert.ok(!access[site.catalogId||site.id],site.name+' still has a generated access road');
+  if(site.viewOf){
+    const [modelId,index]=site.viewOf;
+    const model=VietnamLandmarks.entries.find(s=>s.id===modelId);
+    assert.ok(Number.isInteger(index)&&model?.views?.[index],site.name+' points to an unknown model camera');
+  }
 }
 const ids=new Set([...VietnamLandmarks.entries,...VietnamTourism.entries].map(s=>s.id));
 const shelters=survey.features.filter(f=>f.steleRows);
