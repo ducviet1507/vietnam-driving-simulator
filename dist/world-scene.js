@@ -1662,10 +1662,22 @@
       driveFx.mountExhaust(player.detail?.children[0],player.kind);
       await warmMaterials(scene);
       // Some drivers specialize a linked program on its first draw. Prime the
-      // actual skinned and vehicle layouts behind the departure screen.
+      // skinned, vehicle and impact layouts behind the departure screen.
       const actorsToRestore=[],scissor=renderer.getScissor(new T.Vector4()),clipped=renderer.getScissorTest();
+      const canopyProbes=[];
       try{
-        for(const root of [walkers,...Array.from(actors.values(),item=>item.root)])root.traverse(node=>{
+        // At departure distant trees can all be billboards. The first nearby
+        // grove uses a different shader, with or without per-instance colour.
+        if(small&&treeBatches.length){
+          const canopy=treeModels.geometry('tree',true,0);
+          for(const tinted of [false,true]){
+            const probe=new T.InstancedMesh(canopy,treeModels.material,1);
+            if(tinted)probe.setColorAt(0,new T.Color(0xffffff));
+            probe.receiveShadow=true;probe.frustumCulled=false;
+            scene.add(probe);canopyProbes.push(probe);
+          }
+        }
+        for(const root of [walkers,driveFx.group,...Array.from(actors.values(),item=>item.root)])root.traverse(node=>{
           actorsToRestore.push([node,node.visible,node.frustumCulled]);
           node.visible=true;node.frustumCulled=false;
         });
@@ -1674,6 +1686,7 @@
         if(graphics.profile.waterWidth)waterSurface.prepare(renderer,graphics.profile,()=>renderer.render(scene,camera),true);
         renderer.render(scene,camera);
       }finally{
+        for(const probe of canopyProbes){probe.removeFromParent();probe.dispose();}
         for(const [node,visible,culled] of actorsToRestore){node.visible=visible;node.frustumCulled=culled;}
         renderer.setScissor(scissor);renderer.setScissorTest(clipped);renderer.shadowMap.needsUpdate=true;
       }

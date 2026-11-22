@@ -92,6 +92,10 @@ window.createDrivingFX = function (T, scene, renderer) {
   const chipMesh=new T.InstancedMesh(new T.TetrahedronGeometry(1),new T.MeshStandardMaterial({roughness:.30,metalness:.64}),chipCount);
   chipMesh.frustumCulled=false;chipMesh.instanceMatrix.setUsage(T.DynamicDrawUsage);root.add(chipMesh);
   const chipTint=new T.Color();
+  // The first impact already needs the instanced-colour shader. Allocate its
+  // attribute before the departure screen warms that exact material variant.
+  chipMesh.setColorAt(0,chipTint);
+  chipMesh.instanceColor.setUsage(T.DynamicDrawUsage);
 
   // Local tyre ribbons join at the exact previous wheel contact, even in a turn.
   const markCount=440, marks=Array.from({length:markCount},()=>null),markGeo=new T.BufferGeometry();
@@ -282,5 +286,5 @@ window.createDrivingFX = function (T, scene, renderer) {
     kick*=Math.exp(-dt*8);
   }
   reset();
-  return {update,impact,scrape,reset,mountExhaust,boostFov};
+  return {group:root,update,impact,scrape,reset,mountExhaust,boostFov};
 };
