@@ -14,7 +14,7 @@ class ElevationImage {
 const context=vm.createContext({window:{},Image:ElevationImage,performance,
   createPassSurface:()=>({select(){}}),document:{createElement:()=>({getContext:()=>({
     drawImage(){},getImageData:()=>({data:new Uint8Array(16)})})})}});
-for(const file of ['shore-terrain','vietnam-relief'])
+for(const file of ['shore-terrain','vietnam-relief','cave-openings'])
   vm.runInContext(readFileSync(new URL('../../dist/'+file+'.js',import.meta.url),'utf8'),context);
 const graph={geo:(x,z)=>[107+x/106000,16-z/111000]};
 const survey={elevation:(x,z)=>300+.40*x-.17*z,elevationWeight:()=>1};
@@ -23,6 +23,18 @@ await relief.ready;
 const terrain=relief.prepare(graph,survey);
 relief.activate(terrain,0,0);relief.update(0,0);
 const close=(a,b)=>assert.ok(Math.abs(a-b)<.0001,`${a} differs from ${b}`);
+// A cave visit uses the passage floor instead of lifting the camera onto
+// the mountain overhead. The opening must follow a rebased scene origin.
+const openings=context.createCaveOpenings(T);
+const portal={x:250,z:180,base:37,data:{yaw:Math.PI/2,caveOpening:{approach:4,sections:[[0,0,2,6,0],[10,1,4,8,-1]]}}};
+openings.update(portal,200,100);
+close(openings.floorAt(45,80),36.5);
+assert.equal(openings.floorAt(45,89),null);
+assert.equal(openings.floorAt(56,80),null);
+openings.update(portal,245,150);
+close(openings.floorAt(0,30),36.5);
+openings.update(null,245,150);
+assert.equal(openings.floorAt(0,30),null);
 for(const [x,z] of [[0,0],[-65,53],[19,25],[15,14],[1024,-128],[-1024,32]]){
   close(terrain.altitude(x,z),survey.elevation(x,z));
   close(terrain.grade(x,z,Math.PI/2),.40);

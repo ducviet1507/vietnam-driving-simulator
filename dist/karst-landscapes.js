@@ -153,7 +153,7 @@ window.VietnamKarst=(()=>{
     }
   }
 
-  function river(T,group,length,centre,width,rapids=false) {
+  function river(T,group,length,centre,width,rapids=false,shelterDepth=0) {
     const water=batch(T);
     water.grid(16,40,(u,t)=>{
       const z=length[0]+(length[1]-length[0])*t;
@@ -165,7 +165,7 @@ window.VietnamKarst=(()=>{
     });
     const m=new T.MeshPhongMaterial({vertexColors:true,specular:0x9cc8bd,shininess:52,transparent:true,depthWrite:false});
     const clock={value:0},limits={value:new T.Vector2(...length)},quiet=matchMedia('(prefers-reduced-motion: reduce)');
-    m.customProgramCacheKey=()=>rapids?'phong-nha-riffles':'phong-nha-pool';
+    m.customProgramCacheKey=()=>(rapids?'phong-nha-riffles':'phong-nha-pool')+shelterDepth;
     m.onBeforeRender=()=>{clock.value=quiet.matches?0:(performance.now()%900000)*.001;};
     m.onBeforeCompile=shader=>{
       shader.uniforms.streamTime=clock;shader.uniforms.ends=limits;
@@ -184,6 +184,8 @@ window.VietnamKarst=(()=>{
             float white=smoothstep(.86,1.8,bank)*smoothstep(.13,.88,wave+.26*crossWave)*smoothstep(-.55,.80,curl);
             diffuseColor.rgb=mix(diffuseColor.rgb,vec3(.57,.66,.60),white*fade*.63);`:''}
           diffuseColor.a*=.94*smoothstep(0.,3.8,min(p.y-ends.x,ends.y-p.y));`);
+      if(shelterDepth)shader.fragmentShader=shader.fragmentShader.replace('#include <tonemapping_fragment>',
+        `gl_FragColor.rgb*=mix(.065,1.,smoothstep(-${shelterDepth.toFixed(1)},4.,streamPoint.y));\n#include <tonemapping_fragment>`);
     };
     water.add(group,m);
   }

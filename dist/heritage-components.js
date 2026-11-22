@@ -49,6 +49,14 @@
     [1504768248,'Đền Trung – Hùng Vương Tổ miếu','Phú Thọ','Hùng Sơn',105.3240986,21.3690193,105.322450,21.369750,189,'https://denhung.vn/tin-tuc/den-trung'],
   ];
   const existing = new Set(atlas.entries.map(site => site.id));
+  // Pò Giả Mải is the local name of Đảo Bà Góa. The way is tagged as an
+  // island and has no tourism tag in the national catalogue import.
+  if(!existing.has('osm-way-591309599'))atlas.entries.push({
+    id:'osm-way-591309599',name:'Đảo Bà Góa – Pò Giả Mải',province:'Thái Nguyên',city:'Thái Nguyên',
+    locality:'Ba Bể',region:'Bắc Bộ',kind:'Đảo',lon:105.623214,lat:22.405097,
+    start:[105.6241973,22.4086666],approachMeters:409,source:'https://csdl.vietnamtourism.gov.vn/dest/?item=752',
+    map:'https://www.openstreetmap.org/way/591309599'
+  });
   for (const [way, name, province, locality, lon, lat, startLon, startLat, approachMeters, componentSource=source] of components) {
     const id = 'osm-way-' + way;
     if (existing.has(id) || atlas.aliases[id]) continue;

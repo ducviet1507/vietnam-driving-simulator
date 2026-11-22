@@ -382,7 +382,9 @@
     'osm-node-9811545028':[0,.46],
     'osm-node-9789872321':[0,.46]
   };
+  const authored=new Set((window.VietnamSights||[]).map(s=>s.catalogId||s.id));
   for(const [id,p] of Object.entries(profiles)){
+    if(authored.has(id))continue;
     const site=byId.get(id);
     if(!site)continue;
     const isCave=site.kind==='Hang động',seed=Number(id.slice(id.lastIndexOf('-')+1))||1;

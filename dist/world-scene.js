@@ -167,7 +167,7 @@
     let shorePatch=null;
     const shoreEarth=texture('verge-earth.webp',true);
     const landOrigin=new T.Vector2();
-    const tunnelCut=createTunnelCut(T);
+    const tunnelCut=createTunnelCut(T),caveOpenings=createCaveOpenings(T);
     // Low-frequency variation is fixed in geographic space. Close-up grain stays sharp.
     for(const mat of [meadow,upland]){
       mat.onBeforeCompile=shader=>{
@@ -178,7 +178,7 @@
           '#include <map_fragment>\n float patchiness=sin(dot(groundMetres,vec2(.035,.019)))+.55*cos(dot(groundMetres,vec2(-.015,.047))); diffuseColor.rgb*=vec3(.96,.98,.95)+patchiness*vec3(.08,.035,.05); vec3 silt=texture2D(shoreEarth,groundMetres*.58).rgb; float bank=clamp(bankWet+(silt.g-.17)*.7,0.,1.)*smoothstep(0.,.2,bankWet); diffuseColor.rgb=mix(diffuseColor.rgb,silt*mix(vec3(.84,.78,.66),vec3(.34,.31,.25),bankWet),bank);');
         coverMap.shade(shader);landscapeSource.shade(shader);groundSource.shade(shader);
         relief.passSurface.shade(shader,'groundMetres','(.40+.46*smoothstep(35.,450.,length(vViewPosition)))*(1.-bankWet)');
-        tunnelCut.shade(shader,'groundMetres');
+        tunnelCut.shade(shader,'groundMetres');caveOpenings.shade(shader);
         // The satellite texels span several metres. Restore ground-scale contrast
         // after the regional tint, including at the edge of a streamed tile.
         shader.fragmentShader=shader.fragmentShader.replace('#include <alphamap_fragment>',`
@@ -194,11 +194,11 @@
     const waterSurface=createDrivingWater(T,true);
     const shadeWater=waterSurface.material.onBeforeCompile;
     waterSurface.material.onBeforeCompile=function(shader,renderer){
-      shadeWater.call(this,shader,renderer);tunnelCut.shade(shader,'waterMetres');
+      shadeWater.call(this,shader,renderer);tunnelCut.shade(shader,'waterMetres');caveOpenings.shade(shader);
     };
     surfaces.weatheredAsphalt(material.asphalt,atmosphere.wetness,asphaltOrigin,waterSurface.reflection);
     for(const finish of [...Object.values(material),meadow,upland,waterSurface.material])atmosphere.registerFinish(finish);
-    const relief=createVietnamRelief(T,scene,graphics.profile.id==='low',landscapeSource,tunnelCut,landWidth);
+    const relief=createVietnamRelief(T,scene,graphics.profile.id==='low',landscapeSource,tunnelCut,landWidth,caveOpenings);
     const sightings=createSkySightings(T,scene,Math.random,relief.ground);
     const unitBox=new T.BoxGeometry(),unitPlane=new T.PlaneGeometry(),unitPole=new T.CylinderGeometry(.5,.5,1,8);
     const roofSection=new T.Shape();roofSection.moveTo(-.5,0);roofSection.lineTo(0,1);roofSection.lineTo(.5,0);roofSection.closePath();
@@ -1390,6 +1390,7 @@
     const driveFx=createDrivingFX(T,scene,renderer);
     const lookAxis=new T.Vector3(0,1,0),headTurn=new T.Euler(0,0,0,'YXZ');
     function render(car,traffic,dt,inside=false,now=performance.now(),prepareOnly=false){
+      caveOpenings.update(car.sightView?.monument,originX,originZ);
       foliageEye.set(car.x-originX,car.z-originZ,car.sightView?0:1);
       if(!car||!Number.isFinite(car.x)||!Number.isFinite(car.z))return;
       if(car.sightView||car.flood)inside=false;
@@ -1499,12 +1500,13 @@
         const span=Math.abs(Math.cos(angle))*v.data.width+Math.abs(Math.sin(angle))*v.data.depth;
         const front=Math.abs(Math.sin(angle))*v.data.width+Math.abs(Math.cos(angle))*v.data.depth;
         const radius=(v.data.viewRadius??(Math.max(span/Math.max(.35,camera.aspect),v.height)*1.10+front*.40))*v.zoom;
-        const base=(modeledBridgeLengths[v.data.id]?bridges?.signatureHeight(v.x,v.z):null)??relief.ground(v.x,v.z);
+        const base=(v.data.caveOpening?v.monument.base:null)??(modeledBridgeLengths[v.data.id]?bridges?.signatureHeight(v.x,v.z):null)??relief.ground(v.x,v.z);
         const focus=v.data.focusAltitude??(base+v.height*.46);
         look.set(v.x-originX,focus,v.z-originZ);
         camera.position.set(look.x+Math.sin(v.angle)*radius*Math.cos(v.elevation),focus+radius*Math.sin(v.elevation),
           look.z+Math.cos(v.angle)*radius*Math.cos(v.elevation));
-        camera.position.y=Math.max(camera.position.y,relief.ground(camera.position.x+originX,camera.position.z+originZ)+2);
+        const floor=caveOpenings.floorAt(camera.position.x,camera.position.z)??relief.ground(camera.position.x+originX,camera.position.z+originZ);
+        camera.position.y=Math.max(camera.position.y,floor+2);
         camera.lookAt(look);
         sun.target.position.copy(look);
       }

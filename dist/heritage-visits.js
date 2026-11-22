@@ -2,6 +2,17 @@
 // Anchor a regional visit on an existing road arrival. Each stop keeps its own
 // coordinates and the camera can move out to an island while the car stays parked.
 const heritageVisits=[
+  ['cao-nguyen-da-dong-van','Cao nguyên đá Đồng Văn',[
+    'dai-ngam-nui-doi-quan-ba','nui-doi-quan-ba','dong-lung-khuy','dinh-thu-ho-vuong',
+    'rung-da-lung-tao','lung-cu','pho-co-dong-van','cho-co-dong-van',
+  ]],
+  ['vuon-quoc-gia-cuc-phuong','Vườn quốc gia Cúc Phương',[
+    'osm-way-481782794','osm-way-201095352','osm-node-1725481657','osm-node-10768945036',
+    'osm-node-1995508763','osm-node-1995508761','osm-node-5294733035',
+  ]],
+  ['ho-ba-be-song-nang','Hồ Ba Bể và sông Năng',[
+    'osm-relation-7109450','dao-ba-goa-ba-be','den-an-ma-ba-be','osm-node-1888768316','osm-node-4755846850','osm-node-4879886024',
+  ]],
   ['tuong-niem-dien-bien-phu','Điện Biên Phủ – bảo tàng và các điểm tưởng niệm',[
     'bao-tang-chien-thang-dien-bien-phu','nghia-trang-liet-si-a1','san-hanh-le-doi-d1','tuong-dai-chien-thang-dien-bien-phu',
   ]],

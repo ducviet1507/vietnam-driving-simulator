@@ -1128,7 +1128,7 @@ window.VietnamLandmarks=(()=>{
       for(const site of active){
         if(id&&site.data.id!==id)continue;
         const distance=Math.hypot(x-site.x,z-site.z);
-        if(distance<=maxMeters&&(!best||best.distance>distance))best={data:site.data,distance,x:site.x,z:site.z,height:site.mesh.userData.height};
+        if(distance<=maxMeters&&(!best||best.distance>distance))best={data:site.data,distance,x:site.x,z:site.z,base:site.base,height:site.mesh.userData.height};
       }
       return best;
     }

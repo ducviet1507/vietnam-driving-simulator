@@ -3,6 +3,8 @@
 // Clues belong to the tour camera. The little scenes in the reveals are original
 // keepsakes inspired by the place, including the imagined voices and movements.
 window.sightSecretStories = {
+  'cao-nguyen-da-dong-van':['ridge','Hai ngọn núi bên ruộng','Đứng ở đài ngắm Quản Bạ nhìn xuống, có thể nhận ra Núi Đôi bằng dáng nào?','Hai đỉnh tròn nhô lên sát nhau giữa cánh đồng. Đi tiếp về Đồng Văn, đá vôi còn hiện ra thành những mỏm nhọn ở Lũng Táo.'],
+  'vuon-quoc-gia-cuc-phuong':['leaf','Dấu rừng trên đường tới Bống','Đi qua Hồ Mạc rồi theo đường rừng về Bống, những thân cây nào có tên riêng trên tuyến?','Cây Sấu cổ thụ và cây Chò ngàn năm là hai điểm dừng khác nhau. Từ các lối mòn có thể dừng lại quan sát gốc cây và tầng lá phía trên.'],
   'tuong-niem-dien-bien-phu':['ridge','Từ sân lễ lên đồi','Sau khoảng sân ở chân đồi D1, con đường tham quan dẫn tới đâu?','Từng vế bậc đưa người xem lên đỉnh đồi, nơi đặt tượng đài Chiến thắng. Quãng dừng ở Nghĩa trang liệt sĩ A1 dành để tưởng niệm.'],
   'di-tich-co-loa':['drop','Vòng nước trước đền','Từ đền thờ An Dương Vương nhìn ra, vòng nước nhỏ nằm ở đâu?','Trong lòng hồ trước đền có giếng Ngọc. Từ mép hồ đi tiếp tới đình Ngự Triều Di Quy, am Mỵ Châu và chùa Cổ Loa.'],
   'khu-di-tich-den-hung':['ridge','Ba tên trên một đường lên núi','Theo lối lên Nghĩa Lĩnh, ba ngôi đền mang tên chỉ vị trí nào?','Từ chân núi, đường đi lần lượt qua Đền Hạ, Đền Trung rồi lên Đền Thượng. Cổng cũ dưới chân núi khác với cổng lớn ngoài quảng trường lễ hội.'],

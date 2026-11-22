@@ -2,7 +2,7 @@
 // The baked imagery and elevation share the bounds of Web Mercator z8 tiles
 // x=200..206, y=110..122. Heights are metres above sea level.
 const vietnamReliefStep=32;
-function createVietnamRelief(T,scene,compact,landscapes,tunnelCut,landWidth){
+function createVietnamRelief(T,scene,compact,landscapes,tunnelCut,landWidth,caveOpenings){
   const urls='streetscape/surfaces/vietnam-',imagery=new T.TextureLoader().load(urls+'landcover.webp');
   imagery.colorSpace=T.SRGBColorSpace;
   const nearCentre={value:new T.Vector2()},eye={value:new T.Vector2()},anchor={value:new T.Vector2()};
@@ -25,6 +25,7 @@ function createVietnamRelief(T,scene,compact,landscapes,tunnelCut,landWidth){
     landscapes.shade(shader,'canopy','1.');
     passSurface.shade(shader,'canopy','.86');
     tunnelCut?.shade(shader,'canopy');
+    caveOpenings?.shade(shader);
   };
   const texels=Float32Array.from({length:256},(_,v)=>3500*(v/255)**1.6);
   // Fixed geographic lattice: shared ridgelines retain exactly the same vertices
