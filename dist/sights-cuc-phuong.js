@@ -210,9 +210,27 @@
       const d=-z,last=sections.at(-1),j=sections.findIndex(q=>q[0]>=d);
       const a=j<0?last:sections[Math.max(0,j-1)],b=j<0?last:sections[j];
       const t=b===a?0:Math.max(0,Math.min(1,(d-a[0])/(b[0]-a[0]))),cx=a[1]+t*(b[1]-a[1]),w=a[2]+t*(b[2]-a[2]);
-      const edge=Math.max(0,Math.abs(x-cx)-w-1.6,z-1.4,d-last[0]),mix=Math.min(1,edge/8.3);
+      const edge=Math.max(0,Math.abs(x-cx)-w-1.6,(z-.65)*1.85,d-last[0]),mix=Math.min(1,edge/8.3);
       return ground(x,z)*mix*mix*(3-2*mix);
     };
+  }
+  function caveFloor(rock,sections){
+    // The terrain cut is fractionally wider than the arch. Carry compacted
+    // earth underneath both jambs and out to the grade of the final steps.
+    for(let i=1;i<sections.length;i++){
+      const a=sections[i-1],b=sections[i];
+      rock.grid(18,4,(u,v)=>{
+        const x=a[1]+(b[1]-a[1])*v+(u*2-1)*((a[2]+(b[2]-a[2])*v)*1.18+.61);
+        return [x,a[4]+(b[4]-a[4])*v-.19,-a[0]-(b[0]-a[0])*v,0x897f67,.51+.12*Math.cos(x*.7)];
+      });
+    }
+    const [,,width,,level]=sections[0];
+    rock.grid(23,13,(u,v)=>{
+      const across=u*2-1,x=across*(width*1.17+.75+v*.45),
+        z=-.1+v*(4.77+.46*Math.sin(u*11)+.63*Math.cos(u*7));
+      const skirt=.77*v**2+.47*Math.max(0,(Math.abs(across)-.89)/.11);
+      return [x,level*(1-v)**1.4-.06-skirt+.048*Math.sin(x*1.6+v*7),z,0x948872,.78+.13*Math.sin(x*1.3-v*9)];
+    });
   }
   stop('osm-node-1725481657',{name:'Động Người Xưa (hang Đắng)',kind:'Hang động',yaw:-.79,width:45,depth:50,start:caveRoad,
     caveOpening:{sections:nguoiSections,approach:2.1},
@@ -222,7 +240,7 @@
     shots:[['Cửa hang trên vách đá vôi',0,.1,10.7,24,.08,.13],['Lối cầu dưới chân núi',-19.2,60.1,7.4,35,-1.12,.20,true],['Ngăn sáng dưới vòm cửa',.4,-1.5,7.2,7.7,-.25,.09]]},
   (T,kit)=>{
     const rock=K.batch(T);
-    K.grotto(rock,nguoiSections,19.3,19.9,1.21);
+    K.grotto(rock,nguoiSections,19.3,19.9,1.21);caveFloor(rock,nguoiSections);
     for(let j=0;j<12;j++){
       const a=.32+j*.51;K.boulder(rock,Math.cos(a)*8.15,.08,2.4+Math.sin(a)*4.0,1.05+j%3*.52,.77+j%4*.32,.89+j%2*.60,a,j%3!==1);
     }
@@ -282,9 +300,15 @@
     caveOpening:{sections:palaceSections,approach:2},
     description:'Trên vòng đường mòn cây chò ngàn năm, một nhánh bậc đá dẫn lên động Sơn Cung. Khoảng sáng trên vòm dọi xuống nền đá lổn nhổn, bên cạnh những dải nhũ rủ trong bóng tối.',
     arrivalNote:'Xe ở bãi Bống. Từ đường mòn cây chò, nhánh bậc đi bộ vòng lên cửa động.',
-    shots:[['Khoảng sáng ở cửa Sơn Cung',0,-.5,12.8,23.4,.14,.13],['Vòm sáng và dải nhũ',-.5,-11.2,13.6,7.45,-.11,-.16],['Những bậc cuối trước cửa động',.2,8,8.8,17,.29,.20,true]]},
+    shots:[['Giếng sáng trên vòm Sơn Cung',-.5,-11.2,15.2,7.55,-.11,-.23],['Rèm nhũ bên ngăn đầu',-3.44,-8.3,9.1,6.8,.48,-.085],['Những bậc cuối trước cửa động',.2,8,8.8,17,.29,.20,true]]},
   (T,kit)=>{
-    const rock=K.batch(T);palaceChamber(rock);
+    const rock=K.batch(T);palaceChamber(rock);caveFloor(rock,palaceSections);
+    for(let j=0;j<3;j++)rock.grid(62,19,(u,v)=>{
+      const z=-5.69-3.32*j-u*3.67,fold=Math.sin(u*30+j*2.1),ribs=.26*Math.sin(u*75+v*.42);
+      const fringe=2.19+.52*fold+.37*Math.cos(u*21+j)+.52*j;
+      const x=-4.31-.30*j+.45*Math.sin(u*4+j)+v*.32+.25*fold+ribs*(.68+.32*v);
+      return [x,fringe+(7.28-fringe)*v,z,0xb7a68c,.67+.20*v+.10*fold+.06*Math.cos(u*75)];
+    });
     for(let j=0;j<18;j++){
       const x=-4.6+(j%6)*.32,z=-2.7-Math.floor(j/6)*1.45-.39*Math.sin(j),tip=2.32+(j*.57%1)*1.79;
       rock.grid(12,7,(u,v)=>{const a=u*tau,r=(.12+.10*(j%3))*(.06+.94*v)**.73*(1+.14*Math.sin(a*5));return [x+r*Math.cos(a),tip+v*(6.86-tip),z+r*Math.sin(a),0xaea189,.66+.20*v];});
@@ -433,16 +457,18 @@
     nearForest(rock,true);understory(rock,200,38,36,(x,z)=>Math.hypot(x,z)<8.8||z>0&&Math.abs(x)<3.3);K.finish(T,kit,rock);
   });
 
-  stop('osm-node-5294733035',{name:'Đỉnh Mây Bạc – Cúc Phương',kind:'Đỉnh núi',yaw:0,width:30,depth:36,start:bong,
+  // This attraction node lies alongside ways 46654391 and 1157952708.
+  // Elevation data places the trail here below the published 648 m summit.
+  stop('osm-node-5294733035',{name:'Đường mòn lên đỉnh Mây Bạc',kind:'Tham quan',yaw:0,width:30,depth:36,start:bong,
     source:bongSource,photo:'https://dantri.com.vn/du-lich/xuyen-rung-gia-cuc-phuong-chinh-phuc-noc-nha-may-bac-20260323100021942.htm',
-    description:'Đường mòn hẹp qua rừng rậm rồi lên sườn đá vôi lộ thiên. Từ khoảng hở trên đỉnh, những dãy núi phủ cây nối tiếp nhau về phía đông nam.',
+    description:'Ở ghim này, hai nhánh đường mòn gặp nhau trên sườn đá vôi giữa rừng. Tuyến của Vườn dẫn lên Mây Bạc, đỉnh núi cao khoảng 648 m.',
     arrivalNote:'Xe ở bãi Bống. Tuyến lên Mây Bạc là tuyến đi bộ cùng hướng dẫn viên của Vườn.',
-    shots:[['Đường mòn trên sườn đá',0,2,9.9,22,-.32,.19],['Nhìn về các dãy núi phía đông nam',50,42,12,69,-2.29,.045]]},
+    shots:[['Lối mòn trên sườn đá',0,2,9.9,22,-.32,.19],['Nhìn ra các dải rừng phía nam',.6,5.5,16,10.3,3.06,-.016]]},
   (T,kit)=>{
     const rock=K.batch(T);
-    for(let i=0;i<24;i++){
-      const theta=i*2.39996,r=Math.sqrt(i)*1.70,cx=r*Math.cos(theta),cz=r*Math.sin(theta);
-      const a=.81+.35*Math.sin(i*3.1),long=1.6+(i*.41421%1)*2.35,wide=.50+(i*.618%1)*.65,h=1.19+(i*.731%1)*1.64;
+    for(let i=0;i<19;i++){
+      const theta=i*2.39996,r=Math.sqrt(i)*1.72,cx=r*Math.cos(theta),cz=r*Math.sin(theta);
+      const a=.81+.35*Math.sin(i*3.1),long=2.2+(i*.41421%1)*2.2,wide=.60+(i*.618%1)*.90,h=.64+(i*.731%1)*1.12;
       rock.grid(19,8,(u,v)=>{
         const q=(u*2-1),end=Math.max(0,1-q*q)**.65,cross=2*v-1,ridge=Math.max(0,1-Math.abs(cross+.11*Math.sin(7*u+i)))**.74;
         const along=q*long,dis=cross*wide*end,crack=Math.cos(u*19+v*1.7+i);
