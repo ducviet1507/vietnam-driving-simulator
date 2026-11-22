@@ -3,6 +3,7 @@
 // Clues belong to the tour camera. The little scenes in the reveals are original
 // keepsakes inspired by the place, including the imagined voices and movements.
 window.sightSecretStories = {
+  'ho-lak-buon-jun-biet-dien':['sail','Từ mũi buôn Jun','Con đường nào dẫn đến bến thuyền ở đầu mũi buôn Jun?','Đường Y Jút đi dọc mũi đất rồi gặp đường lát ven bờ. Từ đầu bến có thể nhìn qua lòng hồ tới những dải đồi xa.'],
   'pho-cu-go-cong':['arch','Ba nếp nhà của đình','Từ phố Phan Chu Trinh, ba nếp nhà của Đình Trung nối nhau theo thứ tự nào?','Phía chợ là võ ca. Qua võ quy ở giữa mới đến chánh điện. Cách đó một quãng đi bộ, Nhà Đốc Phủ Hải có tiền sảnh quay ra đường Hai Bà Trưng.'],
   'sa-dec-nha-co-lang-hoa':['leaf','Chậu hoa trên mặt nước','Trong nhà vườn Tân Quy Đông, người trồng kê chậu hoa lên đâu?','Những hàng chậu nằm trên giàn bắc phía trên mặt nước. Lối nhỏ giữa các giàn giúp người trồng tiếp cận từng luống để chăm hoa.'],
   'suoi-cham-thac-hieu-pu-luong':['drop','Nước về bản','Ở Chiềng Lau, nước suối theo đường nào mới tới ruộng?','Dọc mương, những ống tre trên vành guồng múc nước lên cao rồi đổ vào máng dẫn về ruộng. Ở bản Hiêu, nước từ vùng núi đá vôi chảy tự nhiên qua các bậc thác.'],
