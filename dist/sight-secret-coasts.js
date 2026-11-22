@@ -1,6 +1,9 @@
 'use strict';
 
 Object.assign(window.sightSecretStories, {
+  'phat-vien-dong-duong': ['arch','Thanh đá giữa hai trụ','Qua các thanh chống ở Tháp Sáng, tìm một đường ngang bằng đá nằm giữa hai trụ cửa.','Đầu bút đi lên theo vết gạch vỡ rồi rẽ ngang trên thanh đá. Dưới nét ngang ấy, hai trụ vẫn để ngỏ một lối cho mắt nhìn xuyên sang phía bên kia.'],
+  'thap-phu-dien': ['drop','Giữa lòng cồn cát','Qua cửa phía đông ở Phú Diên, có gì còn lại giữa bốn bức tường gạch?','Từ ba bậc cửa, một nét bút luồn vào lòng tháp và dừng ở bệ thờ nhỏ. Phía trên trang ký họa, mái nhà kính hắt một quầng xanh xuống phần diềm mái xưa.'],
+  'thap-yang-prong': ['wing','Mỏ chim ở mép rừng','Hãy lần theo diềm mái Yang Prong ra góc tháp để tìm chiếc mỏ quặp.','Bên mảng gạch phủ rêu, một chiếc mỏ nhỏ ngoặt xuống từ góc mái. Người vẽ nối nó với đường cong của tán rừng, rồi chừa trắng một khoảng trời ngay bên dưới.'],
   'thap-hoa-lai': ['ridge','Khoảng trống giữa hai tháp','Từ nền thấp giữa Hòa Lai, quay nhìn hai đầu trục tháp.','Hai ngọn tháp đứng ở hai mép trang. Ở khoảng trống giữa chúng, người vẽ chỉ đặt một nét vuông thấp bằng gạch, đúng nơi cuộc khai quật tìm thấy nền tháp Giữa.'],
   'thap-bac-hoa-lai': ['leaf','Móc lá trên cột gạch','Lần theo dải lá cuộn giữa cột ốp của tháp Bắc.','Đầu một chiếc lá đổi chiều, khớp vào chiếc kế bên. Người vẽ đi hết dải móc gạch rồi khép nét thành bông hoa ở chân cột.'],
   'thap-nam-hoa-lai': ['arch','Nét phác bên tiền sảnh','Quanh cửa đông tháp Nam, chỗ nào người thợ xưa mới phác dáng trên gạch?','Khối ốp dưới chân cột còn nét vuông của viên gạch. Nhìn lên một tầng, ô khám trên mái đã hiện đủ đường chạm.'],

@@ -275,6 +275,21 @@ try {
     });
     assert.deepEqual(invalidPacks,[],'Regional model registrations must match their Atlas entries');
     console.log('PASS nationwide Atlas search and regional model loading');
+    await page.locator('#findPlace').fill('');
+    await page.locator('#tourFilter').selectOption('heritage');
+    const routes=page.locator('#places button');
+    assert.equal(await routes.count(),Math.min(24,await page.evaluate(()=>regionalVisits.length)));
+    await page.locator('#findPlace').fill('Cầu tàu 914');
+    const conDao=routes.filter({hasText:'Côn Đảo'});
+    await conDao.waitFor();assert.equal(await conDao.count(),1);
+    assert.match(await conDao.innerText(),/4 điểm dừng/);
+    await conDao.click();
+    assert.equal(await page.locator('#travel').innerText(),'Mở tuyến tham quan');
+    await page.locator('#travel').click();
+    await page.locator('#tourCamera').waitFor({state:'visible'});
+    await page.locator('#complexStop').selectOption('stop/cau-tau-914');
+    await page.waitForFunction(()=>document.querySelector('#tourTitle').textContent==='Cầu tàu 914');
+    console.log('PASS Atlas heritage routes, stop search and touring from a parked car');
 
     await go('/cup');
     await page.locator('#launch').click();

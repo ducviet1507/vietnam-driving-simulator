@@ -74,8 +74,10 @@ function match(e,p,fuzzy){
   if(e.alias.includes(' '+p.original+' ')||e.title.includes(' '+p.query+' '))return 2;
   return inName===p.tokens.length?3:4;
 }
+function onlyCurated(filter){return filter==='heritage'||filter==='model'||filter==='mountain';}
 function search(input){
   const p=plan(input.text),found=[],seen=new Set();
+  const curated=onlyCurated(input.filter),needsCatalog=!curated||!!p.anchor;
   let [cx,cy]=input.center,anchorName='';
   if(p.anchor){
     const words=plan(p.anchor);let best=null,score=Infinity;
@@ -94,7 +96,7 @@ function search(input){
   const wanted=input.filter==='all'?'':fold(input.filter);
   const distance=e=>Math.hypot((e.lon-cx)*unitX,(e.lat-cy)*110.9);
   function collect(e,fuzzy){
-    if(wanted&&!(input.filter==='model'?e.ref!=null&&e.custom:input.filter==='mountain'?e.mountain:
+    if(wanted&&!(input.filter==='model'?e.ref!=null&&e.custom:input.filter==='mountain'?e.mountain:input.filter==='heritage'?e.heritage:
       e.area.includes(' '+wanted+' ')||e.region===input.filter))return;
     if(p.near&&(Math.abs(e.lat-cy)>.14||Math.abs(e.lon-cx)*unitX>15))return;
     const rank=match(e,p,fuzzy);
@@ -107,16 +109,16 @@ function search(input){
   }
   if((p.query||p.category)&&(!p.anchor||anchorName)){
     for(const e of extras)collect(e,false);
-    for(const e of catalog)collect(e,false);
+    if(!curated)for(const e of catalog)collect(e,false);
     if(!found.length&&p.query.length>=4&&!p.number){
       for(const e of extras)collect(e,true);
-      for(const e of catalog)collect(e,true);
+      if(!curated)for(const e of catalog)collect(e,true);
     }
   }
   found.sort((a,b)=>(p.street?Number(b.e.kind==='road')-Number(a.e.kind==='road'):0)||a.rank-b.rank||(!p.category?Number(!!b.e.featured)-Number(!!a.e.featured):0)||a.km-b.km||a.e.label.localeCompare(b.e.label,'vi'));
   const hits=found.slice(0,limit).map(({e,km,rank})=>({ref:e.ref,name:e.label||types[e.kind]?.[0],kind:types[e.kind]?.[0]||'Địa điểm',
     lon:e.lon,lat:e.lat,context:[e.locality,e.province].filter(Boolean).join(' · '),km,approx:rank===9}));
-  postMessage({id:input.id,hits,total:found.length,near:p.near,anchor:anchorName,missingAnchor:!!p.anchor&&!anchorName,loading:!!loading,error:failure});
+  postMessage({id:input.id,hits,total:found.length,near:p.near,anchor:anchorName,missingAnchor:!!p.anchor&&!anchorName,loading:needsCatalog&&!!loading,error:needsCatalog&&failure});
 }
 async function readShard(file){
   const response=await fetch('vn-search/'+file);
@@ -142,8 +144,12 @@ function prepare(){
 }
 onmessage=({data})=>{
   if(data.type==='extras'){
-    extras=data.entries.map(({row,id,custom,mountain,featured,region})=>Object.assign(makeEntry(row,id),{custom,mountain,featured,region}));
+    extras=data.entries.map(({row,id,custom,mountain,heritage,featured,region})=>Object.assign(makeEntry(row,id),{custom,mountain,heritage,featured,region}));
     if(latest)search(latest);
   }else if(data.type==='prepare'){prepare();}
-  else if(data.type==='query'){latest=data;prepare();search(data);}
+  else if(data.type==='query'){
+    latest=data;
+    if(!onlyCurated(data.filter)||plan(data.text).anchor)prepare();
+    search(data);
+  }
 };

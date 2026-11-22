@@ -2,6 +2,19 @@
 // Anchor a regional visit on an existing road arrival. Each stop keeps its own
 // coordinates and the camera can move out to an island while the car stays parked.
 const heritageVisits=[
+  ['tuong-niem-dien-bien-phu','Điện Biên Phủ – bảo tàng và các điểm tưởng niệm',[
+    'bao-tang-chien-thang-dien-bien-phu','nghia-trang-liet-si-a1','san-hanh-le-doi-d1','tuong-dai-chien-thang-dien-bien-phu',
+  ]],
+  ['di-tich-co-loa','Khu di tích Cổ Loa',[
+    'osm-way-776438252','osm-way-497328755','osm-way-776437158','osm-way-1556531233','osm-way-776437157',
+  ]],
+  ['khu-di-tich-den-hung','Khu di tích Đền Hùng',[
+    'osm-node-11395354269','osm-node-7189828683','osm-node-11395352269','osm-node-11395352270',
+    'osm-way-1504768248','osm-node-11395352271','osm-node-11395352369','osm-node-11395352469',
+  ]],
+  ['kien-truc-bao-tang-ha-noi','Kiến trúc ba bảo tàng ở Hà Nội',[
+    'bao-tang-my-thuat-viet-nam','bao-tang-phu-nu-viet-nam','bao-tang-ha-noi',
+  ]],
   // https://condao.com.vn/vi/news/tai-nguyen-du-lich/nha-tu-con-dao-2750.html
   ['di-tich-con-dao','Côn Đảo – từ Dinh Chúa Đảo đến Cầu tàu 914',[
     'so-co-con-dao','dinh-chua-dao','bia-cau-tau-914','cau-tau-914',

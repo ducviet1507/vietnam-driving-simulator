@@ -3,6 +3,13 @@
 // Clues belong to the tour camera. The little scenes in the reveals are original
 // keepsakes inspired by the place, including the imagined voices and movements.
 window.sightSecretStories = {
+  'tuong-niem-dien-bien-phu':['ridge','Từ sân lễ lên đồi','Sau khoảng sân ở chân đồi D1, con đường tham quan dẫn tới đâu?','Từng vế bậc đưa người xem lên đỉnh đồi, nơi đặt tượng đài Chiến thắng. Quãng dừng ở Nghĩa trang liệt sĩ A1 dành để tưởng niệm.'],
+  'di-tich-co-loa':['drop','Vòng nước trước đền','Từ đền thờ An Dương Vương nhìn ra, vòng nước nhỏ nằm ở đâu?','Trong lòng hồ trước đền có giếng Ngọc. Từ mép hồ đi tiếp tới đình Ngự Triều Di Quy, am Mỵ Châu và chùa Cổ Loa.'],
+  'khu-di-tich-den-hung':['ridge','Ba tên trên một đường lên núi','Theo lối lên Nghĩa Lĩnh, ba ngôi đền mang tên chỉ vị trí nào?','Từ chân núi, đường đi lần lượt qua Đền Hạ, Đền Trung rồi lên Đền Thượng. Cổng cũ dưới chân núi khác với cổng lớn ngoài quảng trường lễ hội.'],
+  'bao-tang-ha-noi':['gear','Ô vuông lồng nhau','Nhìn gần mặt ngoài Bảo tàng Hà Nội, lớp kính nằm phía sau thứ gì?','Trước kính là một lớp chắn nắng có họa tiết ô vuông. Tầng phía trên vươn xa hơn, đổ bóng xuống mép tầng phía dưới.'],
+  'bao-tang-phu-nu-viet-nam':['ink','Những ô màu trên phố','Từ bậc thềm bảo tàng ở phố Lý Thường Kiệt, em nhìn thấy những mảng màu ở đâu?','Phía trên mái sảnh, những ô cửa màu nằm giữa hai dải kính cao. Dãy nhà bên trái kéo dài về phía sân.'],
+  'bao-tang-my-thuat-viet-nam':['arch','Nửa vòng tròn giữa sân','Ở Bảo tàng Mỹ thuật Việt Nam, lối vào nhô ra khỏi dãy cửa sổ theo nét gì?','Nhìn từ vườn, hàng cột ôm lấy một nửa vòng tròn. Trên cao, mái ngói giữa nhà uốn lên ở hai đầu.'],
+  'kien-truc-bao-tang-ha-noi':['ink','Ba mặt đứng thủ đô','Có thể nhận ra ba bảo tàng từ ba chi tiết nào ngoài sân?','Một sảnh tròn dưới mái ngói, một hàng cửa màu trên nền trắng, rồi bốn tầng vuông vươn dần ra ngoài. Mỗi hình là một điểm dừng trong sổ ký họa Hà Nội.'],
   'dinh-chua-dao':['leaf','Bóng mát dưới hàng hiên','Ở Dinh Chúa Đảo, lớp mái nào che cho người đứng ngoài cửa?','Phía dưới mái chính còn một lớp ngói thấp che hàng hiên. Bóng cột vuông nằm dọc theo lan can.'],
   'so-co-con-dao':['arch','Hai cánh cổng vàng','Hai bức tường trước Sở Cò dẫn mắt về đâu?','Theo đường cong của tường vàng, mắt gặp khoảng mở giữa hai trụ cổng rồi nhìn tới mái ngói phía trong.'],
   'bia-cau-tau-914':['ink','Trang đá bên vịnh','Bia nằm ở đoạn nào trên đường từ phố ra biển?','Ngay đầu cầu phía bờ, người đến thăm có thể dừng lại trước bia để tưởng nhớ những người đã mất khi xây cầu.'],

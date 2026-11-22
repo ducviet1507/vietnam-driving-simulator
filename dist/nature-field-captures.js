@@ -13,6 +13,10 @@ window.NatureFieldCaptures=(()=>{
     return {name,url:'https://www.youtube-nocookie.com/embed/'+id,source:'https://www.youtube.com/watch?v='+id,credit,scope};
   }
   return {
+    'osm-relation-21425134':[{
+      name:'Tham quan trưng bày thường xuyên',url:'https://3d.vnfam.vn/vi',source:'https://3d.vnfam.vn/vi',
+      credit:'Bảo tàng Mỹ thuật Việt Nam',scope:'Đi qua các phòng trưng bày trên ba tầng và chọn hiện vật để nghe thuyết minh.'
+    }],
     'osm-node-3157796075':[
       {name:'Theo đoàn thám hiểm vào Sơn Đoòng',url:'https://sondoong360.com/?media-name=THE%20ENTRANCE',
         source:'https://edstrom.photo/projects/son-doong-360/',credit:'Martin Edström và đoàn Sơn Đoòng 360 · 2015',

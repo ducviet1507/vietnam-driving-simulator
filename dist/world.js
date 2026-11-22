@@ -1132,6 +1132,8 @@ const openingPlace=['Tam Chúc',105.79650,20.555945,tamChuc];
 const tourismSites=window.VietnamTourism?.entries||[];
 const modeledStops=new Map();
 const sharedSites=new Map([
+ ['osm-way-640295913','san-hanh-le-doi-d1'],
+ ['osm-node-6565918086','osm-way-1556531233'],
  ['osm-way-1346643116','tam-chuc'],['osm-way-1273113083','dinh'],
  ['osm-way-1272874768','ke-ga'],['osm-way-1545646899','hai-dang-mui-dinh']
 ]);
@@ -1172,7 +1174,9 @@ const regionalVisits=heritageVisits.map(([id,name,ids])=>{
  const stops=ids.map(key=>allStops.get(key)||legacyDestinations.get(key)).filter(Boolean);
  if(!stops.length)return null;
  const first=stops[0],visit={id,name,kind:'Quần thể',city:first.city,province:first.province,region:first.region,
-   start:first.start,lon:first.lon,lat:first.lat,approachMeters:first.approachMeters,stops,searchNames:stops.map(s=>s.name).join(' ')};
+   start:first.start,lon:first.lon,lat:first.lat,approachMeters:first.approachMeters,visitOnArrival:true,
+   arrivalNote:'Xe dừng ở điểm đầu tuyến. Chọn một trong '+stops.length+' điểm dừng ở mục Góc ngắm.',
+   stops,searchNames:stops.map(s=>s.name).join(' ')};
  for(const stop of stops)visitsByStop.set(stop.id,visit);
  return visit;
 }).filter(Boolean);
@@ -1249,7 +1253,7 @@ function choosePlace(place,focus=false){
  pendingPlace=place;const site=place[3];
  if(focus)focusedPin=place;
  activeResult=matches.findIndex(p=>samePlace(p,place));$('travel').disabled=!indexData||!!site?.islands;
- $('travel').textContent=atlasChoice?'Dùng làm '+atlasChoice.label:site?.visitOnArrival?'Ngắm '+site.name:
+ $('travel').textContent=atlasChoice?'Dùng làm '+atlasChoice.label:site?.stops?'Mở tuyến tham quan':site?.visitOnArrival?'Ngắm '+site.name:
    site&&!site.accessRoad&&site.approachMeters>=500?'Xuất phát từ đường gần nhất':'Đặt điểm xuất phát';
  const raceLink=$('racePass');raceLink.hidden=!site?.km;
  if(site?.km)raceLink.href='cup.html?route='+encodeURIComponent(site.id);
@@ -1268,10 +1272,12 @@ function placeList(keepScroll=false){
    finder.query(q,filter,roads?roads.geo(car.x,car.z):source.slice(1,3),pageSize,destinations.length+':'+Boolean(atlasData));return;
  }
  finder.cancel();$('retrySearch').hidden=true;
- matches=(filter==='model'?gallery:destinations.filter(s=>filter==='all'||(filter==='mountain'?!!s.km:filter===s.region||filter===s.province))).map(tourPlace);
+ const places=filter==='heritage'?regionalVisits:filter==='model'?gallery:
+   destinations.filter(s=>filter==='all'||(filter==='mountain'?!!s.km:filter===s.region||filter===s.province));
+ matches=places.map(tourPlace);
  if(filter==='all')matches.push(...featured);
  renderPlaces(matches.length,keepScroll);
- $('resultCount').textContent=matches.length.toLocaleString('vi-VN')+' điểm đến';
+ $('resultCount').textContent=matches.length.toLocaleString('vi-VN')+(filter==='heritage'?' tuyến tham quan':' điểm đến');
  choosePlace(pendingPlace);
 }
 function showSearchResults(places,status){
@@ -1293,6 +1299,7 @@ function renderPlaces(count,keepScroll=false){
    const b=document.createElement('button'),title=document.createElement('strong'),detail=document.createElement('span');
    title.textContent=p[3]?.name||p[0];detail.textContent=p[3]?.km?'Đường đèo · '+p[3].km.toLocaleString('vi-VN')+' km':p[3]?[p[3].kind,p[3].province||p[3].city].filter(Boolean).join(' · '):'Điểm xuất phát';
    if(p[3]?.islands){title.textContent=p[0];detail.textContent=p[3].province+', Việt Nam · Chỉ xem bản đồ';}
+   if(p[3]?.stops)detail.textContent=p[3].stops.length+' điểm dừng · '+p[3].city;
    if(p[4])detail.textContent=[p[4].kind,p[4].context,atlasDistance(p[4].km)+' từ '+(p[4].anchor||'xe')].filter(Boolean).join(' · ');
    if(p===baSaoDrive)detail.textContent='Điểm xuất phát · Phường Tam Chúc · Ninh Bình (Hà Nam cũ)';
    if(filter==='model'&&p[3]?.custom){

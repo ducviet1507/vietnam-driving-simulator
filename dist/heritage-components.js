@@ -39,21 +39,21 @@
         {name:'Dọc theo quảng trường',viewAngle:2.85,viewRadius:151,viewElevation:.24,height:13}]}
   };
   for(const site of atlas.entries)if(precincts[site.id])Object.assign(site,precincts[site.id]);
-  // Three named member polygons of https://www.openstreetmap.org/relation/21218176
-  // © OpenStreetMap contributors, ODbL. Each pin is the polygon's interior
-  // representative_point(); starts use tools/build_vn_tourism.py road_approaches.
+  // Mapped components omitted from the national import, including three member
+  // ways of OSM relation 21218176. © OpenStreetMap contributors, ODbL.
   const source = 'https://dulichbacninh.gov.vn/kham-pha/vung-dat-con-nguoi-bac-ninh/quan-the-di-tich-yen-tu-vinh-nghiem-con-son-kiep-bac-di-san-van-hoa-the-gioi-1096.html';
   const components = [
     [1567975867,'Chùa Lân – Thiền viện Trúc Lâm Yên Tử','Quảng Ninh','Yên Tử',106.7293311,21.1097242,106.729035,21.110194,61],
     [1567975864,'Am – chùa Ngọa Vân','Quảng Ninh','Bình Khê',106.5795496,21.1765214,106.562360,21.167990,2017],
     [1567975862,'Chùa Bổ Đà','Bắc Ninh','Vân Hà',106.0524118,21.2423431,106.052006,21.242033,54],
+    [1504768248,'Đền Trung – Hùng Vương Tổ miếu','Phú Thọ','Hùng Sơn',105.3240986,21.3690193,105.322450,21.369750,189,'https://denhung.vn/tin-tuc/den-trung'],
   ];
   const existing = new Set(atlas.entries.map(site => site.id));
-  for (const [way, name, province, locality, lon, lat, startLon, startLat, approachMeters] of components) {
+  for (const [way, name, province, locality, lon, lat, startLon, startLat, approachMeters, componentSource=source] of components) {
     const id = 'osm-way-' + way;
     if (existing.has(id) || atlas.aliases[id]) continue;
     atlas.entries.push({id, name, province, city:province, locality, region:'Bắc Bộ', kind:'Di tích',
-      lon, lat, start:[startLon, startLat], approachMeters, source, map:'https://www.openstreetmap.org/way/' + way});
+      lon, lat, start:[startLon, startLat], approachMeters, source:componentSource, map:'https://www.openstreetmap.org/way/' + way});
   }
   // UNESCO's location for 678-014 and its list of the fourteen Huế components:
   // https://whc.unesco.org/en/list/678/maps/
