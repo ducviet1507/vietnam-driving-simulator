@@ -864,24 +864,35 @@ async function frameStop(stop){
  }
  if(stop===tamChucOverview)return showMonument({data:stop,x,z,height:75});
  const authored=gfx.nearLandmark(x,z);
- if(authored?.data.id===stop.id)return showMonument(authored,0,collection);
+ const approach=roads.point(...stop.start),dx=approach.x-x,dz=approach.z-z;
+ const distance=Math.hypot(dx,dz),yaw=distance>2?Math.atan2(dx,dz):authored?.data.yaw||0;
+ function surroundings(width,depth,height){
+   const includeRoad=distance>=12&&distance<=320;
+   return {name:includeRoad?'Quang cảnh và đường vào':'Toàn cảnh địa hình',
+     offset:includeRoad?[dx*.28,dz*.28]:[0,0],viewAngle:yaw+.24,viewElevation:.40,
+     viewRadius:Math.max(85,Math.max(width,depth)*1.35,height*1.6,includeRoad?distance*1.05:0),
+     height:Math.min(30,Math.max(5,height*.6))};
+ }
+ if(authored?.data.id===stop.id){
+   const data=authored.data;
+   if(!data.views&&!data.complex)authored.data={...data,views:[
+     {name:'Cận cảnh địa danh'},surroundings(data.width,data.depth,authored.height)]};
+   return showMonument(authored,0,collection);
+ }
  const footprint=gfx.sightFootprint(stop,x,z);
  const wide=stop.km||['Hồ','Vịnh','Khu bảo tồn','Vườn quốc gia','Đỉnh núi','Bãi biển','Điểm ngắm cảnh'].includes(stop.kind);
  const tags=window.VietnamSightDetails?.[stop.id]||{};
  const extent=footprint?[footprint.maxX-footprint.minX,footprint.maxZ-footprint.minZ]:tags.extent;
  const [ew,ns]=extent||[wide?165:68,wide?165:68];
- const approach=roads.point(...stop.start),dx=approach.x-x,dz=approach.z-z;
- const distance=Math.hypot(dx,dz),yaw=Math.atan2(dx,dz);
  const c=Math.abs(Math.cos(yaw)),s=Math.abs(Math.sin(yaw));
  const width=clamp(ew*c+ns*s,13,440),depth=clamp(ew*s+ns*c,13,440);
  const height=footprint?.h||Math.min(wide?18:12,Math.max(3,Math.min(width,depth)*.14));
  const description=[tags.start_date?'Niên đại ghi trên bản đồ là năm '+tags.start_date+'.':'',
    tags.architect?'Thiết kế của '+tags.architect+'.':''].filter(Boolean).join(' ');
  const data={...stop,width,depth,yaw,viewAngle:yaw,viewElevation:wide?.53:.39,description};
- if(distance>=22&&distance<=350){
-   data.views=[{name:'Toàn cảnh địa điểm'},{name:'Từ phía đường ô tô',viewAngle:yaw,
-     viewRadius:distance,viewElevation:.065,height:Math.min(8,height)}];
- }
+ data.views=[{name:'Toàn cảnh địa điểm'},surroundings(width,depth,height)];
+ if(distance>=22&&distance<=350)data.views.push({name:'Từ phía đường ô tô',viewAngle:yaw,
+   viewRadius:distance,viewElevation:.065,height:Math.min(8,height)});
  showMonument({data,x,z,height},0,collection);
 }
 $('tourView').onclick=()=>{

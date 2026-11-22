@@ -4,23 +4,57 @@
 
   // 1. Chùa Hương Tích (Can Lộc, Hà Tĩnh — Hoan Châu đệ nhất danh lam)
   function chuaHuongTich(T, kit) {
-    const { stamp, box } = kit;
-    const rock = new T.DodecahedronGeometry(1, 1);
-    for (const [rx, ry, rz, sx, sy, sz] of [[-12, 3.8, -6.5, 4.8, 5.2, 4.2], [12, 4.0, -6.2, 4.8, 5.4, 4.5], [0, 4.6, -11.5, 9.2, 6.4, 4.6]]) {
-      stamp(rock, 0x7c7a74, rx, ry, rz, sx, sy, sz);
-    }
-    rock.dispose();
-    A.vietnameseHall(T, kit, {
-      w: 17.0, d: 10.2, baseH: 1.3, colH: 3.6, bays: 5,
-      wall: 0xe6d3a0, wood: 0x66271b, tile: 0x99412d, ridge: 0xd9b862, eave: 0xd4a64a,
-      doubleTier: true, atticColor: 0x8a2c20,
-      title: 'CHÙA HƯƠNG TÍCH', plaque: { bg: '#732118', fg: '#f8da74' }
+    const { stamp, box, round } = kit;
+    const stone=0x9b927e, trim=0xb7b7aa, brick=0xa16849, wood=0x675246, dark=0x3e342d;
+    kit.palette({stone:[stone,trim,0x8f9187],brick:[brick,0xab856b],timber:[wood,dark]});
+    // The old Tam Bảo hall faces south. A continuous low roof shelters the
+    // shuttered central bays between stone end walls (Võ Văn Tường, photos 7–8).
+    const base=createTempleFoundations(T,kit);
+    const platform=base.fixture(g=>g(0,0)+.18,()=>{
+      kit.deck(0xab856b,0,.02,6.15,20.8,.16,12.4);
+      box(brick,0,.42,0,18.3,.84,9.1);
+      for(let i=0;i<4;i++)box(brick,0,(4-i)*.10,4.7+i*.33,11.5,(4-i)*.20,.36);
+      box(stone,0,2.34,-.63,17.6,3,7.4);
+      box(dark,0,2.39,3.24,11.15,3.05,.35);
+      for(let bay=-1;bay<=1;bay++){
+        for(let leaf=0;leaf<4;leaf++){
+          const x=bay*3.54+(leaf-1.5)*.80;
+          box(wood,x,1.64,3.46,.73,1.36,.16);
+          box(dark,x,1.68,3.55,.53,.98,.04);
+          for(let bar=-2;bar<=2;bar++)box(wood,x+bar*.13,2.78,3.48,.052,1.08,.12);
+          box(wood,x,3.37,3.47,.75,.10,.14);
+        }
+      }
+      for(const side of [-1,1]){
+        const x=side*7.18;
+        box(stone,x,2.34,3.5,3.42,3,1);
+        box(trim,x,2.65,4.04,1.35,1.40,.11);
+        box(dark,x,2.65,4.11,1.12,1.16,.06);
+        for(const a of [-1,1])box(trim,x,2.65,4.17,.08,1.38,.08,0,0,a*.77);
+        const post=side*9.32;
+        for(const [y,w,h] of [[.26,1.30,.50],[.60,1.14,.22],[2.15,.91,2.9],[3.64,1.10,.22],[4.04,1,.63],[4.43,1.21,.15]]){
+          box(trim,post,y,4.17,w,h,w);
+        }
+        box(0x8f9187,post,2.18,4.64,.48,2.48,.06);
+      }
+      for(const x of [-5.45,-1.77,1.77,5.45])stamp(round,wood,x,2.44,3.79,.16,3.2,.16);
+      box(wood,0,3.89,3.78,17.9,.32,.31);
+      A.curvedRoof(T,kit,0,3.96,-.2,19.5,10,2.03,0x82624d,0x706e63,0x777568,.42);
+      // The front court has a bronze censer and the stone steps continue
+      // behind the north wall towards Am Phật Bà.
+      for(const [y,r,h] of [[.22,.64,.34],[.56,.36,.34],[.84,.69,.36],[1.09,.73,.14]]){
+        stamp(round,0x58564c,0,y,7.5,r,h,r);
+      }
     });
-    box(0x888175, 0, 0.35, 9.8, 12.5, 0.7, 3.2);
-    A.trees(T, kit, [
-      { x: -11.5, z: 2.5, h: 11.2, kind: 'pine' }, { x: 11.5, z: 2.5, h: 10.8, kind: 'pine' },
-      { x: -13.5, z: -2.0, h: 10.0, kind: 'pine' }, { x: 13.5, z: -2.0, h: 10.4, kind: 'pine' }
-    ]);
+    base.skirt(0,6.15,20.8,12.4,.085,platform);
+    base.skirt(0,0,18.3,9.1,.12,platform);
+    base.stairs(platform,10,3.1,10,-14.2,2.2,.12,28);
+    for(const tree of [{x:-12,z:-4,h:10.1,kind:'banyan'},{x:12.7,z:-8,h:9.4,kind:'banyan'}]){
+      let parts;
+      base.fixture(g=>g(tree.x,tree.z),()=>{
+        parts=kit.place(tree.x,tree.z,0,()=>A.trees(T,kit,[{...tree,x:0,z:0}])).map(mesh=>({mesh,y:mesh.position.y}));
+      },dy=>{for(const {mesh,y} of parts)mesh.position.y=y+dy;});
+    }
   }
 
   // 2. Đền Chợ Củi (Đền Ông Hoàng Mười, Nghi Xuân, Hà Tĩnh)
@@ -202,10 +236,16 @@
   const sights = [
     {
       id: 'chua-huong-tich-ha-tinh', name: 'Chùa Hương Tích', city: 'Can Lộc', province: 'Hà Tĩnh',
-      lon: 105.756850, lat: 18.496650, yaw: 0.780, width: 28, depth: 24,
-      start: [105.758460, 18.495100], viewDistance: 1300,
-      map: 'https://www.openstreetmap.org/#map=17/18.49665/105.75685',
-      source: 'https://dulichhatinh.com.vn/',
+      lon: 105.7890804, lat: 18.5342785, yaw: 0, width: 28, depth: 31,
+      start: [105.78468, 18.52661], viewDistance: 1500, approachMeters: 969,
+      mappedEntrance: true, visitOnArrival: true,
+      views:[{name:'Tam Bảo trên sườn Hồng Lĩnh',offset:[0,2],height:7,viewAngle:.82,viewElevation:.23,viewRadius:53},
+        {name:'Toàn cảnh sườn núi',offset:[-12,5],height:10,viewAngle:-.88,viewElevation:.24,viewRadius:165}],
+      arrivalNote: 'Xe dừng ở cuối đường gần ga Miếu Cô. Từ đây có thể đi bộ hoặc đi cáp treo lên ga Hương Tích, rồi đi tiếp đến chùa chính.',
+      description: 'Tiền đường và Tam Bảo nằm trên sườn núi Hồng Lĩnh, gần ga Hương Tích. Sau chùa là lối lên Am Phật Bà. Nền Trang Vương nằm cao hơn về phía bắc.',
+      map: 'https://www.openstreetmap.org/node/11701538536',
+      source: 'https://baotang.hatinh.gov.vn/huong-tichngoi-chua-thieng-tren-dinh-nui-hong-1673514625.html',
+      photo: 'https://www.chuaviettoancau.com/chua-mien-trung/chua-huong-tich-ha-tinh-725.html',
       build: chuaHuongTich
     },
     {

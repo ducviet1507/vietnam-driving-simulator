@@ -1,25 +1,25 @@
 'use strict';
 // The baked imagery and elevation share the bounds of Web Mercator z8 tiles
 // x=200..206, y=110..122. Heights are metres above sea level.
-function createVietnamRelief(T,scene,compact,landscapes,tunnelCut){
+const vietnamReliefStep=32;
+function createVietnamRelief(T,scene,compact,landscapes,tunnelCut,landWidth){
   const urls='streetscape/surfaces/vietnam-',imagery=new T.TextureLoader().load(urls+'landcover.webp');
   imagery.colorSpace=T.SRGBColorSpace;
-  const datum={value:0},passWeight={value:0},closeDetail={value:0},eye={value:new T.Vector2()},anchor={value:new T.Vector2()};
+  const nearCentre={value:new T.Vector2()},eye={value:new T.Vector2()},anchor={value:new T.Vector2()};
   const passSurface=createPassSurface(T);
   const mat=new T.MeshLambertMaterial({name:'Vietnam relief',map:imagery,side:T.DoubleSide,color:0xc9d5bc});
   mat.onBeforeCompile=shader=>{
-    shader.uniforms.terrainDatum=datum;shader.uniforms.passWeight=passWeight;shader.uniforms.terrainEye=eye;shader.uniforms.terrainAnchor=anchor;
-    shader.uniforms.closePassDetail=closeDetail;
-    shader.vertexShader='attribute vec2 summitSurface;attribute float coarseElevation; uniform float terrainDatum,passWeight,closePassDetail;uniform vec2 terrainEye,terrainAnchor;varying float horizonDistance;varying vec2 canopy;\n'+shader.vertexShader.replace(
-      '#include <begin_vertex>', '#include <begin_vertex>\n canopy=terrainAnchor+position.xz; horizonDistance=distance(terrainEye,position.xz); transformed.y=(mix(coarseElevation,position.y,passWeight*mix(smoothstep(700.,1450.,horizonDistance),1.,closePassDetail))-terrainDatum)*mix(.43,.9,smoothstep(1800.,9500.,horizonDistance))-mix(70.,5.,smoothstep(530.,1500.,horizonDistance)); transformed.y=mix(transformed.y,summitSurface.x-mix(1.,.17,smoothstep(780.,1000.,horizonDistance)),summitSurface.y);');
-    shader.fragmentShader=`varying float horizonDistance;
+    shader.uniforms.terrainEye=eye;shader.uniforms.terrainAnchor=anchor;shader.uniforms.nearCentre=nearCentre;
+    shader.vertexShader='uniform vec2 terrainEye,terrainAnchor;varying float horizonDistance;varying vec2 canopy;\n'+shader.vertexShader.replace(
+      '#include <begin_vertex>', '#include <begin_vertex>\n canopy=terrainAnchor+position.xz; horizonDistance=distance(terrainEye,position.xz);');
+    shader.fragmentShader=`uniform vec2 nearCentre;varying float horizonDistance;
       varying vec2 canopy;
       float standHash(vec2 i){vec3 p=fract(vec3(i.xyx)*.1031);p+=dot(p,p.yzx+33.33);return fract((p.x+p.y)*p.z);}
       float standNoise(vec2 x){
         vec2 cell=floor(x),f=fract(x);f=f*f*(3.-2.*f);
         return mix(mix(standHash(cell),standHash(cell+vec2(1,0)),f.x),mix(standHash(cell+vec2(0,1)),standHash(cell+vec2(1,1)),f.x),f.y);
       }\n`+shader.fragmentShader.replace('#include <map_fragment>',
-      '#include <map_fragment>\n float mottling=(standNoise(canopy*.028)-.5)*.46+(standNoise(canopy*.083)-.5)*.23; diffuseColor.rgb*=1.+mottling*(1.-smoothstep(3500.,11000.,horizonDistance));')
+      `#include <map_fragment>\n vec2 local=abs(canopy-nearCentre);if(max(local.x,local.y)<${(landWidth/2).toFixed(1)}) discard; float mottling=(standNoise(canopy*.028)-.5)*.46+(standNoise(canopy*.083)-.5)*.23; diffuseColor.rgb*=1.+mottling*(1.-smoothstep(3500.,11000.,horizonDistance));`)
       .replace('#include <fog_fragment>',
       '#ifdef USE_FOG\n gl_FragColor.rgb=mix(gl_FragColor.rgb,fogColor,.17+.79*(1.-exp(-horizonDistance*.00009)));\n #endif');
     landscapes.shade(shader,'canopy','1.');
@@ -32,15 +32,8 @@ function createVietnamRelief(T,scene,compact,landscapes,tunnelCut){
   const cells=compact?128:160,spacing=512,stride=cells+1;
   const axis=new Float32Array(stride);
   for(let i=1;i<=cells/2;i++){
-    const f=i/(cells/2),size=f<=.42?64:f<=.64?128:f<=.83?256:512;
+    const tail=(i-40)/(cells/2-40),size=i<=40?vietnamReliefStep:tail<=.25?64:tail<=.50?128:tail<=.75?384:1024;
     axis[cells/2+i]=axis[cells/2+i-1]+size;axis[cells/2-i]=-axis[cells/2+i];
-  }
-  // Keep the same 64 m triangle under the pagoda even in the distant, coarser mesh.
-  function summitAxis(offset){
-    const i=axis.findIndex(value=>value>offset);
-    if(i<1||i>=cells)return axis;
-    const result=axis.slice(),low=Math.floor(offset/64)*64;
-    result[i-1]=low;result[i]=low+64;return result;
   }
   const count=stride*stride,indices=[];
   for(let j=0;j<cells;j++)for(let k=0;k<cells;k++){
@@ -49,7 +42,7 @@ function createVietnamRelief(T,scene,compact,landscapes,tunnelCut){
   const triangles=new T.Uint16BufferAttribute(indices,1);
   function horizonGeometry(){
     const geometry=new T.BufferGeometry();
-    for(const [name,size] of [['position',3],['normal',3],['uv',2],['coarseElevation',1],['summitSurface',2]]){
+    for(const [name,size] of [['position',3],['normal',3],['uv',2]]){
       geometry.setAttribute(name,new T.BufferAttribute(new Float32Array(count*size),size).setUsage(T.DynamicDrawUsage));
     }
     geometry.setIndex(triangles);return geometry;
@@ -76,45 +69,35 @@ function createVietnamRelief(T,scene,compact,landscapes,tunnelCut){
     for(let i=0;i<pixels.length;i++)pixels[i]=rgba[i*4];
     canvas.width=canvas.height=1;heights.onload=null;heights.removeAttribute('src');finishLoad();
   };heights.src=urls+'elevation.png';
-  // The road mesh, terrain and wheels use the same two triangles in each 64 m cell.
-  // Directly index nearby lattice vertices. The coordinate tags keep distant
-  // locations distinct when they reuse a slot, including west/south of spawn.
-  const step=64,cacheSide=64,cacheMask=cacheSide-1;
+  // Meshes, tyres and landmark foundations share these triangles and vertical datum.
+  const step=vietnamReliefStep,cacheSide=128,cacheMask=cacheSide-1;
   function sampleTerrain(graph,activePass,landscapes){
   const nodes=new Float64Array(cacheSide*cacheSide),nodeX=new Int32Array(nodes.length),nodeZ=new Int32Array(nodes.length);
   nodes.fill(NaN);
   const base=graph&&pixels?elevation(...uvAt(0,0,graph)):0;
-  function measured(x,z,coarse){
-    const h=landscapes.elevation(x,z);
-    // A DSM includes roofs and crowns. Retain the street datum in lowlands
-    // and limit discontinuities between measured terrain and the regional DEM.
-    return h===null?coarse:coarse+Math.max(-95,Math.min(95,h-coarse))*
-      T.MathUtils.smoothstep(Math.max(coarse,h-15),18,90)*.85;
+  function height(x,z,u,v){
+    let regional=elevation(u,v);
+    if(activePass){
+      const p=activePass,east=(x-p.x)*p.eastScale,south=z-p.z;
+      const tx=east*p.cos+south*p.sin,tz=-east*p.sin+south*p.cos;
+      const weight=1-T.MathUtils.smoothstep(Math.max(Math.abs(tx),Math.abs(tz)),11200,15200);
+      if(weight)regional+=(p.grid.elevation(tx,tz)-regional)*weight;
+    }
+    const centre=landscapes.elevation(x,z);
+    if(centre===null)return regional-base;
+    // A surface model can include a roof or a tree crown. Remove isolated spikes
+    // over one survey pixel while retaining the full rise between valley and ridge.
+    const west=landscapes.elevation(x-32,z)??centre,east=landscapes.elevation(x+32,z)??centre;
+    const north=landscapes.elevation(x,z-32)??centre,south=landscapes.elevation(x,z+32)??centre;
+    const average=(north+south+east+west)*.25;
+    const cleaned=.75*Math.min(centre,Math.max(west,east,north,south)+2)+.25*average;
+    const weight=landscapes.elevationWeight(x,z);
+    return regional+(cleaned-regional)*weight-base;
   }
   function node(i,j){
     const key=(j&cacheMask)*cacheSide+(i&cacheMask);
     if(nodeX[key]===i&&nodeZ[key]===j&&!Number.isNaN(nodes[key]))return nodes[key];
-    const x=i*step,z=j*step;
-    // A low-pass reconstruction removes abrupt changes of grade at DEM texel edges.
-    const sample=(dx,dz)=>elevation(...uvAt(x+dx,z+dz,graph));
-    const h=sample(0,0)*.5+(sample(-105,0)+sample(105,0)+sample(0,-105)+sample(0,105))*.125;
-    let value=(measured(x,z,h)-base)*.43;
-    if(activePass?.stage.id==='kim-bang'){
-      const east=(x-activePass.x)*activePass.eastScale,south=z-activePass.z;
-      const weight=1-T.MathUtils.smoothstep(Math.hypot(east,south),3600,5600);
-      // Preserve the lake datum while the limestone summit rises above the halls.
-      const local=activePass.grid.elevation(east,south);
-      value+=((local-10)*.80+(10-base)*.43-value)*weight;
-    }else if(activePass&&scenicPasses.has(activePass.stage.id)){
-      const p=activePass,east=(x-p.x)*p.eastScale,south=z-p.z;
-      const tx=east*p.cos+south*p.sin,tz=-east*p.sin+south*p.cos;
-      const weight=1-T.MathUtils.smoothstep(Math.max(Math.abs(tx),Math.abs(tz)),4200,5400);
-      // The drivable mesh shares these samples with the tyres. Filter single
-      // DEM-cell spikes while preserving the relief across the road and valley.
-      const h=p.grid.elevation(tx,tz)*.5+.125*(p.grid.elevation(tx-40,tz)+p.grid.elevation(tx+40,tz)+
-        p.grid.elevation(tx,tz-40)+p.grid.elevation(tx,tz+40));
-      value+=((h-base)*.43-value)*weight;
-    }
+    const x=i*step,z=j*step,value=height(x,z,...uvAt(x,z,graph));
     nodeX[key]=i;nodeZ[key]=j;nodes[key]=value;return value;
   }
   function ground(x,z){
@@ -128,20 +111,21 @@ function createVietnamRelief(T,scene,compact,landscapes,tunnelCut){
     const dx=2*Math.sin(yaw),dz=-2*Math.cos(yaw);
     return (ground(x+dx,z+dz)-ground(x-dx,z-dz))/4;
   }
-  return {graph,pass:activePass,landscapes,base,ground,grade,measured,step,revision:Symbol(),
-    altitude:(x,z)=>graph&&pixels?base+ground(x,z)/.43:0};
+  return {graph,pass:activePass,landscapes,base,ground,grade,height,step,revision:Symbol(),
+    altitude:(x,z)=>graph&&pixels?base+ground(x,z):0};
   }
-  const byGraph=new WeakMap(),passCache=new Map();
+  const byGraph=new WeakMap(),requested=new WeakMap(),passCache=new Map();
   let activePass=null;
   async function loadLocal(g,x,z){
     const current=byGraph.get(g);
-    if(current&&Math.hypot(current.x-x,current.z-z)<12000)return false;
     let closest=null,range=12000;
     for(const stage of [...(window.mountainStages||[]),...(window.landmarkTerrain||[])]){
       const p=g.point(...stage.start),dist=Math.hypot(p.x-x,p.z-z);
       if(dist<range){range=dist;closest={...p,stage};}
     }
+    requested.set(g,closest?.stage.id);
     if(!closest){byGraph.delete(g);return !!current;}
+    if(current?.stage.id===closest.stage.id)return false;
     const {stage}=closest;
     if(!passCache.has(stage.id)){
       const promise=fetch('stage-terrain/'+stage.id+'.js').then(async response=>{
@@ -154,7 +138,7 @@ function createVietnamRelief(T,scene,compact,landscapes,tunnelCut){
       if(passCache.size>3)passCache.delete(passCache.keys().next().value);
     }
     const grid=await passCache.get(stage.id);
-    if(!grid)return false;
+    if(!grid||requested.get(g)!==stage.id||byGraph.get(g)?.stage.id===stage.id)return false;
     const bearing=stage.bearing*Math.PI/180;
     // Convert world X back to east metres at the raster centre latitude.
     byGraph.set(g,{...closest,grid,sin:Math.sin(bearing),cos:Math.cos(bearing),
@@ -169,36 +153,23 @@ function createVietnamRelief(T,scene,compact,landscapes,tunnelCut){
   }
   function activate(next,x,z){
     if(next!==terrain){
-      terrain=next;graph=next.graph;activePass=next.pass;datum.value=next.base;
-      building=null;closeDetail.value=scenicPasses.has(activePass?.stage.id)?1:0;
+      terrain=next;graph=next.graph;activePass=next.pass;
+      building=null;
       passSurface.select(activePass?.stage.id,activePass?.x,activePass?.z,activePass?.cos,activePass?.sin,activePass?.eastScale);
     }
-    originX=x;originZ=z;
+    originX=x;originZ=z;nearCentre.value.set(Math.round(x/step)*step,Math.round(z/step)*step);
   }
   const ground=(x,z)=>terrain.ground(x,z);
   function* buildHorizon(ax,az){
     const target=spare??=horizonGeometry(),attrs=target.attributes;
-    const pos=attrs.position.array,uv=attrs.uv.array,coarse=attrs.coarseElevation.array,summit=attrs.summitSurface.array;
-    const pagoda=activePass?.stage.id==='kim-bang'&&window.VietnamSights?.find(site=>site.id==='chua-ngoc-tam-chuc');
-    const peak=pagoda&&graph.point(pagoda.lon,pagoda.lat);
-    const nearPeak=peak&&Math.hypot(peak.x-ax,peak.z-az)<5000;
-    const xs=nearPeak?summitAxis(peak.x-ax):axis,zs=nearPeak?summitAxis(peak.z-az):axis;
-    const us=Float64Array.from(xs,dx=>uvAt(ax+dx,az)[0]);
+    const pos=attrs.position.array,uv=attrs.uv.array;
+    const us=Float64Array.from(axis,dx=>uvAt(ax+dx,az)[0]);
     for(let j=0,i=0;j<=cells;j++){
-      const v=uvAt(ax,az+zs[j])[1];
+      const dz=axis[j],v=uvAt(ax,az+dz)[1];
       for(let k=0;k<=cells;k++,i++){
-        const dx=xs[k],dz=zs[j];
-        const blend=nearPeak?1-T.MathUtils.smoothstep(Math.hypot(ax+dx-peak.x,az+dz-peak.z),135,640):0;
-        summit[i*2]=blend?ground(ax+dx,az+dz):0;summit[i*2+1]=blend;
-        const u=us[k];
-        let h=elevation(u,v);h=terrain.measured(ax+dx,az+dz,h);coarse[i]=h;
-        if(activePass){
-          const p=activePass,east=(ax+dx-p.x)*p.eastScale,south=az+dz-p.z;
-          const tx=east*p.cos+south*p.sin,tz=-east*p.sin+south*p.cos;
-          const coverage=1-T.MathUtils.smoothstep(Math.max(Math.abs(tx),Math.abs(tz)),11200,15200);
-          h+=(p.grid.elevation(tx,tz)-h)*coverage;
-        }
-        pos[i*3]=dx;pos[i*3+1]=h;pos[i*3+2]=dz;uv[i*2]=u;uv[i*2+1]=1-v;
+        const dx=axis[k],u=us[k];
+        pos[i*3]=dx;pos[i*3+1]=terrain.height(ax+dx,az+dz,u,v)-.17;pos[i*3+2]=dz;
+        uv[i*2]=u;uv[i*2+1]=1-v;
       }
       if((j&3)===3)yield;
     }
@@ -216,7 +187,6 @@ function createVietnamRelief(T,scene,compact,landscapes,tunnelCut){
       const deadline=displayedTerrain?.graph===graph?performance.now()+1.5:Infinity;
       do{if(building.next().done){building=null;break;}}while(performance.now()<deadline);
     }
-    passWeight.value=activePass?1-T.MathUtils.smoothstep(Math.hypot(x-activePass.x,z-activePass.z),8600,12000):0;
     mesh.position.set(anchorX-originX,0,anchorZ-originZ);eye.value.set(x-anchorX,z-anchorZ);
   }
   return {prepare,activate,update,loadLocal,ready,ground,step,passSurface};

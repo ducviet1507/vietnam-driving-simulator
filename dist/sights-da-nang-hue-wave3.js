@@ -108,74 +108,84 @@
   }
 
   // 3. Tượng Cá Chép Hóa Rồng & Cầu Tình Yêu (Sông Hàn, Đà Nẵng) — White marble Carp-Dragon sculpture + red-heart lantern pier
+  // OSM pier 1243663176, east/south metres from the fountain (node 5272119221).
+  const lovePier=[[18.7,3.6],[9.2,1.9],[6.3,4.5],[3.2,6],[-1.4,5.8],[-3.7,4.2],[-4.2,0],[-2.3,-3.5],
+    [-2.8,-8.2],[-18.2,-27.8],[-26.6,-43.1],[-31.7,-56.5],[-36.1,-73.2],[-33.5,-76.5],[-29.3,-74.9],
+    [-25.6,-58.5],[-21.1,-45.9],[-13,-31.1],[-2.9,-18],[15.3,-19.1],[18,-15.2],[23.5,-12.8],[25.1,-4]];
   function caChepHoaRong(T, kit) {
-    const { box, stamp, round, tapered, outline } = kit;
-    const marble = 0xf2f0eb, marbleShade = 0xd9d6ce, granite = 0x8d9196, water = 0x2d6b82, heartRed = 0xc92a2a, woodDeck = 0x8b6240;
-    kit.palette({stone: [marble, marbleShade, granite], timber: woodDeck});
-
-    // Han River stone promenade deck & river basin
-    box(granite, 0, 0.25, 2.5, 24, 0.5, 13);
-    box(water, 0, 0.04, -7.2, 28, 0.12, 12);
-
-    // Iconic Cầu Tình Yêu (Love Lock Pier) jutting out into the river with red heart-lantern posts
-    box(woodDeck, 5.6, 0.52, -5.8, 5.2, 0.34, 11.4);
-    for (const s of [-1, 1]) {
-      box(0x3a4046, 5.6 + s * 2.45, 1.1, -5.8, 0.12, 0.88, 11.2);
-      for (const lz of [-2.2, -5.6, -9.0]) {
-        const px = 5.6 + s * 2.45;
-        stamp(round, 0x2f363c, px, 2.45, lz, 0.09, 3.6, 0.09);
-        // Cluster of glowing red heart lanterns hanging from curved bracket
-        for (const ox of [-0.28, 0, 0.28]) {
-          const orb = new T.SphereGeometry(0.24, 8, 8);
-          stamp(orb, heartRed, px - s * 0.45 + ox, 3.85 - Math.abs(ox) * 0.4, lz);
-          orb.dispose();
+    const {box,stamp,round,tapered,outline}=kit;
+    const marble=0xf2f0eb,marbleShade=0xd9d6ce,granite=0x96918a,metal=0x41443f,red=0xc73333;
+    kit.palette({stone:[marble,marbleShade,granite],metal});
+    const shape=new T.Shape(lovePier.map(([x,z])=>new T.Vector2(x,-z)));
+    const slab=new T.ExtrudeGeometry(shape,{depth:.62,bevelEnabled:false});slab.rotateX(-Math.PI/2);
+    kit.groundStamp(slab,granite,0,-.12,0);slab.dispose();
+    const heart=new T.Shape();
+    heart.moveTo(0,-.42);heart.bezierCurveTo(-.20,-.13,-.64,.08,-.44,.37);
+    heart.bezierCurveTo(-.28,.61,-.07,.45,0,.30);heart.bezierCurveTo(.07,.45,.28,.61,.44,.37);
+    heart.bezierCurveTo(.64,.08,.2,-.13,0,-.42);
+    const lantern=new T.ExtrudeGeometry(heart,{depth:.15,bevelEnabled:false,curveSegments:5});
+    for(let i=0;i<lovePier.length;i++){
+      if(i>=20)continue; // Open connection to the eastern promenade.
+      const [x,z]=lovePier[i],[xx,zz]=lovePier[i+1],dx=xx-x,dz=zz-z,length=Math.hypot(dx,dz);
+      const yaw=Math.atan2(dx,dz),bays=Math.ceil(length/2.1);
+      for(const y of [.72,1.05,1.48])box(metal,x+dx*.5,y,z+dz*.5,.055,.08,length,yaw);
+      for(let j=0;j<bays;j++){
+        const px=x+dx*j/bays,pz=z+dz*j/bays;
+        stamp(round,metal,px,.99,pz,.065,1.04,.065);
+      }
+      if(i>=8&&i<=17){
+        stamp(round,granite,x,-2.8,z,.37,6.1,.37);
+        if(length>10){
+          stamp(round,metal,x,2.08,z,.085,3.18,.085);
+          for(const side of [-1,1])stamp(lantern,red,x+side*.42,3.75,z,.88,.88,1);
         }
       }
     }
+    lantern.dispose();
+    kit.place(0,0,-1.50,()=>{
+      const cx=0,cz=0;
+      stamp(round, 0x6f767c, cx, 0.72, cz, 4.4, 0.85, 4.4);
+      stamp(round, marbleShade, cx, 1.48, cz, 3.5, 0.72, 3.5);
+      // Stylized sculpted sea waves cradling the base
+      for (let i = 0; i < 8; i++) {
+        const a = i * Math.PI / 4;
+        const wBall = new T.SphereGeometry(0.95, 10, 8);
+        stamp(wBall, marble, cx + Math.sin(a) * 2.2, 1.95, cz + Math.cos(a) * 2.2, 1.1, 0.75, 1.1);
+        wBall.dispose();
+      }
 
-    // Stepped octagonal marble pedestal on riverside terrace for Tượng Cá Chép Hóa Rồng
-    const cx = -4.2, cz = -1.2;
-    stamp(round, 0x6f767c, cx, 0.72, cz, 4.4, 0.85, 4.4);
-    stamp(round, marbleShade, cx, 1.48, cz, 3.5, 0.72, 3.5);
-    // Stylized sculpted sea waves cradling the base
-    for (let i = 0; i < 8; i++) {
-      const a = i * Math.PI / 4;
-      const wBall = new T.SphereGeometry(0.95, 10, 8);
-      stamp(wBall, marble, cx + Math.sin(a) * 2.2, 1.95, cz + Math.cos(a) * 2.2, 1.1, 0.75, 1.1);
-      wBall.dispose();
-    }
+      // Soaring arched white marble body of the Carp transforming into a Dragon (7.5m tall!)
+      const segs = [
+        [0, 2.3, 0.2, 1.55], [-0.2, 3.3, -0.5, 1.42], [-0.3, 4.4, -0.9, 1.28],
+        [-0.2, 5.6, -0.7, 1.15], [0.0, 6.7, -0.2, 1.05], [0.1, 7.6, 0.5, 0.98]
+      ];
+      for (const [ox, y, oz, r] of segs) {
+        const sp = new T.SphereGeometry(r, 12, 10);
+        stamp(sp, marble, cx + ox, y, cz + oz, 0.92, 1.05, 1.12);
+        sp.dispose();
+      }
+      // Sweeping carved side pectoral fins & majestic uplifted carp tail fin
+      for (const s of [-1, 1]) {
+        outline([[0, 0], [1.4, 0.4], [2.2, -0.8], [0.9, -1.3], [0, -0.7]], marbleShade, cx + s * 0.9, 4.8, cz - 0.5, 0.28, s > 0 ? 0 : Math.PI);
+      }
+      outline([[0, 0], [-1.9, 1.4], [-2.5, 3.2], [-0.8, 2.2], [0, 0.9]], marble, cx - 0.1, 2.6, cz - 1.2, 0.34, Math.PI / 2);
+      // Dragon head crest, horns & arched blue-white water jet spraying toward the river
+      box(marble, cx + 0.1, 8.15, cz + 1.25, 1.25, 1.05, 1.65);
+      for (const s of [-1, 1]) {
+        tapered(marbleShade, cx + 0.1 + s * 0.55, 9.05, cz + 0.55, 0.18, 0.05, 1.35, 1, 6);
+      }
+      // Curved sparkling water jet arc from mouth into river basin
+      for (let k = 0; k < 10; k++) {
+        const t = k / 9;
+        const jy = 8.1 + Math.sin(t * Math.PI * 0.85) * 1.4 - t * t * 6.8;
+        const jz = cz + 2.0 + t * 6.6;
+        const drop = new T.SphereGeometry(0.18 + t * 0.14, 8, 6);
+        stamp(drop, 0xc7edf7, cx + 0.1, Math.max(0.35, jy), jz);
+        drop.dispose();
+      }
 
-    // Soaring arched white marble body of the Carp transforming into a Dragon (7.5m tall!)
-    const segs = [
-      [0, 2.3, 0.2, 1.55], [-0.2, 3.3, -0.5, 1.42], [-0.3, 4.4, -0.9, 1.28],
-      [-0.2, 5.6, -0.7, 1.15], [0.0, 6.7, -0.2, 1.05], [0.1, 7.6, 0.5, 0.98]
-    ];
-    for (const [ox, y, oz, r] of segs) {
-      const sp = new T.SphereGeometry(r, 12, 10);
-      stamp(sp, marble, cx + ox, y, cz + oz, 0.92, 1.05, 1.12);
-      sp.dispose();
-    }
-    // Sweeping carved side pectoral fins & majestic uplifted carp tail fin
-    for (const s of [-1, 1]) {
-      outline([[0, 0], [1.4, 0.4], [2.2, -0.8], [0.9, -1.3], [0, -0.7]], marbleShade, cx + s * 0.9, 4.8, cz - 0.5, 0.28, s > 0 ? 0 : Math.PI);
-    }
-    outline([[0, 0], [-1.9, 1.4], [-2.5, 3.2], [-0.8, 2.2], [0, 0.9]], marble, cx - 0.1, 2.6, cz - 1.2, 0.34, Math.PI / 2);
-    // Dragon head crest, horns & arched blue-white water jet spraying toward the river
-    box(marble, cx + 0.1, 8.15, cz + 1.25, 1.25, 1.05, 1.65);
-    for (const s of [-1, 1]) {
-      tapered(marbleShade, cx + 0.1 + s * 0.55, 9.05, cz + 0.55, 0.18, 0.05, 1.35, 1, 6);
-    }
-    // Curved sparkling water jet arc from mouth into river basin
-    for (let k = 0; k < 10; k++) {
-      const t = k / 9;
-      const jy = 8.1 + Math.sin(t * Math.PI * 0.85) * 1.4 - t * t * 6.8;
-      const jz = cz + 2.0 - t * 6.6;
-      const drop = new T.SphereGeometry(0.18 + t * 0.14, 8, 6);
-      stamp(drop, 0xc7edf7, cx + 0.1, Math.max(0.35, jy), jz);
-      drop.dispose();
-    }
-
-    A.plaque(T, kit, 'CÁ CHÉP HÓA RỒNG', cx, 1.25, cz + 3.65, 4.8, 0.72, { bg: '#1e5070', fg: '#f8e69a' });
+      A.plaque(T, kit, 'CÁ CHÉP HÓA RỒNG', cx, 1.25, cz + 3.65, 4.8, 0.72, { bg: '#1e5070', fg: '#f8e69a' });
+    });
   }
 
   // 4. Cung Thể thao Tiên Sơn (Đà Nẵng) — Iconic "Đĩa Bay" futuristic flying-saucer indoor arena
@@ -740,13 +750,14 @@
     },
     {
       id: 'ca-chep-hoa-rong', name: 'Cá Chép Hóa Rồng & Cầu Tình Yêu', city: 'Đà Nẵng', province: 'Đà Nẵng', region: 'Trung Bộ',
-      lon: 108.229816, lat: 16.062925, start: [108.230145, 16.062962], yaw: 1.688,
-      width: 26, depth: 24,
-      solids: [[-4.2, -1.2, 4.4, 4.4], [5.6, -5.8, 2.8, 5.8]],
-      description: 'Tượng Cá Chép Hóa Rồng bằng đá cẩm thạch trắng phun nước bên bờ Đông sông Hàn cùng cầu tàu Tình Yêu rực rỡ trụ đèn trái tim đỏ.',
-      photo: 'https://danangfantasticity.com/',
-      source: 'https://danangfantasticity.com/',
-      map: 'https://www.openstreetmap.org/?mlat=16.062925&mlon=108.229816#map=18/16.062925/108.229816',
+      lon:108.229816,lat:16.062925,start:[108.230145,16.062962],yaw:0,width:26,depth:24,
+      boundary:lovePier,foundationAt:[22,-8],solids:[[0,0,3.6,3.6]],
+      views:[{name:'Tượng bên bờ sông Hàn',height:10,viewRadius:26,viewAngle:-1.0,viewElevation:.20},
+        {name:'Cầu Tình Yêu và đường ven sông',offset:[-6,-31],height:6,viewRadius:101,viewAngle:-1.24,viewElevation:.42}],
+      description:'Từ đường Trần Hưng Đạo ra bến, tượng Cá Chép Hóa Rồng nhìn về sông Hàn. Dãy lan can với đèn trái tim đỏ theo nhịp cầu tàu uốn cong về phía bắc.',
+      photo:'https://danangfantasticity.com/cong-trinh-hien-dai/dhc-marina-ben-du-thuyen-da-nang',
+      source:'https://danangfantasticity.com/en/architecture/dhc-marina',
+      map:'https://www.openstreetmap.org/way/1243663176',
       build: caChepHoaRong
     },
     {

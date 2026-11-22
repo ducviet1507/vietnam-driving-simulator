@@ -156,15 +156,59 @@
 
   // 5. Quần thể Tháp Bánh Ít (4 tháp Chăm cổ trên đỉnh đồi Bình Định)
   function thapBanhIt(T, kit) {
-    kit.box(0x887c6a, 0, 0.45, 0, 34, 0.9, 26);
-    // Main central Kalan (22m), Gate Tower, Stele Tower, and unique Saddle-Roof Tower (Tháp Yên Ngựa)
-    A.chamTower(T, kit, 0, -3.5, { w: 7.8, h: 22.0, tiers: 4, brick: 0xa44e36 });
-    A.chamTower(T, kit, -10.5, 4.5, { w: 5.4, h: 13.5, tiers: 3, brick: 0x9b4730 });
-    A.chamTower(T, kit, 10.8, 4.0, { w: 5.2, h: 12.8, tiers: 3, brick: 0xac553c });
-    // Iconic Tháp Yên Ngựa (saddle-shaped boat roof) on right rear
-    kit.box(0xa44e36, 10.5, 4.2, -6.5, 6.4, 7.6, 4.8);
-    A.curvedRoof(T, kit, 10.5, 8.0, -6.5, 8.2, 5.8, 3.2, 0x8a3f2b, 0xc5b293, 0xa44e36, 0.46);
-    A.trees(T, kit, [{ x: -14.5, z: -8.0, h: 8.5, kind: 'banyan' }, { x: 15.2, z: -1.5, h: 7.5, kind: 'palm' }]);
+    const {building,stairs}=createTempleFoundations(T,kit);
+    const sandstone=0xbca78a,brick=0xa04c32,dark=0x823e2d;
+    kit.palette({brick:[brick,dark],stone:sandstone});
+    // Main sanctuary and the kosagrha share the summit. The other two towers
+    // stand on their own hillside landings across the eastward approach.
+    building(-2,0,1.74,13.2,17.6,()=>{
+      A.chamTower(T,kit,0,0,{w:11.15,h:27,tiers:3,brick,darkBrick:dark,sandstone});
+    });
+    building(5,14,-.175,15.3,7.0,()=>{
+      kit.box(dark,0,.53,0,15.3,1.06,7);
+      kit.box(brick,0,3.50,0,14.35,5.1,6.3);
+      for(const side of [-1,1]){
+        for(let k=-3;k<=3;k++){
+          kit.box(dark,k*2.04,3.28,side*3.19,.43,4.44,.18);
+          kit.box(sandstone,k*2.04,5.55,side*3.24,.56,.22,.31);
+        }
+        kit.box(dark,0,5.94,side*3.30,15.22,.39,.38);
+      }
+      // The longitudinal ends rise far above the waist of the boat roof.
+      for(let i=0;i<24;i++){
+        const x=-7.45+(i+.5)*14.9/24,end=Math.pow(Math.abs(x)/7.45,2.9);
+        kit.outline([[-3.62,0],[-2.42,1.26],[0,2.20+end*1.89],[2.42,1.26],[3.62,0]],
+          i%7===0?dark:brick,x-.313,6,0,.628,Math.PI/2);
+      }
+    });
+    building(26,54,1.74,9.4,11.5,()=>{
+      A.chamTower(T,kit,0,0,{w:8.0,h:14.8,tiers:3,brick:0xaf6040,darkBrick:dark,sandstone});
+      for(const side of [-1,1])for(const end of [-1,1]){
+        kit.tapered(brick,side*2.73,12.55,end*2.73,.69,1.04,.98,1,8);
+        kit.tapered(dark,side*2.73,13.19,end*2.73,1.08,.85,.34,1,8);
+      }
+    });
+    const gate=building(104,-18,1.74,10.2,15,()=>{
+      kit.box(dark,0,.06,0,10.2,.12,15);
+      // Open east-west passage. Curved brick courses carry the tiers over it.
+      const span=2.33,shape=new T.Shape();
+      shape.moveTo(-4.35,0);shape.lineTo(-span,0);shape.lineTo(-span,3.5);
+      shape.quadraticCurveTo(-span,5.39,0,6.72);shape.quadraticCurveTo(span,5.39,span,3.5);
+      shape.lineTo(span,0);shape.lineTo(4.35,0);shape.lineTo(4.35,7.34);shape.lineTo(-4.35,7.34);shape.closePath();
+      kit.profile(shape,brick,0,0,-6.5,13);
+      for(const side of [-1,1])for(const z of [-5.9,-2.0,2.0,5.9]){
+        kit.box(dark,side*4.37,3.62,z,.52,7.18,.67);
+        kit.box(brick,side*4.39,6.99,z,.71,.32,.85);
+      }
+      for(let i=0;i<3;i++){
+        const w=9.4-i*2.14,d=14.0-i*3.14,y=7.34+i*1.90;
+        kit.box(dark,0,y+.22,0,w,.44,d);
+        kit.box(brick,0,y+1.08,0,w-1.42,1.32,d-1.65);
+      }
+      kit.tapered(sandstone,0,13.57,0,1.10,.34,1.37,1,8);
+    });
+    stairs(gate,111.3,-19.23,117,-20,4.45,.12,13);
+    stairs(gate,96.7,-16.77,90,-15.58,4.45,.12,15);
   }
 
   // 6. Nhóm Tháp Dương Long (Tây Sơn — cụm tháp Chăm gạch cao nhất Đông Nam Á)
@@ -275,28 +319,61 @@
   // 13. Chùa Long Sơn – Kim Thân Phật Tổ (Nha Trang — tượng Phật trắng khổng lồ trên đài sen)
   function chuaLongSonNhaTrang(T, kit) {
     const { box, stamp, round, tapered } = kit;
-    const white = 0xf2f0ea, cream = 0xe4dfd4, stone = 0x8f8a80, gold = 0xdcb24e;
+    const white = 0xf2f0ea, cream = 0xe4dfd4, stone = 0x8f8a80;
     kit.palette({plaster: cream, stone});
 
-    // Hilltop stone plaza & ascending dragon stairs
-    box(stone, 0, 0.55, 0, 24, 1.1, 24);
-    A.steps(kit, 0, 11.2, 8.8, 2.2, 6, 0.22, 0.40, cream);
+    const {building,stairs}=createTempleFoundations(T,kit);
+    // The chánh điện is at street level. The stair landings bend around the
+    // east side of the slope before reaching the Kim Thân Phật Tổ above.
+    const lowerHall=building(0,0,-.38,28.4,31.6,()=>{
+      A.vietnameseHall(T,kit,{w:26,d:29,baseH:1.18,colH:5.30,doubleTier:true,bays:5,
+        tile:0xc3653f,wood:0x513a31,wall:0xd3b88d,ridge:0x9c9690,eave:0xaf8c64,
+        atticColor:0x79533d,title:'CHÙA LONG SƠN',incense:false});
+    });
+    stairs(lowerHall,-8,15,-11,24,5.1,1.17,23);
+    stairs(lowerHall,5.8,19.25,2,29,3.0,1.17,25);
+    building(33,-41,.90,7.8,7.8,()=>{
+      box(stone,0,.30,0,7.8,.60,7.8);
+      for(const x of [-2.7,2.7])for(const z of [-2.7,2.7]){
+        stamp(round,0x82462d,x,2.88,z,.26,4.65,.26);
+        stamp(round,stone,x,.82,z,.40,.50,.40);
+      }
+      box(0x593d2b,0,4.94,0,6.76,.36,.40);
+      const bell=new T.LatheGeometry([[0,0],[1.14,0],[1.19,.16],[1.0,.30],[.87,1.48],[.66,2.12],[.32,2.32],[.24,2.54],[0,2.54]]
+        .map(([r,y])=>new T.Vector2(r,y)),24);
+      stamp(bell,0x6d5742,0,1.62,0);bell.dispose();
+      tapered(0x594331,0,4.50,0,.06,.06,.84,1,8);
+      A.curvedRoof(T,kit,0,5.00,0,8.45,8.45,2.28,0xb65c39,cream,0xb39365,.40);
+    });
+    const summit=building(44,-87,.93,21,21,()=>{
+      box(stone,0,.55,0,21,1.10,21);
+      // The paving makes a flower around the octagonal memorial base.
+      for(let i=0;i<8;i++){
+        const angle=i*Math.PI/4;
+        stamp(round,0xc7b495,Math.sin(angle)*6.36,1.111,Math.cos(angle)*6.36,1.95,.022,2.74,angle);
+      }
 
-    // Sculpted white octagonal lotus-petal pedestal (Đài sen 7m)
-    tapered(cream, 0, 3.6, -1.5, 6.4, 5.6, 5.0, 1, 8);
-    kit.palette({plaster:[white,cream]});
-    A.lotusSeat(T,kit,0,5.84,-1.5,5.3,1.30,white,cream);
-    const size=14/(1.048-.31),origin=7.3-.31*size;
-    A.statueFigure(T,kit,white,0,origin,-1.5,size,{seated:true,
-      rightArm:[[-.155,.492,.033],[-.035,.457,.147],[.016,.466,.161]],
-      leftArm:[[.155,.504,.032],[.050,.470,.132],[-.018,.470,.148]]});
-    const drape=A.carving(T,kit,white,0,origin,-1.5,size);
-    for(let i=0;i<4;i++) drape.sweep([[-.109,.785-i*.011,.008,.007,.012],[-.071,.708-i*.014,.058,.008,.009],
-      [.029,.624-i*.012,.063,.008,.009],[.098,.585-i*.015,.017,.005,.007]]);
-    drape.finish();
-
-    A.plaque(T, kit, 'CHÙA LONG SƠN', 0, 2.6, 4.4, 4.8, 0.78, { bg: '#7c241b', fg: '#f8da74' });
-    A.trees(T, kit, [{ x: -10.5, z: -8.0, h: 9.0, kind: 'palm' }, { x: 10.5, z: -8.0, h: 9.2, kind: 'palm' }]);
+      // Sculpted white octagonal lotus-petal pedestal (Đài sen 7m)
+      tapered(cream, 0, 3.6, -1.5, 6.4, 5.6, 5.0, 1, 8);
+      kit.palette({plaster:[white,cream]});
+      A.lotusSeat(T,kit,0,5.84,-1.5,5.3,1.30,white,cream);
+      const size=14/(1.048-.31),origin=7.3-.31*size;
+      A.statueFigure(T,kit,white,0,origin,-1.5,size,{seated:true,
+        rightArm:[[-.155,.492,.033],[-.035,.457,.147],[.016,.466,.161]],
+        leftArm:[[.155,.504,.032],[.050,.470,.132],[-.018,.470,.148]]});
+      const drape=A.carving(T,kit,white,0,origin,-1.5,size);
+      for(let i=0;i<4;i++) drape.sweep([[-.109,.785-i*.011,.008,.007,.012],[-.071,.708-i*.014,.058,.008,.009],
+        [.029,.624-i*.012,.063,.008,.009],[.098,.585-i*.015,.017,.005,.007]]);
+      drape.finish();
+      // Small commemorative portraits set into the eight faces of the base.
+      for(let i=0;i<8;i++){
+        const angle=(i+.5)*Math.PI/4;
+        const relief=A.carving(T,kit,0xa47836,Math.sin(angle)*5.86,3.86,-1.5+Math.cos(angle)*5.86,1,angle);
+        relief.sweep([[0,-.65,0,.49,.14],[0,-.20,.04,.53,.14],[0,-.03,.03,.29,.10],
+          [0,.22,.09,.27,.18],[0,.46,.05,.20,.14],[0,.50,.04,.04,.05]],0,12);relief.finish();
+      }
+    });
+    stairs(summit,52,-85,75,-64,5.4,1.10,35);
   }
 
   // 14. Tháp Chăm Pô Sah Inư (Phan Thiết, Bình Thuận / Lâm Đồng)
@@ -339,53 +416,60 @@
 
   // 16. Quảng trường Lâm Viên Đà Lạt (Nụ hoa Atiso kính xanh & Khối Hoa Dã Quỳ vàng rực!)
   function quangTruongLamVien(T, kit) {
-    const { box, stamp, tapered } = kit;
-    const plaza = 0xb8b2a5, darkStone = 0x76736c;
-    const sunGold = 0xe8b926, sunDark = 0xc9961c, leafGreen = 0x2e7d52, glassTeal = 0x4ca68a;
-    kit.palette({stone: darkStone});
+    const {stamp,tapered}=kit,{building}=createTempleFoundations(T,kit);
+    const emerald=[0x1f7270,0x257775,0x2a827a],leaves=[0xa9ce3d,0xabcf30,0x85b832];
+    const petals=[0xedbd39,0xe6af31,0xf2c845],frame=0x405b53,base=0x93918a;
+    kit.palette({stone:base,metal:frame,glass:[...emerald,...leaves,...petals]});
 
-    // Vast lakeside tiered granite square overlooking Hồ Xuân Hương
-    box(darkStone, 0, 0.45, 0, 38, 0.9, 26);
-    box(plaza, 0, 1.0, 0, 35, 0.35, 23);
-    A.steps(kit, 0, 12.2, 18, 2.0, 5, 0.20, 0.40, plaza);
-
-    // LEFT ICON: Giant Wild Sunflower Pavilion (Khối Hoa Dã Quỳ khổng lồ nghiêng mặt về hồ)
-    const fx = -9.2, fz = -1.5;
-    tapered(leafGreen, fx, 4.6, fz, 7.6, 5.2, 7.2, 0.85, 10);
-    // Tilted faceted golden sunflower crown petals radiating outward
-    for (let i = 0; i < 12; i++) {
-      const a = i * Math.PI * 2 / 12;
-      const px = fx + Math.sin(a) * 5.8;
-      const pz = fz + Math.cos(a) * 4.8 + 1.2;
-      box(i % 2 ? sunGold : sunDark, px, 8.2 + Math.cos(a) * 1.4, pz, 2.4, 6.2, 0.85, a, 0.38);
-    }
-    // Dark-gold glazed heart of the sunflower facing the square
-    const core = new T.CylinderGeometry(3.8, 3.8, 1.2, 12);
-    stamp(core, 0x5c421c, fx, 8.6, fz + 2.4, 1, 1, 1, 0, 0.95);
-    core.dispose();
-
-    // RIGHT ICON: Giant Spiral Emerald-Glass Artichoke Bud (Nụ Hoa Atiso kính màu 15m!)
-    const ax = 9.5, az = -1.2;
-    tapered(0x7c7970, ax, 1.6, az, 6.2, 5.8, 1.2, 1, 12);
-    // Layered spiral twisting green glass-and-steel artichoke petals rising to a golden-tipped bud
-    for (let tier = 0; tier < 4; tier++) {
-      const r = 5.4 - tier * 1.05;
-      const ty = 3.8 + tier * 2.8;
-      const twist = tier * 0.28;
-      for (let k = 0; k < 8; k++) {
-        const a = k * Math.PI / 4 + twist;
-        box(k % 2 ? glassTeal : leafGreen,
-          ax + Math.sin(a) * r * 0.72, ty, az + Math.cos(a) * r * 0.72,
-          r * 0.72, 3.4, 0.38, a, -0.32 - tier * 0.08);
+    // Each panel is set into its steel frame. Twisting the rings carries the
+    // spiral bands continuously over the bud and the broad petals across the roof.
+    function glazing(rings,segments,tint){
+      const swatches=new Map();
+      function triangle(vertices,colour){
+        if(!swatches.has(colour))swatches.set(colour,[]);
+        swatches.get(colour).push(...vertices.flat());
+      }
+      function point(ring,i){
+        const [r,y,twist]=ring,angle=i*Math.PI*2/segments+twist;
+        return [Math.sin(angle)*r,y,Math.cos(angle)*r];
+      }
+      function pane(a,b,c,colour){
+        triangle([a,b,c],frame);
+        const centre=a.map((v,j)=>(v+b[j]+c[j])/3);
+        const face=[a,b,c].map(p=>p.map((v,j)=>(v*.971+centre[j]*.029)*(j===1?1:1.002)+(j===1?.018:0)));
+        triangle(face,colour);
+      }
+      for(let j=0;j<rings.length-1;j++)for(let i=0;i<segments;i++){
+        const a=point(rings[j],i),b=point(rings[j],i+1),c=point(rings[j+1],i+1),d=point(rings[j+1],i);
+        pane(a,b,c,tint(i,j,0));pane(a,c,d,tint(i,j,1));
+      }
+      for(const [colour,positions] of swatches){
+        const geo=new T.BufferGeometry();geo.setAttribute('position',new T.Float32BufferAttribute(positions,3));
+        geo.computeVertexNormals();stamp(geo,colour,0,0,0);geo.dispose();
       }
     }
-    tapered(sunGold, ax, 14.8, az, 1.5, 0.18, 3.0, 1, 8);
 
-    A.plaque(T, kit, 'QUẢNG TRƯỜNG LÂM VIÊN', 0, 1.85, 10.6, 7.2, 0.92, { bg: '#225942', fg: '#fae07c' });
-    A.trees(T, kit, [
-      { x: -17.5, z: -9.5, h: 12.5, kind: 'pine' }, { x: 17.5, z: -9.5, h: 12.0, kind: 'pine' },
-      { x: 0, z: -10.5, h: 11.2, kind: 'pine' }
-    ]);
+    // Western café footprint (OSM way 1304080959). Its yellow-green leaves
+    // twist around an upright teardrop of teal glass.
+    building(0,0,0,19.0,19.0,()=>{
+      tapered(base,0,.23,0,10.65,10.65,.46,1,48);
+      const rings=[[7.8,.45,0],[9.35,2.0,.17],[10.05,4.0,.36],[10.22,6.2,.56],
+        [9.68,8.5,.78],[8.36,10.5,1.01],[6.57,12.4,1.23],[4.39,13.9,1.47],[2.25,15.15,1.67],[.04,15.83,1.89]];
+      glazing(rings,48,(i,j,k)=>(i%12<6?leaves:emerald)[(i+j+k)%3]);
+    });
+
+    // The opera house (OSM way 777439868) is a low 41 m dome east of the café. The
+    // gold lobes sweep down over the blue-green curtain wall toward the lake.
+    building(132.98,5.93,0,37.2,37.2,()=>{
+      tapered(base,0,.27,0,20.30,20.30,.54,1,60);
+      const rings=[[17.35,.53,.05],[19.13,2.48,.09],[20.18,4.85,.14],[20.40,7.15,.18],
+        [19.89,9.55,.22],[18.98,11.40,.26],[17.22,13.38,.30],[15.11,15.04,.34],
+        [12.39,16.48,.38],[8.77,17.61,.42],[4.81,18.21,.45],[.05,18.51,.47]];
+      glazing(rings,60,(i,j,k)=>{
+        const bearing=(i+k*.36+.5)/60*Math.PI*2,edge=(1-Math.cos(bearing*5))*.5;
+        return (j+.5>1.05+5.2*edge?petals:emerald)[(i+j+k)%3];
+      });
+    });
   }
 
   // 17. Nhà thờ Con Gà Đà Lạt (1931 — tường hồng cam & tháp chuông 47m có gà đồng trên đỉnh)
@@ -476,10 +560,15 @@
     },
     {
       id: 'thap-banh-it', name: 'Tháp Bánh Ít', city: 'Tuy Phước', province: 'Gia Lai', formerProvince: 'Bình Định',
-      lon: 109.135186, lat: 13.868437, yaw: -0.731, width: 35, depth: 26,
-      start: [109.134140, 13.867300], viewDistance: 1350,
+      lon: 109.135186, lat: 13.868437, yaw: 0, width: 24, depth: 18,
+      start: [109.137156,13.867346], viewDistance: 1350,
+      solids:[[-1,0,9,6.3],[5,14,7.8,3.7],[26,54,5.7,4.5],[104,-21.5,6.4,1.4],[104,-14.5,6.4,1.4]],
+      views:[{name:'Tháp chính và tháp Yên Ngựa',offset:[1,6],height:24,viewRadius:64,viewAngle:1.15},
+        {name:'Qua tháp cổng',offset:[104,-18],height:12,viewRadius:34,viewAngle:1.73},
+        {name:'Toàn cảnh sườn đồi',offset:[47,14],height:18,viewRadius:170,viewAngle:1.8,viewElevation:.52}],
+      description:'Từ đường vào phía đông, tháp cổng mở lối lên đồi. Tháp chính và tháp mái cong hình yên ngựa đứng gần nhau ở đỉnh. Tháp còn lại nằm về phía đông nam.',
       map: 'https://www.openstreetmap.org/way/677227553',
-      source: 'https://dsvh.gov.vn/',
+      source: 'https://dsvh.gov.vn/Upload/files/Thap%20Cham%20Binh%20Dinh.pdf',
       build: thapBanhIt
     },
     {
@@ -540,10 +629,16 @@
     },
     {
       id: 'chua-long-son-nha-trang', name: 'Chùa Long Sơn – Kim Thân Phật Tổ', city: 'Nha Trang', province: 'Khánh Hòa',
-      lon: 109.180556, lat: 12.251258, yaw: -0.011, width: 26, depth: 26,
+      lon: 109.180556, lat: 12.251258, yaw: 0, width: 29, depth: 32,
+      modeledStairWays:[1239863980,1239863982,196896062],
+      solids:[[0,0,12,13],[44,-87,6.7,6.7],[33,-41,2.7,2.7]],
+      views:[{name:'Kim Thân Phật Tổ',offset:[44,-87],height:22,viewRadius:43,viewAngle:1.04},
+        {name:'Chánh điện dưới chân đồi',offset:[0,0],height:10,viewRadius:49,viewAngle:-.32},
+        {name:'Từ chánh điện lên đồi Trại Thủy',offset:[20,-40],height:27,viewRadius:138,viewAngle:1.07}],
+      description:'Từ chánh điện ở chân đồi Trại Thủy, bậc đá dẫn lên gác chuông và tượng Kim Thân Phật Tổ ngồi trên đài sen trắng.',
       start: [109.180550, 12.250710], viewDistance: 1450,
       map: 'https://www.openstreetmap.org/way/196896036',
-      source: 'https://nhatrang-travel.com/',
+      source: 'https://dulichso.khanhhoa.gov.vn/article/chua-long-son-b4e',
       build: chuaLongSonNhaTrang
     },
     {
@@ -556,18 +651,24 @@
     },
     {
       id: 'thap-nuoc-phan-thiet', name: 'Tháp Nước Phan Thiết', city: 'Phan Thiết', province: 'Lâm Đồng', formerProvince: 'Bình Thuận',
-      lon: 108.100350, lat: 10.927750, yaw: 2.355, width: 16, depth: 16,
-      start: [108.100443, 10.927841], viewDistance: 1450,
-      map: 'https://www.openstreetmap.org/#map=18/10.92775/108.10035',
-      source: 'https://binhthuantourism.vn/',
+      lon:108.1000173,lat:10.9287668,yaw:2.355,width:16,depth:16,
+      start:[108.0997649,10.9285053],viewDistance:1450,mappedEntrance:true,approachMeters:40,
+      arrivalNote:'Từ đường Bà Triệu đi vào Công viên Tháp Nước ở bờ bắc sông Cà Ty.',
+      map:'https://www.openstreetmap.org/node/2666384178',
+      source:'https://baolamdong.vn/cong-nhan-thap-nuoc-phan-thiet-la-di-tich-lich-su-van-hoa-cap-tinh-309191.html',
       build: thapNuocPhanThiet
     },
     {
       id: 'quang-truong-lam-vien', name: 'Quảng trường Lâm Viên', city: 'Đà Lạt', province: 'Lâm Đồng',
-      lon: 108.445250, lat: 11.940350, yaw: 0.300, width: 38, depth: 28,
-      start: [108.445454, 11.939702], viewDistance: 1350,
-      map: 'https://www.openstreetmap.org/#map=17/11.94035/108.44525',
-      source: 'https://dalat.lamdong.gov.vn/',
+      lon:108.4441707,lat:11.9385315,yaw:0,width:22,depth:22,
+      start:[108.4439198,11.9392552],viewDistance:1350,mappedEntrance:true,approachMeters:85,
+      solids:[[0,0,8.5,8.5],[132.98,5.93,16.7,16.7]],
+      views:[{name:'Nụ hoa Atisô',offset:[0,0],height:16,viewRadius:38,viewAngle:2.46,viewElevation:.17},
+        {name:'Khối hoa Dã Quỳ',offset:[132.98,5.93],height:19,viewRadius:57,viewAngle:2.9,viewElevation:.19},
+        {name:'Toàn cảnh quảng trường',offset:[68,3],height:16,viewRadius:181,viewAngle:2.96,viewElevation:.43}],
+      arrivalNote:'Từ đường Trần Quốc Toản bên hồ Xuân Hương đi vào quảng trường. Nụ Atisô ở phía tây, khối hoa Dã Quỳ ở phía đông.',
+      map:'https://www.openstreetmap.org/way/1304080959',
+      source:'https://visitlamdong.vn/vi/quangtruonglamvien',
       build: quangTruongLamVien
     },
     {

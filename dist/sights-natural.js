@@ -54,7 +54,7 @@
 
   function granite(T,group,random){
     const xyz=[],rgb=[],indices=[];
-    function stone(x,y,z,rx,ry,rz,color,turn=0,lean=0,hand=false){
+    function stone(x,y,z,rx,ry,rz,color,turn=0,lean=0,hand=false,taper=0){
       const c=Math.cos(turn),s=Math.sin(turn),seed=random()*6.28;
       const steps=hand?44:Math.max(rx,ry,rz)>4?14:7,vertices=new Map(),tone=new T.Color(color);
       // Project a welded cube grid onto a rounded, sheared block. On the face
@@ -77,7 +77,7 @@
             hollow+=.13*Math.exp(-radius*radius);
           }
         }
-        const heel=hand?.85+.15*(1-Math.abs(v)):1;
+        const heel=hand?.85+.15*(1-Math.abs(v)):1-taper*Math.max(0,v+.15);
         const px=u*rx*shell*heel+v*lean,pz=(w*shell*heel-hollow)*rz;
         const crest=hand?Math.max(0,v)*(-.21*u+.073*Math.cos(w*3)):.065*u;
         const id=xyz.length/3;vertices.set(key,id);
@@ -105,6 +105,7 @@
     }
     return {stone,finish};
   }
+  window.createSightGranite=granite;
 
   function* basaltHeadlands(T,{group,random}){
     const xyz=[],rgb=[],axis=[],indices=[],colour=new T.Color(),spacing=.69;

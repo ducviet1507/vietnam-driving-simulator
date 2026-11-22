@@ -25,8 +25,9 @@ function* updateTerrainNormals(T,geometry){
 // Its outer land vertices keep the same height and diagonal as the large terrain mesh.
 function* buildMappedShoreSteps(T, options){
   const {mask,field,size,scale,maskX,maskZ,cx,cz,gx,gz,landWidth,land,landIndex,ground,pools,group,waterMaterial}=options;
-  const metres=1/scale,coarse=landWidth/32,steps=coarse/metres;
-  const active=new Uint8Array(32*32),count=size*size,dry=new Float32Array(count),ids=new Uint8Array(count);
+  const segments=land.geometry.parameters.widthSegments;
+  const metres=1/scale,coarse=landWidth/segments,steps=coarse/metres;
+  const active=new Uint8Array(segments*segments),count=size*size,dry=new Float32Array(count),ids=new Uint8Array(count);
   const left=gx-cx-landWidth/2,top=gz-cz-landWidth/2;
   for(let j=0,i=0;j<size;j++)for(let k=0;k<size;k++,i++){
     if((i & 8191)===0)yield;
@@ -35,9 +36,9 @@ function* buildMappedShoreSteps(T, options){
     if(a<=0)continue;
     const x=maskX+(k+.5)*metres-left,z=maskZ+(j+.5)*metres-top;
     // Include the dry bank outside the silhouette.
-    for(let v=Math.max(0,Math.floor((z-10)/coarse));v<=Math.min(31,Math.floor((z+10)/coarse));v++)
-      for(let u=Math.max(0,Math.floor((x-10)/coarse));u<=Math.min(31,Math.floor((x+10)/coarse));u++){
-        const c=v*32+u;
+    for(let v=Math.max(0,Math.floor((z-10)/coarse));v<=Math.min(segments-1,Math.floor((z+10)/coarse));v++)
+      for(let u=Math.max(0,Math.floor((x-10)/coarse));u<=Math.min(segments-1,Math.floor((x+10)/coarse));u++){
+        const c=v*segments+u;
         if(field[i*4+2]<240)active[c]=1;
         else if(!active[c])active[c]=2;
       }
@@ -65,7 +66,7 @@ function* buildMappedShoreSteps(T, options){
   function distance(i){return i<0?-32:signed[i];}
   // Only cells near water need samples. Rows share boundary vertices between
   // neighbouring cells and serve the physics queries on the same metre grid.
-  const gridSide=32*steps+1,heights=new Array(gridSide);
+  const gridSide=segments*steps+1,heights=new Array(gridSide);
   function node(x,z){
     const ix=Math.round((x-left)/metres),iz=Math.round((z-top)/metres);
     const line=heights[iz]??=new Array(gridSide);
@@ -101,8 +102,8 @@ function* buildMappedShoreSteps(T, options){
     }
     for(let i=2;i<ring.length;i++)waterIndices.push(ring[0],ring[i-1],ring[i]);
   }
-  for(let j=0;j<32;j++)for(let i=0;i<32;i++){
-    const c=j*32+i;
+  for(let j=0;j<segments;j++)for(let i=0;i<segments;i++){
+    const c=j*segments+i;
         if((c & 7)===0)yield;
     if(!active[c]){for(let k=c*6;k<c*6+6;k++)remaining.push(landIndex.array[k]);continue;}
     // Open water has a level surface and a saturated bed profile; shoreline
@@ -144,11 +145,11 @@ function* buildMappedShoreSteps(T, options){
       read(a,i);read(b,i+1);read(c,i+2);
       const bx=b.x-a.x,bz=b.z-a.z,cx=c.x-a.x,cz=c.z-a.z,det=bx*cz-bz*cx;
       if(Math.abs(det)<1e-8)continue;
-      const x0=Math.max(0,Math.floor((Math.min(a.x,b.x,c.x)-left)/coarse)),x1=Math.min(31,Math.floor((Math.max(a.x,b.x,c.x)-left)/coarse));
-      const z0=Math.max(0,Math.floor((Math.min(a.z,b.z,c.z)-top)/coarse)),z1=Math.min(31,Math.floor((Math.max(a.z,b.z,c.z)-top)/coarse));
+      const x0=Math.max(0,Math.floor((Math.min(a.x,b.x,c.x)-left)/coarse)),x1=Math.min(segments-1,Math.floor((Math.max(a.x,b.x,c.x)-left)/coarse));
+      const z0=Math.max(0,Math.floor((Math.min(a.z,b.z,c.z)-top)/coarse)),z1=Math.min(segments-1,Math.floor((Math.max(a.z,b.z,c.z)-top)/coarse));
       let tri;
       for(let z=z0;z<=z1;z++)for(let x=x0;x<=x1;x++){
-        const key=z*32+x;if(!active[key])continue;
+        const key=z*segments+x;if(!active[key])continue;
         if(!covers.has(key))covers.set(key,[]);
         tri??={x:a.x,y:a.y,z:a.z,bx,bz,cx,cz,by:b.y-a.y,cy:c.y-a.y,det};
         covers.get(key).push(tri);
@@ -157,8 +158,8 @@ function* buildMappedShoreSteps(T, options){
   }
   function sample(x,z,includeBank=false){
     const tx=Math.floor((x-left)/coarse),tz=Math.floor((z-top)/coarse);
-    if(tx<0||tx>=32||tz<0||tz>=32||!active[tz*32+tx])return null;
-    const stride=active[tz*32+tx]===2?steps/2:1,u=(x-left)/(metres*stride),v=(z-top)/(metres*stride);
+    if(tx<0||tx>=segments||tz<0||tz>=segments||!active[tz*segments+tx])return null;
+    const stride=active[tz*segments+tx]===2?steps/2:1,u=(x-left)/(metres*stride),v=(z-top)/(metres*stride);
     const i=Math.floor(u),j=Math.floor(v),f=u-i,h=v-j,col=i*stride,row=j*stride;
     const topRow=heights[row],bottomRow=heights[row+stride];
     const a=topRow?.[col],b=topRow?.[col+stride],c=bottomRow?.[col],d=bottomRow?.[col+stride];
@@ -166,16 +167,16 @@ function* buildMappedShoreSteps(T, options){
     const height=k=>f+h<=1?a[k]+f*(b[k]-a[k])+h*(c[k]-a[k]):d[k]+(1-f)*(c[k]-d[k])+(1-h)*(b[k]-d[k]);
     if(!includeBank&&height('d')<=0)return null;
     const level=height('level');let bed=height('bed');
-    for(const t of covers.get(tz*32+tx)||[]){
+    for(const t of covers.get(tz*segments+tx)||[]){
       const dx=x-t.x,dz=z-t.z,u=(dx*t.cz-dz*t.cx)/t.det,v=(t.bx*dz-t.bz*dx)/t.det;
       if(u>=-1e-7&&v>=-1e-7&&u+v<=1.0000001)bed=Math.max(bed,t.y+u*t.by+v*t.cy);
     }
     return includeBank||level>bed?{level,bed}:null;
   }
   function intersects(x0,z0,x1,z1){
-    const firstX=Math.max(0,Math.floor((x0-left)/coarse)),lastX=Math.min(31,Math.floor((x1-left)/coarse));
-    const firstZ=Math.max(0,Math.floor((z0-top)/coarse)),lastZ=Math.min(31,Math.floor((z1-top)/coarse));
-    for(let j=firstZ;j<=lastZ;j++)for(let i=firstX;i<=lastX;i++)if(active[j*32+i])return true;
+    const firstX=Math.max(0,Math.floor((x0-left)/coarse)),lastX=Math.min(segments-1,Math.floor((x1-left)/coarse));
+    const firstZ=Math.max(0,Math.floor((z0-top)/coarse)),lastZ=Math.min(segments-1,Math.floor((z1-top)/coarse));
+    for(let j=firstZ;j<=lastZ;j++)for(let i=firstX;i<=lastX;i++)if(active[j*segments+i])return true;
     return false;
   }
   return {sample,addCover,intersects,dispose(){land.remove(bank);patch.dispose();land.geometry.setIndex(landIndex);}};

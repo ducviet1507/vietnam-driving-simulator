@@ -267,89 +267,108 @@
 
   // 5. Lăng Khải Định – Ứng Lăng (Huế) — Dramatic stepped stone/concrete hill mausoleum
   function langKhaiDinh(T, kit) {
-    const {box, stamp, outline, tapered, round} = kit;
-    const darkStone = 0x5c5c59, greyStone = 0x7b7a75, lightStone = 0x9e9c94, moss = 0x5c644e, gold = 0xbfa055;
-    kit.palette({stone: [darkStone, greyStone, lightStone]});
-
-    // Deep hillside foundation & 3 monumental stepped terraces ascending toward -Z
-    box(darkStone, 0, -2.5, 0, 27, 5.2, 42);
-    // Lower terrace (Tam Quan + approach stairs)
-    box(greyStone, 0, 0.45, 13.5, 24.5, 0.9, 13.5);
-    // Middle terrace (Sân Bái Đính + Bi Đình octagonal stele pavilion)
-    box(greyStone, 0, 1.95, 1.5, 23.5, 3.9, 12.5);
-    // Upper terrace (Cung Thiên Định — main tomb palace)
-    box(darkStone, 0, 3.85, -11.5, 22.5, 7.7, 14.5);
-
-    // Sweeping triple dragon staircases (bậc tam cấp rồng chầu)
-    function stairs(y0, y1, z0, z1, w) {
-      const steps = 10;
-      for (let i = 0; i < steps; i++) {
-        const t = i / steps;
-        box(lightStone, 0, y0 + (y1 - y0) * (t + 0.05), z0 + (z1 - z0) * t, w, (y1 - y0) / steps + 0.08, Math.abs(z1 - z0) / steps + 0.14);
-      }
-      // 4 sculpted dragon-wave balustrades framing the 3 stair lanes
-      for (const sx of [-w * 0.5, -w * 0.17, w * 0.17, w * 0.5]) {
-        const dz = Math.abs(z1 - z0), dy = y1 - y0;
-        const len = Math.hypot(dz, dy), ang = Math.atan2(dy, dz);
-        box(darkStone, sx, (y0 + y1) / 2 + 0.55, (z0 + z1) / 2, 0.38, 0.72, len, 0, ang);
-        box(lightStone, sx, (y0 + y1) / 2 + 0.98, (z0 + z1) / 2, 0.44, 0.24, len, 0, ang);
-      }
+    const {box,stamp,outline,tapered,round}=kit;
+    const dark=0x595a56,stone=0x838078,trim=0xacaa9e,tile=0x666961;
+    kit.palette({stone:[dark,stone,trim,tile]});
+    const foundation=createTempleFoundations(T,kit);
+    // Local +Z points down the measured axis towards the road. The paired flights
+    // beside the stele and palace leave those buildings on continuous terraces.
+    const tiers=[],riser=.165;
+    function landing(front,back,width,steps,build){
+      const previous=tiers.at(-1),z=(front+back)/2,depth=front-back;
+      const anchor=foundation.fixture(ground=>{
+        const floor=Math.max(ground(0,z),ground(-width*.46,back),ground(width*.46,back),
+          ground(-width*.46,front),ground(width*.46,front))+.08;
+        return previous?Math.max(floor,previous.height+steps*riser):floor;
+      },()=>{
+        box(stone,0,-.15,z,width,.3,depth);
+        for(const side of [-1,1]){
+          box(trim,side*(width/2-.28),.44,z,.45,.16,depth);
+          const bays=Math.ceil(depth/2);
+          for(let i=0;i<=bays;i++)box(dark,side*(width/2-.28),.24,front-i*depth/bays,.37,.5,.34);
+        }
+        build?.();
+      });
+      foundation.skirt(0,z,width,depth,0,anchor);
+      tiers.push(anchor);return anchor;
     }
-    stairs(0.85, 3.9, 11.2, 7.4, 9.6);
-    stairs(3.9, 7.65, -2.8, -6.4, 9.6);
-
-    // Grand Front Indo-Gothic Tam Quan Pillars (Trụ Biểu)
-    for (const [px, h, w] of [[-7.8, 6.2, 0.95], [-3.2, 8.2, 1.25], [3.2, 8.2, 1.25], [7.8, 6.2, 0.95]]) {
-      box(darkStone, px, 1.0 + h / 2, 17.5, w, h, w);
-      for (const y of [1.5, 1.0 + h * 0.5, 1.0 + h]) box(lightStone, px, y, 17.5, w * 1.22, 0.26, w * 1.22);
-      tapered(lightStone, px, 1.0 + h + 0.95, 17.5, w * 0.65, 0.12, 1.65, 1, 4);
-    }
-
-    // Middle Terrace: Rows of Stone Mandarins/Guardians + Octagonal Bi Đình Stele Pavilion
-    for (const s of [-1, 1]) {
-      for (let i = 0; i < 4; i++) {
-        const gx = s * 6.8, gz = -1.2 + i * 2.1;
-        box(lightStone, gx, 4.35, gz, 0.78, 0.9, 0.78);
-        tapered(greyStone, gx, 5.45, gz, 0.34, 0.26, 1.35, 1, 8);
+    function stairs(low,high,z0,z1,count,lanes){
+      const run=(z0-z1)/count;
+      for(let i=1;i<=count;i++){
+        const t=i/count,z=z0-(i-.5)*run;
+        foundation.fixture(()=>low.height+(high.height-low.height)*t,()=>{
+          for(const [x,w] of lanes){
+            box(trim,x,-.24,z,w,.48,run+.015);
+            for(const side of [-1,1]){
+              const u=x+side*(w/2+.20);
+              box(dark,u,-.10,z,.49,.84,run+.018);
+              box(stone,u,.34,z,.57,.15,run+.02);
+            }
+          }
+        });
       }
     }
-    // Octagonal Bi Đình pavilion at center of middle terrace
-    tapered(darkStone, 0, 4.35, 2.2, 3.3, 3.1, 0.75, 1, 8);
-    for (let i = 0; i < 8; i++) {
-      const a = i * Math.PI / 4;
-      box(darkStone, Math.sin(a) * 2.4, 6.25, 2.2 + Math.cos(a) * 2.4, 0.42, 3.2, 0.42, a);
-    }
-    box(lightStone, 0, 6.0, 2.2, 1.15, 2.45, 0.34); // Imperial stele inside
-    tapered(darkStone, 0, 8.45, 2.2, 3.6, 1.65, 1.35, 1, 8);
-    tapered(greyStone, 0, 9.85, 2.2, 2.25, 0.25, 1.55, 1, 8);
-
-    // Upper Terrace: Imposing Cung Thiên Định Palace (Indo-Gothic concrete + curved tiers)
-    const py = 7.7, pz = -12.2;
-    box(darkStone, 0, py + 2.8, pz, 16.8, 5.6, 9.8);
-    // Gothic-Romanesque pointed arched façade colonnade
-    for (let i = -3; i <= 3; i++) {
-      const cx = i * 2.35;
-      box(lightStone, cx, py + 2.9, pz + 4.98, 0.55, 5.5, 0.48);
-      if (i < 3) {
-        const ax = cx + 1.175;
-        outline([[-0.82, 0], [0.82, 0], [0.82, 2.45], [0.45, 3.2], [0, 3.75], [-0.45, 3.2], [-0.82, 2.45]],
-          0x2d2b29, ax, py + 0.35, pz + 4.95, 0.14);
+    const road=foundation.fixture(g=>g(0,69)+.04,()=>{});
+    const lower=landing(54.1,37.9,46.8,37,()=>{
+      for(const side of [-1,1]){
+        const x=side*17.2;
+        box(trim,x,.18,41,8.6,.36,17);
+        box(stone,x,2.35,41,7.35,4.3,15.1);
+        for(const dz of [-5.4,-2.7,0,2.7,5.4])box(dark,x-side*3.70,1.78,41+dz,.15,3.0,1.35);
+        imperialRoof(T,kit,x,4.48,41,9.3,17.5,1.5,tile,dark,trim,.57);
+        box(stone,x,5.85,41,5.4,1.65,12.3);
+        imperialRoof(T,kit,x,6.65,41,7.4,15.4,1.65,tile,dark,trim,.52);
       }
-    }
-    // Ornate weathered cornice, Gothic-Vietnamese parapet & stepped upper pavilion roof
-    box(lightStone, 0, py + 5.72, pz, 17.6, 0.36, 10.6);
-    for (let i = -6; i <= 6; i++) {
-      tapered(i % 2 ? lightStone : moss, i * 1.32, py + 6.42, pz + 5.1, 0.26, 0.06, 1.05, 1, 4);
-    }
-    // Upper central sanctuary tier with curved imperial pagoda crown
-    box(greyStone, 0, py + 7.2, pz, 9.8, 2.6, 6.2);
-    for (const dx of [-2.8, 0, 2.8]) box(0x2d2b29, dx, py + 7.25, pz + 3.15, 1.35, 1.65, 0.1);
-    imperialRoof(T, kit, 0, py + 8.5, pz, 12.2, 8.2, 1.95, darkStone, lightStone, gold, 0.3);
-    // Flanking Gothic-Vietnamese pinnacle towers
-    for (const s of [-1, 1]) {
-      box(greyStone, s * 7.2, py + 6.8, pz + 3.8, 2.2, 2.2, 2.2);
-      tapered(darkStone, s * 7.2, py + 8.85, pz + 3.8, 1.45, 0.2, 2.1, 1, 4);
-    }
+      for(const x of [-9,-3.4,3.4,9]){
+        const h=Math.abs(x)<4?6.9:5.3;
+        box(stone,x,.36,53.1,1.35,.72,1.35);box(dark,x,h/2,53.1,.88,h,.88);
+        box(trim,x,h,53.1,1.3,.32,1.3);tapered(stone,x,h+.74,53.1,.67,.12,1.28,1,4);
+      }
+    });
+    stairs(road,lower,69.1,54.1,37,[[0,8.5]]);
+    const court=landing(25.8,3.35,46.5,29,()=>{
+      for(const side of [-1,1])for(const x of [8.5,11.3])for(let i=0;i<5;i++){
+        const px=side*x,z=14.2+i*1.92;
+        box(stone,px,.17,z,.72,.34,.72);tapered(stone,px,.91,z,.33,.25,1.25,.88,10);
+        stamp(round,stone,px,1.68,z,.21,.34,.21);box(dark,px,1.89,z,.46,.13,.42);
+      }
+      const x=1,z=9.45;
+      tapered(stone,x,.3,z,4.9,4.8,.60,.78,8);
+      for(let i=0;i<8;i++){
+        const a=(i+.5)*Math.PI/4;
+        stamp(round,trim,x+4.15*Math.sin(a),2.65,z+3.15*Math.cos(a),.26,4.8,.26);
+      }
+      box(dark,x,1.9,z,1.45,3.1,.54);
+      tapered(dark,x,5.55,z,5.35,3.25,1.4,.78,8);
+      tapered(stone,x,6.6,z,3.2,3.0,1.05,.77,8);
+      tapered(dark,x,7.72,z,3.8,.39,1.65,.80,8);
+    });
+    stairs(lower,court,37.9,25.8,29,[[-6.2,3.7],[0,6.1],[6.2,3.7]]);
+    const mid=landing(3.2,-3.2,46.5,13);
+    stairs(court,mid,11,3.2,13,[[-12.7,3.65],[12.7,3.65]]);
+    const upper=landing(-7.3,-12.7,46.5,13);
+    stairs(mid,upper,-3.2,-7.3,13,[[0,10.6]]);
+    const forecourt=landing(-17.1,-23.1,46.5,13);
+    stairs(upper,forecourt,-12.7,-17.1,13,[[0,10.6]]);
+    const palace=landing(-26.8,-54.6,46.8,22,()=>{
+      const x=-.65,z=-39.85,facade=-26.85;
+      box(stone,x,4.0,z,35,8,26);
+      for(let i=-4;i<=4;i++){
+        const px=x+i*3.7;
+        outline([[-1.05,0],[1.05,0],[1.05,3.1],[.77,3.79],[0,4.21],[-.77,3.79],[-1.05,3.1]],
+          dark,px,.28,facade+.02,.15);
+        box(trim,px+1.64,3.6,facade+.18,.43,7.2,.58);
+        box(trim,px,7.54,facade+.2,3.74,.28,.61);
+      }
+      box(trim,x,8.05,z,35.6,.42,26.4);
+      imperialRoof(T,kit,x,8.27,z,34.8,25.4,2.6,tile,dark,trim,.65);
+      for(const side of [-1,1]){
+        const px=x+side*15.15;
+        box(stone,px,8.82,facade-2.5,4.6,2.4,4.6);
+        tapered(dark,px,11.12,facade-2.5,3.1,.20,2.5,1,4);
+      }
+    });
+    stairs(forecourt,palace,-22.8,-31.1,22,[[-20.3,3.5],[21,3.2]]);
   }
 
   (window.VietnamSights ??= []).push({
@@ -392,11 +411,16 @@
     build: cauNgoiThanhToan
   }, {
     id: 'lang-khai-dinh', name: 'Lăng Khải Định', city: 'Huế', province: 'Huế', region: 'Trung Bộ',
-    lon: 107.590339, lat: 16.399017, start: [107.589673, 16.398995], yaw: -1.536, viewElevation: 0.25, width: 28, depth: 42,
-    solids: [[0, -12.2, 8.6, 5.2], [0, 2.2, 3.2, 3.2], [-7.8, 17.5, 0.7, 0.7], [-3.2, 17.5, 0.8, 0.8], [3.2, 17.5, 0.8, 0.8], [7.8, 17.5, 0.7, 0.7]],
-    description: 'Ứng Lăng trên triền núi Châu Chữ với các bậc tam cấp rồng chầu, trụ biểu, sân Bái Đính, nhà bia Bi Đình bát giác và cung Thiên Định giao thoa kiến trúc Đông – Tây.',
-    photo: 'https://visithue.vn/diem-den/lang-khai-dinh',
-    source: 'https://vi.wikipedia.org/wiki/L%C4%83ng_Kh%E1%BA%A3i_%C4%90%E1%BB%8Bnh',
+    lon: 107.590339, lat: 16.399017, start: [107.589673, 16.398995], yaw: -.757, viewAngle:-.98, viewElevation:.32, width:48, depth:138,
+    views:[{name:'Từ chân núi Châu Chữ',offset:[-11,12],viewAngle:-.96,viewElevation:.28,viewRadius:128,height:26},
+      {name:'Sân Bái Đình',offset:[-7,7],viewAngle:-.71,viewElevation:.26,viewRadius:48,height:12},
+      {name:'Cung Thiên Định',offset:[27,-29],viewAngle:-.84,viewElevation:.24,viewRadius:66,height:15}],
+    boundary:[[-23.7,54.9],[-23.5,-54.9],[23.7,-55],[23.5,54.8],[8,54.9],[5,69],[-5,69],[-8.6,54.9]],
+    solids:[[-.65,-39.85,17.5,13],[1,9.45,4.3,3.3],[-17.2,41,4.3,8.5],[17.2,41,4.3,8.5]],
+    modeledStairWays:[242940965,242940967,242940970,242940971,242940974,242940976,242943367,242943368,1205438744,1205438746],
+    description:'Từ chân núi Châu Chữ, các bậc đá dẫn lên Tả, Hữu tòng tự và sân Bái Đình. Qua hai hàng tượng chầu và nhà bia bát giác là những tầng sân cao dần tới cung Thiên Định.',
+    photo:'https://visithue.vn/lang-tam-hoang-gia-thoi-nguyen-tai-hue-phan-2/?pid=MjA3NTF8Y3NkbGRs0',
+    source:'https://vietnamtourism.vn/index.php/tourism/items/462/4',
     map: 'https://www.openstreetmap.org/way/175035807',
     build: langKhaiDinh
   });

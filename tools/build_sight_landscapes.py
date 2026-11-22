@@ -54,7 +54,7 @@ def byte_range(url, first, last, optional=False):
     return r.content
 
 
-def read_cells(url, path, cells, level, workers, optional=False, divisions=GRID, size=SIZE):
+def read_cells(url, path, cells, level, workers, optional=False, divisions=GRID, size=SIZE, point_grid=False):
     header = byte_range(url, 0, 131071, optional)
     if header is None:
         return {}
@@ -63,10 +63,20 @@ def read_cells(url, path, cells, level, workers, optional=False, divisions=GRID,
         width, height = page.imagewidth, page.imagelength
         tw, th = page.tilewidth, page.tilelength
         offsets, lengths = page.dataoffsets, page.databytecounts
-    windows, blocks = {}, set()
+    windows, blocks, centres = {}, set(), {}
     for x, y in cells:
         left, top = (x % divisions) * width / divisions, (divisions - 1 - y % divisions) * height / divisions
         w, h = width / divisions, height / divisions
+        if point_grid:
+            # The north-west Copernicus sample is centred on the integer degree.
+            # Read its native pixels, including the four interpolation neighbours,
+            # to avoid GDAL automatically substituting a downsampled COG overview.
+            fraction = (np.arange(size) + .5) / size
+            u = np.clip(left + fraction*w, 0, width-1)
+            v = np.clip(top + fraction*h, 0, height-1)
+            left, top = math.floor(u[0]), math.floor(v[0])
+            w, h = math.ceil(u[-1])+1-left, math.ceil(v[-1])+1-top
+            centres[x,y] = u-left, v-top
         windows[x, y] = Window(left, top, w, h)
         for j in range(int(top) // th, math.ceil((top+h)/th)):
             for i in range(int(left) // tw, math.ceil((left+w)/tw)):
@@ -90,6 +100,18 @@ def read_cells(url, path, cells, level, workers, optional=False, divisions=GRID,
             f.write(data)
     options = {'overview_level': level-1} if level else {}
     with rasterio.open(path, **options) as src:
+        if point_grid:
+            sampled = {}
+            for key,win in windows.items():
+                data = src.read(window=win)
+                u,v = centres[key]
+                i,j = u.astype(int),v.astype(int)
+                ix,jy = np.minimum(i+1,data.shape[2]-1),np.minimum(j+1,data.shape[1]-1)
+                fx,fy = u-i,(v-j)[:,None]
+                north = data[:,j[:,None],i]*(1-fx) + data[:,j[:,None],ix]*fx
+                south = data[:,jy[:,None],i]*(1-fx) + data[:,jy[:,None],ix]*fx
+                sampled[key] = north*(1-fy) + south*fy
+            return sampled
         return {key: src.read(window=win, out_shape=(src.count, size, size),
                               resampling=Resampling.nearest) for key, win in windows.items()}
 

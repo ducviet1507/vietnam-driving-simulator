@@ -243,60 +243,121 @@
 
   // 3. Chùa Linh Ứng Bãi Bụt – Bán đảo Sơn Trà (Đà Nẵng)
   function chuaLinhUng(T, kit) {
-    const {box, stamp, round, tapered, sign} = kit;
-    const marble = 0xebe8e0, pureWhite = 0xf4f2ec, lotusPink = 0xe4c7bf, gold = 0xd6b052;
-    const tile = 0x9b4432, stone = 0x9e9a90, jade = 0x5c7f6f;
-    kit.palette({stone: [marble, stone], tile});
-
-    // The 35 m lotus and its circular sanctuary determine the footprint.
-    const gx=5.5,gz=-4.6;
-    box(stone,0,-1.2,0,52,3.0,51);
-    box(marble,0,.45,0,50,.36,49);
-    tapered(marble,gx,2.15,gz,16.45,15.6,3.0,1,40);
-    tapered(pureWhite,gx,5.12,gz,15.35,14.8,2.95,1,40);
-    for(let i=0;i<12;i++){
-      const angle=i*Math.PI/6,x=gx+Math.sin(angle)*15.93,z=gz+Math.cos(angle)*15.93;
-      box(marble,x,2.1,z,2.14,2.98,.33,angle);
-      box(0x67615c,x+.18*Math.sin(angle),1.9,z+.18*Math.cos(angle),1.53,2.37,.12,angle);
-    }
-    kit.palette({stone:[marble,pureWhite,lotusPink]});
-    CentralArch.lotusSeat(T,kit,gx,5.96,gz,16.43,3.62,pureWhite,lotusPink);
-    const base=10.2,h=(67-base)/1.048;
-    CentralArch.statueFigure(T,kit,pureWhite,gx,base,gz,h,{robe:true,
-      rightArm:[[-.153,.651,.045],[-.099,.729,.094],[-.077,.773,.108]],
-      leftArm:[[.148,.614,.018],[.090,.545,.082],[.055,.538,.10]]});
-    const vase=CentralArch.carving(T,kit,marble,gx,base,gz,h);
-    vase.sweep([[.047,.533,.103,.018,.018],[.047,.547,.103,.025,.026],[.046,.566,.103,.020,.019],
-      [.047,.582,.102,.009,.010],[.047,.591,.102,.013,.013]]);
-    vase.sweep([[0,.975,-.038,.055,.036],[.004,.915,-.048,.063,.039],[.007,.846,-.041,.080,.042],
-      [.013,.738,-.051,.105,.045],[.010,.644,-.055,.093,.039]],.09);
-    vase.finish();
-
-    // 9-story octagonal Xá Lợi Stupa (Tháp Xá Lợi) on the left (-X)
-    const sx = -17.6, sz = -3.8;
-    tapered(stone, sx, 1.15, sz, 4.4, 4.1, 1.25, 1, 8);
-    let sy = 1.75;
-    for (let tier = 0; tier < 9; tier++) {
-      const r = 3.25 - tier * 0.22, h = 1.78 - tier * 0.05;
-      tapered(marble, sx, sy + h * 0.45, sz, r, r * 0.96, h * 0.85, 1, 8);
-      for (let f = 0; f < 4; f++) {
-        const a = f * Math.PI / 2;
-        box(0x56392c, sx + Math.sin(a) * (r * 0.95), sy + h * 0.44, sz + Math.cos(a) * (r * 0.95), r * 0.34, h * 0.55, 0.1, a);
+    const {box,stamp,round,tapered}=kit,A=window.CentralArch;
+    const {building,stairs}=createTempleFoundations(T,kit);
+    const marble=0xebe8e0,pureWhite=0xf4f2ec,lotusPink=0xe4c7bf,stone=0x918d86,jade=0x486e62;
+    const grey=0x7b8388,slate=0x626f72,ivory=0xe7e4d7;
+    kit.palette({stone:[marble,stone,grey],glazedTile:jade,tile:slate});
+    building(0,0,-.52,37,37,()=>{
+      const gx=0,gz=0;
+      box(marble,0,.31,0,37,.62,37);
+      tapered(marble,gx,2.15,gz,16.45,15.6,3.0,1,40);
+      tapered(pureWhite,gx,5.12,gz,15.35,14.8,2.95,1,40);
+      for(let i=0;i<12;i++){
+        const angle=i*Math.PI/6,x=gx+Math.sin(angle)*15.93,z=gz+Math.cos(angle)*15.93;
+        box(marble,x,2.1,z,2.14,2.98,.33,angle);
+        box(0x67615c,x+.18*Math.sin(angle),1.9,z+.18*Math.cos(angle),1.53,2.37,.12,angle);
       }
-      tapered(tile, sx, sy + h * 0.92, sz, r * 1.28, r * 0.88, h * 0.28, 1, 8);
-      sy += h;
-    }
-    tapered(gold, sx, sy + 1.15, sz, 0.52, 0.06, 2.25, 1, 8);
+      kit.palette({stone:[marble,pureWhite,lotusPink]});
+      CentralArch.lotusSeat(T,kit,gx,5.96,gz,16.43,3.62,pureWhite,lotusPink);
+      const base=10.2,h=(67-base)/1.048;
+      CentralArch.statueFigure(T,kit,pureWhite,gx,base,gz,h,{robe:true,
+        rightArm:[[-.153,.651,.045],[-.099,.729,.094],[-.077,.773,.108]],
+        leftArm:[[.148,.614,.018],[.090,.545,.082],[.055,.538,.10]]});
+      const vase=CentralArch.carving(T,kit,marble,gx,base,gz,h);
+      vase.sweep([[.047,.533,.103,.018,.018],[.047,.547,.103,.025,.026],[.046,.566,.103,.020,.019],
+        [.047,.582,.102,.009,.010],[.047,.591,.102,.013,.013]]);
+      vase.sweep([[0,.975,-.038,.055,.036],[.004,.915,-.048,.063,.039],[.007,.846,-.041,.080,.042],
+        [.013,.738,-.051,.105,.045],[.010,.644,-.055,.093,.039]],.09);
+      vase.finish();
+    });
 
-    // Coastal Tam Quan Entrance Gate facing +Z
-    for (const dx of [-5.8, -2.1, 2.1, 5.8]) {
-      box(marble, dx, 2.65, 19.2, 0.86, 4.1, 0.86);
-      box(gold, dx, 4.82, 19.2, 1.05, 0.22, 1.05);
-    }
-    box(marble, 0, 4.75, 19.2, 12.6, 0.82, 1.45);
-    sign('CHÙA LINH ỨNG', 0, 4.82, 19.98, 4.2, 0.62);
-    window.CentralArch.curvedRoof(T, kit, 0, 5.25, 19.2, 14.2, 3.6, 1.35, jade, gold, gold, 0.34);
-    window.CentralArch.curvedRoof(T, kit, 0, 6.95, 19.2, 7.6, 2.8, 1.15, jade, gold, gold, 0.28);
+    // The tam quan is a two-storey open stone arcade opposite the main hall.
+    building(60,5,-.36,15.2,5.3,()=>{
+      box(stone,0,.10,0,15.2,.20,5.3);
+      function arcade(x,y,w,h,d){
+        const span=w*.33,spring=h*.35,shape=new T.Shape();
+        shape.moveTo(-w/2,0);shape.lineTo(-span,0);shape.lineTo(-span,spring);
+        shape.absarc(0,spring,span,Math.PI,0,true);shape.lineTo(span,0);
+        shape.lineTo(w/2,0);shape.lineTo(w/2,h);shape.lineTo(-w/2,h);shape.closePath();
+        kit.profile(shape,grey,x,y,-d/2,d);
+        for(const face of [-1,1])for(const side of [-1,1]){
+          box(ivory,x+side*w*.419,y+h*.47,face*(d/2+.02),w*.094,h*.81,.055);
+          box(slate,x+side*w*.419,y+h*.47,face*(d/2+.062),w*.048,h*.77,.030);
+        }
+        A.curvedRoof(T,kit,x,y+h,0,w+.52,d+.92,.72,jade,ivory,slate,.31);
+      }
+      arcade(0,.20,6.34,4.60,4.25);arcade(0,5.41,5.54,3.58,3.35);
+      for(const side of [-1,1]){
+        arcade(side*5.07,.20,3.84,3.58,3.68);
+        arcade(side*4.90,4.40,3.23,2.67,2.85);
+      }
+    });
+    building(90,-70,-.36,28,25.8,()=>{
+      A.vietnameseHall(T,kit,{w:25.6,d:23.2,bays:5,doubleTier:true,baseH:1.2,colH:5.7,
+        wood:0x873e2e,tile:jade,eave:0xc2b66e,ridge:ivory,wall:0xe0d2aa,atticColor:0x834332,incense:false});
+    });
+    building(98,-92,-.36,26.4,20.1,()=>{
+      A.vietnameseHall(T,kit,{w:24,d:17.5,bays:5,baseH:.92,colH:4.0,wood:0x794638,
+        tile:jade,eave:0xb8a576,ridge:ivory,wall:0xdbd2b7,incense:false});
+    });
+
+    // The two processional rows face across the courtyard. Sixteen statue
+    // positions are tagged in OSM; the last pair follows their spacing.
+    const rows=[[[46,-11],[48,-17],[51,-24],[53,-31],[55,-37],[57,-42],[59,-47],[61,-52],[63,-57]],
+      [[79,2],[82,-4],[84,-11],[87,-18],[89,-24],[91,-29],[93,-34],[95,-39],[97,-44]]];
+    rows.forEach((row,side)=>row.forEach(([x,z],i)=>{
+      building(x,z,side?-.37-Math.PI/2:-.37+Math.PI/2,1.62,1.50,()=>{
+        box(0xc1b7aa,0,.32,0,1.62,.64,1.50);
+        const monk=A.carving(T,kit,pureWhite,0,.60,0,1);
+        const lean=(i%3-1)*.09,raised=i%3===1;
+        monk.sweep([[0,.03,0,.59,.41],[-.04,.34,.01,.54,.36],[lean,.88,-.02,.35,.28],
+          [lean,1.35,0,.41,.28],[lean,1.46,0,.20,.17]],.13,12);
+        monk.sweep([[lean,1.36,.03,.15,.15],[lean,1.51,.04,.21,.19],[lean,1.74,.02,.19,.18],
+          [lean+.015,1.85,0,.06,.07]],0,12);
+        for(const dir of [-1,1]){
+          const high=raised&&dir===1;
+          monk.sweep([[lean+dir*.29,1.32,.01,.15,.16],[lean+dir*.42,1.02,.07,.15,.17],
+            [lean+dir*(high?.39:.20),high?1.46:.89,.25,.085,.09]],.06,10);
+        }
+        monk.finish();
+      });
+    }));
+
+    // The separate eastern sanctuary carries nine hexagonal, grey stone roofs.
+    const stupa=building(328,-23,-.71,18,18,()=>{
+      box(stone,0,.21,0,18,.42,18);tapered(grey,0,1.05,0,8.45,7.98,1.26,1,6);
+      const medallion=new T.CircleGeometry(1,16);
+      let y=1.68;
+      for(let i=0;i<9;i++){
+        const r=6.83-i*.40,h=3.40-i*.105;
+        tapered(0xa0a4a1,0,y+h*.48,0,r,r*.955,h*.96,1,6);
+        const vertices=[],indices=[];
+        for(let face=0;face<6;face++){
+          const a=face*Math.PI/3,b=a+Math.PI/3,mid=(a+b)/2,offset=r*.85;
+          for(const [radius,tint,extra] of [[.66,ivory,.04],[.53,0x4b5654,.07],[.29,0xabb0a8,.10]]){
+            stamp(medallion,tint,Math.sin(mid)*(offset+extra),y+h*.48+(extra===.10?-.105:0),Math.cos(mid)*(offset+extra),radius,radius,1,mid);
+          }
+          const first=vertices.length/3;
+          for(const [scale,height,upturn] of [[.86,1.01,.12],[1.02,.87,.26],[1.21,.80,.83],[1.21,.74,.83],[.90,.74,.02]]){
+            for(let u=0;u<=8;u++){
+              const t=u/8,edge=Math.pow(Math.abs(t*2-1),3);
+              vertices.push(r*scale*((1-t)*Math.sin(a)+t*Math.sin(b)),y+h*height+edge*upturn,
+                r*scale*((1-t)*Math.cos(a)+t*Math.cos(b)));
+            }
+          }
+          for(let j=0;j<4;j++)for(let k=0;k<8;k++){
+            const n=first+j*9+k;indices.push(n,n+9,n+1,n+1,n+9,n+10);
+          }
+        }
+        const roof=new T.BufferGeometry();roof.setAttribute('position',new T.Float32BufferAttribute(vertices,3));
+        roof.setIndex(indices);roof.computeVertexNormals();stamp(roof,slate,0,0,0);roof.dispose();
+        y+=h;
+      }
+      medallion.dispose();tapered(grey,0,y+.66,0,3.04,.54,1.32,1,6);
+      tapered(ivory,0,y+2.08,0,.53,.05,1.70,1,8);
+    });
+    stairs(stupa,321.6,-18.8,315,-14,4.1,.43,13);
   }
 
   // 4. Hội quán Phúc Kiến – Hội An (Đà Nẵng / Quảng Nam cũ)
@@ -390,11 +451,17 @@
     build: haiVanQuan
   }, {
     id: 'chua-linh-ung-son-tra', name: 'Chùa Linh Ứng Bãi Bụt', city: 'Sơn Trà', province: 'Đà Nẵng', region: 'Trung Bộ',
-    lon: 108.277016, lat: 16.099686, start: [108.277460, 16.098590], yaw: 0.372, width: 52, depth: 51, viewElevation: 0.22,
-    solids: [[5.5,-4.6,15.8,15.8],[-17.6,-3.8,4.1,4.1],[-5.8,19.2,.7,.7],[5.8,19.2,.7,.7]],
-    description: 'Quần thể chùa ven biển trên bán đảo Sơn Trà nổi bật với đài sen trắng, tượng Quan Âm hướng vịnh Đà Nẵng, tháp Xá Lợi chín tầng và tam quan.',
-    photo: 'https://danangfantasticity.com/en/culture-en/linh-ung-pagoda-on-son-tra-peninsula',
-    source: 'https://vi.wikipedia.org/wiki/Ch%C3%B9a_Linh_%E1%BB%A8ng_(B%C3%A3i_B%E1%BB%A5t)',
+    lon:108.277016,lat:16.099686,start:[108.277460,16.098590],yaw:0,width:37,depth:37,viewElevation:.22,
+    modeledStairWays:[1205397097],
+    solids:[[0,0,14.5,14.5],[90,-70,12,11],[98,-92,11,8],[328,-23,6.7,6.7],
+      [53.4,2.5,.6,.6],[57.0,3.9,.6,.6],[63.0,6.1,.6,.6],[66.6,7.5,.6,.6]],
+    views:[{name:'Quan Âm hướng vịnh Đà Nẵng',offset:[0,0],height:67,viewRadius:112,viewAngle:-.61},
+      {name:'Sân La Hán và chánh điện',offset:[75,-32],height:13,viewRadius:83,viewAngle:-.48,viewElevation:.34},
+      {name:'Tháp Xá Lợi',offset:[328,-23],height:32,viewRadius:59,viewAngle:-.66},
+      {name:'Toàn cảnh từ Quan Âm tới tháp Xá Lợi',offset:[144,-27],height:27,viewRadius:368,viewAngle:-.15,viewElevation:.42}],
+    description:'Trên sườn núi Sơn Trà, tượng Quan Âm hướng ra vịnh. Hai hàng La Hán nối tam quan với chánh điện. Tháp Xá Lợi chín tầng nằm ở phía đông khuôn viên.',
+    photo:'https://danangfantasticity.com/en/kham-pha/chua-linh-ung-bai-but-da-nang',
+    source:'https://csdl.vietnamtourism.gov.vn/dest/?item=954',
     map: 'https://www.openstreetmap.org/way/420947244',
     build: chuaLinhUng
   }, {

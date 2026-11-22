@@ -77,32 +77,23 @@
 
   // 5. Hòn Trống Mái (Núi Trường Lệ, Sầm Sơn — kỳ quan đá xếp cân bằng)
   function honTrongMaiSamSon(T, kit) {
-    const { stamp, box } = kit;
-    const granite = 0xa9a295, weathered = 0x8e877b, darkRock = 0x767067;
-    kit.palette({stone: granite});
-
-    // Coastal mountain rock terrace & massive flat base boulder (Bệ đá Trường Lệ)
-    box(0x888175, 0, 0.35, 0, 22, 0.70, 18);
-    const baseSlab = new T.DodecahedronGeometry(1, 2);
-    stamp(baseSlab, weathered, 0, 2.0, -0.5, 8.8, 2.4, 5.6);
-
-    // Taller Rooster Rock (Hòn Trống) perched on left with pointed beak leaning toward Hen
-    const rock = new T.DodecahedronGeometry(1, 1);
-    stamp(rock, granite, -2.9, 6.2, -0.4, 2.6, 3.8, 2.3, 0.25, 0, -0.22);
-    stamp(rock, darkRock, -1.6, 8.6, -0.3, 1.35, 1.65, 1.25, 0.2, 0, -0.38);
-
-    // Smaller curved Hen Rock (Hòn Mái) perched opposite on right facing the Rooster
-    stamp(rock, granite, 2.8, 5.4, -0.3, 2.35, 2.85, 2.15, -0.2, 0, 0.24);
-    stamp(rock, weathered, 1.8, 7.2, -0.2, 1.15, 1.25, 1.1, -0.1, 0, 0.32);
-
-    baseSlab.dispose();
-    rock.dispose();
-
-    A.plaque(T, kit, 'HÒN TRỐNG MÁI SẦM SƠN', 0, 1.55, 6.8, 5.4, 0.78, { bg: '#efe4c6', fg: '#5a3022' });
-    A.trees(T, kit, [
-      { x: -10.5, z: -5.5, h: 10.2, kind: 'pine' }, { x: 10.5, z: -5.5, h: 9.8, kind: 'pine' },
-      { x: -9.8, z: 4.0, h: 8.6, kind: 'pine' }, { x: 9.8, z: 4.0, h: 8.8, kind: 'pine' }
-    ]);
+    const {stone,finish}=globalThis.createSightGranite(T,kit.group,kit.random);
+    // The provincial photo shows one low outcrop, a horizontal block on the
+    // left and a tapering, split block on the right, with scrub at the toe.
+    stone(0,.37,-.22,5.57,1.77,3.0,0x938c82,.11,-.27);
+    stone(-2.62,2.77,-.43,2.35,1.03,1.51,0x827b72,-.18,.24);
+    stone(2.44,3.13,-.29,1.91,1.37,1.35,0x9e9487,.21,-.44,false,.53);
+    stone(-.9,.24,4.48,1.1,.59,.75,0x9a938a,-.31,-.05);
+    finish();
+    A.trees(T,kit,[{x:-7.8,z:-4.9,h:7.1,kind:'banyan'},{x:5.9,z:-6.6,h:7.8,kind:'banyan'},
+      {x:8.7,z:-3.3,h:6.7,kind:'banyan'},{x:-8.8,z:-.9,h:5.6,kind:'banyan'}]);
+    const shrubs=[];
+    for(let i=0;i<22;i++){
+      const a=i*2.39996,r=kit.random();
+      shrubs.push({x:Math.sin(a)*(5.2+r*.6),z:-.35+Math.cos(a)*(2.7+r*.7),
+        h:.68+r*.79,width:1.05+r*1.2,kind:'banyan'});
+    }
+    A.trees(T,kit,shrubs);
   }
 
   // 6. Tượng đài Lê Lợi (TP. Thanh Hóa — Hoàng đế cầm gươm Thuận Thiên)
@@ -175,18 +166,25 @@
     },
     {
       id: 'den-doc-cuoc-sam-son', name: 'Đền Độc Cước', city: 'Sầm Sơn', province: 'Thanh Hóa',
-      lon: 105.901200, lat: 19.728500, yaw: -2.231, width: 26, depth: 22,
-      start: [105.899700, 19.729600], viewDistance: 1300,
-      map: 'https://www.openstreetmap.org/#map=17/19.72850/105.90120',
-      source: 'https://dulichthanhhoa.org/',
+      // The roof is at the south end of the mapped Cổ Giải precinct. The porch faces west.
+      lon: 105.900226, lat: 19.729316, yaw: -Math.PI / 2, width: 26, depth: 22,
+      start: [105.8996951, 19.7295984], mappedEntrance: true, viewDistance: 1300,
+      arrivalNote: 'Dừng xe ở cuối đường Hồ Xuân Hương, rồi đi bộ lên các bậc đá tới đền.',
+      map: 'https://www.openstreetmap.org/way/647769578',
+      source: 'https://visitthanhhoa.vn/vi/dendoccuoc1',
       build: denDocCuoc
     },
     {
       id: 'hon-trong-mai-sam-son', name: 'Hòn Trống Mái Sầm Sơn', city: 'Sầm Sơn', province: 'Thanh Hóa',
-      lon: 105.900800, lat: 19.727800, yaw: -2.618, width: 22, depth: 18,
-      start: [105.899700, 19.729600], viewDistance: 1250,
-      map: 'https://www.openstreetmap.org/#map=17/19.72780/105.90080',
-      source: 'https://dulichthanhhoa.org/',
+      catalogId: 'osm-way-647769584',
+      // Provincial tourism pin inside the park. The vehicle stops at the mountain road by its car park.
+      lon: 105.8919211, lat: 19.7266986, yaw: 0, width: 14, depth: 10, solids:[[0,-.22,5.4,2.9]],
+      views:[{name:'Ba khối đá',height:4.6,viewRadius:15.8,viewAngle:.16,viewElevation:.17},
+        {name:'Công viên trên núi Trường Lệ',height:7,viewRadius:53,viewAngle:1.17,viewElevation:.34}],
+      start: [105.8920636, 19.7263107], mappedEntrance: true, viewDistance: 1250,
+      arrivalNote: 'Dừng xe trên đường Trên Núi Trường Lệ cạnh bãi đỗ xe Hòn Trống Mái, rồi đi bộ lên khu đá.',
+      map: 'https://www.openstreetmap.org/way/647769584',
+      source: 'https://visitthanhhoa.vn/vi/hontrongmai',
       build: honTrongMaiSamSon
     },
     {

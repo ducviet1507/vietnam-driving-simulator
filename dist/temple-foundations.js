@@ -1,15 +1,19 @@
 'use strict';
 // The structures stay level. Only their bedding, perimeter walls and garden walk
 // follow the sampled relief. Coordinates and heights here are in landmark space.
-function createTempleFoundations(T,{group,vertexCount}){
-  const fixtures=[],walls=[],walks=[],walkEdges=[];
+function createTempleFoundations(T,{group,vertexCount,place}){
+  const fixtures=[],walls=[],tops=[],flights=[],walks=[],walkEdges=[];
   function fixture(elevation,build,moved){
     const start=vertexCount();build();
     const anchor={elevation,start,end:vertexCount(),height:0,moved};
     fixtures.push(anchor);return anchor;
   }
-  function skirt(x,z,w,d,top,anchor){
-    const corners=[[x-w/2,z-d/2],[x+w/2,z-d/2],[x+w/2,z+d/2],[x-w/2,z+d/2]];
+  function cornersAt(x,z,w,d,yaw){
+    const c=Math.cos(yaw),s=Math.sin(yaw);
+    return [[-1,-1],[1,-1],[1,1],[-1,1]].map(([u,v])=>[x+c*u*w/2+s*v*d/2,z-s*u*w/2+c*v*d/2]);
+  }
+  function skirt(x,z,w,d,top,anchor,yaw=0){
+    const corners=cornersAt(x,z,w,d,yaw);
     for(let side=0;side<4;side++){
       const [ax,az]=corners[side],[bx,bz]=corners[(side+1)%4],length=Math.hypot(bx-ax,bz-az);
       const count=Math.ceil(length/2);
@@ -17,6 +21,27 @@ function createTempleFoundations(T,{group,vertexCount}){
         ax:ax+(bx-ax)*i/count,az:az+(bz-az)*i/count,
         bx:ax+(bx-ax)*(i+1)/count,bz:az+(bz-az)*(i+1)/count,top,anchor,u:i*length/count,v:(i+1)*length/count
       });
+    }
+  }
+  function building(x,z,yaw,w,d,build){
+    const corners=cornersAt(x,z,w,d,yaw);
+    let parts=[];
+    const anchor=fixture(ground=>Math.max(ground(x,z),...corners.map(([px,pz])=>ground(px,pz))),()=>{
+      parts=place(x,z,yaw,build).map(mesh=>({mesh,y:mesh.position.y}));
+    },height=>{for(const part of parts)part.mesh.position.y=part.y+height;});
+    skirt(x,z,w,d,.06,anchor,yaw);
+    tops.push({corners,anchor});
+    return anchor;
+  }
+  // A flight starts on a level landing and ends on the sampled path. The
+  // outer cheek of each tread reaches the slope independently on both sides.
+  function stairs(anchor,x,z,endX,endZ,width,top,count){
+    const dx=endX-x,dz=endZ-z,length=Math.hypot(dx,dz);
+    const sideX=dz*width/(2*length),sideZ=-dx*width/(2*length);
+    for(let i=0;i<count;i++){
+      const a=i/count,b=(i+1)/count,ax=x+dx*a,az=z+dz*a,bx=x+dx*b,bz=z+dz*b;
+      flights.push({anchor,top,endX,endZ,a,b,corners:[
+        [ax-sideX,az-sideZ],[ax+sideX,az+sideZ],[bx+sideX,bz+sideZ],[bx-sideX,bz-sideZ]]});
     }
   }
   function walk(width,depth,cx=0,cz=0){
@@ -36,7 +61,8 @@ function createTempleFoundations(T,{group,vertexCount}){
     if(!body){
       body=group.children[group.children.length-1].geometry;
       const p=body.getAttribute('position');rest=Float32Array.from({length:p.count},(_,i)=>p.getY(i));
-      const g=new T.BufferGeometry(),count=(walls.length+walks.length+walkEdges.length)*6;
+      const count=(walls.length+tops.length+walks.length+walkEdges.length+flights.length*4)*6;
+      const g=new T.BufferGeometry();
       g.setAttribute('position',new T.BufferAttribute(new Float32Array(count*3),3));
       g.setAttribute('uv',new T.BufferAttribute(new Float32Array(count*2),2));
       const material=new T.MeshStandardMaterial({color:0x827e71,roughness:.94});
@@ -74,6 +100,23 @@ function createTempleFoundations(T,{group,vertexCount}){
       vertex(ax,top,az,u,top);vertex(bx,top,bz,v,top);vertex(ax,lowA,az,u,lowA);
       vertex(bx,top,bz,v,top);vertex(bx,lowB,bz,v,lowB);vertex(ax,lowA,az,u,lowA);
     }
+    for(const {corners,anchor} of tops)for(const k of [0,2,1,0,3,2]){
+      const [x,z]=corners[k];vertex(x,anchor.height+.055,z,x,z);
+    }
+    for(const {anchor,top,endX,endZ,a,b,corners} of flights){
+      const start=anchor.height+top,end=ground(endX,endZ)+.025;
+      const height=start+(end-start)*a,lip=start+(end-start)*b;
+      for(const k of [0,2,1,0,3,2]){
+        const [x,z]=corners[k];vertex(x,height,z,x,z);
+      }
+      for(const [left,right,tread] of [[1,2,false],[2,3,true],[3,0,false]]){
+        const [ax,az]=corners[left],[bx,bz]=corners[right],len=Math.hypot(bx-ax,bz-az);
+        const lowA=tread?lip:Math.min(height,ground(ax,az)-.15);
+        const lowB=tread?lip:Math.min(height,ground(bx,bz)-.15);
+        vertex(ax,height,az,0,height);vertex(bx,height,bz,len,height);vertex(ax,lowA,az,0,lowA);
+        vertex(bx,height,bz,len,height);vertex(bx,lowB,bz,len,lowB);vertex(ax,lowA,az,0,lowA);
+      }
+    }
     for(const tile of walks)for(let j=0;j<tile.length;j+=2){
       const x=tile[j],z=tile[j+1];vertex(x,ground(x,z)-.126,z,x,z);
     }
@@ -84,5 +127,5 @@ function createTempleFoundations(T,{group,vertexCount}){
     }
     if(changed){positions.needsUpdate=true;uv.needsUpdate=true;g.computeVertexNormals();g.computeBoundingSphere();}
   };
-  return {fixture,skirt,walk};
+  return {fixture,skirt,walk,building,stairs};
 }

@@ -11,6 +11,8 @@ function createSightGrounds(T,small,source){
   texture.magFilter=texture.minFilter=T.LinearFilter;
   const uniforms={visitorMap:{value:texture},visitorOrigin:{value:new T.Vector2()},visitorActive:{value:0}};
   const codes={sand:1,rock:2,lawn:3,orchard:3,tea:3,court:4,trail:5,walk:6,steps:6,drive:7};
+  const surfaces={asphalt:1,concrete:2,'concrete:plates':2,gravel:3,wood:4,brick:5,
+    sett:6,cobblestone:6,stone:6};
   const cache=new Map(),states=source?.states||new WeakMap(),projections=source?.projections||new WeakMap();
   let manifest,mask,fixtures=[],originX=0,originZ=0;
   async function load(graph,x,z){
@@ -67,6 +69,13 @@ function createSightGrounds(T,small,source){
         }
         if(type==5.)tint=vec3(.235,.16,.095);
         if(type==7.)tint=vec3(.23,.225,.21);
+        float surface=floor(sampleGround.g*8.+.5);
+        if(surface==1.)tint=vec3(.105,.108,.105);
+        if(surface==2.)tint=vec3(.34,.33,.30);
+        if(surface==3.)tint=vec3(.28,.23,.17);
+        if(surface==4.)tint=vec3(.29,.19,.12);
+        if(surface==5.)tint*=vec3(1.12,.65,.49);
+        if(surface==6.)tint*=vec3(.87,.94,1.);
         diffuseColor.rgb=mix(diffuseColor.rgb,tint*grain,sampleGround.a*(1.-bankWet)*.92);
       }`);
   }
@@ -78,7 +87,8 @@ function createSightGrounds(T,small,source){
     if(!projections.has(graph))projections.set(graph,new WeakMap());
     const projected=projections.get(graph);
     const layers=[];
-    for(const [kind,size,raw] of rows){
+    const modeledSteps=new Set((landmarks?.active||[]).flatMap(site=>site.data.modeledStairWays||[]));
+    for(const [kind,size,raw,finish='',detail=0,wayId] of rows){
       let feature=projected.get(raw);
       if(!feature){
         let minX=Infinity,maxX=-Infinity,minZ=Infinity,maxZ=-Infinity;
@@ -102,8 +112,9 @@ function createSightGrounds(T,small,source){
       const rings=feature.rings.map(r=>r.map(p=>[p.x-cx,p.z-cz]));
       const ring=rings[0];
       const code=codes[kind];
-      if(code)layers.push({kind,code,rings,size});
-      if(!code||['steps','orchard','tea'].includes(kind))fixtures.push({kind,size,ring,rings});
+      if(code)layers.push({kind,code,rings,size,finish});
+      if((!code||['steps','orchard','tea'].includes(kind))&&!(kind==='steps'&&modeledSteps.has(wayId)))
+        fixtures.push({kind,size,ring,rings,finish,detail});
     }
     if(!layers.length)return;
     pen.setTransform(ratio,0,0,ratio,canvas.width/2,canvas.height/2);
@@ -114,11 +125,14 @@ function createSightGrounds(T,small,source){
       for(let i=1;i<points.length;i++)pen.lineTo(...points[i]);
       if(closed)pen.closePath();
     }
-    for(const {code,rings} of layers){
-      if(code>=5)continue;
+    function pigment(code,finish){
+      return 'rgb('+Math.round(code*255/8)+' '+Math.round((surfaces[finish]||0)*255/8)+' 0)';
+    }
+    for(const {code,rings,finish} of layers){
+      if(code>=4)continue;
       pen.beginPath();
       for(const ring of rings)trace(ring,true);
-      pen.fillStyle='rgb('+Math.round(code*255/8)+' 0 0)';pen.fill('evenodd');
+      pen.fillStyle=pigment(code,finish);pen.fill('evenodd');
     }
     // Detailed architectural models already include paving and landscaping.
     pen.globalCompositeOperation='destination-out';
@@ -127,12 +141,18 @@ function createSightGrounds(T,small,source){
     }
     pen.globalCompositeOperation='source-over';
     // An approach can run through a modeled gate and into its courtyard.
-    for(const {kind,code,rings,size} of layers){
+    for(const {kind,code,rings,size,finish} of layers){
+      if(code===4){
+        pen.beginPath();
+        for(const ring of rings)trace(ring,true);
+        pen.fillStyle=pigment(code,finish);pen.fill('evenodd');
+        continue;
+      }
       if(code<5)continue;
       pen.beginPath();
       for(const ring of rings)trace(ring,false);
       pen.lineWidth=Math.min(14,size||(kind==='drive'?4:kind==='trail'?1.5:2.4));
-      pen.strokeStyle='rgb('+Math.round(code*255/8)+' 0 0)';pen.stroke();
+      pen.strokeStyle=pigment(code,finish);pen.stroke();
     }
     mask=pen.getImageData(0,0,canvas.width,canvas.height).data;
     texture.image.data=new Uint8Array(mask.buffer,mask.byteOffset,mask.byteLength);
@@ -147,36 +167,77 @@ function createSightGrounds(T,small,source){
   }
   // Structural features share one vertex-coloured draw, with metre-space joints
   // on brickwork and end grain on timber. Keep the original path bearings.
+  const grain=source?.grain||new T.TextureLoader().load('streetscape/surfaces/landmark-grain.webp');
+  grain.wrapS=grain.wrapT=T.RepeatWrapping;
   const material=new T.MeshStandardMaterial({vertexColors:true,side:T.DoubleSide,roughness:.88});
   material.onBeforeCompile=shader=>{
+    shader.uniforms.fixtureGrain={value:grain};
     const vary='varying vec2 groundsUV; varying float finishCode;\n';
     shader.vertexShader=vary+'attribute float finish;\n'+shader.vertexShader.replace('#include <begin_vertex>',
       '#include <begin_vertex>\n groundsUV=uv; finishCode=finish;');
-    shader.fragmentShader=vary+shader.fragmentShader.replace('#include <color_fragment>',`#include <color_fragment>
-      if(finishCode>.5 && finishCode<1.5){
-        vec2 p=groundsUV/vec2(.44,.17);p.x+=.5*mod(floor(p.y),2.);
+    shader.fragmentShader=vary+'uniform sampler2D fixtureGrain;\n'+shader.fragmentShader.replace('#include <color_fragment>',`#include <color_fragment>
+      vec3 relief=texture2D(fixtureGrain,groundsUV*.46).rgb-.5;
+      if(abs(finishCode-1.)<.1 || abs(finishCode-3.)<.1){
+        vec2 p=groundsUV/(finishCode<2.?vec2(.32,.115):vec2(.82,.36));p.x+=.5*mod(floor(p.y),2.);
         vec2 aa=max(fwidth(p),vec2(.002)),edge=min(fract(p),1.-fract(p));
         vec2 inside=smoothstep(vec2(.013)-aa*.5,vec2(.037)+aa*.5,edge);
-        diffuseColor.rgb*=1.-(1.-inside.x*inside.y)*.36*(1.-smoothstep(.12,.9,max(aa.x,aa.y)));
-      }else if(finishCode>1.5){
+        float shade=fract(sin(dot(mod(floor(p),256.),vec2(53.3,97.1)))*4817.);
+        diffuseColor.rgb*=1.+relief.g*.43+(.13*(shade-.5)-(1.-inside.x*inside.y)*.36)*(1.-smoothstep(.12,.9,max(aa.x,aa.y)));
+      }else if(abs(finishCode-2.)<.1){
         float fibre=sin(groundsUV.y*47.+1.7*sin(groundsUV.x*2.6));
-        diffuseColor.rgb*=1.+.07*fibre*(1.-smoothstep(.012,.072,fwidth(groundsUV.y)));
+        diffuseColor.rgb*=1.+relief.b*.45+.07*fibre*(1.-smoothstep(.012,.072,fwidth(groundsUV.y)));
+      }else if(abs(finishCode-4.)<.1){
+        float damp=(1.-smoothstep(.12,.88,groundsUV.y))*smoothstep(-.14,.13,relief.r);
+        diffuseColor.rgb*=vec3(1.+.39*relief.r)*mix(vec3(1.),vec3(.73,.78,.66),damp*.74);
+      }else if(abs(finishCode-5.)<.1){
+        float leaf=texture2D(fixtureGrain,groundsUV*2.7).g-.5;
+        diffuseColor.rgb*=1.+relief.r*.48+leaf*.82-.16*(1.-smoothstep(.05,.6,groundsUV.y));
       }`);
   };
-  function build(group,ground,blocked,obstacle,water,plant){
+  // Alpha-cut wire leaves gaps in the shadow map as well as in the colour pass.
+  // Pots, masonry and rails still share the solid fixture draw call.
+  const fenceMaterials=source?.fenceMaterials||new Map();
+  function fenceMaterial(style){
+    if(fenceMaterials.has(style))return fenceMaterials.get(style);
+    const tile=document.createElement('canvas');tile.width=tile.height=64;
+    const c=tile.getContext('2d');c.strokeStyle='#fff';c.lineCap='square';
+    c.lineWidth=style==='mesh'?3:7;c.beginPath();
+    if(style==='mesh'){
+      for(const x of [-64,0,64]){c.moveTo(x,0);c.lineTo(x+64,64);c.moveTo(x+64,0);c.lineTo(x,64);}
+    }else{c.moveTo(32,0);c.lineTo(32,64);}
+    c.stroke();
+    const map=new T.CanvasTexture(tile);map.wrapS=map.wrapT=T.RepeatWrapping;
+    const mat=new T.MeshLambertMaterial({color:style==='mesh'?0x727b72:0x4d5554,map,alphaTest:.23,side:T.DoubleSide});
+    fenceMaterials.set(style,mat);return mat;
+  }
+  function build(group,ground,blocked,obstacle,water,plant,mappedBlocked=blocked){
     const pos=[],rgb=[],uv=[],finish=[],colour=new T.Color();
+    const panels=new Map(),posts=new Set();
     function quad(a,b,c,d,tint,code=0){
       colour.setHex(tint);
       const w=Math.hypot(...b.map((v,i)=>v-a[i])),h=Math.hypot(...d.map((v,i)=>v-a[i]));
+      const across=Math.hypot(b[0]-a[0],b[2]-a[2]);
+      const u=across?(((a[0]+originX)*(b[0]-a[0])+(a[2]+originZ)*(b[2]-a[2]))/across)%2048:0;
       for(const p of [a,b,c,a,c,d]){pos.push(...p);rgb.push(colour.r,colour.g,colour.b);finish.push(code);}
-      uv.push(0,0,w,0,w,h,0,0,w,h,0,h);
+      uv.push(u,0,u+w,0,u+w,h,u,0,u+w,h,u,h);
     }
     function slab(ax,az,bx,bz,half,loA,loB,hiA,hiB,tint,code=0){
       const length=Math.hypot(bx-ax,bz-az),nx=(az-bz)*half/length,nz=(bx-ax)*half/length;
       const a=[ax+nx,hiA,az+nz],b=[bx+nx,hiB,bz+nz],c=[bx-nx,hiB,bz-nz],d=[ax-nx,hiA,az-nz];
       const al=[a[0],loA,a[2]],bl=[b[0],loB,b[2]],cl=[c[0],loB,c[2]],dl=[d[0],loA,d[2]];
-      quad(a,b,c,d,tint,code);quad(bl,b,a,al,tint,code);quad(dl,d,c,cl,tint,code);
-      quad(al,a,d,dl,tint,code);quad(cl,c,b,bl,tint,code);
+      quad(a,b,c,d,tint,code);quad(al,bl,b,a,tint,code);quad(cl,dl,d,c,tint,code);
+      quad(dl,al,a,d,tint,code);quad(bl,cl,c,b,tint,code);
+    }
+    function upright(x,z,r,base,top,tint,finish=0){
+      slab(x-r,z,x+r,z,r,base,base,top,top,tint,finish);
+    }
+    function screen(style,x,z,xx,zz,a,b,h){
+      let panel=panels.get(style);
+      if(!panel){panel={pos:[],uv:[]};panels.set(style,panel);}
+      const lo=.11,top=h-.09;
+      panel.pos.push(x,a+lo,z,xx,b+lo,zz,xx,b+top,zz,x,a+lo,z,xx,b+top,zz,x,a+top,z);
+      const u=Math.hypot(xx-x,zz-z)/(style==='bars'?.16:.115),v=(top-lo)/(style==='bars'?1:.15);
+      panel.uv.push(0,0,u,0,u,v,0,0,u,v,0,v);
     }
     const close=small?145:225,reach=small?230:350;
     function inside(x,z,ring){
@@ -213,11 +274,20 @@ function createSightGrounds(T,small,source){
         }
       }
     }
-    for(const {kind,ring,rings,size} of fixtures){
+    for(const {kind,ring,rings,size,finish:skin,detail} of fixtures){
       if(kind==='orchard'||kind==='tea'){rows(kind,rings);continue;}
       if(ring.length===1){
-        const [x,z]=ring[0];if(Math.hypot(x,z)>close||blocked(x,z,.45))continue;
+        const [x,z]=ring[0],gate=kind==='gate_post'||kind==='gate_pier';
+        if(Math.hypot(x,z)>close||(gate?mappedBlocked:blocked)(x,z,gate?.1:.45))continue;
         const baseY=ground(x,z);
+        if(gate){
+          const stone=kind==='gate_pier',h=Math.min(5.5,size||(stone?1.95:1.6)),r=stone?.17:.062;
+          upright(x,z,r,baseY-.19,baseY+h,stone?0xa6a094:0x596361,stone?4:0);
+          upright(x,z,r+.025,baseY+h-.055,baseY+h+.04,stone?0x89877f:0x414943);
+          obstacle({id:'grounds:'+kind+':'+Math.round(originX+x)+':'+Math.round(originZ+z),kind:'barrier',
+            x,z,fx:1,fz:0,w:r+.025,d:r+.025,height:h+.04,parts:[]});
+          continue;
+        }
         if(['tree','pine','palm'].includes(kind)){
           const seed=Math.sin((x+originX)*.15+(z+originZ)*.41),height=Math.min(55,size||9+seed*2.2);
           plant(kind,x,z,height,height*(kind==='pine'?.47:kind==='palm'?.61:.86),seed*3);
@@ -252,23 +322,31 @@ function createSightGrounds(T,small,source){
         }
         continue;
       }
+      const fence=kind==='fence'||kind==='railing';
+      const closedFence=['wall','brick','dry_stone','stone','concrete','concrete_block','sheet'].includes(skin);
+      let along=0;
       for(let i=1;i<ring.length;i++){
         const [ax,az]=ring[i-1],[bx,bz]=ring[i],dx=bx-ax,dz=bz-az,len=Math.hypot(dx,dz);
         if(len<.12)continue;
+        const start=along;along+=len;
         const nearest=Math.max(0,Math.min(1,-(ax*dx+az*dz)/(len*len)));
         if(Math.hypot(ax+nearest*dx,az+nearest*dz)>reach)continue;
-        const step=kind==='steps'?.77:kind==='pier'?2.5:kind==='avenue'?8:6;
-        const n=Math.ceil(len/step),fx=dx/len,fz=dz/len;
+        const taggedRun=kind==='steps'&&detail>=.12&&detail<=3?detail:0;
+        const step=kind==='steps'?.40:kind==='pier'?2.5:kind==='avenue'?8:fence?2.7:3.6;
+        const n=taggedRun?Math.max(1,Math.round(along/taggedRun)-Math.round(start/taggedRun)):Math.ceil(len/step);
+        const fx=dx/len,fz=dz/len;
         for(let j=0;j<n;j++){
           const t=j/n,u=(j+1)/n,x=ax+dx*t,z=az+dz*t,xx=ax+dx*u,zz=az+dz*u,mx=(x+xx)/2,mz=(z+zz)/2;
-          if(Math.hypot(mx,mz)>reach||blocked(mx,mz,.16,kind==='pier'))continue;
+          if(Math.hypot(mx,mz)>reach||(kind==='avenue'?blocked:mappedBlocked)(mx,mz,.16,kind==='pier'||kind==='retaining_wall'))continue;
           const a=ground(x,z),b=ground(xx,zz);
           if(kind==='avenue'){
             const h=Math.min(40,size||8.5);
             plant('tree',mx,mz,h,h*.75,j*.83);
           }else if(kind==='steps'){
-            const top=(a+b)/2-.055;
-            slab(x,z,xx,zz,Math.min(8,size||2.4)/2,Math.min(a,b)-.20,Math.min(a,b)-.20,top,top,0xb4ae9e);
+            const half=Math.min(8,size||2.4)/2,sx=-fz*half,sz=fx*half;
+            const sides=[ground(x+sx,z+sz),ground(x-sx,z-sz),ground(xx+sx,zz+sz),ground(xx-sx,zz-sz)];
+            const top=Math.max(a,b,...sides)+.035,bottom=Math.min(a,b,...sides)-.14;
+            slab(x,z,xx,zz,half,bottom,bottom,top,top,skin==='brick'?0xaa7255:0xb4ae9e,4);
           }else if(kind==='pier'){
             const level=water(mx,mz)?.level,deck=Number.isFinite(level)?level+.96:Math.max(a,b)+.5;
             const half=Math.min(8,size||2)/2;
@@ -278,9 +356,29 @@ function createSightGrounds(T,small,source){
               slab(px-.09,pz,px+.09,pz,.09,deck-2.8,deck-2.8,deck-.16,deck-.16,0x766650,2);
             }
           }else{
-            const hedge=kind==='hedge',fort=kind==='city_wall',h=Math.min(15,size||(hedge?1.14:fort?3.8:1.65)),half=hedge?.44:fort?1.15:.15;
-            slab(x,z,xx,zz,half,a-.22,b-.22,a+h,b+h,hedge?0x597344:fort?0x978978:0xb2a493,hedge?0:1);
-            if(!hedge)slab(x,z,xx,zz,half+.075,a+h-.08,b+h-.08,a+h+.045,b+h+.045,0x8e8475);
+            const hedge=kind==='hedge',fort=kind==='city_wall',retained=kind==='retaining_wall';
+            const h=Math.min(15,size||(hedge?1.14:fort?3.8:retained?.92:fence?1.35:1.65));
+            const half=Math.min(fence&&!closedFence?.13:4,detail?detail/2:hedge?.44:fort?1.15:fence&&!closedFence?.055:.15);
+            if(fence&&!closedFence){
+              const wood=skin==='timber',paint=wood?0x80715a:0x64706c;
+              for(const [px,pz,y] of [[x,z,a],[xx,zz,b]]){
+                const key=px.toFixed(2)+','+pz.toFixed(2);
+                if(posts.has(key))continue;
+                posts.add(key);upright(px,pz,half,y-.15,y+h+.04,paint,wood?2:0);
+              }
+              for(const level of [h*.18,h*.91])
+                slab(x,z,xx,zz,wood?.048:.026,a+level,b+level,a+level+.07,b+level+.07,paint,wood?2:0);
+              if(skin==='bars'||skin==='mesh'||kind==='railing')screen(skin==='mesh'?'mesh':'bars',x,z,xx,zz,a,b,h);
+              else if(!wood)slab(x,z,xx,zz,.021,a+h*.54,b+h*.54,a+h*.54+.045,b+h*.54+.045,paint);
+            }else{
+              const sx=-fz*half,sz=fx*half;
+              const loA=Math.min(a,ground(x+sx,z+sz),ground(x-sx,z-sz))-.22;
+              const loB=Math.min(b,ground(xx+sx,zz+sz),ground(xx-sx,zz-sz))-.22;
+              const masonry=hedge?5:skin==='brick'?1:fort||retained||skin==='stone'||skin==='dry_stone'?3:skin==='sheet'?0:4;
+              const tint=hedge?0x597344:masonry===1?0xa07159:masonry===3?0x978978:skin==='sheet'?0x87918e:0xb2a99b;
+              slab(x,z,xx,zz,half,loA,loB,a+h,b+h,tint,masonry);
+              if(!hedge&&skin!=='sheet')slab(x,z,xx,zz,half+.045,a+h-.075,b+h-.075,a+h+.03,b+h+.03,0x989488);
+            }
             obstacle({id:'grounds:'+kind+':'+Math.round(originX+mx)+':'+Math.round(originZ+mz),kind:'barrier',
               x:mx,z:mz,fx,fz,w:len/n/2,d:half,height:h,parts:[]});
           }
@@ -293,8 +391,14 @@ function createSightGrounds(T,small,source){
       geo.setAttribute(name,new T.Float32BufferAttribute(array,size));
     setFlatNormals(T,geo);
     const mesh=new T.Mesh(geo,material);mesh.name='Mapped visitor grounds';mesh.castShadow=mesh.receiveShadow=true;group.add(mesh);
+    for(const [style,data] of panels){
+      const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(data.pos,3));
+      g.setAttribute('uv',new T.Float32BufferAttribute(data.uv,2));setFlatNormals(T,g);
+      const infill=new T.Mesh(g,fenceMaterial(style));infill.name='Mapped '+style+' fence';
+      infill.castShadow=infill.receiveShadow=true;group.add(infill);
+    }
   }
-  return {load,prepare,shade,createView:()=>createSightGrounds(T,small,{states,projections}),uniforms,
+  return {load,prepare,shade,createView:()=>createSightGrounds(T,small,{states,projections,fenceMaterials,grain}),uniforms,
     display(view){displayed.visitorMap.value=view.uniforms.visitorMap.value;displayed.visitorOrigin.value.copy(view.uniforms.visitorOrigin.value);displayed.visitorActive.value=view.uniforms.visitorActive.value;},
     mapped:(x,z)=>groundCode(x,z)>0,accessLane:(x,z)=>groundCode(x,z)===codes.drive,build};
 }

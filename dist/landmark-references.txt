@@ -395,7 +395,8 @@ https://vi.wikipedia.org/wiki/C%E1%BA%A7u_ng%C3%B3i_Thanh_To%C3%A0n
 
 Lăng Khải Định, Huế
 Ứng Lăng trên triền núi Châu Chữ với các bậc tam cấp rồng chầu, tứ trụ biểu, sân Bái Đính, nhà bia Bi Đình bát giác và cung Thiên Định.
-https://visithue.vn/diem-den/lang-khai-dinh
+https://vietnamtourism.vn/index.php/tourism/items/462/4
+https://www.openstreetmap.org/way/242940960
 https://www.openstreetmap.org/way/175035807
 
 Bảo tàng Chiến thắng lịch sử Điện Biên Phủ và dinh thự họ Vương
@@ -519,3 +520,24 @@ https://dulichquynhon.binhdinh.gov.vn/vi/tuongtranhungdao
 https://gialai.dcs.vn/van-hoa-xa-hoi/-/view-content/416785/tuong-dai-tran-hung-dao-bieu-tuong-uy-nghiem-noi-cua-bien-quy-nhon
 https://danangfantasticity.com/en/kham-pha/chua-linh-ung-bai-but-da-nang
 https://dulichso.khanhhoa.gov.vn/article/chua-long-son-b4e
+
+Sân chùa và các tầng địa hình ở Bãi Bụt, Trại Thủy, Bánh Ít
+Vị trí tương đối, hướng và mặt bằng các công trình dựa theo OpenStreetMap. Độ cao nền lấy mẫu từ địa hình của cảnh. Chiều cao mái và chi tiết chạm khắc được ước lượng từ ảnh.
+Bãi Bụt — điện chính, nhà sau, cổng đá hai tầng, hai hàng La Hán và tháp Xá Lợi chín mái lục giác. Mười sáu chân tượng có tọa độ riêng trên bản đồ, cặp cuối ước theo bước hàng.
+https://www.openstreetmap.org/way/486703075
+https://www.openstreetmap.org/way/420947240
+https://www.openstreetmap.org/way/486703070
+https://www.openstreetmap.org/way/486703057
+https://csdl.vietnamtourism.gov.vn/dest/?item=954
+https://sunworld.vn/vi/banahills/check-in/chua-linh-ung-bai-buthtml
+Long Sơn — ảnh toàn cảnh của Nền tảng du lịch số Khánh Hòa cho thấy chánh điện và tượng trắng nằm trên hai tầng đồi, ở giữa là tuyến bậc và gác chuông.
+https://dulichso.khanhhoa.gov.vn/article/chua-long-son-b4e
+https://www.openstreetmap.org/way/196896036
+https://www.openstreetmap.org/way/196896037
+https://www.openstreetmap.org/way/1343540992
+Bánh Ít — tháp chính, tháp mái yên ngựa, tháp cổng và tháp cúng nằm trên các nền riêng. Cổng mở xuyên theo trục lên đồi phía đông.
+https://dsvh.gov.vn/Upload/files/Thap%20Cham%20Binh%20Dinh.pdf
+https://www.openstreetmap.org/way/677227553
+https://www.openstreetmap.org/way/677227549
+https://www.openstreetmap.org/way/677227554
+https://www.openstreetmap.org/way/677227555

@@ -160,8 +160,8 @@
     const streetLife=createWorldStreetLife(T,scene,small,environment,amenities,prepareActor);
     const signs=createWorldSigns(T,scene,small);
     const mappedLights=createMappedTrafficLights(T,scene,small);
-    const landWidth=2048;
-    let land=new T.Mesh(new T.PlaneGeometry(landWidth,landWidth,32,32),meadow);
+    const landWidth=2048,landSegments=landWidth/vietnamReliefStep;
+    let land=new T.Mesh(new T.PlaneGeometry(landWidth,landWidth,landSegments,landSegments),meadow);
     const landIndex=land.geometry.index;
     land.geometry.setAttribute('shoreSediment',new T.Float32BufferAttribute(new Float32Array(land.geometry.attributes.position.count),1));
     let shorePatch=null;
@@ -198,7 +198,7 @@
     };
     surfaces.weatheredAsphalt(material.asphalt,atmosphere.wetness,asphaltOrigin,waterSurface.reflection);
     for(const finish of [...Object.values(material),meadow,upland,waterSurface.material])atmosphere.registerFinish(finish);
-    const relief=createVietnamRelief(T,scene,graphics.profile.id==='low',landscapeSource,tunnelCut);
+    const relief=createVietnamRelief(T,scene,graphics.profile.id==='low',landscapeSource,tunnelCut,landWidth);
     const sightings=createSkySightings(T,scene,Math.random,relief.ground);
     const unitBox=new T.BoxGeometry(),unitPlane=new T.PlaneGeometry(),unitPole=new T.CylinderGeometry(.5,.5,1,8);
     const roofSection=new T.Shape();roofSection.moveTo(-.5,0);roofSection.lineTo(0,1);roofSection.lineTo(.5,0);roofSection.closePath();
@@ -287,7 +287,7 @@
       roadGroup.traverse(obj=>{if(obj.isInstancedMesh)obj.dispose();else if(obj.geometry)obj.geometry.dispose();});
     }
     function makeSpare(){
-      const nextLand=new T.Mesh(new T.PlaneGeometry(landWidth,landWidth,32,32),land.material);
+      const nextLand=new T.Mesh(new T.PlaneGeometry(landWidth,landWidth,landSegments,landSegments),land.material);
       nextLand.geometry.setAttribute('shoreSediment',land.geometry.attributes.shoreSediment.clone());
       nextLand.rotation.x=-Math.PI/2;nextLand.receiveShadow=true;
       return {land:nextLand,district:buildingSource.createView(new T.Group()),grounds:groundSource.createView()};
@@ -326,7 +326,7 @@
       if(graph)for(const site of VietnamLandmarks.entries){
         const end=graph.point(site.lon,site.lat);if(Math.hypot(end.x-cx,end.z-cz)>1000)continue;
         const start=graph.point(...site.start),dx=end.x-start.x,dz=end.z-start.z;
-        vistas.push({start,dx,dz,length2:dx*dx+dz*dz||1});
+        if(dx*dx+dz*dz<=70*70)vistas.push({start,dx,dz,length2:dx*dx+dz*dz||1});
       }
       function onApproach(x,z){
         return vistas.some(v=>{
@@ -334,7 +334,7 @@
           return f>-.12&&f<1.1&&Math.hypot(dx-v.dx*f,dz-v.dz*f)<9;
         });
       }
-      const gx=Math.round(cx/64)*64,gz=Math.round(cz/64)*64,positions=land.geometry.attributes.position;
+      const gx=Math.round(cx/terrain.step)*terrain.step,gz=Math.round(cz/terrain.step)*terrain.step,positions=land.geometry.attributes.position;
       const showCover=yield* coverMap.prepare(graph,gx,gz);
       land.position.set(gx-cx,-.17,gz-cz);
       for(let i=0;i<positions.count;i++)positions.setZ(i,terrain.ground(gx+positions.getX(i),gz-positions.getY(i)));
@@ -487,8 +487,9 @@
         for(let ix=Math.floor((Math.min(seg.ax,seg.bx)-pad)/cellSize);ix<=Math.floor((Math.max(seg.ax,seg.bx)+pad)/cellSize);ix++)
           for(let iz=Math.floor((Math.min(seg.az,seg.bz)-pad)/cellSize);iz<=Math.floor((Math.max(seg.az,seg.bz)+pad)/cellSize);iz++)fn(ix+','+iz);
       }
-      function obstruction(x,z,r,allowWater=false){
-        if(landmarks?.reserved(x+cx,z+cz,r)||district.contact(x+cx,z+cz,r))return true;
+      function obstruction(x,z,r,allowWater=false,mapped=false){
+        const occupied=mapped?landmarks?.contact(x+cx,z+cz,r):landmarks?.reserved(x+cx,z+cz,r);
+        if(occupied||district.contact(x+cx,z+cz,r))return true;
         if(!allowWater&&wetMask&&(wet(x,z)||wet(x+r,z)||wet(x-r,z)||wet(x,z+r)||wet(x,z-r)))return true;
         const list=cells.get(nearbyCell(x,z))||[];
         for(const s of list){
@@ -1027,7 +1028,7 @@
         const tree=registerObstacle({id:'mapped-tree:'+Math.round(cx+x)+':'+Math.round(cz+z),
           kind:'tree',x,z,radius:Math.max(.12,h*.022),height:h,parts:[]});
         plantTree(kind,x,z,h,w,angle,null,tree);
-      });
+      },(x,z,r,allowWater=false)=>obstruction(x,z,r,allowWater,true));
       yield* surface(bankData,material.earth,-.065,.60);
       if(cover.length){
         temple??=createTempleSurfaces(T);temple.setOrigin(graph);

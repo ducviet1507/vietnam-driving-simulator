@@ -6,6 +6,7 @@ Requires osmium and shapely. Coordinates are WGS84 in millionths of a degree.
 import argparse
 from collections import Counter, defaultdict
 import gzip
+import hashlib
 import json
 import math
 from pathlib import Path
@@ -22,7 +23,7 @@ from build_tour_buildings import metres
 ROOT = Path(__file__).resolve().parents[1]
 GRID, SCALE = 32, 1000000
 KEYS = ("highway","barrier","amenity","leisure","man_made","natural","tourism","historic","landuse","place")
-WALLS = {"wall", "hedge", "city_wall"}
+PERIMETERS = {"wall", "hedge", "city_wall", "retaining_wall", "fence", "railing"}
 GATES = {"gate", "entrance", "lift_gate", "swing_gate", "sliding_gate", "kissing_gate", "stile"}
 RESTRICTED = {"private", "no", "military", "forestry", "agricultural"}
 
@@ -70,7 +71,7 @@ def visitor_access(source):
     for obj in objects.with_filter(osmium.filter.KeyFilter("barrier", "entrance")):
         barrier = obj.tags.get("barrier")
         if obj.is_way():
-            if barrier in WALLS:
+            if barrier in PERIMETERS:
                 refs = [n.ref for n in obj.nodes]
                 wall_nodes.update(refs)
                 wall_edges.update(tuple(sorted(pair)) for pair in zip(refs, refs[1:]))
@@ -103,22 +104,54 @@ def visitor_access(source):
             lane_ends.update((refs[0], refs[-1]))
     openings = {ref: min(14, gates.get(ref) or crossings.get(ref) or 2.4)
                 for ref in wall_nodes.intersection(gates.keys() | crossings.keys())}
-    return openings, entrance_lanes, lane_ends
+    return openings, gates.keys(), entrance_lanes, lane_ends
 
 
-def cut_openings(wall, way, openings):
+def cut_openings(wall, way, openings, gates):
     gaps = list(MAPPED_GAPS.get(way.id, ()))
     if way.id in FRONT_WALKS:
         width, coords = FRONT_WALKS[way.id]
         entry = wall.intersection(LineString(coords))
         if entry.geom_type == "Point" and not entry.is_empty:
             gaps.append((entry.x, entry.y, width))
+    posts = []
+    def gap_disc(x, y, width):
+        return scale(Point(x,y).buffer(1), width / (2 * 111320 * math.cos(math.radians(y))),
+                     width / (2 * 110900), origin=(x,y))
     for n in way.nodes:
         if n.ref in openings and n.location.valid():
             gaps.append((n.lon, n.lat, openings[n.ref]))
-    cuts = [scale(Point(x, y).buffer(1), width / (2 * 111320 * math.cos(math.radians(y))),
-                  width / (2 * 110900), origin=(x, y)) for x, y, width in gaps]
-    return wall.difference(union_all(cuts)) if cuts else wall
+            if n.ref in gates:
+                # Centre each jamb outside the clear width. At a bend or the
+                # end of a wall, keep only the actual wall/disc intersection.
+                jambs = wall.intersection(gap_disc(n.lon, n.lat, openings[n.ref]+.54).boundary)
+                posts.extend(p for p in getattr(jambs,"geoms",[jambs]) if p.geom_type=="Point" and not p.is_empty)
+    cuts = [gap_disc(x,y,width) for x,y,width in gaps]
+    return (wall.difference(union_all(cuts)) if cuts else wall), posts
+
+
+def fence_style(tags):
+    style=tags.get("fence_type") or tags.get("wall") or tags.get("material")
+    if style in {"railing","metal","bars","metal_bars","iron"}:
+        return "bars"
+    if style in {"chain_link","mesh","wire","barbed_wire"}:
+        return "mesh"
+    if style in {"split_rail","wood","wooden","picket"}:
+        return "timber"
+    if style in {"wall","brick","dry_stone","stone","concrete","concrete_block"}:
+        return style
+    if style in {"metal_sheet","corrugated_metal"}:
+        return "sheet"
+    return ""
+
+
+def way_finish(tags):
+    surface=tags.get("surface")
+    if surface in {"dirt","earth","ground","gravel","fine_gravel","compacted","sand"}:
+        return "gravel"
+    if surface in {"asphalt","concrete","concrete:plates","wood","brick","sett","cobblestone","stone"}:
+        return surface
+    return ""
 
 
 def feature(tags, area=False, point=False):
@@ -159,7 +192,9 @@ def feature(tags, area=False, point=False):
         return
     if tags.get("natural")=="tree_row":
         return "avenue"
-    if tags.get("barrier") in WALLS:
+    if tags.get("barrier") in GATES and not road and tags.get("locked")!="yes":
+        return "gate_line"
+    if tags.get("barrier") in PERIMETERS:
         return tags["barrier"]
     if tags.get("man_made")=="pier":
         return "pier"
@@ -188,14 +223,25 @@ def pack(coords):
 
 
 def build(source, output):
-    openings, entrance_lanes, lane_ends = visitor_access(source)
+    openings, gates, entrance_lanes, lane_ends = visitor_access(source)
     entrance_lanes.update(MAPPED_DRIVES)
-    script = "global.window=global;require('./dist/tourism-catalog');console.log(JSON.stringify(VietnamTourism.entries.flatMap(s=>[[s.lon,s.lat],s.start])))"
-    sites = json.loads(subprocess.check_output(["node","-e",script],cwd=ROOT))
+    script = r"""const fs=require('fs');global.window=global;
+const tags=Array.from(fs.readFileSync('index.html','utf8').matchAll(/src="([^"]+\.js)"/g),m=>m[1]);
+for(const file of tags.slice(tags.indexOf('tourism-catalog.js'),tags.indexOf('vietnam-landmarks.js')+1))require('./'+file);
+console.log(JSON.stringify([...VietnamTourism.entries,...VietnamLandmarks.entries].flatMap(s=>[[s.lon,s.lat],s.start])));"""
+    sites = set(map(tuple,json.loads(subprocess.check_output(["node","-e",script],cwd=ROOT/"dist"))))
     boxes = [box(x-.0048,y-.00455,x+.0048,y+.00455) for x,y in sites]
     nearby = STRtree(boxes)
     tiles = defaultdict(list)
     counts = Counter()
+    emitted_posts = set()
+    def add_post(p, kind, height):
+        xy = pack(p.coords)
+        if tuple(xy) in emitted_posts or not len(nearby.query(p,predicate="intersects")):
+            return
+        emitted_posts.add(tuple(xy))
+        tiles[math.floor(p.x*GRID),math.floor(p.y*GRID)].append([kind,height,[xy]])
+        counts[kind]+=1
     filters = osmium.filter.KeyFilter(*KEYS)
     stream = osmium.FileProcessor(source).with_locations().with_areas(filters).with_filter(filters)
     factory = osmium.geom.WKBFactory()
@@ -226,11 +272,33 @@ def build(source, output):
         w,s,e,n = shape.bounds
         if not len(nearby.query(shape,predicate="intersects")):
             continue
-        if kind in WALLS:
-            shape = cut_openings(shape, obj, openings)
+        finish = ""
+        if kind=="gate_line":
+            # Only a linear gate spanning a gap defines two jamb positions.
+            length = math.hypot((coords[0][0]-coords[-1][0])*111320*math.cos(math.radians(s)),
+                                (coords[0][1]-coords[-1][1])*110900)
+            if 1.1<=length<=16:
+                for point in (coords[0],coords[-1]):
+                    add_post(Point(point),"gate_post",metres(obj.tags.get("height")))
+            continue
+        if kind in PERIMETERS:
+            finish = fence_style(obj.tags)
+            shape, posts = cut_openings(shape, obj, openings, gates)
+            post_kind = "gate_post" if kind in {"fence","railing","hedge"} else "gate_pier"
+            for p in posts:
+                add_post(p,post_kind,metres(obj.tags.get("height")))
             if shape.is_empty:
                 continue
-        size = metres(obj.tags.get("height" if kind in {"wall","city_wall","hedge","flagpole","stele","stone","obelisk","tree","pine","palm","avenue"} else "width"))
+        elif kind in {"court","walk","trail","drive","steps"}:
+            finish = way_finish(obj.tags)
+        dimension = "height" if kind in PERIMETERS or kind in {"flagpole","stele","stone","obelisk","tree","pine","palm","avenue"} else "width"
+        size = metres(obj.tags.get(dimension))
+        detail = metres(obj.tags.get("width")) if kind in PERIMETERS else 0
+        count_tag = obj.tags.get("step_count","")
+        if kind=="steps" and count_tag.isdigit() and int(count_tag)>0:
+            run=sum(math.hypot((x-a)*111320*math.cos(math.radians(y)),(y-b)*110900)
+                    for (a,b),(x,y) in zip(coords,coords[1:]))
+            detail = round(run/int(count_tag),2)
         for i in range(math.floor(w*GRID),math.floor(e*GRID)+1):
             for j in range(math.floor(s*GRID),math.floor(n*GRID)+1):
                 tile = box(i/GRID,j/GRID,(i+1)/GRID,(j+1)/GRID)
@@ -252,7 +320,8 @@ def build(source, output):
                         rings = [pack(g.coords)]
                         if not node and len(rings[0])<4:
                             continue
-                    tiles[i,j].append([kind,size,rings])
+                    extra=[finish,detail,obj.id] if kind=="steps" else [finish,detail] if detail else [finish] if finish else []
+                    tiles[i,j].append([kind,size,rings,*extra])
                     counts[kind]+=1
     # One request can serve several adjacent sight cells.
     for width, coords in FRONT_WALKS.values():
@@ -268,7 +337,10 @@ def build(source, output):
     for key,rows in bundles.items():
         data = json.dumps(rows,separators=(",",":")).encode()
         (output/(key+".gz")).write_bytes(gzip.compress(data,compresslevel=8,mtime=0))
+    with source.open("rb") as raw:
+        digest = hashlib.file_digest(raw, "sha256").hexdigest()
     manifest = {"bundles":sorted(bundles),"grid":GRID,"scale":SCALE,"counts":dict(sorted(counts.items())),
+                "sourceSha256":digest,"osmTimestamp":osmium.io.Reader(str(source)).header().get("osmosis_replication_timestamp"),
                 "attribution":"© OpenStreetMap contributors","license":"ODbL 1.0",
                 "source":"https://download.geofabrik.de/asia/vietnam.html"}
     (output/"index.json").write_text(json.dumps(manifest,ensure_ascii=False,separators=(",",":")),encoding="utf8")

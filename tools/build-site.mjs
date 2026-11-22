@@ -56,6 +56,9 @@ for (const page of pagePaths) {
   const stem = page === "/" ? "index" : page.slice(1);
   await rename(path.join(client, stem + ".html"), path.join(documents, stem + ".bin"));
 }
+for (const name of await readdir(documents)) {
+  if (name.endsWith(".bin")) await storeGzip(path.join(documents,name));
+}
 // A public .txt asset is served by Sites before the Worker can declare its charset.
 for (const name of await readdir(client, {recursive:true})) {
   if (name.endsWith(".txt")) {

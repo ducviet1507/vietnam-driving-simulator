@@ -43,7 +43,7 @@ window.VietnamLandmarks=(()=>{
     let seed=2043;
     function random(){seed=(Math.imul(seed,1664525)+1013904223)>>>0;return seed/4294967296;}
     const cube=new T.BoxGeometry(),round=new T.CylinderGeometry(1,1,1,20),colour=new T.Color();
-    const finishKinds=[], swatches=new Map();
+    const finishKinds=[],swatches=new Map(),footingVertices=[];
     function palette(spec, defaults=false) {
       for(const [kind,tints] of Object.entries(spec))
         for(const tint of [].concat(tints)){
@@ -54,11 +54,15 @@ window.VietnamLandmarks=(()=>{
       pose.position.set(x,y,z);pose.scale.set(w,h,d);pose.rotation.set(rx,ry,rz,'YXZ');pose.updateMatrix();
       const p=geo.attributes.position,n=geo.attributes.normal,base=positions.length/3;
       const kind=swatches.get(tint)??landmarkFinish.plain;
+      // Only the underside of an actual ground-level slab can extend downhill.
+      const footing=geo===cube&&rx===0&&rz===0&&Math.min(w,d)>=1&&Math.max(w,d)<=160&&
+        y-h/2>=-.60&&y-h/2<=.22&&y+h/2>0;
       normalMatrix.getNormalMatrix(pose.matrix);colour.setHex(tint);
       for(let i=0;i<p.count;i++){
         const {x:px,y:py,z:pz}=point.fromBufferAttribute(p,i).applyMatrix4(pose.matrix);
         const {x:nx,y:ny,z:nz}=normal.fromBufferAttribute(n,i).applyNormalMatrix(normalMatrix);
         positions.push(px,py,pz);normals.push(nx,ny,nz);colours.push(colour.r,colour.g,colour.b);
+        if(footing&&p.getY(i)<0)footingVertices.push(base+i);
         const top=Math.abs(ny)>Math.max(Math.abs(nx),Math.abs(nz));
         let u=top||Math.abs(nz)>=Math.abs(nx)?px:pz, v=top?pz:py;
         if(kind===landmarkFinish.tile||kind===landmarkFinish.glazedTile||kind===landmarkFinish.thatch){
@@ -77,6 +81,22 @@ window.VietnamLandmarks=(()=>{
       }
       const order=geo.index;
       for(let i=0;i<(order?.count??p.count);i++)indices.push(base+(order?order.getX(i):i));
+    }
+    // Place a complete authored building on a surveyed axis. Keep its metre
+    // UVs in building space so rotating the hall also rotates its tile rows.
+    function place(x,z,yaw,build){
+      const start=positions.length,firstChild=group.children.length;
+      build();
+      const c=Math.cos(yaw),s=Math.sin(yaw);
+      for(let i=start;i<positions.length;i+=3){
+        const px=positions[i],pz=positions[i+2],nx=normals[i],nz=normals[i+2];
+        positions[i]=x+c*px+s*pz;positions[i+2]=z-s*px+c*pz;
+        normals[i]=c*nx+s*nz;normals[i+2]=-s*nx+c*nz;
+      }
+      const matrix=new T.Matrix4().makeRotationY(yaw).setPosition(x,0,z);
+      const children=group.children.slice(firstChild);
+      for(const child of children)child.applyMatrix4(matrix);
+      return children;
     }
     const box=(...args)=>stamp(cube,...args);
     const shoreRanges=[];
@@ -970,7 +990,7 @@ window.VietnamLandmarks=(()=>{
     }
     const addition=additions.get(id);
     if(addition){
-      const steps=addition.build(T,{group,stamp,box,deck,round,tapered,profile,outline,arch,sign,random,wavingFlag,palette,vertexCount:()=>positions.length/3});
+      const steps=addition.build(T,{group,place,stamp,groundStamp,box,deck,round,tapered,profile,outline,arch,sign,random,wavingFlag,palette,vertexCount:()=>positions.length/3});
       if(steps?.next)yield* steps;
     }
     cube.dispose();round.dispose();group.name=id;
@@ -1010,6 +1030,26 @@ window.VietnamLandmarks=(()=>{
     }
     const mesh=new T.Mesh(geometry,finish);mesh.castShadow=true;mesh.receiveShadow=true;group.add(mesh);
     if(shoreRanges.length)mesh.userData.shoreCover=shoreRanges;
+    if(footingVertices.length&&addition&&!group.userData.fitGround&&!addition.scale&&
+       addition.solids?.length!==0&&!id.startsWith('cau-')){
+      const p=geometry.getAttribute('position'),feet=new Map();
+      for(const i of footingVertices){
+        const x=p.getX(i),z=p.getZ(i),rest=p.getY(i),key=x+','+z;
+        if(!feet.has(key))feet.set(key,{x,z,vertices:[]});
+        feet.get(key).vertices.push([i,rest]);
+      }
+      group.userData.fitGround=ground=>{
+        let changed=false;
+        for(const {x,z,vertices} of feet.values()){
+          const bed=ground(x,z)-.22;
+          for(const [i,rest] of vertices){
+            const y=Math.min(rest,bed);
+            if(Math.abs(p.getY(i)-y)>.001){p.setY(i,y);changed=true;}
+          }
+        }
+        if(changed){p.needsUpdate=true;geometry.computeBoundingBox();geometry.computeBoundingSphere();}
+      };
+    }
     return group;
   }
   function create(T,scene,nightLights={value:0}){
@@ -1067,7 +1107,8 @@ window.VietnamLandmarks=(()=>{
         }
         const foundation=deckHeight&&modeledBridgeLengths[data.id]?(px,pz)=>deckHeight(px,pz)??ground(px,pz):ground;
         const mesh=cached.get(data.id),c=Math.cos(data.yaw),s=Math.sin(data.yaw);
-        const base=foundation(x,z);
+        const [u,v]=data.foundationAt||[0,0];
+        const base=foundation(x+u*c+v*s,z-u*s+v*c);
         active.push({data,x,z,mesh,c,s,base,place(){
           mesh.position.set(x-cx,base,z-cz);mesh.rotation.y=data.yaw;
           if(data.scale)mesh.scale.fromArray(data.scale);
