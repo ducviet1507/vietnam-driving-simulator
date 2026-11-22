@@ -381,45 +381,6 @@
     A.plaque(T, kit, 'SÂN BAY TÀ CƠN - KHE SANH', 1.5, 5.2, -6.9, 8.8, 1.02, { bg: '#6e2119', fg: '#f8e082' });
   }
 
-  // 9. Bảo tàng Tổng hợp Quảng Bình – Quảng Trị (Đồng Hới) — Sweeping curved coastal pavilion by Nhật Lệ River
-  function baoTangQuangBinh(T, kit) {
-    const { box, stamp, round } = kit;
-    const white = 0xf2eee4, sand = 0xdbc9a6, terra = 0x9c4832, glass = 0x264b60, stone = 0xa29d92;
-    kit.palette({glass, stone});
-
-    // Riverfront stone museum terrace
-    box(stone, 0, 0.22, 0, 34, 0.44, 24);
-    A.steps(kit, 0, 9.8, 14.0, 2.0, 4, 0.24, 0.42, 0x8f8a80);
-
-    // Main contemporary 2-story gallery block with rhythmic sandstone brise-soleil piers
-    box(white, 0, 4.8, -1.6, 26.8, 8.8, 12.6);
-    box(glass, 0, 4.6, 4.78, 22.4, 7.2, 0.22);
-    for (let i = -5; i <= 5; i++) {
-      box(sand, i * 2.45, 4.8, 5.15, 0.46, 8.8, 1.05);
-    }
-    // Sweeping dramatic upturned coastal wave-wing roof shell spanning 31m
-    for (let i = -6; i <= 6; i++) {
-      const t = i / 6;
-      const yCurve = 9.4 + t * t * 1.85;
-      box(terra, i * 2.5, yCurve, -0.8, 2.65, 0.48, 15.8, 0, 0, t * 0.22);
-    }
-    box(white, 0, 9.25, -0.8, 27.6, 0.42, 13.8);
-
-    // Projecting shaded entrance canopy & outdoor historical heritage bronze cannon display
-    box(sand, 0, 4.2, 7.2, 12.6, 0.48, 4.4);
-    for (const sx of [-5.2, 5.2]) stamp(round, white, sx, 2.25, 8.8, 0.32, 3.9, 0.32);
-    // Historic fortress cannon on stone plinth on left courtyard
-    box(0x888378, -11.4, 0.65, 7.2, 3.2, 0.85, 2.2);
-    stamp(round, 0x3b3d3e, -11.4, 1.45, 7.2, 0.26, 2.6, 0.26, 0.35, 0, Math.PI / 2 - 0.14);
-
-    A.plaque(T, kit, 'BẢO TÀNG TỔNG HỢP QUẢNG TRỊ', 0, 5.05, 9.45, 8.6, 0.95, { bg: '#74241c', fg: '#f8e28c' });
-    A.trees(T, kit, [
-      { x: 13.8, z: 7.4, h: 8.6, kind: 'palm' },
-      { x: -14.6, z: -6.8, h: 8.2, kind: 'banyan' },
-      { x: 14.6, z: -6.8, h: 8.2, kind: 'banyan' }
-    ]);
-  }
-
   // 10. Hoành Sơn Quan (Đỉnh Đèo Ngang — 1833) — Iconic weathered Minh Mạng stone mountain-pass arch gate
   function hoanhSonQuan(T, kit) {
     const { box, stamp, round } = kit;
@@ -560,17 +521,6 @@
       source: 'https://vi.wikipedia.org/wiki/S%C3%A2n_bay_T%C3%A0_C%C6%A1n',
       map: 'https://www.openstreetmap.org/?mlat=16.65355&mlon=106.72405#map=17/16.65355/106.72405',
       build: sanBayTaCon
-    },
-    {
-      id: 'bao-tang-tong-hop-quang-binh', name: 'Bảo tàng Tổng hợp Quảng Bình – Quảng Trị', city: 'Đồng Hới', province: 'Quảng Trị', region: 'Trung Bộ',
-      lon: 106.623629, lat: 17.468221, start: [106.623260, 17.468162], yaw: -1.406,
-      width: 34, depth: 24,
-      solids: [[0, -1.6, 13.6, 6.6], [-11.4, 7.2, 1.8, 1.4]],
-      description: 'Công trình bảo tàng đương đại mái cánh sóng uốn lượn ven sông Nhật Lệ tại Đồng Hới với hàng lam đá sa thạch, mặt tiền kính lớn và khu trưng bày hiện vật ngoài trời.',
-      photo: 'https://quangbinhtourism.vn/',
-      source: 'https://quangbinhtourism.vn/',
-      map: 'https://www.openstreetmap.org/?mlat=17.468221&mlon=106.623629#map=18/17.468221/106.623629',
-      build: baoTangQuangBinh
     },
     {
       id: 'hoanh-son-quan', name: 'Hoành Sơn Quan (Đỉnh Đèo Ngang)', city: 'Quảng Trạch', province: 'Quảng Trị', region: 'Trung Bộ',

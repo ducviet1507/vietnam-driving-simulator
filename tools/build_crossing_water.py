@@ -138,6 +138,24 @@ def channels_at_crossings(source, bridges, wet):
     return channels, ranges, crossings
 
 
+def channel_rows(way_id, channel, points):
+    if way_id != 1054211136 or channel.width:
+        return [[channel.kind, channel.name, points, channel.width]]
+    # The east moat is visible across the 39 m Cửa Đông bridge. The centreline
+    # has no width tag. The open water spans about 25 m between its masonry banks.
+    # Apply that estimate only beside the eastern gate and museum.
+    positions = list(zip(points[::2], points[1::2]))
+    rows = []
+    for first, last in zip(positions, positions[1:]):
+        lon = (first[0] + last[0]) / 2
+        lat = (first[1] + last[1]) / 2
+        width = 25 if lon > 10662400 and 1746690 <= lat <= 1746930 else channel.width
+        if not rows or rows[-1][3] != width:
+            rows.append([channel.kind, channel.name, list(first), width])
+        rows[-1][2].extend(last)
+    return rows
+
+
 def tile_rows(channels, ranges):
     tiles = defaultdict(list)
     for id, intervals in sorted(ranges.items()):
@@ -165,7 +183,7 @@ def tile_rows(channels, ranges):
                         if point != points[-2:]:
                             points.extend(point)
                     if len(points) >= 4:
-                        tiles[f"{x}_{y}"].append([channel.kind, channel.name, points, channel.width])
+                        tiles[f"{x}_{y}"].extend(channel_rows(id, channel, points))
     return tiles
 
 

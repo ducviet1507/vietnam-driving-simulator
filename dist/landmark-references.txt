@@ -768,3 +768,20 @@ https://www.openstreetmap.org/way/979538328
 https://www.openstreetmap.org/way/1085506314
 https://commons.wikimedia.org/?curid=4279878
 https://commons.wikimedia.org/?curid=148223058
+
+Cửa Đông, cầu đá qua hào và Bảo tàng Quảng Trị tại Đồng Hới
+Bảo tàng Quảng Trị gọi địa điểm trên đường Hùng Vương là cơ sở 1 tại Đồng Hới. Lối vào quay về sân phía tây. Đường bao OSM rộng và sâu khoảng 51 m. Ảnh phía sân năm 2023 cho thấy tên Quảng Bình trên sảnh, dải tường vàng xòe ra, tháp góc và mái ngói chính. Ảnh toàn cảnh của Linhcandng nhìn từ phía hào ghi nhận đồng thời mặt sau bảo tàng, cầu và gác Cửa Đông. Chiều cao, số nhịp kính và các chi tiết mái được ước lượng theo ảnh.
+https://dulich.quangtri.gov.vn/vi/baotangtinhquangtri
+https://baoquangtri.vn/moi-nong/202608/dau-an-cach-mang-thang-tam-qua-nhung-hien-vat-lich-su-eb7766a/
+https://tuoitre.vn/dulichtphcm/xuyen-khong-ve-qua-khu-o-bao-tang-tong-hop-quang-binh-10760593.htm
+https://vtcnews.vn/anh-dau-tu-hang-chuc-ty-dong-bao-tang-o-quang-binh-xay-xong-lai-bo-hoang-ar429024.html
+https://www.openstreetmap.org/way/334166893
+https://commons.wikimedia.org/?curid=89258755
+
+Cửa Đông sau đợt tôn tạo có một lối vòm, gác trắng và hai tầng mái. Cầu đá có một vòm cuốn viền gạch. Hai đầu cầu cách nhau gần 39 m theo đường bản đồ. Hình lan can và khẩu độ vòm theo ảnh của VnExpress. Bề rộng mặt nước được ước khoảng 25 m ở đoạn ngoài Cửa Đông, dựa trên ảnh, chiều dài cầu và tim hào OSM. Mạch nước nối liền qua cầu.
+https://vnexpress.net/dau-tich-thoi-vua-minh-mang-con-lai-o-thanh-dong-hoi-3295094.html
+https://tuoitre.vn/cua-dong-thanh-dong-hoi-phuc-che-ton-tao-co-cach-tan-6800.htm
+https://www.openstreetmap.org/way/319395915
+https://www.openstreetmap.org/way/1054211136
+https://www.openstreetmap.org/way/940795265
+https://www.openstreetmap.org/way/940795266

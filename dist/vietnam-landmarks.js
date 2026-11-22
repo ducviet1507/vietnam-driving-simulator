@@ -1075,7 +1075,7 @@ window.VietnamLandmarks=(()=>{
           mesh.visible=false;scene.add(mesh);cached.set(data.id,mesh);
           yield;
         }
-        const foundation=deckHeight&&modeledBridgeLengths[data.id]?(px,pz)=>deckHeight(px,pz)??ground(px,pz):ground;
+        const foundation=deckHeight&&(modeledBridgeLengths[data.id]||data.foundationOnBridge)?(px,pz)=>deckHeight(px,pz)??ground(px,pz):ground;
         const mesh=cached.get(data.id),c=Math.cos(data.yaw),s=Math.sin(data.yaw);
         const [u,v]=data.foundationAt||[0,0];
         const base=foundation(x+u*c+v*s,z-u*s+v*c);

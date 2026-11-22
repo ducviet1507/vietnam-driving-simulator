@@ -127,4 +127,17 @@ for(const station of [0,crossing.length/2,crossing.length])assert.ok(quayside.au
 const parked=dongHoi.point(...nhatLe.start);
 assert.ok(dongHoi.nearest(parked.x,parked.z,[quay]).error<4);
 assert.ok(dongHoi.nearest(parked.x,parked.z,[crossing]).error>40**2);
+// The small stone crossing and the neighbouring gate have different centres.
+// The stone bridge covers its roadway. The visit starts beyond its east end.
+for(const name of ['central-arch','sights-thanh-dong-hoi']){
+  runInNewContext(readFileSync(new URL('../../dist/'+name+'.js',import.meta.url),'utf8'),nhatLeContext);
+}
+const eastBridge=nhatLeContext.window.VietnamSights.find(s=>s.id==='cau-da-cua-dong-dong-hoi');
+world.window.VietnamLandmarks.entries.push(eastBridge);
+const eastRoad=dongHoi.decodeEdge(sourceRows.find(r=>r[0]===313440));
+dongHoi.bridges.profiles.set(eastRoad.id,{bridge:true});
+const eastDistrict=world.createBridgeDistrict(dongHoi,[eastRoad],0,0,()=>0);
+for(const fraction of [.01,.5,.99])assert.ok(eastDistrict.authoredAt(eastRoad,eastRoad.length*fraction));
+const outside=dongHoi.point(...eastBridge.start);
+assert.ok(dongHoi.nearest(outside.x,outside.z,[eastRoad]).error>2**2);
 console.log('Bridge decks, approaches, stacked crossings, Nga Ba Hue slip-road clearance and road tracking passed.');

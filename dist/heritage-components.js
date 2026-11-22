@@ -36,6 +36,7 @@
   const tuanChau=[106.9894,20.91974];
   // The tower footprint and the park boundary lead to the same visitor tour.
   atlas.aliases['osm-way-979538328']='osm-node-5323866724';
+  atlas.aliases['osm-way-334166893']='osm-node-10756203755';
   atlas.aliases['osm-way-1085506314']='osm-node-5323866724';
   atlas.aliases['osm-way-940004472']='osm-node-8706712863';
   atlas.aliases['osm-way-1228794103']='osm-relation-15805643';
@@ -55,6 +56,14 @@
       description:'Từ phía tây vịnh nhìn về đông bắc, dọc theo bờ có Quốc lộ 29 đến khu di tích Bãi Chùa.'}]};
   const laVangGate=[107.1947094,16.7101806],laVangMap='https://maps.giolelavang.com/';
   const precincts={
+    'osm-node-10756203755':{name:'Bảo tàng Quảng Trị – cơ sở Đồng Hới (Bảo tàng Quảng Bình)',city:'Đồng Hới',locality:'Thành Đồng Hới',
+      formerProvince:'Quảng Bình',lon:106.623951,lat:17.468279,start:[106.6232646,17.4681344],mappedEntrance:true,visitOnArrival:true,
+      source:'https://dulich.quangtri.gov.vn/vi/baotangtinhquangtri'},
+    'dong-hoi-cua-dong':{name:'Cửa Đông thành Đồng Hới',city:'Đồng Hới',locality:'Hào thành Đồng Hới',formerProvince:'Quảng Bình',
+      start:[106.62487,17.46779],mappedEntrance:true,visitOnArrival:true,map:'https://www.openstreetmap.org/way/940795265',
+      source:'https://vnexpress.net/dau-tich-thoi-vua-minh-mang-con-lai-o-thanh-dong-hoi-3295094.html'},
+    'osm-way-319395915':{name:'Cầu đá qua hào Cửa Đông thành Đồng Hới',city:'Đồng Hới',locality:'Cửa Đông',formerProvince:'Quảng Bình',
+      start:[106.62487,17.46779],mappedEntrance:true,visitOnArrival:true,source:'https://vnexpress.net/dau-tich-thoi-vua-minh-mang-con-lai-o-thanh-dong-hoi-3295094.html'},
     'osm-node-5323866724':{name:'Cầu Nhật Lệ 1',city:'Đồng Hới',locality:'Sông Nhật Lệ',formerProvince:'Quảng Bình',start:[106.6242889,17.4711827],
       mappedEntrance:true,visitOnArrival:true,source:'https://nhandan.vn/quang-binh-thong-xe-cau-nhat-le-post470815.html'},
     'osm-node-8716478190':{name:'Tượng đài Mẹ Suốt',city:'Đồng Hới',locality:'Công viên bên sông Nhật Lệ',formerProvince:'Quảng Bình',
@@ -351,6 +360,12 @@
   ];
   const existing = new Set(atlas.entries.map(site => site.id));
   const monumentStops=[
+    ['dong-hoi-cua-dong','Cửa Đông thành Đồng Hới',106.624457,17.467728,'dong-hoi-cua-dong',null,null],
+    ['osm-way-319395915','Cầu đá qua hào Cửa Đông thành Đồng Hới',106.6246531,17.4677601,'osm-way-319395915',null,null],
+    ['dong-hoi-tu-cau-vao-thanh','Từ cầu đá nhìn vào gác Cửa Đông',106.624825,17.46778,'osm-way-319395915','cau-da-cua-dong-dong-hoi',1],
+    ['osm-node-10756203755','Bảo tàng Quảng Trị – cơ sở Đồng Hới',106.623951,17.468279,'osm-node-10756203755',null,null],
+    ['dong-hoi-mai-bao-tang','Mái ngói bảo tàng nhìn từ phía sân',106.62350,17.468155,'osm-node-10756203755','bao-tang-tong-hop-quang-binh',1],
+    ['dong-hoi-bao-tang-tu-hao','Bảo tàng Quảng Bình nhìn từ hào thành',106.62482,17.46778,'osm-node-10756203755','bao-tang-tong-hop-quang-binh',2],
     ['dong-hoi-toan-canh-cau-nhat-le','Toàn cảnh đầu cầu Nhật Lệ 1 từ phía Quách Xuân Kỳ',106.623917,17.47125,'osm-node-5323866724','cau-nhat-le',1],
     ['dong-hoi-le-bo-hanh-cau-nhat-le','Lề bộ hành cầu Nhật Lệ 1', 106.6264180,17.4721693,'osm-node-5323866724','cau-nhat-le',2],
     ['osm-node-8716478190','Tượng đài Mẹ Suốt',106.6270915,17.4654799,'osm-node-8716478190',null,null],
@@ -379,7 +394,7 @@
     const osm=id.startsWith('osm-')?id:anchor;
     atlas.entries.push({id,name,lon,lat,start,city,locality,formerProvince,source,region:'Trung Bộ',province:'Quảng Trị',kind:'Di tích',
       mappedEntrance:true,visitOnArrival:true,approachMeters:Math.round(Math.hypot((lon-start[0])*111320*Math.cos(lat*Math.PI/180),(lat-start[1])*110900)),
-      ...(model?{viewOf:[model,index]}:{}),map:'https://www.openstreetmap.org/'+osm.split('-').slice(1).join('/')});
+      ...(model?{viewOf:[model,index]}:{}),map:precincts[anchor].map||'https://www.openstreetmap.org/'+osm.split('-').slice(1).join('/')});
   }
   const bay=precincts['osm-relation-16028816'];
   for(const [id,name,lon,lat,start,index,arrivalNote] of [

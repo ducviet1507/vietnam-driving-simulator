@@ -14,6 +14,7 @@ const index=JSON.parse(await readFile(new URL('vn-water/index.json',root)));
 const cases=[
   [105.963381,20.994519,'Kênh Kiên Thành',8],
   [106.622586,17.470361,'Hào quanh thành Đồng Hới',8],
+  [106.6246594,17.4677600,'Hào quanh thành Đồng Hới',25],
   [105.558866,10.069996,'Rạch Ô Môn',4],
   [106.54905,10.30279,'Kênh 14',36.5]
 ];
