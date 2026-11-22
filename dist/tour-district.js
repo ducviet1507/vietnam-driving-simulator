@@ -9,8 +9,8 @@ function createVanMieuArchitecture(T){
   const colors={clay:0xb66d4c,ridge:0x8e8176,timber:0x653d2e,wood:0x875742,lacquer:0x9c3b2a,
     granite:0x88887b,border:0x989889,brick:0xa97960,plaster:0xcec5af,bronze:0x827454,hide:0xc8aa81};
   for(const k of Object.keys(colors))colors[k]=new T.Color(colors[k]);
-  const forms={box:new T.BoxGeometry(1,1,1),round:new T.CylinderGeometry(1,1,1,10),
-    ellipsoid:new T.SphereGeometry(1,10,5)};
+  const forms={box:new T.BoxGeometry(1,1,1),round:new T.CylinderGeometry(1,1,1,12),
+    ellipsoid:new T.SphereGeometry(1,10,5),shell:new T.SphereGeometry(1,16,7)};
   return function draw(survey,ring,graph,put){
     const stele=Boolean(survey.steleRows),drum=survey.kind==='drum',bell=survey.kind==='bell';
     const gate=survey.ref==='w702185144'||survey.ref==='w702185176',hall=survey.ref==='w702185189';
@@ -47,10 +47,10 @@ function createVanMieuArchitecture(T){
       if(tint===colors.plaster)return 6;
       return 0;
     }
-    function point(p,tint,finish=finishOf(tint),uv){
+    function point(p,tint,finish=finishOf(tint),uv,normal){
       const [u,y,v]=p;
       const tex=uv||(finish>=3?[u,y]:[u,v]);
-      put(x+ux*u+vx*v,y,z+uz*u+vz*v,tex[0],tex[1],tint,finish);
+      put(x+ux*u+vx*v,y,z+uz*u+vz*v,tex[0],tex[1],tint,finish,normal);
     }
     function planar(a,b,c){
       const dx=b[0]-a[0],dy=b[1]-a[1],dz=b[2]-a[2],ex=c[0]-a[0],ey=c[1]-a[1],ez=c[2]-a[2];
@@ -65,12 +65,19 @@ function createVanMieuArchitecture(T){
     function solid(key,u,y,v,su,sy,sv,tint){
       const geo=forms[key],ind=geo.index.array,positions=geo.attributes.position,uv=geo.attributes.uv,finish=finishOf(tint);
       const pts=Array.from({length:positions.count},(_,i)=>[u+positions.getX(i)*su,y+positions.getY(i)*sy,v+positions.getZ(i)*sv]);
+      // Smooth the carved stone and turned posts without splitting the
+      // district into additional draws. Mirror normals with the gallery.
+      const sign=Math.sign(ux*vz-uz*vx),n=geo.attributes.normal;
+      const normals=key!=='box'&&Array.from({length:n.count},(_,i)=>{
+        const a=n.getX(i)/su,b=n.getY(i)/sy,c=n.getZ(i)/sv,s=sign/Math.hypot(a,b,c);
+        return [(ux*a+vx*c)*s,b*s,(uz*a+vz*c)*s];
+      });
       for(let j=0;j<ind.length;j+=3){
         const projection=key==='box'&&planar(pts[ind[j]],pts[ind[j+1]],pts[ind[j+2]]);
         for(let k=j;k<j+3;k++){
           const i=ind[k],p=pts[i];
           const tex=projection?projection(p):[u+.37*v+uv.getX(i)*Math.PI*(su+sv),y+(uv.getY(i)-.5)*sy*(key==='round'?1:2)];
-          point(p,tint,finish,tex);
+          point(p,tint,finish,tex,normals&&normals[i]);
         }
       }
     }
@@ -237,8 +244,8 @@ function createVanMieuArchitecture(T){
       const photographed=year===1442,ru=width/2,rv=Math.min(.15,width*.14),base=floor+.33;
       const curve=photographed?height*.135:width*.28;
       // A turtle supports each tablet. Its head turns toward Thiên Quang well.
-      solid('ellipsoid',u,floor+.17,0,ru*.95,.22,width*.59,colors.granite);
-      solid('ellipsoid',u,floor+.17,width*.59,ru*.31,.17,width*.27,colors.granite);
+      solid('shell',u,floor+.17,0,ru*1.02,.22,width*.59,colors.granite);
+      solid('shell',u,floor+.17,width*.59,ru*.30,.17,width*.27,colors.granite);
       for(const side of [-1,1])for(const end of [-1,1])
         solid('ellipsoid',u+side*ru*.79,floor+.08,end*width*.27,ru*.27,.09,width*.19,colors.granite);
       const profile=[[-ru,0],[ru,0]];
@@ -421,7 +428,7 @@ function createTourDistrict(T,scene,plaster,structures,osmBuildings,nightLights)
   }
   function createView(parent){
   const group=new T.Group();group.name='OSM building footprints';parent.add(group);
-  const batches=[wall,roof].map(mat=>({mat,stride:mat===wall?14:12,data:new Float32Array(0),used:0}));
+  const batches=[wall,roof].map(mat=>({mat,stride:mat===wall?14:12,data:new Float32Array(0),used:0,curved:[]}));
   const cells=new Map(),blocks=new Map(),streetFronts=[];
   function contact(x,z,r){
     let hit;
@@ -571,10 +578,10 @@ function createTourDistrict(T,scene,plaster,structures,osmBuildings,nightLights)
     }
     for(const b of batches){
       if(b.used < b.data.length/4)b.data=new Float32Array(b.used);
-      b.used=0;
+      b.used=0;b.curved.length=0;
     }
     let baseY=0,opening=0,facadeSeed=0;
-    function vertex(b,x,y,z,u,v,tint,finish=0,bay=-1,floor=0){
+    function vertex(b,x,y,z,u,v,tint,finish=0,bay=-1,floor=0,normal){
       const i=b.used;
       if(i+b.stride>b.data.length){
         const next=new Float32Array(Math.max(b.stride*256,b.data.length*2));
@@ -582,7 +589,13 @@ function createTourDistrict(T,scene,plaster,structures,osmBuildings,nightLights)
       }
       const data=b.data;
       data[i]=x-cx;data[i+1]=baseY+y;data[i+2]=z-cz;
-      // Slots 3–5 receive the face normal once the triangle is complete.
+      // The normal pass fills planar sections after the geometry is complete.
+      if(normal){
+        data[i+3]=normal[0];data[i+4]=normal[1];data[i+5]=normal[2];
+        const run=b.curved.at(-1);
+        if(run&&run[1]===i)run[1]+=b.stride;
+        else b.curved.push([i,i+b.stride]);
+      }
       data[i+6]=u;data[i+7]=v;
       data[i+8]=tint.r;data[i+9]=tint.g;data[i+10]=tint.b;
       if(b.mat===wall){
@@ -717,8 +730,8 @@ function createTourDistrict(T,scene,plaster,structures,osmBuildings,nightLights)
       if(survey&&(survey.steleRows||vanMieuArchitectureRefs.has(id))){
         loadMonumentSurfaces();
         vanMieuArchitecture??=createVanMieuArchitecture(T);
-        const built=vanMieuArchitecture(survey,outer,graph,(px,py,pz,u,v,tint,finish)=>
-          vertex(batches[1],px,py,pz,u,v,tint,finish));
+        const built=vanMieuArchitecture(survey,outer,graph,(px,py,pz,u,v,tint,finish,normal)=>
+          vertex(batches[1],px,py,pz,u,v,tint,finish,-1,0,normal));
         b.h=built.height;b.solids=built.solids;b.stelae=built.stelae;continue;
       }
       const [bLon,bLat]=graph.geo(x,z),zone=window.CentralStreetscapes?.zoneAt(bLon,bLat);
@@ -785,9 +798,20 @@ function createTourDistrict(T,scene,plaster,structures,osmBuildings,nightLights)
     for(const b of batches){
       if(!b.used)continue;
       const data=b.data.subarray(0,b.used);
+      let run=0;
+      const writePlanar=(start,end)=>{
+        if(start>=end)return;
+        const chunk=data.subarray(start,end);writeFlatNormals(chunk,chunk,b.stride,3);
+      };
       for(let start=0;start<data.length;start+=b.stride*1536){
-        const chunk=data.subarray(start,start+b.stride*1536);
-        writeFlatNormals(chunk,chunk,b.stride,3);yield;
+        const end=Math.min(data.length,start+b.stride*1536);
+        let cursor=start;
+        while(run<b.curved.length&&b.curved[run][0]<end){
+          const [lo,hi]=b.curved[run];writePlanar(cursor,lo);cursor=hi;
+          if(hi>end)break;
+          run++;
+        }
+        writePlanar(cursor,end);yield;
       }
       const buffer=new T.InterleavedBuffer(data,b.stride),g=new T.BufferGeometry();
       const attribute=(size,offset)=>new T.InterleavedBufferAttribute(buffer,size,offset);
