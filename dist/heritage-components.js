@@ -38,6 +38,7 @@
   atlas.aliases['osm-way-1228794103']='osm-relation-15805643';
   atlas.aliases['osm-node-1805807506']='osm-way-1244769154';
   const dambriEntrance=[107.7445308,11.6412412],vungRoEntrance=[109.4191949,12.8776377];
+  const honYenLane=[109.3045388,13.2267462],honYenSource='https://daklakvrtour.com/hon-yen.html';
   const dambriSource='https://www.dambri.com.vn/vi/tin-tuc/tin-tuc-damb-ri/mot-ngay-o-khu-du-lich-thac-damb-ri-381.html';
   const baiChuaSource='https://daklakvrtour.com/tau-khong-so.html';
   const vungRoBay={locality:'Vũng Rô',formerProvince:'Phú Yên',start:[109.414242,12.871188],mappedEntrance:true,visitOnArrival:true,
@@ -48,6 +49,29 @@
       {name:'Bờ vịnh nhìn về Bãi Chùa',offset:[370,-570],height:100,viewAngle:-.41,viewRadius:912,viewElevation:.105,viewFov:62,
       description:'Từ phía tây vịnh nhìn về đông bắc, dọc theo bờ có Quốc lộ 29 đến khu di tích Bãi Chùa.'}]};
   const precincts={
+    // This legacy pin is inside the northern water polygon of Đầm Cù Mông,
+    // among floating cages. The Ô Loan marker is 39.7 km farther south.
+    'osm-node-4472649089':{name:'Vùng bè phía bắc đầm Cù Mông',locality:'Bắc đầm Cù Mông',city:'Sông Cầu',formerProvince:'Phú Yên',
+      kind:'Đầm',start:[109.21096,13.61964],mappedEntrance:true,visitOnArrival:true,source:'https://daklakvrtour.com/dam-cu-mong.html',
+      arrivalNote:'Xe dừng trên đường làng, cạnh các ao phía tây nam vùng bè. Các góc ngắm đưa bạn ra mặt đầm.'},
+    'osm-node-4472642290':{name:'Mũi Yến – góc ngắm từ bờ Nhơn Hội',locality:'Nhơn Hội',formerProvince:'Phú Yên',
+      start:honYenLane,mappedEntrance:true,visitOnArrival:true,source:honYenSource,viewOf:['hon-yen-phu-yen',0],
+      arrivalNote:'Xe dừng ở cuối đường làng Nhơn Hội, gần lăng Nam Hải. Từ lối đi ven bờ nhìn ra Hòn Đụn và Hòn Yến ngoài khơi.'},
+    // The field marker at đèo Quán Cau lies just off QL1. The visitor car
+    // stays on the village turn at w799591456, north of the sign.
+    'osm-node-11779827836':{name:'Đầm Ô Loan – điểm ngắm đèo Quán Cau',locality:'Tuy An',formerProvince:'Phú Yên',
+      start:[109.251142,13.269216],mappedEntrance:true,visitOnArrival:true,source:'https://daklakvrtour.com/dam-o-loan.html',
+      arrivalNote:'Xe dừng ở nhánh đường dân cư phía bắc bia thắng cảnh trên đèo Quán Cau. Từ bia nhìn về phía đông, qua các ao ven bờ tới mặt đầm.'},
+    // The raw pin marks the mountain. Visit the granite outcrop from the QL1
+    // trailhead, near the lay-by south of Cầu Suối Lớn on the old Đèo Cả road.
+    'osm-node-4510077892':{name:'Núi Đá Bia – Thạch Bi Sơn',locality:'Đèo Cả',formerProvince:'Phú Yên',
+      start:[109.3941124,12.8847007],mappedEntrance:true,visitOnArrival:true,
+      source:'https://vietnamtourism.vn/index.php/tourism/items/1372',
+      arrivalNote:'Xe dừng trên Quốc lộ 1 ở đầu lối vào bãi. Từ chân núi có đường bậc leo lên phiến đá; các góc ngắm trên đỉnh dành cho người đi bộ.'},
+    'osm-way-804128824':{name:'Nhà thờ Mằng Lăng',locality:'Tuy An Đông',formerProvince:'Phú Yên',kind:'Nhà thờ',
+      start:[109.2252868,13.3340986],mappedEntrance:true,visitOnArrival:true,
+      source:'https://baodaklak.vn/van-hoa-du-lich-van-hoc-nghe-thuat/202511/kien-truc-dac-sac-cua-nha-tho-co-mang-lang-2a50145/',
+      arrivalNote:'Xe dừng trên lối vào phía tây, cạnh sân đỗ xe và cách cổng khoảng 11 m. Đi qua cổng là sân trước mặt nhà thờ hai tháp chuông.'},
     'osm-node-4472600793':{...vungRoBay,name:'Điểm ngắm vịnh Vũng Rô từ bờ tây'},
     'osm-node-11565227115':{...vungRoBay,name:'Vịnh Vũng Rô'},
     'osm-node-4292019089':{name:'Di tích Bến tàu Không số Vũng Rô',locality:'Bãi Chùa',formerProvince:'Phú Yên',kind:'Di tích',
@@ -251,6 +275,18 @@
     [1504768248,'Đền Trung – Hùng Vương Tổ miếu','Phú Thọ','Hùng Sơn',105.3240986,21.3690193,105.322450,21.369750,189,'https://denhung.vn/tin-tuc/den-trung'],
   ];
   const existing = new Set(atlas.entries.map(site => site.id));
+  // OSM maps the two closed island shorelines independently of the mainland viewpoint.
+  for(const [way,name,lon,lat,approachMeters,view] of [
+    [151569083,'Hòn Yến',109.30878,13.22564,476,null],
+    [151569085,'Hòn Đụn (Hòn Sụn)',109.30684,13.22669,250,3]
+  ]){
+    const id='osm-way-'+way;
+    if(existing.has(id))continue;
+    atlas.entries.push({id,name,lon,lat,start:honYenLane,approachMeters,kind:'Đảo',region:'Trung Bộ',city:'Tuy An',
+      province:'Đắk Lắk',formerProvince:'Phú Yên',locality:'Nhơn Hội',source:honYenSource,map:'https://www.openstreetmap.org/way/'+way,
+      ...(view===null?{}:{viewOf:['hon-yen-phu-yen',view]}),mappedEntrance:true,visitOnArrival:true,
+      arrivalNote:'Xe dừng ở cuối đường làng Nhơn Hội trên đất liền. Từ bờ có thể nhìn qua vùng nước giữa hai hòn.'});
+  }
   if(!existing.has('phu-yen-nha-trung-bay-vung-ro'))atlas.entries.push({
     id:'phu-yen-nha-trung-bay-vung-ro',name:'Nhà trưng bày Bến Vũng Rô',region:'Trung Bộ',province:'Đắk Lắk',formerProvince:'Phú Yên',city:'Đông Hòa',locality:'Bãi Chùa',kind:'Nhà trưng bày',
     lon:109.419861,lat:12.877000,start:vungRoEntrance,approachMeters:101,mappedEntrance:true,visitOnArrival:true,source:baiChuaSource,

@@ -37,6 +37,8 @@ GRAPHIC = re.compile(r"(?:^|[ _-])(logo|locator|brochure|floor plan|plan of|coat
 
 # Audited Commons file pages for sites without a specific upstream photograph.
 REVIEWED = {
+    "osm-node-4510077892": "File:Núi Đá Bia.jpg",
+    "osm-node-11779827836": "File:Đầm Ô Loan, An Hiệp, Tuy An, Phú Yên.jpeg",
     "osm-node-5439114923": "File:Pagoda in Vietnam (39983735052).jpg",
     "osm-node-4472600793": "File:Vung Ro Bay 1.jpg",
     "osm-node-11565227115": "File:Vịnh Vũng Rô.jpg",

@@ -298,12 +298,387 @@
 
   // 11. Nhà thờ Mằng Lăng (1892, Tuy An, Phú Yên / Đắk Lắk — Gothic cổ rêu phong)
   function nhaThoMangLang(T, kit) {
-    A.gothicChurch(T, kit, {
-      w: 15.5, d: 30, naveH: 9.8, towerH: 22.5, twinTowers: true,
-      wall: 0xa8a59d, trim: 0xc8c3b8, roof: 0x7c4636, dark: 0x2d2926,
-      title: 'NHÀ THỜ MẰNG LĂNG'
-    });
-    A.trees(T, kit, [{ x: -11.2, z: 10.5, h: 9.5, kind: 'banyan' }, { x: 11.2, z: 10.5, h: 9.2, kind: 'banyan' }]);
+    // Surveyed porch and apse of OSM w804128824. The west frontage follows
+    // Đông Hồ's Commons photograph 125477301 and node3 of tour 69.
+    // Nodes 8, 10, 13 and 14 show the wraparound arcade and its yellow
+    // inner walls. The levels follow the photographs, with the bell-tower
+    // crest set to architect Hoàng Xuân Thưởng's approximate 23.6 m.
+    const k=kit,pi=Math.PI,fc=.72,west=21.52,roundStart=-13.94,rx=11.50,rz=9.58,mid=-.635;
+    const pale=0xc8cac4,light=0xd7d8ce,grey=0x9ba4a4,band=0xaab1ac,deep=0x818882,stone=0x9d9b8e,
+      dark=0x494943,wood=0x65503c,ochre=0xcead6c,glass=0x536c79,tile=0x9d6a55,ash=0x767368;
+    k.palette({plaster:[pale,light,grey,band,deep,ochre],stone:[stone,ash],timber:wood,tile,glass});
+    function extrudeXZ(path,lo,hi,tint){
+      const shape=new T.Shape(path.map(([x,z])=>new T.Vector2(x,-z)));
+      const g=new T.ExtrudeGeometry(shape,{depth:hi-lo,bevelEnabled:false});
+      g.rotateX(-pi/2);k.stamp(g,tint,0,lo,0);g.dispose();
+    }
+    function arcPoint(path,r,spr,tip,back,pointed=true){
+      if(!pointed){
+        const side=back?1:-1,k=.552285;
+        path.bezierCurveTo(side*r,spr+k*tip,side*k*r,spr+tip,0,spr+tip);
+        path.bezierCurveTo(-side*k*r,spr+tip,-side*r,spr+k*tip,-side*r,spr);
+      }else if(back){
+        path.bezierCurveTo(r*.92,spr+tip*.46,r*.40,spr+tip*.88,0,spr+tip);
+        path.bezierCurveTo(-r*.40,spr+tip*.88,-r*.92,spr+tip*.46,-r,spr);
+      }else{
+        path.bezierCurveTo(-r*.92,spr+tip*.46,-r*.40,spr+tip*.88,0,spr+tip);
+        path.bezierCurveTo(r*.40,spr+tip*.88,r*.92,spr+tip*.46,r,spr);
+      }
+    }
+    // Positive local z faces the observer. A face includes a real opening,
+    // its thick return and a narrow raised moulding, all in the same units.
+    function arcade(w,r,spring,rise,h,z,depth,tint,base,lip=.102,pointed=true){
+      const sh=new T.Shape();sh.moveTo(-w/2,0);sh.lineTo(-r,0);sh.lineTo(-r,spring);
+      arcPoint(sh,r,spring,rise,false,pointed);sh.lineTo(r,0);sh.lineTo(w/2,0);sh.lineTo(w/2,h);
+      sh.lineTo(-w/2,h);sh.closePath();k.profile(sh,tint,0,base,z-depth,depth);
+      if(lip)rim(r,spring,rise,z+.014,base,lip,light,pointed);
+    }
+    function rim(r,spring,rise,z,y,t,tint,pointed=true){
+      const sh=new T.Shape();sh.moveTo(-r-t,0);sh.lineTo(-r-t,spring);
+      arcPoint(sh,r+t,spring,rise+t,false,pointed);sh.lineTo(r+t,0);sh.lineTo(r,0);
+      sh.lineTo(r,spring);arcPoint(sh,r,spring,rise,true,pointed);sh.lineTo(-r,0);sh.closePath();k.profile(sh,tint,0,y,z,t*.48);
+    }
+    function lancet(r,spring,rise,z,y,tint,detail){
+      const sh=new T.Shape();sh.moveTo(-r,0);sh.lineTo(-r,spring);arcPoint(sh,r,spring,rise,false);
+      sh.lineTo(r,0);sh.closePath();k.profile(sh,tint,0,y,z,.044);
+      rim(r,spring,rise,z+.048,y,.076,pale);
+      if(detail==='shutter'){
+        for(let j=0;j<Math.floor(spring/.165);j++)k.box(0xa29b85,0,y+.12+j*.165,z+.096,r*1.78,.080,.059,0,.16);
+        k.box(dark,0,y+spring*.51,z+.115,.043,spring,.039);
+        for(const sign of [-1,1])k.box(band,sign*r*.51,y+spring+rise*.36,z+.087,.033,rise*.72,.022,0,0,-sign*.40);
+      }else if(detail==='glass'){
+        k.box(0xa18c4e,0,y+.89,z+.055,.15,1.75,.02);k.box(0xa18c4e,0,y+1.36,z+.056,r*1.31,.14,.023);
+        for(const sign of [-1,1])k.box(0x586d82,sign*r*.59,y+.57,z+.056,r*.28,.98,.025);
+      }
+    }
+    function miniBays(x,z,y,w,h,n,tint=grey){
+      for(let j=0;j<n;j++)k.place(x+w*((j+.5)/n-.5),z,0,()=>{
+        const r=w/n*.353;
+        lancet(r,h*.65,h*.28,0,y,deep);
+        const inner=new T.Shape(),rr=r*.71,spr=h*.61;
+        inner.moveTo(-rr,0);inner.lineTo(-rr,spr);arcPoint(inner,rr,spr,h*.23,false);
+        inner.lineTo(rr,0);inner.closePath();k.profile(inner,tint===deep?band:light,0,y+.035,.046,.027);
+      });
+    }
+    function pier(x,y,z,w,h,d,tint){
+      k.box(tint,x,y+h/2,z,w,h,d);k.box(pale,x,y+.10,z,w+.12,.20,d+.10);
+      k.box(light,x,y+h-.077,z,w+.11,.154,d+.11);
+    }
+    function sill(x,y,z,w,d){
+      k.box(deep,x,y-.05,z,w+.17,.13,d+.15);k.box(pale,x,y+.041,z,w+.30,.083,d+.26);
+    }
+    function belfry(x){
+      const z=west-1.90;
+      // Two successive sets of paired louvres sit above the single
+      // lancet. The crenellated heads are level; there are no spires.
+      const stages=[[7.20,5.85,4.49,4.00,1],[13.05,2.90,4.17,3.84,2],[15.95,3.82,3.94,3.70,2]];
+      for(const [y,h,w,d,n] of stages){
+        k.box(grey,x,y+h/2,z,w,h,d);
+        for(const [ox,oz,a,span] of [[0,d/2+.008,0,w],[0,-d/2-.008,pi,w],[-w/2-.008,0,-pi/2,d],[w/2+.008,0,pi/2,d]]){
+          k.place(x+ox,z+oz,a,()=>{
+            if(n===1){
+              lancet(span*.217,2.23,1.04,.01,y+1.34,dark,'shutter');
+              rim(span*.217+.11,2.25,1.06,.14,y+1.34,.067,band);
+              miniBays(0,.018,y+.18,span-.34,.64,6,band);
+            }else for(const side of [-1,1])k.place(side*span*.205,0,0,()=>{
+              const spr=h*.45,rise=h*.20;
+              lancet(span*.149,spr,rise,.016,y+.30,dark,'shutter');
+              const n=5,r=span*.084,cy=y+.36+spr+rise*.36;
+              for(let i=0;i<n;i++){const a=i*2*pi/n,px=Math.cos(a)*r*.65,py=Math.sin(a)*r*.65;
+                k.box(pale,px,cy+py,.13,.030,r*.91,.028,0,0,a-pi/2);}
+            });
+          });
+        }
+        for(const side of [-1,1])for(const end of [-1,1])pier(x+side*(w/2-.07),y+.16,z+end*(d/2-.065),.27,h-.27,.28,deep);
+        sill(x,y+h,z,w,d);
+      }
+      const top=19.77,w=4.12,d=3.84;
+      k.box(deep,x,top+.12,z,w,.24,d);
+      for(const side of [-1,1]){
+        for(let i=0;i<8;i++){
+          const off=w*(i/7-.5)*.92,ht=i===0||i===7?.55:.34;
+          k.box(deep,x+off,top+.23+ht/2,z+side*d*.475,.24,ht,.25);
+        }
+        for(let i=1;i<7;i++)k.box(deep,x+side*w*.466,top+.41,z+d*(i/7-.5)*.92,.25,.34,.23);
+      }
+    }
+    function rosette(){
+      const y=10.62,z=west+.13,r=1.54;
+      const disk=new T.CylinderGeometry(r,r,.105,56);k.stamp(disk,0x89958c,0,y,z,1,1,1,0,pi/2);disk.dispose();
+      function ring(rad,t,tint,offset){
+        const g=new T.TorusGeometry(rad,t,7,52);k.stamp(g,tint,0,y,z+offset);g.dispose();
+      }
+      ring(r+.14,.097,pale,.070);ring(r-.04,.084,deep,.10);ring(r*.89,.079,light,.118);
+      ring(.27,.064,pale,.154);
+      for(let i=0;i<18;i++){
+        const a=2*pi*i/18,rr=r*.54;
+        k.box(light,Math.sin(a)*rr,y+Math.cos(a)*rr,z+.149,.067,2*(rr-.17),.078,0,0,-a);
+        k.box(0xb5a577,Math.sin(a)*r*.60,y+Math.cos(a)*r*.60,z+.089,.096,r*.42,.047,0,0,-a);
+      }
+    }
+    function frontage(){
+      const bays=[[-10.24,2.52,.72,2.45,1.05,5.0],[-6.28,5.40,1.19,3.12,1.38,6.50],
+        [0,7.16,1.52,3.24,1.68,6.50],[6.28,5.40,1.19,3.12,1.38,6.50],[10.24,2.52,.72,2.45,1.05,5.0]];
+      for(const [x,w,r,spr,rise,h] of bays)k.place(x,0,0,()=>{
+        arcade(w,r,spr,rise,h,west,.62,grey,fc,.13);
+        rim(r+.18,spr,rise+.20,west+.053,fc,.101,band);
+        for(const side of [-1,1]){
+          pier(side*(r+.16),fc,west+.103,.23,spr,.27,pale);
+          if(w>5)k.box(wood,side*(r-.1),fc+1.25,west-.85,.13,2.45,.86);
+        }
+        if(w>5){
+          arcade(w+.03,r*.78,2.56,1.0,5.09,west-1.33,.30,ochre,fc,.082);
+          for(const side of [-1,1]){
+            k.box(wood,side*(r*.78-.056),fc+1.36,west-1.30,.112,2.72,.20);
+            k.box(dark,side*(r*.78-.11),fc+1.31,west-1.81,.15,2.60,.96);
+          }
+          if(x!==0)lancet(r*.70,2.42,.99,west-2.02,fc+.06,wood);
+        }
+      });
+      // Arched return on either side of the narthex, plainly visible from
+      // both courtyard walks. These returns are open to the outer arcade.
+      for(const side of [-1,1])k.place(side*rx,west-2.38,side*pi/2,()=>arcade(4.78,1.43,2.66,1.73,5.32,0,.50,grey,fc,.12));
+      for(const x of [-11.30,-8.99,-3.65,3.65,8.99,11.30]){
+        const h=Math.abs(x)>10?6.0:6.48;
+        pier(x,fc,west+.09,.36,h,.39,deep);
+        if(Math.abs(x)>10){k.tapered(deep,x,6.99,west+.06,.20,.13,.38,1,6);k.tapered(pale,x,7.38,west+.06,.17,0,.42,1,6);}
+      }
+      for(const side of [-1,1]){
+        k.box(grey,side*10.23,5.95,west-.21,2.55,.79,.41);
+        miniBays(side*10.23,west+.025,5.76,2.21,.56,4,deep);belfry(side*6.28);
+      }
+      k.box(grey,0,10.40,west-.47,7.52,6.50,.94);
+      miniBays(0,west+.017,7.38,7.14,.79,13,deep);
+      k.box(pale,0,8.23,west+.007,7.47,.13,.23);
+      rosette();
+      for(const side of [-1,1])k.place(side*2.96,0,0,()=>{
+        lancet(.38,2.43,.64,west+.026,8.68,band);
+        pier(side*.49,8.45,west+.108,.17,4.33,.23,deep);
+      });
+      k.box(grey,0,14.08,west-.44,7.61,2.53,.87);miniBays(0,west+.003,13.10,7.26,1.87,8,band);
+      k.box(pale,0,13.02,west+.02,7.69,.15,.23);k.box(deep,0,15.30,west-.02,7.69,.19,1.02);
+      const g=new T.Shape();g.moveTo(-3.84,0);g.quadraticCurveTo(-2.28,.06,-1.57,.53);
+      g.quadraticCurveTo(-.82,.91,0,1.0);g.quadraticCurveTo(.82,.91,1.57,.53);g.quadraticCurveTo(2.28,.06,3.84,0);g.closePath();
+      k.profile(g,deep,0,15.39,west-.66,.65);
+      k.box(dark,0,17.25,west-.36,.175,1.87,.22);k.box(dark,0,17.58,west-.36,1.21,.165,.22);
+    }
+    function apse(t){return [rx*Math.cos(t),roundStart-rz*Math.sin(t)];}
+    function floorOutline(){
+      const path=[[-rx,west],[rx,west],[rx,roundStart]];
+      for(let i=1;i<=24;i++)path.push(apse(pi*i/24));return path;
+    }
+    function bay(x,z,angle,w,isDoor,pointed,end,lamp,cutback){
+      // All side openings correspond to real bays. The outer piers stand
+      // free of the ochre inner wall. The return is open under the eaves.
+      const opening=w*(isDoor?.395:.368),spring=2.77,rise=pointed?1.54:1.11,eave=5.92;
+      k.place(x,z,angle,()=>{
+        arcade(w+.045,opening,spring,rise,eave,0,.39,grey,fc,.100,pointed);
+        const lampTop=fc+spring+rise;
+        k.box(dark,0,lampTop-.12,-.24,.027,.25,.027);
+        k.box(lamp,0,lampTop-.44,-.24,.27,.42,.27);
+        for(const dx of [-.141,.141])for(const dz of [-.141,.141])k.box(wood,dx,lampTop-.44,-.24+dz,.028,.45,.028);
+        for(const h of [.24,.64])k.box(wood,0,lampTop-h,-.24,.318,.048,.318);
+        for(const side of [-1,1]){
+          const px=side*(w/2-.076);
+          k.box(pale,px,3.43,.006,.17,5.43,.17);
+          k.box(band,px,3.03,.108,.071,4.15,.042);
+          k.box(light,side*opening,fc+spring+.005,.068,.42,.13,.25);
+        }
+        k.box(pale,0,5.80,.003,w+.05,.11,.15);
+        k.box(0xb9ad96,0,6.36,-.006,w+.025,.48,.066);
+        const inset=cutback??2.05,zInner=-inset;
+        if(isDoor){
+          arcade(w+.06,Math.min(opening*.80,1.47),2.51,1.22,5.55,zInner,.21,ochre,fc,.07,pointed);
+          for(const side of [-1,1])k.box(wood,side*(Math.min(opening*.80,1.47)-.07),1.91,zInner-.48,.15,2.33,.91);
+        }else{
+          k.box(ochre,0,3.40,zInner,w+.38,5.36,.28);
+          if(!end)lancet(.67,1.63,.73,zInner+.151,1.55,glass,'glass');
+          k.box(band,0,1.44,zInner+.152,w+.08,.10,.16);
+        }
+      });
+    }
+    function arcades(){
+      const sideFront=west-4.76,sideLength=sideFront-roundStart,width=sideLength/6;
+      const lamps=[0xbb5440,0x4d86a5,0xc99a3c];
+      for(const side of [-1,1])for(let i=0;i<6;i++){
+        const z=sideFront-(i+.5)*width;
+        bay(side*rx,z,side*pi/2,width,i===3,i>=4,false,lamps[i%3]);
+        if(i===3)k.place(side*rx,z,side*pi/2,()=>steps(3.86,.68));
+      }
+      for(let i=0;i<9;i++){
+        const a=apse(i*pi/9),b=apse((i+1)*pi/9),dx=b[0]-a[0],dz=b[1]-a[1];
+        const angle=Math.atan2(-dz,dx),w=Math.hypot(dx,dz),cx=(a[0]+b[0])*.5,cz=(a[1]+b[1])*.5;
+        bay(cx,cz,angle,w,i===4,true,true,lamps[(i+2)%3],1.58);
+        if(i===4)k.place(cx,cz,angle,()=>steps(3.45,.68));
+      }
+    }
+    function steps(w,h){
+      for(let i=0;i<4;i++){const rise=h*(1-i/4);k.box(stone,0,rise/2,.13+i*.32,w,rise,.39);}
+    }
+    function roof(){
+      const p=[],soffit=[],lip=[];
+      function quad(arr,a,b,c,d){arr.push(...a,...b,...c,...a,...c,...d);}
+      const ey=6.71,peak=10.02,zf=west-1.65;
+      for(const side of [-1,1]){
+        const a=[side*(rx+.37),ey,zf],b=[0,peak,zf],d=[side*(rx+.37),ey,roundStart],cc=[0,peak,roundStart];
+        if(side<0)quad(p,a,b,cc,d);else quad(p,b,a,d,cc);
+        if(side<0)quad(soffit,d,cc,b,a);else quad(soffit,cc,d,a,b);
+        quad(lip,a,d,[d[0],ey-.16,d[2]],[a[0],ey-.16,a[2]]);
+      }
+      const middle=[0,peak,roundStart];
+      for(let i=0;i<27;i++){
+        const p0=pi*i/27,p1=pi*(i+1)/27,a=[(rx+.37)*Math.cos(p0),ey,roundStart-(rz+.36)*Math.sin(p0)],
+          b=[(rx+.37)*Math.cos(p1),ey,roundStart-(rz+.36)*Math.sin(p1)];
+        p.push(...middle,...a,...b);soffit.push(...b,...a,...middle);
+        quad(lip,b,a,[a[0],ey-.16,a[2]],[b[0],ey-.16,b[2]]);
+      }
+      function skin(v,tint){
+        const geo=new T.BufferGeometry();geo.setAttribute('position',new T.Float32BufferAttribute(v,3));geo.computeVertexNormals();
+        k.stamp(geo,tint,0,0,0);geo.dispose();
+      }
+      skin(p,tile);skin(soffit,wood);skin(lip,ash);
+      k.box(0x8d6150,0,peak+.028,(zf+roundStart)*.5,.17,.14,zf-roundStart);
+    }
+    function nave(){
+      // Glimpses through the exterior doors: the white inner nave,
+      // polygonal timber ceiling, wood pews and raised east chancel are
+      // visible in the parish tour. Give the cross-aisle a clear sightline.
+      const wallLine=4.46,bayW=4.22,front=16.06;
+      for(const sign of [-1,1])for(let i=0;i<7;i++){
+        const z=front-(i+.5)*bayW;
+        k.place(sign*wallLine,z,sign*pi*.5,()=>arcade(bayW+.025,1.63,3.01,1.83,7.40,0,.37,light,fc,.11));
+      }
+      k.box(0xa98f6d,0,9.04,-.42,5.35,.16,34.2);
+      for(const sign of [-1,1])k.box(0xb19571,sign*3.40,8.64,-.42,1.76,.16,34.2,0,0,-sign*.46);
+      for(let i=0;i<14;i++){
+        const z=13.60-i*1.64;
+        if(Math.abs(z+1.13)<1.35)continue;
+        for(const sign of [-1,1]){
+          const x=sign*2.65;
+          k.box(wood,x,1.16,z,2.93,.10,.44);k.box(wood,x,1.49,z+.23,2.93,.63,.085);
+          for(const end of [-1,1])k.box(wood,x+end*1.35,.97,z,.11,.52,.38);
+        }
+      }
+      k.box(stone,0,.97,-15.02,7.25,.58,3.72);
+      k.box(pale,0,1.71,-16.04,2.82,.92,.78);k.box(light,0,2.22,-16.04,3.03,.12,.91);
+      k.box(0x9d8a73,0,3.82,-18.0,3.25,5.13,.31);
+      k.box(0x80684e,0,4.98,-17.78,.13,1.52,.12);k.box(0x80684e,0,5.18,-17.78,1.01,.12,.12);
+    }
+    function build(){
+      const footprint=floorOutline();
+      extrudeXZ(footprint,-.28,fc,stone);
+      for(let i=0;i<4;i++){
+        const path=[[-rx-i*.17,west-.95],[rx+i*.17,west-.95]];
+        for(let j=0;j<=28;j++){
+          const a=j*pi/28;path.push([(rx+i*.17)*Math.cos(a),west+(1.14+i*.34)*Math.sin(a)]);
+        }
+        const top=fc*(1-i/4);extrudeXZ(path,0,top,stone);
+      }
+      frontage();arcades();nave();roof();
+    }
+    function pavedCourt(){
+      // Visible hardstand between the west gate and steps, then the narrow
+      // strips along the arcades. The neighboring school and chapels lie
+      // outside these edges. The two bonsai bowls have separate positions.
+      const court=[[-17.32,58.65],[-16.74,26.94],[-19.27,20.92],[-17.49,-9.12],[-15.48,-24.69],[-11.03,-33.67],
+        [-2.63,-36.39],[2.01,-41.21],[6.50,-38.11],[8.64,-22.73],[16.52,-18.76],[17.08,14.91],[17.84,19.16],
+        [17.26,57.95],[10.90,60.72]];
+      const loop=court.map(([x,z])=>new T.Vector2(x,z)),pos=[],idx=[];
+      for(const face of T.ShapeUtils.triangulateShape(loop,[])){
+        const [a,b,c]=face.map(j=>loop[j]),n=Math.ceil(Math.max(a.distanceTo(b),b.distanceTo(c),c.distanceTo(a))/4.2);
+        const rows=[];
+        for(let j=0;j<=n;j++){
+          const row=[];rows.push(row);
+          for(let i=0;i<=n-j;i++){
+            const x=a.x+(b.x-a.x)*i/n+(c.x-a.x)*j/n,z=a.y+(b.y-a.y)*i/n+(c.y-a.y)*j/n;
+            row.push(pos.length/3);pos.push(x,0,z);
+          }
+        }
+        for(let j=0;j<n;j++)for(let i=0;i<n-j;i++){
+          idx.push(rows[j][i],rows[j+1][i],rows[j][i+1]);
+          if(i<n-j-1)idx.push(rows[j+1][i],rows[j+1][i+1],rows[j][i+1]);
+        }
+      }
+      const geo=new T.BufferGeometry(),v=new T.Float32BufferAttribute(pos,3);
+      geo.setAttribute('position',v);geo.setIndex(idx);geo.computeVertexNormals();
+      const mat=new T.MeshLambertMaterial({color:0xc1bbaa,side:T.DoubleSide});
+      mat.onBeforeCompile=sh=>{
+        sh.vertexShader='varying vec2 parishGround;\n'+sh.vertexShader.replace('#include <begin_vertex>','#include <begin_vertex>\nparishGround=position.xz;');
+        sh.fragmentShader='varying vec2 parishGround;\n'+sh.fragmentShader.replace('#include <color_fragment>',`#include <color_fragment>
+          vec2 q=parishGround/vec2(4.2,4.8),edge=min(fract(q),1.-fract(q));
+          float joint=smoothstep(.001,.001+max(fwidth(q.x),fwidth(q.y))*.61,min(edge.x,edge.y));
+          float rough=fract(sin(dot(floor(parishGround*17.),vec2(11.86,75.61)))*31971.);
+          diffuseColor.rgb*=mix(.79,.94+.065*rough,joint);`);
+      };
+      const mesh=new T.Mesh(geo,mat);mesh.name='Sân bê tông trước nhà thờ';mesh.receiveShadow=true;k.group.add(mesh);
+      return (land,level)=>{
+        for(let i=0;i<v.count;i++){
+          const x=v.getX(i),z=v.getZ(i),h=land(x,z),d=Math.max(Math.abs(x-mid)-rx,z-west,roundStart-9.58-z,0);
+          const t=Math.min(1,d/8.2);
+          v.setY(i,Math.max(h+.115,level+.032+(h-level)*t*t*(3-2*t)));
+        }
+        v.needsUpdate=true;geo.computeVertexNormals();geo.computeBoundingSphere();
+      };
+    }
+    function planters(){
+      const rims=new T.LatheGeometry([[.62,.23],[.76,.28],[1.19,.49],[1.24,.63],[1.32,.70],[1.32,.75],
+        [1.17,.75],[1.13,.63],[.94,.53]].map(([x,y])=>new T.Vector2(x,y)),32);
+      const bark=0x706957,canopy=0x687442,foliage=new T.IcosahedronGeometry(1,1);
+      function branch(points,r){
+        const g=new T.TubeGeometry(new T.CatmullRomCurve3(points.map(v=>new T.Vector3(...v))),8,r,7);
+        k.stamp(g,bark,0,0,0);g.dispose();
+      }
+      for(const [x,z,a] of [[-11.15,28.75,-.62],[6.81,28.81,.83]])k.place(x,z,a,()=>{
+        for(let i=0;i<3;i++)k.stamp(k.round,deep,.62*Math.cos(i*pi*2/3),.15,.62*Math.sin(i*pi*2/3),.19,.30,.19);
+        k.stamp(rims,stone,0,0,0);k.stamp(k.round,0x665b48,0,.61,0,1.13,.07,1.13);
+        branch([[0,.65,0],[-.13,1.08,-.07],[-.06,1.57,.05],[.21,2.02,.16]],.135);
+        for(let i=0;i<7;i++){
+          const t=2*pi*i/7+.61,dx=Math.cos(t),dz=Math.sin(t),h=1.43+i%3*.23;
+          branch([[0,1.2,0],[.46*dx,h,.36*dz],[.88*dx,h+.19,.81*dz],[1.07*dx,h+.49,.94*dz]],.065);
+          if(i%3!==2)k.stamp(foliage,canopy,.96*dx,h+.53,.90*dz,.39,.18,.36);
+        }
+      });
+      rims.dispose();foliage.dispose();
+    }
+    k.place(mid,0,0,build);
+    planters();
+    const fitCourt=pavedCourt();
+    const outline=floorOutline();
+    let body;
+    k.group.userData.fitGround=land=>{
+      if(!body){
+        body=k.group.children.find(m=>m.geometry?.hasAttribute('finishKind'));
+        body.scale.y=23.6/(19.77+.23+.55);
+        k.group.userData.height=23.6;
+        const mat=body.material;
+        if(!mat.userData.mangLangPatina){
+          const previous=mat.onBeforeCompile,cacheKey=mat.customProgramCacheKey();
+          mat.customProgramCacheKey=()=>cacheKey+'-mang-lang-render';
+          mat.onBeforeCompile=function(sh,renderer){
+            previous.call(this,sh,renderer);
+            sh.vertexShader='varying vec3 churchP;\n'+sh.vertexShader.replace('#include <begin_vertex>','#include <begin_vertex>\nchurchP=position;');
+            sh.fragmentShader=`varying vec3 churchP;
+              float churchHash(vec2 p){return fract(sin(dot(p,vec2(42.106,18.715)))*34854.76);}
+              float churchRain(vec2 p){
+                vec2 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);
+                return mix(mix(churchHash(i),churchHash(i+vec2(1,0)),f.x),mix(churchHash(i+vec2(0,1)),churchHash(i+1.),f.x),f.y);
+              }\n`+sh.fragmentShader.replace('#include <alphatest_fragment>',`#include <alphatest_fragment>
+              if(surfaceKind>.5 && surfaceKind<1.5 && abs(vColor.r-vColor.g)<.16){
+                float fl=churchP.z>16.5?1.:.21+.23*(1.-smoothstep(.6,2.1,churchP.y));
+                vec2 p=vec2(churchP.x+churchP.z*.79,churchP.y);
+                float broad=churchRain(p*vec2(1.86,.63));
+                float mottled=.21*broad+.32*churchRain(p*vec2(4.6,2.1))+.27*churchRain(p*8.1)+.20*churchRain(p*16.7);
+                float stainAmt=smoothstep(.435,.715,mottled)*fl;
+                diffuseColor.rgb*=mix(vec3(1.10),vec3(.265,.286,.284),stainAmt);
+              }`);
+          };
+          mat.userData.mangLangPatina=true;mat.needsUpdate=true;
+        }
+      }
+      const samples=outline.map(([x,z])=>land(x+mid,z));
+      body.position.y=Math.max(land(mid,0),...samples)+.055;
+      fitCourt(land,body.position.y);
+    };
   }
 
   // 12. Nhà thờ Núi / Nhà thờ Chính tòa Nha Trang (1928 — đá chẻ xám Gothic)
@@ -612,11 +987,25 @@
       build: thapNhanTuyHoa
     },
     {
-      id: 'nha-tho-mang-lang', name: 'Nhà thờ Mằng Lăng', city: 'Tuy An', province: 'Đắk Lắk', formerProvince: 'Phú Yên',
-      lon: 109.236750, lat: 13.332450, yaw: 1.919, width: 22, depth: 34,
-      start: [109.237180, 13.332603], viewDistance: 1200,
-      map: 'https://www.openstreetmap.org/#map=17/13.33245/109.23675',
-      source: 'https://phuyentourism.gov.vn/',
+      id: 'nha-tho-mang-lang', name: 'Nhà thờ Mằng Lăng', city: 'Tuy An Đông', province: 'Đắk Lắk', formerProvince: 'Phú Yên',
+      catalogId:'osm-way-804128824',lon:109.225948,lat:13.334185,yaw:-1.405299,width:23.01,depth:45.04,
+      start:[109.2252868,13.3340986],mappedEntrance:true,visitOnArrival:true,viewDistance:1200,
+      map:'https://www.openstreetmap.org/way/804128824',photo:'https://daklakvrtour.com/tour/69/index.html#node3',
+      source:'https://baodaklak.vn/van-hoa-du-lich-van-hoc-nghe-thuat/202511/kien-truc-dac-sac-cua-nha-tho-co-mang-lang-2a50145/',
+      description:'Nhà thờ Mằng Lăng được khởi công năm 1892 và khánh thành năm 1907. Hai tháp chuông vuông cao khoảng 23,6 m đứng hai bên ô cửa hoa và thánh giá. Từ sân phía tây, đi dọc hành lang vòm sẽ đến vòng cung phía sau cung thánh. Mặt bằng theo đường bao OpenStreetMap. Tỷ lệ các tầng và hoa văn được ước dựng theo ảnh.',
+      arrivalNote:'Xe dừng trong sân đỗ ngoài cổng phía tây. Cổng cách xe khoảng 11 m, từ đó đi bộ qua sân đến bậc trước nhà thờ.',
+      modeledBuildings:['w804128824'],solids:[],plasterStain:.34,
+      boundary:[[-12.14,21.52],[10.87,21.52],[10.88,-13.94],[9.85,-17.12],[8.03,-19.74],[5.57,-21.78],[2.66,-23.07],
+        [-.51,-23.52],[-3.75,-23.07],[-6.74,-21.74],[-9.25,-19.63],[-11.07,-16.91],[-12.14,-13.95]],
+      reserve:(x,z,r)=>(x>-13-r&&x<12+r&&z>-24.5-r&&z<26.5+r)||
+        (Math.abs(x)<16.7+r&&z>=20-r&&z<58.5+r),
+      views:[['Hai tháp chuông và ô cửa hoa',-.63,19.5,24.35,38.7,-.069,-.164,47],
+        ['Hành lang vòm bên hông nhà thờ',9.5,-1.6,7.3,16.6,.82,-.068,52],
+        ['Vòng hành lang sau cung thánh',-.6,-18.5,8.5,21,3.05,-.077,52]]
+        .map(([name,x,z,height,viewRadius,a,viewElevation,viewFov])=>{
+          const yaw=-1.405299,c=Math.cos(yaw),s=Math.sin(yaw);
+          return {name,offset:[x*c+z*s,-x*s+z*c],height,viewRadius,viewAngle:yaw+a,viewElevation,viewFov,viewBase:'monument'};
+        }),
       build: nhaThoMangLang
     },
     {

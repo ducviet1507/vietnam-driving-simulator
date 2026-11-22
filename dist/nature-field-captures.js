@@ -16,6 +16,8 @@ window.NatureFieldCaptures=(()=>{
   }
   const vungRoBay=phuYen('Vịnh Vũng Rô từ trên cao','vung-ro',47,
     'Nhìn từ bờ tây ra vịnh và các triền núi bao quanh. Chọn “Bè Nuôi Tôm- Cá” trong ảnh để hạ thấp góc nhìn xuống khu bè.');
+  const honYen=phuYen('Hòn Yến, bãi san hô và vùng bè','hon-yen',62,
+    'Ảnh mở trên doi đá phía tây Hòn Yến. Chọn “Bãi San Hô” để nhìn từ gần bờ hoặc “Góc Đông Nam” để nhìn từ ngoài khơi về hai hòn.');
   function baiChua(name,scope){
     return phuYen(name,'tau-khong-so',116,'Ảnh mở ở toàn cảnh Bãi Chùa. '+scope);
   }
@@ -36,6 +38,17 @@ window.NatureFieldCaptures=(()=>{
     return {name,source,credit:'Cổng thông tin điện tử Hồ Chí Minh',scope:scope+' Ảnh mở trong tab riêng.'};
   }
   return {
+    'osm-node-4510077892':phuYen('Từ chân Đèo Cả lên đỉnh Đá Bia','nui-da-bia',115,
+      'Ảnh mở ở toàn cảnh chân núi. Theo các điểm chuyển cảnh để xem đường bậc, sườn núi và phiến đá trên đỉnh.'),
+    'osm-way-151569083':honYen,
+    'osm-way-151569085':honYen,
+    'osm-node-4472642290':honYen,
+    'osm-node-11779827836':phuYen('Đầm Ô Loan, cầu An Cư và cầu An Hải','dam-o-loan',104,
+      'Từ góc toàn cảnh phía đèo Quán Cau, chọn “Cận Cảnh” để ra giữa đầm. Hai điểm “Cầu An Cư” và “Cầu An Hải” cho thấy các dòng nước nối với đầm.'),
+    'osm-node-4472649089':phuYen('Từ cầu Bình Phú ra đầm Cù Mông','dam-cu-mong',162,
+      'Ảnh mở ở cầu Bình Phú. Chọn hướng bắc để xem vùng bè và các ao ven bờ, hoặc tới cửa đầm để nhìn ra biển.'),
+    'osm-way-804128824':phuYen('Sân, thánh đường và hang trưng bày Mằng Lăng','nha-tho-mang-lang',69,
+      'Từ ảnh trên cao, chọn các điểm ngay nhà thờ để xem mặt đứng, hai hành lang và cung thánh. Hang trưng bày sách Quốc ngữ nằm bên sân.'),
     'osm-node-11565227115':vungRoBay,
     'osm-node-4472600793':vungRoBay,
     'osm-node-4292019089':baiChua('Sân đài tưởng niệm ở Bãi Chùa','Chọn “Biểu Tượng Tàu Không Số” để tới sân lễ có tượng hình mũi tàu. Ảnh chụp khi sân đang dựng rạp.'),

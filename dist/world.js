@@ -833,14 +833,15 @@ function frameAboveTourControls(){
  const width=canvas.clientWidth,height=canvas.clientHeight;
  const covered=panel.hidden?0:Math.max(0,canvas.getBoundingClientRect().bottom-panel.getBoundingClientRect().top);
  $('secretField').style.setProperty('--secret-dock',covered+'px');
- // Centre the monument in the space above the caption and tour controls.
- const shift=Math.round(clamp((covered-48)/2,0,height*.23));
- car.sightView.viewport=shift?{width,height,shift}:null;
+ // Frame the whole view between the top HUD and the actual tour panel.
+ const top=Math.min(38,Math.round(height*.055));
+ const visibleHeight=Math.max(64,height-covered-top-6);
+ car.sightView.viewport=covered&&width&&height?{width,height,top,visibleHeight}:null;
 }
 const tourLayout=new ResizeObserver(frameAboveTourControls);
 tourLayout.observe($('tourCamera'));tourLayout.observe($('world'));
 const tourInfo=$('tourInfo'),tourSummary=tourInfo.querySelector('summary');
-const narrowTour=matchMedia('(max-width:720px) and (orientation:portrait)');
+const narrowTour=matchMedia('(max-width:720px) and (orientation:portrait), (max-width:1050px) and (max-height:650px)');
 function fitTourNotes(){tourInfo.open=!narrowTour.matches;}
 fitTourNotes();narrowTour.addEventListener('change',fitTourNotes);
 tourSummary.onclick=e=>{if($('tourDescription').hidden)e.preventDefault();};
@@ -860,7 +861,7 @@ function showMonument(monument,viewIndex=0,collection=null){
  tourSummary.tabIndex=$('tourDescription').hidden?-1:0;
  tourSummary.setAttribute('aria-disabled',String($('tourDescription').hidden));
  if(view?.photoCredit){
-   const link=document.createElement('a');link.href='landmark-scans/CREDITS.txt';link.target='_blank';link.rel='noopener';
+   const link=document.createElement('a');link.href=view.photoCreditUrl||'landmark-scans/CREDITS.txt';link.target='_blank';link.rel='noopener';
    link.textContent=view.photoCredit;$('tourDescription').append(' ',link);
  }
  $('tourTitle').textContent=view?.title||monument.data.name;$('tourCamera').hidden=false;

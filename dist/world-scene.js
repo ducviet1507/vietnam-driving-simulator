@@ -1529,11 +1529,13 @@
       }
       if(car.flood){eye.y=Math.max(eye.y,car.flood.level+2.2);look.set(x,car.flood.level-.25,z);}
       camera.position.copy(eye);camera.lookAt(look);
+      const viewport=car.sightView?.viewport;
+      const tourAspect=viewport?viewport.width/viewport.visibleHeight:camera.aspect;
       if(car.sightView){
         const v=car.sightView,angle=v.angle-v.data.yaw;
         const span=Math.abs(Math.cos(angle))*v.data.width+Math.abs(Math.sin(angle))*v.data.depth;
         const front=Math.abs(Math.sin(angle))*v.data.width+Math.abs(Math.cos(angle))*v.data.depth;
-        const radius=(v.data.viewRadius??(Math.max(span/Math.max(.35,camera.aspect),v.height)*1.10+front*.40))*v.zoom;
+        const radius=(v.data.viewRadius??(Math.max(span/Math.max(.35,tourAspect),v.height)*1.10+front*.40))*v.zoom;
         const monumentDatum=v.data.caveOpening||v.data.viewBase==='monument';
         const base=(monumentDatum?v.monument.base:null)??(modeledBridgeLengths[v.data.id]?bridges?.signatureHeight(v.x,v.z):null)??relief.ground(v.x,v.z);
         const focus=v.data.focusAltitude??(base+v.height*.46);
@@ -1548,17 +1550,17 @@
       // Fit the facade on a narrow screen without backing the eye into a tree.
       const fixedView=car.sightView?.data.viewRadius;
       const tourFov=car.sightView?.data.viewFov??57;
-      const fov=fixedView?T.MathUtils.radToDeg(2*Math.atan(Math.tan(T.MathUtils.degToRad(tourFov/2))/Math.min(1,camera.aspect))):
+      const fov=fixedView?T.MathUtils.radToDeg(2*Math.atan(Math.tan(T.MathUtils.degToRad(tourFov/2))/Math.min(1,tourAspect))):
         (inside?64:car.openingPose?57+Math.min(15,speed*.28)-9*car.openingPose:car.showroom?47:57+Math.min(15,speed*.28))+driveFx.boostFov(car.driving&&car.boost,inside);
       if(Math.abs(fov-camera.fov)>.05){
         camera.fov=car.showroom||car.sightView?.data.views?fov:camera.fov+(fov-camera.fov)*(1-Math.exp(-dt*7));
         camera.updateProjectionMatrix();
       }
-      const viewport=car.sightView?.viewport;
       if(viewport){
-        const {width,height,shift}=viewport,v=camera.view;
-        if(!v?.enabled||v.fullWidth!==width||v.fullHeight!==height||v.offsetY!==shift)
-          camera.setViewOffset(width,height,0,shift,width,height);
+        const {width,height,top,visibleHeight}=viewport,v=camera.view,scale=height/visibleHeight;
+        const frameWidth=width*scale,frameHeight=height*scale;
+        if(!v?.enabled||v.fullWidth!==width||v.fullHeight!==height||v.height!==frameHeight||v.offsetY!==-top*scale)
+          camera.setViewOffset(width,height,(width-frameWidth)/2,-top*scale,frameWidth,frameHeight);
       }else if(camera.view?.enabled)camera.clearViewOffset();
       if(breakfast.update(car,dt))onBreakfastCall?.();
       atmosphere.setHour(car.sightView?.hour??car.scenicHour);

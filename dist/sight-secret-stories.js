@@ -3,6 +3,7 @@
 // Clues belong to the tour camera. The little scenes in the reveals are original
 // keepsakes inspired by the place, including the imagined voices and movements.
 window.sightSecretStories = {
+  'tuy-an-mang-lang-o-loan-hon-yen':['shell','Hai hòn ngoài bờ Nhơn Hội','Nhìn từ Mũi Yến ra biển, hòn nào nằm gần đất liền hơn?','Hòn Đụn thấp nằm gần bờ. Qua một khoảng nước nữa là khối Hòn Yến cao hơn, có những vách đá dốc.'],
   'vung-ro-ben-tau-khong-so':['sail','Mũi tàu trên sân lễ','Ở Bãi Chùa, hình gì nhô ra giữa hai bức phù điêu?','Một mũi tàu trắng mang hai mỏ neo. Phía trên có bánh lái và ngọn lửa đỏ.'],
   'ho-dambri-va-cau-chu-y':['drop','Chỗ rẽ giữa dòng','Hai lối cầu đi bộ gặp nhau dưới chân thác Đambri tạo thành hình chữ gì?','Cầu có hình chữ Y. Từ chỗ các nhánh gặp nhau có thể nhìn ngược dòng lên màn nước chính.'],
   'bien-ho-che-chua-buu-minh':['leaf','Con đường qua đồi chè','Từ loài cây nào bên đường có thể nhìn qua các luống chè trước khi tới chùa Bửu Minh?','Hai hàng thông cao vươn tán trên mặt đường. Ô chè bên đường có những luống thấp chạy gần vuông góc với hàng cây.'],
