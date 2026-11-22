@@ -380,7 +380,7 @@
     modeledBuildings:['w1556531234'],boundary:[[-8,-12],[8,-12],[8,12],[-8,12]],
     solids:[[0,7.55,7.6,3.5],[0,-8.55,7.7,3.2],[-6.72,-.55,1.15,5.15],[6.7,-.55,1.15,5.15],[0,-29.8,3.1,2.45]],
     arrivalNote:'Xe dừng ở ngõ phía đông của chùa. Ban Quản lý ghi nhận chùa quay hướng nam, gác chuông ở phía sau quay hướng bắc.',
-    shots:[['Các lớp mái Bảo Sơn tự',0,-.5,15.5,27,1.43,.45],['Tiền đường và đại tự trên nóc',0,8.0,8.9,9.3,1.05,.11],
+    shots:[['Các lớp mái Bảo Sơn tự',0,-.5,15.5,27,1.43,.45],['Tiền đường và đại tự trên nóc',0,8.0,8.8,14.7,-.51,.12],
       ['Gác chuông phía bắc',0,-29.8,7.9,12.7,Math.PI-.38,.135]],
     description:'Chùa ở ngay sau hậu cung đình. Tiền đường năm gian, hai dĩ nối với thượng điện thành hình chữ Đinh. Hai hành lang sáu gian dẫn về nhà Tổ, qua sân sau là gác chuông hai tầng.'},
   (T,kit)=>{
