@@ -3,6 +3,9 @@
 // Clues belong to the tour camera. The little scenes in the reveals are original
 // keepsakes inspired by the place, including the imagined voices and movements.
 window.sightSecretStories = {
+  'chua-thay-tay-phuong':['arch','Hai ngôi chùa xứ Đoài','Ở chùa Thầy và chùa Tây Phương, hai con đường dẫn người xem tới các tòa chùa khác nhau thế nào?','Chùa Thầy nhìn ra hồ Long Trì với thủy đình và hai cầu ngói. Đến Tây Phương, đường bậc đá ong lên đỉnh đồi dẫn tới ba tòa chùa song song.'],
+  'dinh-va-thac-bach-ma':['drop','Từ lầu ngắm tới dòng suối','Sau khi ngắm núi ở Hải Vọng Đài, nước hiện ra dưới những dạng nào trên tuyến?','Ở Ngũ Hồ, nước tụ trong các lòng hồ và tràn qua ghềnh đá. Tới Đỗ Quyên, dòng thác đổ xuống vách núi.'],
+  'dat-ngap-nuoc-tram-chim':['leaf','Nhìn Tràm Chim từ hai độ cao','Từ đài quan sát xuống bến khách, tầm mắt thay đổi ra sao?','Ở trên đài có thể nhìn qua tán tràm và các khoảng cỏ. Xuống gần mặt nước, bờ kênh và những thân tràm hai bên hiện rõ hơn.'],
   'cao-nguyen-da-dong-van':['ridge','Hai ngọn núi bên ruộng','Đứng ở đài ngắm Quản Bạ nhìn xuống, có thể nhận ra Núi Đôi bằng dáng nào?','Hai đỉnh tròn nhô lên sát nhau giữa cánh đồng. Đi tiếp về Đồng Văn, đá vôi còn hiện ra thành những mỏm nhọn ở Lũng Táo.'],
   'vuon-quoc-gia-cuc-phuong':['leaf','Dấu rừng trên đường tới Bống','Đi qua Hồ Mạc rồi theo đường rừng về Bống, những thân cây nào có tên riêng trên tuyến?','Cây Sấu cổ thụ và cây Chò ngàn năm là hai điểm dừng khác nhau. Từ các lối mòn có thể dừng lại quan sát gốc cây và tầng lá phía trên.'],
   'tuong-niem-dien-bien-phu':['ridge','Từ sân lễ lên đồi','Sau khoảng sân ở chân đồi D1, con đường tham quan dẫn tới đâu?','Từng vế bậc đưa người xem lên đỉnh đồi, nơi đặt tượng đài Chiến thắng. Quãng dừng ở Nghĩa trang liệt sĩ A1 dành để tưởng niệm.'],

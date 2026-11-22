@@ -55,6 +55,7 @@ function plan(text){
 function match(e,p,fuzzy){
   if(p.category&&e.kind!==p.category.kind&&!e.title.includes(' '+p.category.text+' ')&&!e.alias.includes(' '+p.category.text+' '))return -1;
   if(p.number&&!e.title.startsWith(' '+p.number+' ')&&e.name!==p.number)return -1;
+  if(e.catalogName&&(e.catalogName===p.original||e.catalogName===p.query))return 0;
   if(!p.tokens.length)return 1;
   if(e.name===p.original||(e.featured&&e.title.startsWith(' '+p.original+' ')))return 0;
   let inName=0,typos=0;
@@ -115,7 +116,9 @@ function search(input){
       if(!curated)for(const e of catalog)collect(e,true);
     }
   }
-  found.sort((a,b)=>(p.street?Number(b.e.kind==='road')-Number(a.e.kind==='road'):0)||a.rank-b.rank||(!p.category?Number(!!b.e.featured)-Number(!!a.e.featured):0)||a.km-b.km||a.e.label.localeCompare(b.e.label,'vi'));
+  found.sort((a,b)=>(p.street?Number(b.e.kind==='road')-Number(a.e.kind==='road'):0)||a.rank-b.rank||
+    (!p.near&&!p.category&&a.rank===0?Number(!!b.e.custom)-Number(!!a.e.custom):0)||
+    (!p.category?Number(!!b.e.featured)-Number(!!a.e.featured):0)||a.km-b.km||a.e.label.localeCompare(b.e.label,'vi'));
   const hits=found.slice(0,limit).map(({e,km,rank})=>({ref:e.ref,name:e.label||types[e.kind]?.[0],kind:types[e.kind]?.[0]||'Địa điểm',
     lon:e.lon,lat:e.lat,context:[e.locality,e.province].filter(Boolean).join(' · '),km,approx:rank===9}));
   postMessage({id:input.id,hits,total:found.length,near:p.near,anchor:anchorName,missingAnchor:!!p.anchor&&!anchorName,loading:needsCatalog&&!!loading,error:needsCatalog&&failure});
@@ -144,7 +147,8 @@ function prepare(){
 }
 onmessage=({data})=>{
   if(data.type==='extras'){
-    extras=data.entries.map(({row,id,custom,mountain,heritage,featured,region})=>Object.assign(makeEntry(row,id),{custom,mountain,heritage,featured,region}));
+    extras=data.entries.map(({row,id,custom,catalogName,mountain,heritage,featured,region})=>
+      Object.assign(makeEntry(row,id),{custom,catalogName:catalogName?fold(catalogName):null,mountain,heritage,featured,region}));
     if(latest)search(latest);
   }else if(data.type==='prepare'){prepare();}
   else if(data.type==='query'){

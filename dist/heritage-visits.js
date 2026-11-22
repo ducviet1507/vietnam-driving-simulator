@@ -2,6 +2,18 @@
 // Anchor a regional visit on an existing road arrival. Each stop keeps its own
 // coordinates and the camera can move out to an island while the car stays parked.
 const heritageVisits=[
+  ['chua-thay-tay-phuong','Chùa Thầy và chùa Tây Phương',[
+    'chua-thay-sai-son','thuy-dinh-ho-long-tri','osm-way-550537566','chua-cao-sai-son','chua-mot-mai-boi-am','chua-tay-phuong-thach-xa',
+  ]],
+  ['dinh-va-thac-bach-ma','Vườn quốc gia Bạch Mã – Hải Vọng Đài, Ngũ Hồ và Đỗ Quyên',[
+    'hai-vong-dai-bach-ma','ngu-ho-bach-ma','thac-do-quyen-bach-ma',
+  ]],
+  ['dat-ngap-nuoc-tram-chim','Vườn quốc gia Tràm Chim – bến khách và trạm C4',[
+    'osm-node-12647638907','osm-node-12647714579','osm-node-12647715610','osm-node-4416131389','osm-node-12647689080',
+  ]],
+  ['rung-va-bau-cat-tien','Vườn quốc gia Cát Tiên – từ Bến Cự đến Bàu Sấu',[
+    'ghenh-ben-cu-cat-tien','cay-go-bac-dong','cay-tung-duong-bau-sau','dai-quan-sat-bau-sau','osm-way-141722682',
+  ]],
   ['cao-nguyen-da-dong-van','Cao nguyên đá Đồng Văn',[
     'dai-ngam-nui-doi-quan-ba','nui-doi-quan-ba','dong-lung-khuy','dinh-thu-ho-vuong',
     'rung-da-lung-tao','lung-cu','pho-co-dong-van','cho-co-dong-van',

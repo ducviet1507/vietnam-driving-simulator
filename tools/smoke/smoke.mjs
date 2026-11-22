@@ -275,6 +275,9 @@ try {
     });
     assert.deepEqual(invalidPacks,[],'Regional model registrations must match their Atlas entries');
     console.log('PASS nationwide Atlas search and regional model loading');
+    await page.locator('#tourFilter').selectOption('all');
+    await page.locator('#findPlace').fill('Chùa Tây Phương');
+    await page.waitForFunction(()=>document.querySelector('#places button')?.textContent.includes('Chùa Tây Phương – Thạch Xá'));
     await page.locator('#findPlace').fill('');
     await page.locator('#tourFilter').selectOption('heritage');
     const routes=page.locator('#places button');

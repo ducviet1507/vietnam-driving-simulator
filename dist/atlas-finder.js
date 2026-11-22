@@ -39,9 +39,10 @@ function createAtlasFinder({entries,onResults,onLoading}){
           const rows=entries();refs=rows.map(item=>item.place);
           worker.postMessage({type:'extras',entries:rows.map(({place,context,featured},i)=>{
             const s=place[3],name=s?.name||place[0];
+            const mappedName=s?.custom&&s.catalogId?VietnamTourism.byId.get(s.catalogId)?.name:null;
             return {row:[name,s?.islands?'archipelago':s?.km?'road':featured?'town':'attraction',Math.round((s?.lon??place[1])*1e5),
               Math.round((s?.lat??place[2])*1e5),s?.locality||'',s?.province||s?.city||'',context||''],
-              id:i,custom:!!s?.custom,mountain:!!s?.km,heritage:!!s?.stops,region:s?.region,featured:!!featured};
+              id:i,custom:!!s?.custom,catalogName:mappedName!==name?mappedName:undefined,mountain:!!s?.km,heritage:!!s?.stops,region:s?.region,featured:!!featured};
           })});sourceVersion=version;
         }
         worker.postMessage({type:'query',id,text,filter,center,limit});
