@@ -25,17 +25,14 @@ function createVietnamRelief(T,scene,compact,landscapes,tunnelCut,landWidth,cave
       `#ifdef USE_FOG
         float haze=.17+.79*(1.-exp(-horizonDistance*.00009));
         #ifdef FOG_EXP2
-          if(altitude<5.){
-            // The near water uses scene fog. Match it across the 1 km terrain
-            // seam, using surveyed water wherever there is imagery coverage.
-            // Beyond the surveys, only dark, near-sea-level terrain qualifies.
-            float water=1.-smoothstep(.018,.070,dot(sampledDiffuseColor.rgb,vec3(.2126,.7152,.0722)));
-            if(sightEnabled>.5 && all(greaterThan(sightUV,vec2(0.))) && all(lessThan(sightUV,vec2(1.)))){
-              vec2 uv=vec2(sightUV.x,1.-sightUV.y);
-              water=mix(water,texture2D(sightWater,uv).a,texture2D(sightImage,uv).a);
-            }
+          if(altitude<5. || sightMappedWater>0.){
+            // The same water continues beyond the near mesh at both sea level
+            // and upland lakes. Only the fallback ocean estimate uses altitude.
+            float ocean=(1.-smoothstep(.5,5.,altitude))*(1.-smoothstep(.018,.070,dot(sampledDiffuseColor.rgb,vec3(.2126,.7152,.0722))));
+            float water=mix(ocean,sightMappedWater,sightCoverage);
+            gl_FragColor.rgb=mix(gl_FragColor.rgb,${sightOpenWaterColour},sightMappedWater);
             float waterHaze=1.-exp(-fogDensity*fogDensity*vFogDepth*vFogDepth);
-            haze=mix(haze,max(haze,waterHaze),water*(1.-smoothstep(.5,5.,altitude)));
+            haze=mix(haze,max(haze,waterHaze),water);
           }
         #endif
         gl_FragColor.rgb=mix(gl_FragColor.rgb,fogColor,haze);

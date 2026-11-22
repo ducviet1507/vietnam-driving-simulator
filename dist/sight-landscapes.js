@@ -45,6 +45,8 @@ function sightRasterPages(base,grid,extensions){
     return found?.ready?found:found?.previous||null;
   }};
 }
+// In the output colour space, distant open water takes its light from the sky.
+const sightOpenWaterColour='fogColor*vec3(.36,.54,.59)';
 function createSightLandscapes(T){
   const grid=32,size=96,side=3*size;
   const coarse=sightRasterPages('sight-landscapes/',grid,['.webp','.surface.webp','-water.png']);
@@ -155,6 +157,7 @@ function createSightLandscapes(T){
   }
   front=createView();
   const uniforms=Object.fromEntries(Object.entries(front.uniforms).map(([key,u])=>[key,{value:u.value}]));
+  const waterDistrict={value:new T.Vector3()};
   async function load(graph,x,z){
     return (await Promise.all([coarse.load(graph,x,z),fine.load(graph,x,z),supplement.load(graph,x,z)])).some(Boolean);
   }
@@ -163,22 +166,48 @@ function createSightLandscapes(T){
     shader.fragmentShader='uniform sampler2D sightImage; uniform sampler2D sightWater; uniform vec4 sightBounds; uniform float sightEnabled;\n'+
       shader.fragmentShader.replace('#include <color_fragment>',`#include <color_fragment>
       vec2 sightUV=(${position}-sightBounds.xy)*sightBounds.zw;
+      float sightCoverage=0.,sightMappedWater=0.;
       if(sightEnabled>.5 && all(greaterThan(sightUV,vec2(0.))) && all(lessThan(sightUV,vec2(1.)))){
         vec4 observed=texture2D(sightImage,vec2(sightUV.x,1.-sightUV.y));
         float fineGrain=clamp(dot(diffuseColor.rgb,vec3(.21,.72,.07))*3.8,.60,1.34);
         diffuseColor.rgb=mix(diffuseColor.rgb,observed.rgb*fineGrain,.86*observed.a*(${exposure}));
-        float sea=texture2D(sightWater,vec2(sightUV.x,1.-sightUV.y)).a;
-        diffuseColor.rgb=mix(diffuseColor.rgb,vec3(.049,.13,.145)+observed.rgb*.10,.91*sea*(${exposure}));
+        sightCoverage=observed.a;
+        sightMappedWater=texture2D(sightWater,vec2(sightUV.x,1.-sightUV.y)).a;
+        diffuseColor.rgb=mix(diffuseColor.rgb,vec3(.049,.13,.145)+observed.rgb*.10,.91*sightMappedWater*(${exposure}));
       }`);
   }
   function prepare(graph){
     if(front.matches(graph))return front;
     spare??=createView();spare.setOrigin(graph);return spare;
   }
+  // A lake can extend beyond the generated water mesh. Use the surveyed mask
+  // on both sides of that boundary, and keep waves and reflections in the foreground.
+  function shadeWaterBoundary(shader,surface){
+    shader.uniforms.waterDistrict=waterDistrict;
+    const position=surface?'waterMetres':'groundMetres';
+    let declarations='uniform vec3 waterDistrict;\n';
+    if(surface){
+      for(const id of ['sightWater','sightBounds','sightEnabled'])shader.uniforms[id]=uniforms[id];
+      declarations+='uniform sampler2D sightWater; uniform vec4 sightBounds; uniform float sightEnabled;\n';
+    }
+    shader.fragmentShader=declarations+shader.fragmentShader.replace('#include <fog_fragment>',`
+      #ifdef USE_FOG
+        float districtRange=length(${position}-waterDistrict.xy)*waterDistrict.z;
+        float edgeBlend=smoothstep(.58,.96,districtRange);
+        if(edgeBlend>0.){
+          ${surface?`vec2 uv=(waterMetres-sightBounds.xy)*sightBounds.zw;
+          float sightMappedWater=0.;
+          if(sightEnabled>.5 && all(greaterThanEqual(uv,vec2(0.))) && all(lessThanEqual(uv,vec2(1.))))
+            sightMappedWater=texture2D(sightWater,vec2(uv.x,1.-uv.y)).a;`:''}
+          gl_FragColor.rgb=mix(gl_FragColor.rgb,${sightOpenWaterColour},edgeBlend*sightMappedWater);
+        }
+      #endif
+      #include <fog_fragment>`);
+  }
   function activate(view){
     if(front===view)return;
     spare=front;front=view;
     for(const key of Object.keys(uniforms))uniforms[key].value=view.uniforms[key].value;
   }
-  return {load,shade,prepare,activate};
+  return {load,shade,shadeWaterBoundary,prepare,activate,setWaterDistrict(x,z,radius){waterDistrict.value.set(x,z,1/radius);}};
 }

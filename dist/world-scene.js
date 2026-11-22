@@ -174,7 +174,7 @@
           '#include <begin_vertex>\n groundMetres=vec2(position.x,-position.y)+landOrigin; bankWet=shoreSediment;');
         shader.fragmentShader='varying vec2 groundMetres; varying float bankWet; uniform sampler2D shoreEarth;\n'+shader.fragmentShader.replace('#include <map_fragment>',
           '#include <map_fragment>\n float patchiness=sin(dot(groundMetres,vec2(.035,.019)))+.55*cos(dot(groundMetres,vec2(-.015,.047))); diffuseColor.rgb*=vec3(.96,.98,.95)+patchiness*vec3(.08,.035,.05); vec3 silt=texture2D(shoreEarth,groundMetres*.58).rgb; float bank=clamp(bankWet+(silt.g-.17)*.7,0.,1.)*smoothstep(0.,.2,bankWet); diffuseColor.rgb=mix(diffuseColor.rgb,silt*mix(vec3(.84,.78,.66),vec3(.34,.31,.25),bankWet),bank);');
-        coverMap.shade(shader);landscapeSource.shade(shader);groundSource.shade(shader);
+        coverMap.shade(shader);landscapeSource.shade(shader);landscapeSource.shadeWaterBoundary(shader,false);groundSource.shade(shader);
         relief.passSurface.shade(shader,'groundMetres','(.40+.46*smoothstep(35.,450.,length(vViewPosition)))*(1.-bankWet)');
         tunnelCut.shade(shader,'groundMetres');caveOpenings.shade(shader);
         // The satellite texels span several metres. Restore ground-scale contrast
@@ -192,7 +192,8 @@
     const waterSurface=createDrivingWater(T,true);
     const shadeWater=waterSurface.material.onBeforeCompile;
     waterSurface.material.onBeforeCompile=function(shader,renderer){
-      shadeWater.call(this,shader,renderer);tunnelCut.shade(shader,'waterMetres');caveOpenings.shade(shader);
+      shadeWater.call(this,shader,renderer);landscapeSource.shadeWaterBoundary(shader,true);
+      tunnelCut.shade(shader,'waterMetres');caveOpenings.shade(shader);
     };
     surfaces.weatheredAsphalt(material.asphalt,atmosphere.wetness,asphaltOrigin,waterSurface.reflection);
     for(const finish of [...Object.values(material),meadow,upland,waterSurface.material])atmosphere.registerFinish(finish);
@@ -1162,6 +1163,7 @@
       activate({land,district,grounds,landmarks,roadGroup,shorePatch,groundAt,bridges,tunnels,obstacleCells,waterAt,
         nearbyWaterLevel,sceneGraph:graph,originX:cx,originZ:cz,treeBatches,streetBulbs});
       committed=true;districtRadius=cutoff;nextLightCheck=0;asphaltOrigin.set(cx,cz);landOrigin.set(gx,gz);
+      landscapeSource.setWaterDistrict(cx,cz,cutoff);
       if(graph)atmosphere.setLocation(...graph.geo(cx,cz));
       landscapeSource.activate(landscapes);relief.activate(terrain,cx,cz);tunnelCut.update(graph,tunnels,cx,cz);showCover();
       if(fieldPixels)waterSurface.setField(fieldPixels,maskSize,maskX,maskZ,maskScale,cx,cz);

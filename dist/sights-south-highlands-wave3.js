@@ -177,53 +177,158 @@
     A.plaque(T, kit, 'TRẦN HƯNG ĐẠO - QUY NHƠN', 0, 2.75, 4.9, 7.6, 0.92, { bg: '#5a221b', fg: '#f8e084' });
   }
 
-  // 6. Biệt điện Bảo Đại (Buôn Ma Thuột, Đắk Lắk) — 1926 Central Highlands Êđê longhouse-inspired royal stilt villa
+  // Residence at 2 Y Ngông. OSM w242705749 sets the footprint and two
+  // projecting southern gables. VR360 node5 shows the straight southern
+  // stair; the garden elevation has a polygonal bay and paired side stairs.
   function bietDienBaoDaiBmt(T, kit) {
-    const { box, stamp, round } = kit;
-    const cream = 0xeee4ce, timber = 0x5c3620, roof = 0x8f3f2b, stone = 0x8e877c, shutter = 0x264a38;
-    kit.palette({plaster: cream, timber: [timber, shutter], stone});
-
-    // Shaded basalt-earth courtyard & wide ceremonial garden walk
-    box(0x8e7c64, 0, 0.14, 0.5, 34, 0.28, 22);
-
-    // Signature elevated stilt undercroft inspired by Êđê longhouses (nhà sàn Tây Nguyên)!
-    for (let i = -5; i <= 5; i++) {
-      for (const pz of [-5.2, -1.8, 1.8, 5.2]) {
-        box(stone, i * 2.55, 1.15, pz, 0.62, 2.2, 0.62);
+    const {box,stamp,round,outline}=kit;
+    const plaster=0xd9ad62,cream=0xe8d9ad,stone=0x676662,wood=0x604036,tiles=0x73584a;
+    const glass=0x394044,paving=0xa59c87,shutters=0x6c4639,hedge=0x536c43;
+    kit.palette({plaster:[plaster,cream],stone:[stone,paving],timber:[wood,shutters],tile:tiles});
+    // The raised garden terrace covers approximately 2,136 square metres.
+    box(stone,0,.60,0,61,1.65,35);
+    box(paving,0,1.43,0,61,.12,35);
+    const terrace=1.49,deck=3.87,eaves=7.68;
+    // The local elevation raster slopes noticeably west across the terrace.
+    // Join the retaining wall to the surrounding garden instead of extending
+    // a tall vertical foundation all the way down to the sampled terrain.
+    const skirt=[],border=[],indices=[];
+    for(const [ax,az,bx,bz,nx,nz] of [
+      [-30.5,17.5,30.5,17.5,0,1],[30.5,17.5,30.5,-17.5,1,0],
+      [30.5,-17.5,-30.5,-17.5,0,-1],[-30.5,-17.5,-30.5,17.5,-1,0]]){
+      const count=Math.ceil(Math.hypot(bx-ax,bz-az)/3);
+      for(let i=0;i<=count;i++){
+        const t=i/count,x=ax+(bx-ax)*t,z=az+(bz-az)*t;
+        const corner=i===0||i===count,spread=7.5;
+        const ox=x+(nx||(corner?Math.sign(x):0))*spread;
+        const oz=z+(nz||(corner?Math.sign(z):0))*spread;
+        const index=border.length;
+        border.push([x,z,true],[ox,oz,false]);skirt.push(x,0,z,ox,0,oz);
+        if(i)indices.push(index-2,index,index-1,index-1,index,index+1);
       }
     }
-    // Timber floor deck slab & grand sweeping double central front staircase
-    box(timber, 0, 2.38, 0, 27.6, 0.45, 11.8);
-    A.steps(kit, 0, 7.2, 6.2, 2.6, 6, 0.38, 0.44, stone);
-    for (const s of [-1, 1]) {
-      box(cream, s * 3.25, 1.55, 7.4, 0.35, 1.8, 3.2);
-    }
-
-    // Long horizontal colonial-highlands royal pavilion body with wraparound wooden veranda
-    box(cream, 0, 4.75, -0.4, 24.4, 4.4, 8.8);
-    for (let i = -5; i <= 5; i++) {
-      const px = i * 2.4;
-      stamp(round, timber, px, 4.7, 5.45, 0.17, 4.4, 0.17);
-      if (i < 5) {
-        box(0x28363c, (i + 0.5) * 2.4, 4.75, 4.05, 1.32, 2.65, 0.14);
-        for (const sf of [-1, 1]) box(shutter, (i + 0.5) * 2.4 + sf * 0.78, 4.75, 4.12, 0.30, 2.6, 0.08);
+    const apron=new T.BufferGeometry(),groundPositions=new T.Float32BufferAttribute(skirt,3);
+    apron.setAttribute('position',groundPositions);apron.setIndex(indices);
+    apron.setAttribute('uv',new T.Float32BufferAttribute(border.flatMap(([x,z])=>[x/6,z/6]),2));
+    const turf=typeof document==='undefined'?null:new T.TextureLoader().load('streetscape/surfaces/meadow-color.webp');
+    if(turf){turf.colorSpace=T.SRGBColorSpace;turf.wrapS=turf.wrapT=T.RepeatWrapping;}
+    const grass=new T.Mesh(apron,new T.MeshLambertMaterial({color:turf?0xadb39a:0x758069,map:turf,side:T.DoubleSide}));
+    grass.receiveShadow=true;kit.group.add(grass);
+    kit.group.userData.fitGround=ground=>{
+      let changed=!apron.hasAttribute('normal');
+      for(const [i,[x,z,inner]] of border.entries()){
+        const bed=ground(x,z);
+        const y=inner?Math.max(-.26,Math.min(terrace-.06,bed+.14)):bed+.035;
+        if(Math.abs(y-groundPositions.getY(i))>.002){groundPositions.setY(i,y);changed=true;}
+      }
+      if(changed){groundPositions.needsUpdate=true;apron.computeVertexNormals();apron.computeBoundingSphere();}
+    };
+    function stairs(x,z,direction,top,bottom,count,width){
+      for(let i=0;i<count;i++){
+        const high=top-(i+.5)*(top-bottom)/count;
+        box(paving,x,(high+bottom)/2,z+direction*(i+.5)*.30,width,high-bottom,.32);
       }
     }
-    // Wooden veranda balustrade along the entire longhouse front
-    box(timber, -7.8, 3.15, 5.45, 10.6, 0.92, 0.16);
-    box(timber, 7.8, 3.15, 5.45, 10.6, 0.92, 0.16);
-
-    // Sweeping wide overhanging red-tile hip roof sheltering the entire veranda
-    A.curvedRoof(T, kit, 0, 6.95, 0, 29.4, 13.8, 3.4, roof, cream, 0xcba152, 0.36);
-
-    A.plaque(T, kit, 'BIỆT ĐIỆN BẢO ĐẠI', 0, 6.55, 5.65, 5.6, 0.78, { bg: '#5a2b1c', fg: '#f8e084' });
-    // Iconic ancient towering Buôn Ma Thuột shade trees (Cây Long Não cổ thụ!)
-    A.trees(T, kit, [
-      { x: -15.4, z: 6.4, h: 11.4, kind: 'banyan' },
-      { x: 15.4, z: 6.4, h: 11.8, kind: 'banyan' },
-      { x: -14.8, z: -7.8, h: 10.8, kind: 'banyan' },
-      { x: 14.8, z: -7.8, h: 11.0, kind: 'banyan' }
-    ]);
+    function rail(x,z,width,level){
+      for(const h of [.27,.55,.83])box(h===.83?wood:cream,x,level+h,z,width,.105,.13);
+      for(const end of [-1,1])box(cream,x+end*width/2,level+.43,z,.18,.87,.18);
+    }
+    function shuttered(x,z,level,width=1.46,height=1.77){
+      const s=Math.sign(z);
+      box(cream,x,level,z,width+.22,height+.18,.15);
+      box(wood,x,level,z+s*.09,width,height,.12);
+      box(glass,x,level,z+s*.17,width-.15,height-.18,.06);
+      box(wood,x,level,z+s*.22,.065,height,.045);
+      for(const k of [-1,1]){
+        box(shutters,x+k*width*.67,level,z+s*.10,width*.28,height,.13);
+        for(const h of [-.48,0,.48])box(wood,x+k*width*.67,level+h,z+s*.18,width*.28,.045,.04);
+      }
+    }
+    // Hip the ends of the long east–west roof. Each cross gable has a
+    // separate ridge and the pale framing seen at both ends.
+    function hip(x,z,y,w,d,h){
+      const a=w/2,b=d/2,r=Math.max(.18,a-b*.78);
+      const verts=[[-a,0,b],[a,0,b],[a,0,-b],[-a,0,-b],[-r,h,0],[r,h,0]];
+      const ids=[0,1,5,0,5,4,1,2,5,2,3,4,2,4,5,3,0,4];
+      const geom=new T.BufferGeometry();
+      geom.setAttribute('position',new T.Float32BufferAttribute(ids.flatMap(i=>verts[i]),3));
+      geom.computeVertexNormals();stamp(geom,tiles,x,y,z);geom.dispose();
+      box(wood,x,y-.075,z,w,.15,d);box(0x9b8981,x,y+h,z,2*r,.13,.20);
+    }
+    box(stone,0,terrace+.93,-.84,51.1,1.86,7.9);
+    box(cream,0,deck-.24,-.35,51.1,.48,10.5);
+    box(plaster,0,(eaves+deck)/2,-1.22,51.1,eaves-deck,8.0);
+    hip(0,-.2,eaves,52.3,12.1,3.05);
+    for(const x of [-14.05,12.45]){
+      box(stone,x,(terrace+deck)/2,1.9,7.95,deck-terrace,13.5);
+      box(cream,x,deck-.12,1.9,8.15,.25,13.7);
+      box(plaster,x,(deck+eaves)/2,1.9,7.95,eaves-deck,13.5);
+      outline([[-3.98,0],[0,3.66],[3.98,0]],plaster,x,eaves,-5.85,14.56);
+      A.gabledRoof(T,kit,x,eaves,1.4,8.15,14.8,3.77,tiles,0x968677,{overhang:.38,thick:.19});
+      for(const [z,sign] of [[8.72,1],[-5.86,-1]]){
+        shuttered(x,z,5.76,2.3);
+        for(const dx of [-1.8,1.8]){
+          box(cream,x+dx,2.60,z+.06*sign,.93,.65,.12);
+          box(0x383732,x+dx,2.60,z+.14*sign,.78,.52,.08);
+        }
+        for(const dx of [-2,-1,0,1,2]){
+          const h=3.43-Math.abs(dx)*.92;
+          box(cream,x+dx,eaves+h/2,z+sign*.05,.09,h,.09);
+        }
+        for(const h of [.65,1.58,2.48])box(cream,x,eaves+h,z+sign*.09,Math.max(.25,7.4-h*2.18),.10,.08);
+      }
+    }
+    for(const x of [-22,-18.8,17.8,22.2]){
+      shuttered(x,2.86,5.77);
+      shuttered(x,-5.31,5.80);
+    }
+    // Recessed central veranda, open basement bays and its straight stair.
+    box(cream,-.45,deck-.08,4.55,18.55,.22,3.55);
+    box(0xdbcfb8,-.35,2.57,3.13,17.4,1.94,.20);
+    for(const x of [-7.5,3.55,7.0])box(wood,x,2.45,3.25,1.01,1.89,.12);
+    for(const x of [-9.05,-6.15,-2.55,2.1,5.6,8]){
+      box(plaster,x,(deck+terrace)/2,5.72,.46,deck-terrace,.48);
+      stamp(round,plaster,x,(deck+eaves)/2,5.72,.37,eaves-deck,.37);
+    }
+    for(const x of [-6.75,6.2])shuttered(x,2.84,5.65,1.15,1.55);
+    box(wood,-.1,5.34,2.89,3.24,2.94,.19);
+    for(const x of [-1.27,1.1])box(glass,x,5.36,3.01,.58,2.55,.08);
+    rail(-5.95,6.29,7.0,deck);rail(5.04,6.29,5.75,deck);
+    stairs(-.15,6.2,1,deck,terrace,13,4.45);
+    for(const s of [-1,1]){
+      A.strut(T,kit,wood,s*2.30-.15,deck+.92,6.22,s*2.30-.15,terrace+.92,10.17,.092);
+      for(const t of [0,.33,.66,1])box(plaster,s*2.30-.15,deck+(terrace-deck)*t+.46,6.22+3.95*t,.19,.92,.19);
+    }
+    for(const x of [-7,-3.6,0,3.6,7]){
+      box(plaster,x,8.68,3.41,.93,.76,.82);box(wood,x,8.72,3.88,.47,.42,.06);
+      hip(x,3.38,9.06,1.48,1.25,.38);
+    }
+    // The north bay of the OSM outline narrows to a short wall on the axis.
+    const bay=[[-6.2,-5.35],[-2.5,-9.05],[.9,-9.05],[5.4,-5.35]];
+    const roofGeom=new T.BufferGeometry(),roof=[];
+    for(let i=1;i<bay.length;i++){
+      const [x0,z0]=bay[i-1],[x1,z1]=bay[i];
+      const dx=x1-x0,dz=z1-z0,len=Math.hypot(dx,dz),yaw=-Math.atan2(dz,dx),mx=(x0+x1)/2,mz=(z0+z1)/2;
+      box(plaster,mx,(eaves+deck)/2,mz,len,eaves-deck,.24,yaw);
+      box(wood,mx+dz/len*.16,5.85,mz-dx/len*.16,len*.62,2.03,.12,yaw);
+      roof.push(x1,eaves,z1,x0,eaves,z0,-.65,eaves+2.48,-5.05);
+    }
+    roofGeom.setAttribute('position',new T.Float32BufferAttribute(roof,3));roofGeom.computeVertexNormals();stamp(roofGeom,tiles,0,0,0);roofGeom.dispose();
+    box(cream,-.75,deck-.13,-8.45,7.20,.25,2.45);rail(-.75,-9.60,7.08,deck);
+    for(const s of [-1,1]){
+      for(let i=0;i<12;i++){
+        const h=(12-i)*(deck-terrace)/12;
+        box(paving,-.75+s*(3.65+i*.32),terrace+h/2,-8.3,.34,h,2.34);
+      }
+      for(const h of [.25,.53,.85])
+        A.strut(T,kit,h===.85?wood:cream,-.75+s*3.55,deck+h,-9.42,-.75+s*7.48,terrace+h,-9.42,.077);
+      for(const t of [0,.5,1])box(plaster,-.75+s*(3.55+t*3.93),deck+(terrace-deck)*t+.42,-9.42,.2,.84,.2);
+    }
+    stairs(0,-17.5,-1,terrace,0,9,5.8);stairs(0,17.5,1,terrace,0,9,6.3);
+    for(const s of [-1,1]){
+      box(hedge,s*16.5,terrace+.48,-16.95,24.4,.96,.83);
+      A.trees(T,kit,[{x:s*25.9,z:13.9,h:14,kind:'banyan'},{x:s*29.8,z:-11,h:14.5,kind:'banyan'}]);
+    }
   }
 
   // 7. Chùa Thanh Lương (Tuy An, Đắk Lắk / Phú Yên) — Coral-stone & coconut-shell pagoda with Hồ Vô Cực emerging Quan Âm!
@@ -558,14 +663,18 @@
       build: tranHungDaoQuyNhon
     },
     {
-      id: 'biet-dien-bao-dai-bmt', name: 'Biệt điện Bảo Đại (Buôn Ma Thuột)', city: 'Buôn Ma Thuột', province: 'Đắk Lắk', region: 'Tây Nguyên',
-      lon: 108.042116, lat: 12.674553, start: [108.041329, 12.674355], yaw: -1.320,
-      width: 34, depth: 22,
-      solids: [[0, 0, 13.8, 6.2]],
-      description: 'Di tích lịch sử xây năm 1926 tại trung tâm Buôn Ma Thuột, kết hợp độc đáo kiến trúc nhà sàn dài Êđê Tây Nguyên với biệt thự Pháp cổ giữa vườn long não cổ thụ.',
-      photo: 'https://vhttdl.daklak.gov.vn/',
-      source: 'https://vhttdl.daklak.gov.vn/',
-      map: 'https://www.openstreetmap.org/?mlat=12.674553&mlon=108.042116#map=18/12.674553/108.042116',
+      id:'biet-dien-bao-dai-bmt',catalogId:'osm-way-242705749',name:'Biệt điện Bảo Đại (Buôn Ma Thuột)',city:'Buôn Ma Thuột',province:'Đắk Lắk',region:'Tây Nguyên',
+      lon: 108.042116, lat: 12.674553, start: [108.042115,12.67345], yaw: -.008,
+      width:61,depth:40,foundationAt:[9,0],gardenRadius:46,mappedEntrance:true,visitOnArrival:true,viewBase:'monument',
+      solids: [[0,-.8,25.5,4],[-14,1.9,4,6.7],[12.45,1.9,4,6.7]],
+      arrivalNote:'Xe dừng trên đường Y Ngông, tại cổng phía nam khuôn viên bảo tàng. Lối giữa hai hàng cây dẫn lên biệt điện.',
+      description:'Trong khuôn viên Bảo tàng Đắk Lắk, biệt điện nằm trên nền đất cao có kè đá. Từ năm 1926, tòa công sứ được xây dựng lại ở đây. Bảo Đại từng ở và làm việc trong tòa nhà.',
+      views:[{name:'Hai đầu hồi và hiên phía nam',offset:[0,3],height:9,viewAngle:-.11,viewRadius:44,viewElevation:.15},
+        {name:'Cầu thang giữa hai cánh nhà',offset:[-.15,6.4],height:8.8,viewAngle:.08,viewRadius:18.5,viewElevation:.07},
+        {name:'Sân vườn và sảnh đa giác phía bắc',offset:[-.5,-3],height:9,viewAngle:3.02,viewRadius:46,viewElevation:.13}],
+      photo:'https://vr360.com.vn/projects/ban-do-so-du-lich-daklak/#node5',
+      source:'https://daklak.gov.vn/dia-danh-di-tich-thang-canh/-/asset_publisher/bDngMUmMrWIw/content/biet-ien-bao-ai',
+      map:'https://www.openstreetmap.org/way/242705749',
       build: bietDienBaoDaiBmt
     },
     {

@@ -38,6 +38,36 @@
   atlas.aliases['osm-way-1228794103']='osm-relation-15805643';
   atlas.aliases['osm-node-1805807506']='osm-way-1244769154';
   const precincts={
+    // This old viewpoint is inland. Serve the eastern peninsula from the
+    // mapped service-road junction with Âu Cơ (n677443064), at Lắk Resort.
+    'osm-node-1765142229':{name:'Bờ đông nam hồ Lắk',locality:'Liên Sơn',kind:'Điểm ngắm cảnh',
+      lookout:{lon:108.1820713,lat:12.4125449,kind:'Điểm ngắm cảnh'},
+      start:[108.1824406,12.4132505],mappedEntrance:true,visitOnArrival:true,
+      source:'https://daklaktourist.com.vn/lak-resort/',
+      arrivalNote:'Xe dừng trên đường Âu Cơ, ở đầu lối vào Lắk Resort. Góc tham quan đưa tới bán đảo ở bờ đông nam hồ.',
+      views:[{name:'Từ sân ven bờ nhìn về vũng hồ',offset:[-5.4,15],height:2,viewAngle:2.796,viewRadius:16,viewElevation:.08,
+        description:'Góc nhìn từ khoảng sân bên nhà dài, hướng tây nam qua vũng nước ở bờ bán đảo.'},
+        {name:'Mặt nước phía nam bán đảo',offset:[206.2,149],height:2,viewAngle:-2.7,viewRadius:25,viewElevation:.08,
+          description:'Nhìn về phía đông nam từ lối dạo men bờ. Buôn Jun nằm ở phía bên kia vịnh, về hướng tây bắc.'}]},
+    // Keep the Atlas lake polygon at its centroid. The public viewpoint is on
+    // the western side of Buôn Jun's tip (n13654496501), beside the Y Jút landing.
+    'osm-relation-7074662':{locality:'Liên Sơn',lookout:{lon:108.1672437,lat:12.416416,kind:'Điểm ngắm cảnh'},
+      start:[108.1675773,12.4164342],mappedEntrance:true,visitOnArrival:true,source:'https://daklaktourist.com.vn/tour-ho-lak/',
+      description:'Mũi đất của buôn Jun nhô ra từ bờ nam hồ Lắk. Từ đây có thể nhìn qua mặt nước tới những dải đồi bao quanh lòng hồ.',
+      arrivalNote:'Xe dừng trên đường Y Jút gần bến buôn Jun. Điểm ngắm nằm ở mép tây mũi đất, cách chỗ dừng khoảng 36 m.',
+      views:[{name:'Từ mũi buôn Jun nhìn về tây bắc',offset:[-89,-140],height:3,viewAngle:.568,viewRadius:166,viewElevation:.026,
+        description:'Từ sát bờ, nhìn qua khoảng nước phía tây bắc buôn Jun tới đường chân đồi.'},
+        {name:'Mũi đất giữa hai phía mặt hồ',offset:[13,38],height:2.5,viewAngle:-2.62,viewRadius:213,viewElevation:.35,
+          description:'Góc cao từ mặt hồ nhìn về buôn Jun. Đường Y Jút đi dọc mũi đất, kết thúc ở bến phía bắc.'}]},
+    // w706543013 is the public ĐT.819 beside Kênh 79. World Bank SWLC ESIA
+    // fig. 3.5 marks the small canal compound 1.7 km southwest of this road.
+    'osm-relation-17189466':{locality:'Tân Hưng',start:[105.7210387,10.7871526],mappedEntrance:true,visitOnArrival:true,
+      source:'https://nbca.gov.vn/khu-du-tru-thien-nhien-lang-sen-long-an/',
+      arrivalNote:'Xe dừng trên ĐT.819, phía đông nam cầu Kênh Tỉnh, bên Kênh 79. Từ đây góc tham quan đưa tới rừng tràm và con mương cạnh trạm, cách khoảng 1,7 km theo đường thẳng.'},
+    // n4735572208 joins Âu Cơ to Nguyễn Huệ, the winding hill access (w52755113).
+    'osm-way-52823719':{name:'Biệt điện Bảo Đại bên hồ Lắk',kind:'Biệt điện',locality:'Liên Sơn',start:[108.1783988,12.4129976],mappedEntrance:true,visitOnArrival:true,
+      source:'https://daklaktourist.com.vn/tour-ho-lak/',
+      arrivalNote:'Xe dừng trên đường Âu Cơ ở chân dốc Nguyễn Huệ. Con đường uốn theo sườn đồi dẫn lên sân biệt điện nhìn xuống hồ Lắk.'},
     // Lê Văn Giáo meets the eastern entrance walk (w769479510) at n6466763187.
     'osm-way-1244769154':{locality:'Cao Lãnh',start:[105.63325,10.4467407],mappedEntrance:true,visitOnArrival:true,
       arrivalNote:'Xe dừng cạnh cổng phía đường Lê Văn Giáo. Đi bộ qua cổng mộ và hồ sen để tới nơi an nghỉ của cụ Phó bảng Nguyễn Sinh Sắc.'},
@@ -158,6 +188,25 @@
     [1504768248,'Đền Trung – Hùng Vương Tổ miếu','Phú Thọ','Hùng Sơn',105.3240986,21.3690193,105.322450,21.369750,189,'https://denhung.vn/tin-tuc/den-trung'],
   ];
   const existing = new Set(atlas.entries.map(site => site.id));
+  // The residence and provincial museum stand in the same grounds. w242705749
+  // is the residence itself, south of the museum building w239932350.
+  if(!existing.has('osm-way-242705749'))atlas.entries.push({
+    id:'osm-way-242705749',name:'Biệt điện Bảo Đại (Buôn Ma Thuột)',region:'Trung Bộ',province:'Đắk Lắk',city:'Buôn Ma Thuột',locality:'Buôn Ma Thuột',
+    kind:'Biệt điện',lon:108.042116,lat:12.674553,start:[108.042115,12.67345],approachMeters:122,mappedEntrance:true,visitOnArrival:true,
+    map:'https://www.openstreetmap.org/way/242705749',
+    source:'https://daklak.gov.vn/dia-danh-di-tich-thang-canh/-/asset_publisher/bDngMUmMrWIw/content/biet-ien-bao-ai',
+    arrivalNote:'Xe dừng trên đường Y Ngông, trước lối vào khuôn viên bảo tàng. Đi bộ theo lối giữa vườn cây đến biệt điện.'
+  });
+  // The provincial transport plan connects Y Jút to the Buôn Jun landing.
+  // Its last road segment (w779496939) meets the shore at the tip of the village.
+  if(!existing.has('dak-lak-ben-thuyen-buon-jun'))atlas.entries.push({
+    id:'dak-lak-ben-thuyen-buon-jun',name:'Bến thuyền độc mộc buôn Jun',region:'Trung Bộ',province:'Đắk Lắk',city:'Lắk',locality:'Buôn Jun',
+    kind:'Bến tàu',lon:108.1675231,lat:12.4165578,start:[108.1675773,12.4164342],approachMeters:15,mappedEntrance:true,visitOnArrival:true,
+    source:'https://ttthlak.gov.vn/tin-tuc/van-hoa-xa-hoi/doc-dao-le-cung-ben-thuyen-doc-moc-ho-lak-tai-buon-jun-thi-tran-lien-son',
+    map:'https://www.openstreetmap.org/way/779496939',
+    description:'Ở đầu bắc buôn Jun, đường Y Jút dẫn ra bến trên hồ Lắk. Người M’nông R’lâm từng dùng thuyền độc mộc để đánh cá, đi rẫy và qua lại giữa các buôn ven hồ.',
+    arrivalNote:'Xe dừng gần cuối đường Y Jút. Đi bộ khoảng 15 m ra mép nước ở đầu bến.'
+  });
   // The inscription faces the short southwestern court. The other main hall
   // across the roof ridge is the shrine of the Đặng family. The OSM pin
   // called Chùa Nam Phương lies outside the northern enclosure.

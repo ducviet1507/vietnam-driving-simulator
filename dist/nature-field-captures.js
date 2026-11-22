@@ -10,6 +10,10 @@ window.NatureFieldCaptures=(()=>{
     return [{name,url:'https://daklakvrtour.com/tour/'+tour+'/index.html',
       source:'https://daklakvrtour.com/'+page+'.html',credit:'Đắk Lắk – Phú Yên VR Tour',scope}];
   }
+  function dakLak(node,name,scope){
+    const url='https://vr360.com.vn/projects/ban-do-so-du-lich-daklak/#node'+node;
+    return {name,url,source:url,credit:'Bản đồ số du lịch tỉnh Đắk Lắk · VR360',scope};
+  }
   function video(name,id,credit,scope){
     return {name,url:'https://www.youtube-nocookie.com/embed/'+id,source:'https://www.youtube.com/watch?v='+id,credit,scope};
   }
@@ -27,6 +31,13 @@ window.NatureFieldCaptures=(()=>{
     return {name,source,credit:'Cổng thông tin điện tử Hồ Chí Minh',scope:scope+' Ảnh mở trong tab riêng.'};
   }
   return {
+    'biet-dien-bao-dai-bmt':[
+      dakLak(5,'Sân và cầu thang biệt điện','Từ sân phía nam nhìn lên hiên vàng giữa hai đầu hồi.'),
+      dakLak(6,'Hành lang trên hiên','Từ đầu cầu thang nhìn dọc hiên và qua cửa vào phòng trưng bày.'),
+      dakLak(13,'Phòng làm việc','Bàn gỗ đặt dưới chân dung, bên cạnh hai ghế bành và tủ trưng bày.'),
+      dakLak(16,'Phòng ngủ','Đứng giữa giường, tủ và các ghế gỗ trong phòng.'),
+      dakLak(26,'Hầm rượu','Xuống tầng dưới, có thể nhìn quanh căn hầm và những chiếc ché.')
+    ],
     'osm-way-1244769154':[
       dongThap('dongthap/nguyensinhsac','scene_kdtnss-canh-2-30m','Toàn cảnh làng Hòa An','Nhìn từ trên cao xuống khu cây xanh, các mái nhà và ao nước trong khu di tích.'),
       nguyenSinhSac('pano74','Bậc lên vòm mộ','Nhìn gần các bậc đá và mái vòm trắng che nơi an nghỉ của cụ Nguyễn Sinh Sắc.'),

@@ -37,6 +37,9 @@ GRAPHIC = re.compile(r"(?:^|[ _-])(logo|locator|brochure|floor plan|plan of|coat
 
 # Audited Commons file pages for sites without a specific upstream photograph.
 REVIEWED = {
+    "osm-way-242705749": "File:Biệt Điện Bảo Đại.jpg",
+    "osm-way-52823719": "File:Biet thu Bao Dai 1.JPG",
+    "osm-relation-17189466": "File:Rungtram 1.jpg",
     "dong-thap-lang-mo-truong-dinh": "File:Đền và mộ Trương Định.JPG",
     "osm-node-10608268024": "File:Tượng Trương Định.jpg",
     "osm-node-13518302230": "File:Làng hoa Tân Quy Đông.jpg",

@@ -37,6 +37,17 @@ const statue=VietnamTourism.entries.find(site=>site.id===statueId);
 const graveDistance=Math.hypot((grave.lon-statue.lon)*109500,(grave.lat-statue.lat)*110900);
 assert.ok(graveDistance>100&&graveDistance<200);
 const ids=new Set([...VietnamLandmarks.entries,...VietnamTourism.entries].map(s=>s.id));
+// The royal residences in Buôn Ma Thuột and at Lắk are separate buildings.
+// The provincial VR360 interior at 2 Y Ngông belongs to the city residence.
+const lakVisit=runInContext("heritageVisits.find(v=>v[0]==='ho-lak-buon-jun-biet-dien')[2]",context);
+const cityResidence='biet-dien-bao-dai-bmt',lakeResidence='osm-way-52823719';
+assert.ok(lakVisit.includes(lakeResidence)&&!lakVisit.includes(cityResidence));
+assert.ok(NatureFieldCaptures[cityResidence].some(scene=>scene.url.endsWith('#node13')));
+assert.ok(!(NatureFieldCaptures[lakeResidence]||[]).some(scene=>scene.url.includes('ban-do-so-du-lich-daklak')));
+const jun=VietnamTourism.entries.find(site=>site.id==='dak-lak-ben-thuyen-buon-jun');
+const eastShore=VietnamTourism.entries.find(site=>site.id==='osm-node-1765142229');
+assert.ok(lakVisit.includes(jun.id)&&lakVisit.includes(eastShore.id));
+assert.ok(jun.lon+.012<eastShore.lookout.lon,'The village landing is west of the resort peninsula');
 // Keep the two cross-province homonyms separate, and the Hương Sơn approach
 // at the coach station even when a direct link selects a stop up the mountain.
 const huongSon=runInContext("heritageVisits.find(v=>v[0]==='chua-huong-huong-son')[2]",context);
