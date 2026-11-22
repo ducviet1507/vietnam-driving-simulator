@@ -1303,8 +1303,10 @@ function renderPlaces(count,keepScroll=false){
    if(p[4])detail.textContent=[p[4].kind,p[4].context,atlasDistance(p[4].km)+' từ '+(p[4].anchor||'xe')].filter(Boolean).join(' · ');
    if(p===baSaoDrive)detail.textContent='Điểm xuất phát · Phường Tam Chúc · Ninh Bình (Hà Nam cũ)';
    if(filter==='model'&&p[3]?.custom){
-     const photo=document.createElement('img');photo.src='landmark-previews/'+encodeURIComponent(p[3].id)+'.webp';
-     photo.alt='';photo.width=84;photo.height=58;photo.loading='lazy';b.className='sightChoice';b.append(photo);
+     const photo=document.createElement('img');
+     photo.onerror=()=>{photo.remove();b.classList.remove('sightChoice');};
+     photo.alt='';photo.width=84;photo.height=58;photo.loading='lazy';
+     photo.src='landmark-previews/'+encodeURIComponent(p[3].id)+'.webp';b.className='sightChoice';b.append(photo);
      detail.textContent=[...new Set([p[3].surveyed?p[3].kind:p[3].city,p[3].province||p[3].region].filter(Boolean))].join(' · ');
    }
    b.append(title,detail);b.type='button';b.dataset.index=i;b.setAttribute('aria-pressed',String(samePlace(p,pendingPlace)));

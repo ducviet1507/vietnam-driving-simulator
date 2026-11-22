@@ -75,7 +75,13 @@
     }
     function paving(ring,tint){
       const s=new T.Shape(ring.map(([x,z])=>new T.Vector2(x,-z))),g=new T.ShapeGeometry(s);g.rotateX(-Math.PI/2);
-      const m=new T.Mesh(g,new T.MeshStandardMaterial({color:tint,roughness:1,side:T.DoubleSide}));
+      const surface=new T.MeshStandardMaterial({color:tint,roughness:1,side:T.DoubleSide});
+      surface.onBeforeCompile=s=>{
+        s.vertexShader='varying vec2 yardXZ;\n'+s.vertexShader.replace('#include <begin_vertex>','#include <begin_vertex>\nyardXZ=position.xz;');
+        s.fragmentShader='varying vec2 yardXZ;\n'+s.fragmentShader.replace('#include <color_fragment>',
+          '#include <color_fragment>\nvec2 p=yardXZ*5.;float grit=fract(sin(dot(floor(p),vec2(29.71,87.16)))*17371.41);diffuseColor.rgb*=.88+.12*sin(yardXZ.x*.43+sin(yardXZ.y*.71))+.14*(grit-.5)*(1.-smoothstep(.2,1.4,fwidth(p.x)+fwidth(p.y)));');
+      };
+      const m=new T.Mesh(g,surface);
       m.receiveShadow=true;k.group.add(m);surfaces.push([g,.10]);
     }
     function wetland(trees,grass){
@@ -170,7 +176,7 @@
     arrivalNote:townArrival+' Đi theo lối vào khoảng 40 m đến quầy vé.'},
     [['Cổng mái tranh và quầy vé',1,9.1,6.4,19,-1.64,.10],['Nhà mái tròn sau cổng',24.7,12.5,6.3,25,-1.99,.15]],(T,k)=>{
       const f=floodplain(T,k);k.palette({timber:[wood,rail],thatch,plaster:0xd6ceb3});
-      f.paving([[-12,6.9],[-2,6.5],[4.5,3.5],[10,-6.2],[21,-9],[34,-8.2],[43,-4.8],[48,4],[50,16.5],[47,25],[34,28],[17,28.2],[8.3,22.7],[3.7,15.4],[-12.5,14.7]],0xb9b2a1);
+      f.paving([[-22.1,7.1],[-2,6.5],[4.5,3.5],[10,-6.2],[21,-9],[34,-8.2],[43,-4.8],[48,4],[50,16.5],[47,25],[34,28],[17,28.2],[8.3,22.7],[3.7,15.4],[-22.6,14.2]],0x9b988b);
       f.wetland([[-8.6,-3.1,7.4],[-7.2,-12,8.6],[-5.1,-19,8.2],[-2.4,-13.5,6.6],[1.6,-15.9,9.1],[4.7,-9.8,7.3],[9,-14.4,8.8],[15,-16.8,9.7],[20,-17.5,7.7],[24,-20,8.3],[31,-14.2,7.6],[39,-14.5,8.8],[-7.3,24.6,6.6],[-5.6,30.6,7.8],[2.4,26.9,5.4],[9.7,30.9,8.6],[19.9,33.4,7.6],[27,35.7,9.4],[38.7,32.7,8.5]],[]);
       f.piece(0,10.5,-Math.PI/2,()=>{
         for(const x of [-4.23,4.23]){post(k,wood,x,0,-.2,5.18,.25);for(const side of [-1,1])beam(T,k,wood,[x,3.56,0],[x+side*1.02,4.9,0],.10);}
