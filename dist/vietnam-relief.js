@@ -6,13 +6,14 @@ function createVietnamRelief(T,scene,compact,landscapes,tunnelCut,landWidth,cave
   const urls='streetscape/surfaces/vietnam-',imagery=new T.TextureLoader().load(urls+'landcover.webp');
   imagery.colorSpace=T.SRGBColorSpace;
   const nearCentre={value:new T.Vector2()},eye={value:new T.Vector2()},anchor={value:new T.Vector2()};
+  const datum={value:0};
   const passSurface=createPassSurface(T);
   const mat=new T.MeshLambertMaterial({name:'Vietnam relief',map:imagery,side:T.DoubleSide,color:0xc9d5bc});
   mat.onBeforeCompile=shader=>{
-    shader.uniforms.terrainEye=eye;shader.uniforms.terrainAnchor=anchor;shader.uniforms.nearCentre=nearCentre;
-    shader.vertexShader='uniform vec2 terrainEye,terrainAnchor;varying float horizonDistance;varying vec2 canopy;\n'+shader.vertexShader.replace(
-      '#include <begin_vertex>', '#include <begin_vertex>\n canopy=terrainAnchor+position.xz; horizonDistance=distance(terrainEye,position.xz);');
-    shader.fragmentShader=`uniform vec2 nearCentre;varying float horizonDistance;
+    shader.uniforms.terrainEye=eye;shader.uniforms.terrainAnchor=anchor;shader.uniforms.nearCentre=nearCentre;shader.uniforms.terrainDatum=datum;
+    shader.vertexShader='uniform vec2 terrainEye,terrainAnchor;uniform float terrainDatum;varying float horizonDistance,altitude;varying vec2 canopy;\n'+shader.vertexShader.replace(
+      '#include <begin_vertex>', '#include <begin_vertex>\n canopy=terrainAnchor+position.xz; horizonDistance=distance(terrainEye,position.xz);altitude=position.y+.17+terrainDatum;');
+    shader.fragmentShader=`uniform vec2 nearCentre;varying float horizonDistance,altitude;
       varying vec2 canopy;
       float standHash(vec2 i){vec3 p=fract(vec3(i.xyx)*.1031);p+=dot(p,p.yzx+33.33);return fract((p.x+p.y)*p.z);}
       float standNoise(vec2 x){
@@ -21,7 +22,24 @@ function createVietnamRelief(T,scene,compact,landscapes,tunnelCut,landWidth,cave
       }\n`+shader.fragmentShader.replace('#include <map_fragment>',
       `#include <map_fragment>\n vec2 local=abs(canopy-nearCentre);if(max(local.x,local.y)<${(landWidth/2).toFixed(1)}) discard; float mottling=(standNoise(canopy*.028)-.5)*.46+(standNoise(canopy*.083)-.5)*.23; diffuseColor.rgb*=1.+mottling*(1.-smoothstep(3500.,11000.,horizonDistance));`)
       .replace('#include <fog_fragment>',
-      '#ifdef USE_FOG\n gl_FragColor.rgb=mix(gl_FragColor.rgb,fogColor,.17+.79*(1.-exp(-horizonDistance*.00009)));\n #endif');
+      `#ifdef USE_FOG
+        float haze=.17+.79*(1.-exp(-horizonDistance*.00009));
+        #ifdef FOG_EXP2
+          if(altitude<5.){
+            // The near water uses scene fog. Match it across the 1 km terrain
+            // seam, using surveyed water wherever there is imagery coverage.
+            // Beyond the surveys, only dark, near-sea-level terrain qualifies.
+            float water=1.-smoothstep(.018,.070,dot(sampledDiffuseColor.rgb,vec3(.2126,.7152,.0722)));
+            if(sightEnabled>.5 && all(greaterThan(sightUV,vec2(0.))) && all(lessThan(sightUV,vec2(1.)))){
+              vec2 uv=vec2(sightUV.x,1.-sightUV.y);
+              water=mix(water,texture2D(sightWater,uv).a,texture2D(sightImage,uv).a);
+            }
+            float waterHaze=1.-exp(-fogDensity*fogDensity*vFogDepth*vFogDepth);
+            haze=mix(haze,max(haze,waterHaze),water*(1.-smoothstep(.5,5.,altitude)));
+          }
+        #endif
+        gl_FragColor.rgb=mix(gl_FragColor.rgb,fogColor,haze);
+      #endif`);
     landscapes.shade(shader,'canopy','1.');
     passSurface.shade(shader,'canopy','.86');
     tunnelCut?.shade(shader,'canopy');
@@ -177,6 +195,7 @@ function createVietnamRelief(T,scene,compact,landscapes,tunnelCut,landWidth,cave
     return sampleTerrain(g,pass,view);
   }
   function activate(next,x,z){
+    datum.value=next.base;
     if(next!==terrain){
       terrain=next;graph=next.graph;activePass=next.pass;
       building=null;
