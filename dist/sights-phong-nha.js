@@ -79,22 +79,53 @@
       finish(T,kit,rock);
     });
 
-  // OSM w1416099207 enters the dry cave from the north. The first small
-  // flight and a fluted curtain distinguish it from the river mouth below.
+  // w1416099207 reaches the entrance from the north, then its mapped axis
+  // continues under the mountain. Only its outer 18.6 m sit on the surface.
+  function tienSonStairs(T,kit){
+    const count=49,spans=10,run=18.6,dx=-.60,angle=Math.atan2(dx,run);
+    const group=new T.Group(),pose=new T.Object3D(),up=new T.Vector3(0,1,0);
+    const blocks=new T.InstancedMesh(new T.BoxGeometry(),new T.MeshStandardMaterial({color:0xa49a87,roughness:.97}),count);
+    const rails=new T.InstancedMesh(new T.CylinderGeometry(1,1,1,8),new T.MeshStandardMaterial({color:0x736a5d,roughness:.77}),2*(2*spans+1));
+    for(const m of [blocks,rails]){m.castShadow=m.receiveShadow=true;group.add(m);}kit.group.add(group);
+    const fit=kit.group.userData.fitGround;
+    function update(ground){
+      const tread=t=>ground(dx*t,run*t)+1.41*(1-t)+.11*t;
+      for(let j=0;j<count;j++){
+        const t=(j+.5)/count,h=tread(t),riser=Math.max(.27,Math.abs(tread(j/count)-tread((j+1)/count))+.16);
+        pose.rotation.set(0,angle,0);pose.position.set(dx*t,h-riser/2,run*t);pose.scale.set(2.38,riser,Math.hypot(dx,run)/count+.016);pose.updateMatrix();blocks.setMatrixAt(j,pose.matrix);
+      }
+      let index=0;
+      function bar(a,b,r){
+        const axis=b.clone().sub(a);pose.position.copy(a).lerp(b,.5);pose.quaternion.setFromUnitVectors(up,axis.clone().normalize());
+        pose.scale.set(r,axis.length(),r);pose.updateMatrix();rails.setMatrixAt(index++,pose.matrix);
+      }
+      for(const side of [-1,1]){
+        let previous;
+        for(let j=0;j<=spans;j++){
+          const t=j/spans,p=new T.Vector3(dx*t+side*1.14,tread(t),run*t),q=p.clone().addScaledVector(up,.97);
+          bar(p,q,.045);if(previous)bar(previous,q,.052);previous=q;
+        }
+      }
+      for(const m of [blocks,rails]){m.instanceMatrix.needsUpdate=true;m.computeBoundingSphere();m.computeBoundingBox();}
+    }
+    update(()=>0);kit.group.userData.fitGround=ground=>{fit(ground);update(ground);};
+  }
+  const tienSections=[[0,0,4.6,4.8,1.38],[4,0,6.4,5.9,.8],[9,.4,7.8,7.1,.5],[18,1.4,7,6,.3]];
   register(3499399985,{source:park+'cave/dong-tien-son-1',yaw:Math.PI,width:30,depth:40,
-    shots:[['Bậc đá trước cửa động',0,0,5.1,20,.16,.20],['Rèm nhũ đá',-1,-4,4.7,8,.18,.11]],
+    caveOpening:{sections:tienSections,approach:1.2},modeledStairWays:[1416099207],
+    shots:[['Bậc đá trước cửa động',0,0,6.5,18,.32,.12],['Rèm nhũ đá',-1.7,-4.7,9.6,6.55,.38,.075]],
     description:'Từ sườn núi, các bậc cấp dẫn vào động khô Tiên Sơn. Dưới trần hang, những nếp rèm và cột nhũ đá đón ánh sáng từ cửa động.'},
     (T,kit)=>{
       const rock=batch(T);
-      grotto(rock,[[0,0,4.6,4.8,1.38],[4,0,6.4,5.9,.8],[9,.4,7.8,7.1,.5],[18,1.4,7,6,.3]],15,12,1.9);
-      for(let i=0;i<13;i++){
-        const z=5.9-i*.47,h=.11*(i+1);
-        kit.box(0xaaa695,0,h/2,z,2.45,h,.49);
-      }
-      for(const side of [-1,1]){
-        for(let i=0;i<4;i++)kit.box(0x615b48,side*1.15,.59+.43*i,5.9-i*1.88,.075,.96,.075);
-        A.strut(T,kit,0x615b48,side*1.15,1.08,5.9,side*1.15,2.35,.26,.044);
-      }
+      grotto(rock,tienSections,15,12,1.9);
+      rock.grid(32,15,(u,v)=>{
+        const edge=Math.abs(2*u-1),z=-.62+4.3*v+.19*edge*Math.sin(12*u);
+        const apron=Math.min(1,Math.max(0,(z-1.1)/2.25)),x=(2*u-1)*(6.13-2.45*apron+.12*Math.cos(8*v));
+        const level=1.25*(1-apron)-.25*apron-.18*edge**2;
+        return [x,level+.045*Math.cos(x*3.2+z*.8),z,0xa39984,.71+.12*Math.cos(x*.7+z*.46)];
+      });
+      rock.grid(12,6,(u,v)=>[-6.6+u*16.1,-.65+v*7.3,-18.24,0x494339,.45]);
+      walkway(T,kit,[[0,-.25],[-.30,-3.1],[-.79,-8.1],[-1.43,-15.8]],1.56,1.45,0x866744);
       // Interleaved calcite curtains sag along their hem. Keep channels
       // between the folds so the close camera can see the warmer lining.
       for(let i=0;i<3;i++)rock.grid(64,10,(u,v)=>{
@@ -111,22 +142,45 @@
         });
       }
       for(let i=0;i<5;i++)boulder(rock,4+i*.45,0,-3+i*.68,.8,1.6+i*.27,.7,i);
-      finish(T,kit,rock);
+      finish(T,kit,rock,(ground,x,z)=>{
+        const margin=Math.min(1,Math.max(0,(Math.abs(x)-6.5)/8));
+        const approach=Math.min(1,Math.max(0,(z-1.2)/2.15));
+        return Math.max(margin,approach)*ground(x,z);
+      });
+      tienSonStairs(T,kit);
     });
 
-  register(5063396623,{source:park+'travel/tuyen-du-lich-song-chay-hang-toi5-en',yaw:Math.PI,width:42,depth:46,
-    shots:[['Lối gỗ ven Hang Tối',0,0,6.8,26,-.23,.19],['Mặt nước dưới vòm đá',.5,-1,5.2,12,.24,.12]],
+  const darkSections=[[0,0,7.1,8.2,-.40],[4,-.2,7.65,8.8,-.42],[10,-.9,7.35,8.3,-.44],[17,-2.2,6.6,7.1,-.45],[26,-4.1,5.9,6.8,-.47]];
+  const darkChannel=z=>.9+.17*Math.min(z,0)+.54*Math.sin(z*.16);
+  const darkWidth=z=>3.31+.39*Math.cos(z*.15)+.48*Math.sin(z*.30);
+  register(5063396623,{source:park+'du-lich/tuyen-du-lich-song-chay-hang-toi5',yaw:Math.PI,width:42,depth:57,
+    caveOpening:{sections:darkSections,approach:29},foundationAt:[0,3.4],
+    shots:[['Lối gỗ ven Hang Tối',-.55,-1.2,10.4,25,-.13,.14],['Từ vòm đá nhìn ra sông Chày',-.65,-3.4,9.7,15.3,-3.02,.045]],
     description:'Lối gỗ có lan can men theo một bên vách. Ánh sáng từ phía sông Chày soi rõ nước xanh và các mỏm đá sát cửa, rồi nhạt dần trong hang.'},
     (T,kit)=>{
       const rock=batch(T);
-      grotto(rock,[[0,0,6.8,6.9,0],[5,-.4,7.2,7,0],[11,-2,5.8,5.9,0],[19,-4,4.7,5.8,0]],20,17,4.1);
-      river(T,kit.group,[-18,21],z=>-1.2+.14*Math.min(z,0)+Math.sin(z*.14)*.55,z=>4.4+.85*Math.sin(z*.18));
-      walkway(T,kit,[[5.9,13],[4.6,6],[4.1,0],[3.1,-5],[2.5,-10]],1.22,1.1,0x81624c);
-      for(let i=0;i<17;i++){
-        const z=-5+kit.random()*23,sz=.4+kit.random()*1.2;
-        boulder(rock,-4-kit.random()*3,.03,z,sz*1.3,sz*1.4,sz,i,true);
+      grotto(rock,darkSections,22,20,4.1);
+      river(T,kit.group,[-25.9,35],darkChannel,darkWidth,false,23);
+      // Operator photographs look outward along the boardwalk, with the
+      // channel to the left and small limestone shelves under the timber.
+      walkway(T,kit,[[-3.9,19],[-2.65,12],[-3.07,7],[-4.23,1.3],[-4,-2.3],[-5.4,-7],[-5.9,-12],[-6.7,-16.7]],1.24,1.23,0x826b50);
+      for(const side of [-1,1])rock.grid(17,52,(u,t)=>{
+        const z=-24+t*60,centre=darkChannel(z),edge=darkWidth(z)-.65;
+        const w=z<0?5.7:10+z*.24,x=centre+side*(edge+u*w);
+        const ridge=(.65+.28*Math.sin(.67*z+side)+.28*Math.cos(.8*x+.19*z))*Math.min(1,u*5);
+        return [x,-.25+ridge+.07*Math.cos(z*.9+x*2.2),z,side<0?0x758065:0x8e927d,.68+.23*Math.cos(.6*x+z*.3)];
+      });
+      for(let i=0;i<40;i++){
+        const z=-13+kit.random()*42,sz=.31+kit.random()*.83,side=i%3?1:-1;
+        boulder(rock,darkChannel(z)+side*(darkWidth(z)+kit.random()*2.6),.21,z,sz*1.52,sz*.92,sz*1.33,i,true);
       }
-      finish(T,kit,rock);
+      for(const [x,z,r,h] of [[-7,1.5,1.55,2.5],[-6.3,5.9,1.38,1.7],[5.5,2.8,1.69,2.3],[6.6,8.3,2.45,3.7],
+        [6.4,13.9,1.65,2.5],[-6.8,12.1,1.84,2.6],[-6.1,18,1.53,1.9],[4.6,20.6,1.44,1.7]])boulder(rock,x,.15,z,r,h,r*1.18,z,true);
+      for(const [x,z,h] of [[-7.8,8.1,6.3],[8.3,9.7,7.5],[8.8,14.5,5.4],[-7.6,15.8,7.1],[-8.3,21.3,6.4],[7.5,22.9,8.1],[-9,28,8.4],[9.3,30.3,6.7]])rock.trees.push([x,.22,z,h*.77,h,z*.27]);
+      finish(T,kit,rock,(ground,x,z)=>{
+        const side=Math.abs(x-darkChannel(z)),t=Math.min(1,Math.max(0,(side-8.4)/11.5));
+        return .0019*Math.max(-26,Math.min(35,z))+t*t*(3-2*t)*ground(x,z);
+      });
     });
 
   register(5353612634,{source:park+'tin-tuc/hang-tam-co-khong-chi-la-mot-dia-danh-lich-su',yaw:-1.21,width:14,depth:12,
