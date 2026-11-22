@@ -14,6 +14,11 @@ window.NatureFieldCaptures=(()=>{
     const url='https://vr360.com.vn/projects/ban-do-so-du-lich-daklak/#node'+node;
     return {name,url,source:url,credit:'Bản đồ số du lịch tỉnh Đắk Lắk · VR360',scope};
   }
+  const vungRoBay=phuYen('Vịnh Vũng Rô từ trên cao','vung-ro',47,
+    'Nhìn từ bờ tây ra vịnh và các triền núi bao quanh. Chọn “Bè Nuôi Tôm- Cá” trong ảnh để hạ thấp góc nhìn xuống khu bè.');
+  function baiChua(name,scope){
+    return phuYen(name,'tau-khong-so',116,'Ảnh mở ở toàn cảnh Bãi Chùa. '+scope);
+  }
   function video(name,id,credit,scope){
     return {name,url:'https://www.youtube-nocookie.com/embed/'+id,source:'https://www.youtube.com/watch?v='+id,credit,scope};
   }
@@ -31,6 +36,11 @@ window.NatureFieldCaptures=(()=>{
     return {name,source,credit:'Cổng thông tin điện tử Hồ Chí Minh',scope:scope+' Ảnh mở trong tab riêng.'};
   }
   return {
+    'osm-node-11565227115':vungRoBay,
+    'osm-node-4472600793':vungRoBay,
+    'osm-node-4292019089':baiChua('Sân đài tưởng niệm ở Bãi Chùa','Chọn “Biểu Tượng Tàu Không Số” để tới sân lễ có tượng hình mũi tàu. Ảnh chụp khi sân đang dựng rạp.'),
+    'osm-node-12382639867':baiChua('Lối vào nhà tưởng niệm bên mép nước','Chọn “Di Tích”, rồi “Nhà Tưởng Niệm”. Từ sân gạch chọn “Vào Trong” để xem gian thờ.'),
+    'phu-yen-nha-trung-bay-vung-ro':baiChua('Sân và phòng trưng bày Bến Vũng Rô','Chọn “Nhà Trưng Bày” rồi “Vào Trong” để xem các tủ và tranh ảnh trong phòng.'),
     'osm-node-10314905409':[
       dakLak(41,'Cổng đình Lạc Giao','Nhìn từ mặt phố vào cổng và bức tường bao dưới tán cây.'),
       dakLak(39,'Sân trước chính điện','Từ sân lát gạch có thể nhìn bao quát chính điện, dãy nhà bên và cây cổ thụ.'),

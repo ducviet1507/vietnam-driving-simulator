@@ -680,7 +680,7 @@ function frame(now){
    if(mode!=='loading'&&roads&&!document.hidden&&now>=nextWeatherCheck){nextWeatherCheck=now+2000;gfx.weather.locate(...roads.geo(car.x,car.z));}
    car.driving=mode==='drive';car.showroom=mode==='grid';
    vehicleLook.update(dt);
-   if(mode!=='loading'&&mode!=='error'&&mode!=='map'&&!$('postcard').open&&!$('fieldDialog').open&&!document.hidden){
+   if(mode!=='loading'&&mode!=='error'&&mode!=='map'&&!$('postcard').open&&!$('fieldDialog').open&&!$('sightPhoto').open&&!document.hidden){
      // Keep steering against the displayed road until the next district is complete.
      // Look ahead at cruising speed so the next district starts building inside the overlap.
      const gap=gfx.districtDistance(car.x,car.z);

@@ -56,6 +56,17 @@ assert.deepEqual([...teaAvenue.start],[108.0121527,14.0635859]);
 const prison=VietnamLandmarks.entries.find(site=>site.catalogId==='osm-node-1730268393');
 assert.deepEqual([...prison.start],[108.0473086,12.6757888],'Use the Phạm Hồng Thái visitor entrance');
 assert.ok(NatureFieldCaptures[prison.catalogId].some(scene=>scene.url.endsWith('/tour/446/index.html')));
+// Bãi Chùa has two separate visitor buildings. The larger exhibition hall is
+// by the ceremony plaza; the smaller memorial hall stands along the shore.
+const exhibit=VietnamLandmarks.entries.find(site=>site.catalogId==='phu-yen-nha-trung-bay-vung-ro');
+const memorialHall=VietnamLandmarks.entries.find(site=>site.catalogId==='osm-node-12382639867');
+assert.ok(memorialHall.lon-exhibit.lon>.002 && memorialHall.lon-exhibit.lon<.0025);
+assert.deepEqual([...exhibit.start],[109.4191949,12.8776377]);
+assert.deepEqual([...memorialHall.start],[...exhibit.start]);
+const dambri=VietnamLandmarks.entries.filter(site=>site.catalogId==='osm-node-3093994368');
+assert.deepEqual(Array.from(dambri,site=>site.id),['thac-dambri'],'Only the surveyed waterfall should render');
+const upperDambri=VietnamTourism.entries.find(site=>site.id==='osm-node-3094058858');
+assert.deepEqual([...upperDambri.viewOf],['thac-dambri',1]);
 const eastShore=VietnamTourism.entries.find(site=>site.id==='osm-node-1765142229');
 assert.ok(lakVisit.includes(jun.id)&&lakVisit.includes(eastShore.id));
 assert.ok(jun.lon+.012<eastShore.lookout.lon,'The village landing is west of the resort peninsula');

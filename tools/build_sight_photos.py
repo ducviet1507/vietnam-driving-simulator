@@ -37,6 +37,9 @@ GRAPHIC = re.compile(r"(?:^|[ _-])(logo|locator|brochure|floor plan|plan of|coat
 
 # Audited Commons file pages for sites without a specific upstream photograph.
 REVIEWED = {
+    "osm-node-5439114923": "File:Pagoda in Vietnam (39983735052).jpg",
+    "osm-node-4472600793": "File:Vung Ro Bay 1.jpg",
+    "osm-node-11565227115": "File:Vịnh Vũng Rô.jpg",
     "osm-way-506959800": "File:Ho T'Nung (2).jpg",
     "osm-node-1730268393": "File:Buôn Ma Thuột - buildings at Exile House former prison Apr 2024 05.jpg",
     "osm-node-10314905409": "File:The Lac giao tabernacle.jpg",

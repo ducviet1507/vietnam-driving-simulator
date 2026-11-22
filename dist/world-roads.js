@@ -2,6 +2,9 @@
 // Pine avenue at Biển Hồ Chè (w741701067). The paved road is about 6.8 m
 // wide between the two earth shoulders. Use OSM junctions across tile splits.
 (globalThis.VietnamRoadWidths??=new Map()).set('6943315929:7799883179',3.4);
+// The lane outside Bửu Minh is about 5.1 m across at both gates, with earth
+// shoulders. Its tertiary classification alone would produce a much wider road.
+globalThis.VietnamRoadWidths.set('7650858866:7650873693',2.55);
 async function fetchMapTile(url){
  const response=await fetch(url);
  if(!response.ok)throw Error('Không tải được vùng bản đồ.');
@@ -36,7 +39,7 @@ class VietnamRoads {
    }
    if(length<.5)return null;
    const edge={id,start,end,name,kind,oneway:Boolean(oneway),points,dist,length,minX,minZ,maxX,maxZ,visitorRoad:this.visitorEdges.has(id)};
-   if(kind==='service'||kind==='residential')edge.authoredHalfWidth=globalThis.VietnamRoadWidths.get(Math.min(start,end)+':'+Math.max(start,end));
+   if(kind==='service'||kind==='residential'||kind==='tertiary')edge.authoredHalfWidth=globalThis.VietnamRoadWidths.get(Math.min(start,end)+':'+Math.max(start,end));
    return edge;
  }
  async tile(key){

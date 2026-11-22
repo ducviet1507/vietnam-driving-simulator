@@ -9,7 +9,8 @@ import {mkdir,mkdtemp,readFile,readdir,rename,rm,writeFile} from "node:fs/promis
 import {tmpdir} from "node:os";
 import {fileURLToPath} from "node:url";
 import path from "node:path";
-import {gzipSync} from "node:zlib";
+import {promisify} from "node:util";
+import {gzip,gunzipSync,gzipSync} from "node:zlib";
 
 const root = fileURLToPath(new URL("../", import.meta.url));
 const revision = execFileSync("git",["rev-parse","HEAD"],{cwd:root,encoding:"utf8"}).trim();
@@ -36,6 +37,18 @@ for (const name of ["my-son","my-son-g4","den-ngoc-son"]) {
   await rm(path.join(client,"landmark-scans",name+".glb"));
 }
 await Promise.all([packRoadAssets(client),prepareSightSurfaces(client)]);
+// Population and land-cover rasters are already gzip streams. Repack the
+// release copies at level 9 while preserving the exact sampled pixels.
+const environmentDir=path.join(client,"vn-environment");
+const environmentTiles=(await readdir(environmentDir)).filter(name=>name.endsWith(".gz"));
+const gzipAsync=promisify(gzip);
+for(let index=0;index<environmentTiles.length;index+=4){
+  await Promise.all(environmentTiles.slice(index,index+4).map(async name=>{
+    const file=path.join(environmentDir,name),source=await readFile(file);
+    const packed=await gzipAsync(gunzipSync(source),{level:9});
+    if(packed.length<source.length)await writeFile(file,packed);
+  }));
+}
 // The Worker serves the original bytes at each public URL.
 async function storeGzip(file) {
   await writeFile(file+".gz",gzipSync(await readFile(file),{level:9}));

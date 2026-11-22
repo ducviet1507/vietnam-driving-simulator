@@ -2,6 +2,15 @@
 // Anchor a regional visit on an existing road arrival. Each stop keeps its own
 // coordinates and the camera can move out to an island while the car stays parked.
 const heritageVisits=[
+  ['vung-ro-ben-tau-khong-so','Vũng Rô – từ sân tượng đài đến bến Tàu Không số',[
+    'osm-node-4292019089','phu-yen-nha-trung-bay-vung-ro','osm-node-12382639867','osm-node-4472600793',
+  ]],
+  ['ho-dambri-va-cau-chu-y','Đambri – từ hồ đến cầu chữ Y dưới thác',[
+    'osm-way-304773101','osm-node-3094058858','osm-node-3093994368',
+  ]],
+  ['bien-ho-che-chua-buu-minh','Biển Hồ Chè – hàng thông và chùa Bửu Minh',[
+    'osm-way-741701880','osm-node-5439114923',
+  ]],
   ['buon-ma-thuot-biet-dien-nha-day-dinh-lac-giao','Buôn Ma Thuột – biệt điện, Nhà đày và đình Lạc Giao',[
     'osm-way-242705749','osm-node-1730268393','osm-node-10314905409',
   ]],

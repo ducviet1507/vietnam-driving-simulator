@@ -3,6 +3,9 @@
 // Clues belong to the tour camera. The little scenes in the reveals are original
 // keepsakes inspired by the place, including the imagined voices and movements.
 window.sightSecretStories = {
+  'vung-ro-ben-tau-khong-so':['sail','Mũi tàu trên sân lễ','Ở Bãi Chùa, hình gì nhô ra giữa hai bức phù điêu?','Một mũi tàu trắng mang hai mỏ neo. Phía trên có bánh lái và ngọn lửa đỏ.'],
+  'ho-dambri-va-cau-chu-y':['drop','Chỗ rẽ giữa dòng','Hai lối cầu đi bộ gặp nhau dưới chân thác Đambri tạo thành hình chữ gì?','Cầu có hình chữ Y. Từ chỗ các nhánh gặp nhau có thể nhìn ngược dòng lên màn nước chính.'],
+  'bien-ho-che-chua-buu-minh':['leaf','Con đường qua đồi chè','Từ loài cây nào bên đường có thể nhìn qua các luống chè trước khi tới chùa Bửu Minh?','Hai hàng thông cao vươn tán trên mặt đường. Ô chè bên đường có những luống thấp chạy gần vuông góc với hàng cây.'],
   'buon-ma-thuot-biet-dien-nha-day-dinh-lac-giao':['arch','Sân đình giữa phố','Qua cổng đình Lạc Giao ở đường Điện Biên Phủ, bạn thấy gì dưới tán cây trước chính điện?','Bình phong và đôi hạc đứng trong sân gạch. Từ sân nhìn vào có thể thấy hai cột rồng đỡ mái hiên chính điện.'],
   'bien-ho-pleiku-mui-dau-rua':['lotus','Đài sen trên mũi đất','Ở đầu mũi Đầu Rùa, bộ phận nào nằm giữa thân tượng trắng và bệ tám cạnh?','Đó là đài sen cao 3 m. Từ lối đi quanh sân, có thể nhìn qua lan can xuống mặt hồ ở cả hai phía mũi đất.'],
   'ho-lak-buon-jun-biet-dien':['sail','Từ mũi buôn Jun','Con đường nào dẫn đến bến thuyền ở đầu mũi buôn Jun?','Đường Y Jút đi dọc mũi đất rồi gặp đường lát ven bờ. Từ đầu bến có thể nhìn qua lòng hồ tới những dải đồi xa.'],

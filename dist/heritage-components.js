@@ -37,7 +37,41 @@
   // The tower footprint and the park boundary lead to the same visitor tour.
   atlas.aliases['osm-way-1228794103']='osm-relation-15805643';
   atlas.aliases['osm-node-1805807506']='osm-way-1244769154';
+  const dambriEntrance=[107.7445308,11.6412412],vungRoEntrance=[109.4191949,12.8776377];
+  const dambriSource='https://www.dambri.com.vn/vi/tin-tuc/tin-tuc-damb-ri/mot-ngay-o-khu-du-lich-thac-damb-ri-381.html';
+  const baiChuaSource='https://daklakvrtour.com/tau-khong-so.html';
+  const vungRoBay={locality:'Vũng Rô',formerProvince:'Phú Yên',start:[109.414242,12.871188],mappedEntrance:true,visitOnArrival:true,
+    lookout:{lon:109.414301,lat:12.871245,kind:'Điểm ngắm cảnh'},source:'https://daklakvrtour.com/vung-ro.html',
+    arrivalNote:'Xe dừng trên đường ven bờ phía tây vịnh. Bãi Chùa, nơi có đài tưởng niệm và nhà trưng bày, nằm về phía đông bắc.',
+    views:[{name:'Nhìn ra vịnh từ bờ tây',offset:[109,24],height:7,viewAngle:-1.79,viewRadius:109,viewElevation:.048,
+      description:'Từ bờ tây nhìn qua khoảng nước về sườn núi bên kia vịnh.'},
+      {name:'Bờ vịnh nhìn về Bãi Chùa',offset:[370,-570],height:100,viewAngle:-.41,viewRadius:912,viewElevation:.105,viewFov:62,
+      description:'Từ phía tây vịnh nhìn về đông bắc, dọc theo bờ có Quốc lộ 29 đến khu di tích Bãi Chùa.'}]};
   const precincts={
+    'osm-node-4472600793':{...vungRoBay,name:'Điểm ngắm vịnh Vũng Rô từ bờ tây'},
+    'osm-node-11565227115':{...vungRoBay,name:'Vịnh Vũng Rô'},
+    'osm-node-4292019089':{name:'Di tích Bến tàu Không số Vũng Rô',locality:'Bãi Chùa',formerProvince:'Phú Yên',kind:'Di tích',
+      start:vungRoEntrance,mappedEntrance:true,visitOnArrival:true,source:baiChuaSource,
+      arrivalNote:'Xe dừng trên Quốc lộ 29, tại lối vào Bãi Chùa. Từ đó đi bộ qua sân lát tới đài tưởng niệm hình mũi tàu.'},
+    'osm-node-12382639867':{name:'Nhà tưởng niệm liệt sĩ Bến Vũng Rô',locality:'Bãi Chùa',formerProvince:'Phú Yên',kind:'Di tích',
+      start:vungRoEntrance,mappedEntrance:true,visitOnArrival:true,source:baiChuaSource,
+      arrivalNote:'Xe dừng ở lối vào Bãi Chùa trên Quốc lộ 29. Nhà tưởng niệm nằm ở đầu đông lối đi bộ ven nước.'},
+    'osm-node-5439114923':{name:'Chùa Bửu Minh',locality:'Biển Hồ',kind:'Chùa',searchNames:'Chùa Biển Hồ Trà, Chùa Phật Học, Chùa Biển Hồ Chè',
+      start:[108.0130060,14.0660780],mappedEntrance:true,visitOnArrival:true,
+      source:'https://chuabuuminh.vn/hinh-anh/nhiep-anh/7A5419_chua_buu_minh_tam_huyet_mot_doi_tu_.aspx',
+      arrivalNote:'Xe dừng bên đường trước tam quan mái ngói đỏ. Cổng gỗ có đôi voi nằm chếch về phía nam, cùng bên đường.'},
+    'osm-node-3093994368':{name:'Thác Đambri',locality:'Bảo Lộc',start:dambriEntrance,mappedEntrance:true,visitOnArrival:true,source:dambriSource,
+      arrivalNote:'Xe dừng ở đầu đường vào khu du lịch. Từ bãi đỗ bên trong, khách đi bộ xuống chân thác hoặc dùng thang máy.'},
+    'osm-way-1418616745':{name:'Khu du lịch thác Đambri',locality:'Bảo Lộc',start:dambriEntrance,mappedEntrance:true,visitOnArrival:true,source:dambriSource,
+      lookout:{lon:107.74275,lat:11.642035,kind:'Điểm ngắm cảnh'},viewOf:['thac-dambri',1],
+      arrivalNote:'Lối vào khu du lịch nằm ở phía đông. Thác Đambri ở phía bắc khuôn viên, còn hồ du lịch nằm về phía nam.'},
+    'osm-way-304773101':{name:'Hồ Đambri',locality:'Bảo Lộc',start:dambriEntrance,mappedEntrance:true,visitOnArrival:true,source:dambriSource,
+      lookout:{lon:107.7430902,lat:11.640799,kind:'Điểm ngắm cảnh'},
+      arrivalNote:'Xe dừng ở đầu đường vào khu du lịch. Từ đây, đường nội bộ men theo bờ bắc của hồ.',
+      views:[{name:'Mặt hồ từ bờ bắc',offset:[-22,81],height:6,viewAngle:2.876,viewRadius:84,viewElevation:.07,
+        description:'Nhìn về phía tây nam qua lòng hồ dùng cho các hoạt động chèo thuyền, đạp vịt.'},
+        {name:'Từ bờ bắc đến nhánh hồ phía nam',offset:[-8,98],height:5,viewAngle:-1.93,viewRadius:158,viewElevation:.47,
+          description:'Góc cao cho thấy lòng hồ ở phía bắc thu hẹp dần về phía nam.'}]},
     // The museum moved the visitor entrance to 27 Phạm Hồng Thái in 2022.
     // The older Atlas pin remains at the west wall, next to Tán Thuật.
     'osm-node-1730268393':{name:'Nhà đày Buôn Ma Thuột',kind:'Di tích',locality:'Buôn Ma Thuột',
@@ -217,6 +251,16 @@
     [1504768248,'Đền Trung – Hùng Vương Tổ miếu','Phú Thọ','Hùng Sơn',105.3240986,21.3690193,105.322450,21.369750,189,'https://denhung.vn/tin-tuc/den-trung'],
   ];
   const existing = new Set(atlas.entries.map(site => site.id));
+  if(!existing.has('phu-yen-nha-trung-bay-vung-ro'))atlas.entries.push({
+    id:'phu-yen-nha-trung-bay-vung-ro',name:'Nhà trưng bày Bến Vũng Rô',region:'Trung Bộ',province:'Đắk Lắk',formerProvince:'Phú Yên',city:'Đông Hòa',locality:'Bãi Chùa',kind:'Nhà trưng bày',
+    lon:109.419861,lat:12.877000,start:vungRoEntrance,approachMeters:101,mappedEntrance:true,visitOnArrival:true,source:baiChuaSource,
+    map:'https://www.openstreetmap.org/?mlat=12.877000&mlon=109.419861#map=19/12.877000/109.419861',
+    arrivalNote:'Xe dừng trên Quốc lộ 29 ở lối vào Bãi Chùa. Nhà trưng bày nằm phía nam sân tượng đài.'});
+  if(!existing.has('osm-node-3094058858'))atlas.entries.push({
+    id:'osm-node-3094058858',name:'Điểm ngắm phía trên thác Đambri',region:'Trung Bộ',province:'Lâm Đồng',locality:'Bảo Lộc',kind:'Điểm ngắm cảnh',
+    lon:107.7428354,lat:11.642191,start:dambriEntrance,approachMeters:213,mappedEntrance:true,visitOnArrival:true,source:dambriSource,
+    viewOf:['thac-dambri',1],map:'https://www.openstreetmap.org/node/3094058858',
+    arrivalNote:'Từ lối vào khu du lịch đi về khu thang máy để nhìn qua mép thác.'});
   // w741701880 is the named tea parcel. Its centroid marks the crop on the
   // map; the visit starts at the pull-off on the pine avenue w741701067.
   if(!existing.has('osm-way-741701880'))atlas.entries.push({
