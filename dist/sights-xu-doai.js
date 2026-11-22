@@ -8,8 +8,8 @@
   const boi='https://sovhtt.hanoi.gov.vn/di-tich-chua-mot-mai-noi-luu-dau-chan-nguoi/';
   const oldTile=0x796155,redTile=0x9d583e,stone=0x949088,wood=0x604737,plaster=0xc1b9a2;
   const grey=0x817e70,clay=0xad694e,pale=0xd3c9ad,iron=0x56544a;
-  const parking=[105.64332,21.02006]; // w1518755302, on the NW approach from the festival centre
-  const parkNote='Từ bãi xe của khu di tích Sài Sơn, đi bộ men hồ Long Trì đến sân trước chùa.';
+  const parking=[105.6435889,21.0197721]; // w550537571, the road beside the visitor car park (w1518755302).
+  const parkNote='Xe dừng trên đường cạnh bãi đỗ xe Chùa Thầy. Từ đây, đi bộ men hồ Long Trì đến sân trước chùa.';
   function site(catalogId,id,name,source,description,origin,extent,views,draw,settings={}){
     const pin=atlas.get(catalogId);
     if(!pin)throw Error('Thiếu địa điểm Xứ Đoài '+catalogId);
