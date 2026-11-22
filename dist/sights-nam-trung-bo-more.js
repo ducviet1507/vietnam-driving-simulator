@@ -289,13 +289,6 @@
     A.plaque(T, kit, 'CHIẾN THẮNG BUÔN MA THUỘT', 0, 2.2, 7.6, 6.2, 0.84, { bg: '#84231b', fg: '#f8da72' });
   }
 
-  // 10. Tháp Nhạn (Núi Nhạn, Tuy Hòa, Phú Yên / Đắk Lắk)
-  function thapNhanTuyHoa(T, kit) {
-    kit.box(0x887f72, 0, 0.42, 0, 18, 0.84, 18);
-    A.chamTower(T, kit, 0, 0, { w: 8.6, h: 23.5, tiers: 4, brick: 0xa84e34, darkBrick: 0x863b26, sandstone: 0xcab898 });
-    A.trees(T, kit, [{ x: -10.2, z: -6.5, h: 10.2, kind: 'pine' }, { x: 10.2, z: -6.5, h: 9.8, kind: 'pine' }]);
-  }
-
   // 11. Nhà thờ Mằng Lăng (1892, Tuy An, Phú Yên / Đắk Lắk — Gothic cổ rêu phong)
   function nhaThoMangLang(T, kit) {
     // Surveyed porch and apse of OSM w804128824. The west frontage follows
@@ -977,14 +970,6 @@
       map: 'https://www.openstreetmap.org/#map=18/12.67960/108.03780',
       source: 'https://daklak.gov.vn/',
       build: tuongDaiChienThangBmt
-    },
-    {
-      id: 'thap-nhan-tuy-hoa', name: 'Tháp Nhạn Tuy Hòa', city: 'Tuy Hòa', province: 'Đắk Lắk', formerProvince: 'Phú Yên',
-      lon: 109.301598, lat: 13.082314, yaw: -0.860, width: 20, depth: 20,
-      start: [109.301320, 13.082080], viewDistance: 1400,
-      map: 'https://www.openstreetmap.org/node/4674771389',
-      source: 'https://dsvh.gov.vn/',
-      build: thapNhanTuyHoa
     },
     {
       id: 'nha-tho-mang-lang', name: 'Nhà thờ Mằng Lăng', city: 'Tuy An Đông', province: 'Đắk Lắk', formerProvince: 'Phú Yên',

@@ -854,7 +854,7 @@ function showMonument(monument,viewIndex=0,collection=null,stopId=monument.data.
  car.sightView={monument,data,stopId,x:monument.x+east,z:monument.z+south,height:view?.height??monument.height,
    angle,elevation:data.viewElevation??.27,zoom:1,hour:$('tourLight').value===''?null:Number($('tourLight').value)};
  const visit=collection||visitsByStop.get(stopId)||visitsByStop.get(monument.data.id);
- $('tourZoom').value='1';sightPhotos.select(monument.data);
+ $('tourZoom').value='1';sightPhotos.select(view?.photoCatalogId?data:monument.data);
  fieldViews.select(monument.data,collection||visit);
  const description=[data.description,data.arrivalNote].filter(Boolean).join(' ');
  $('tourDescription').textContent=description;$('tourDescription').hidden=!description&&!view?.photoCredit;

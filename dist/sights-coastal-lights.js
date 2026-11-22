@@ -165,7 +165,6 @@
   add('osm-way-1273256841', 'hai-dang-cu-lao-cham', {height:26.1,diameter:4.8,shape:'round',paint:'grey',optic:'lantern'}, 1.435, 'vnmnc', 'Cù Lao Chàm (2)'); // Cù Lao Chàm
   add('osm-way-1273256839', 'hai-dang-son-cha', {height:15.5,diameter:4,shape:'round',paint:'paleBlue',optic:'lantern'}, 0.504, 'vnmnc', 'Sơn Chà'); // Sơn Chà
   add('osm-way-1272966036', 'hai-dang-da-rang', {height:17,diameter:3.3,shape:'square',paint:'white',optic:'beacon',details:'house2',house:[12.1,12]}, -2.795, 'vnmsc', 'Đà Rằng (Tuy Hòa)'); // Đà Rằng
-  add('osm-way-1272966043', 'hai-dang-ganh-den', {height:10,diameter:3,shape:'hex',paint:'redWhite',optic:'beacon'}, -2.632, 'vnmsc', 'Gành Đèn'); // Gành Đèn
   // The province's Hòn Nưa drone photographed the red beacon from node5,
   // about 39 m east-northeast of the tower. https://daklakvrtour.com/hon-nua.html
   add('osm-way-1272966044','hai-dang-hon-nua',{

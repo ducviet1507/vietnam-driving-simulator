@@ -26,6 +26,8 @@ window.NatureFieldCaptures=(()=>{
   }
   const thanhLuong=phuYen('Hai hồ và chính điện chùa Thanh Lương','chua-thanh-luong',55,
     'Chọn “Lối Vào” để xuống sân trước chính điện. Từ đây, “Quan Âm Linh Ứng” dẫn tới điện thờ, còn “Quan Âm Nam Hải” dẫn ra hồ Long Ẩn có tượng nhô lên khỏi mặt nước.');
+  const nghinhPhong=phuYen('Quảng trường, khe gió và hai tháp Nghinh Phong','thap-nghinh-phong',40,
+    'Chọn “Vào Trong” để nhìn dọc khe giữa hai tháp. “View Bên Hông” mở góc bên sườn. Từ đó có thể ra bờ biển hoặc chuyển sang ảnh ban đêm.');
   function baiChua(name,scope){
     return phuYen(name,'tau-khong-so',116,'Ảnh mở ở toàn cảnh Bãi Chùa. '+scope);
   }
@@ -55,6 +57,13 @@ window.NatureFieldCaptures=(()=>{
       'Từ góc toàn cảnh phía đèo Quán Cau, chọn “Cận Cảnh” để ra giữa đầm. Hai điểm “Cầu An Cư” và “Cầu An Hải” cho thấy các dòng nước nối với đầm.'),
     'osm-node-4472649089':phuYen('Từ cầu Bình Phú ra đầm Cù Mông','dam-cu-mong',162,
       'Ảnh mở ở cầu Bình Phú. Chọn hướng bắc để xem vùng bè và các ao ven bờ, hoặc tới cửa đầm để nhìn ra biển.'),
+    'osm-node-11055944805':nghinhPhong,'osm-way-1272649341':nghinhPhong,
+    'osm-way-1272966043':phuYen('Lối bộ trên ghềnh và hải đăng Gành Đèn','ganh-da-dia',43,
+      'Từ toàn cảnh Gành Đá Đĩa chọn “Gành Đèn” để xem tháp và bờ đá từ trên cao, rồi theo điểm nối xuống lối có lan can cạnh tháp.'),
+    'osm-node-4674771389':phuYen('Sân Tháp Nhạn, ba tầng mái và Tuy Hòa từ trên cao','nui-nhan',42,
+      'Chọn “Tháp Nhạn” để đứng trước lối bậc ở mặt đông. Từ toàn cảnh, có thể tới nhà trưng bày hoặc chuyển sang ảnh ban đêm.'),
+    'osm-node-4518976294':phuYen('Từ sân đài tưởng niệm vào nhà bia','nui-nhan',42,
+      'Chọn “Đài Liệt Sỹ” để xuống sân trước đài tưởng niệm. Từ sân, chọn “Vào Trong” để xem các trụ và bia.'),
     'osm-node-12856400201':phuYen('Đền thờ và cây bồ đề ở Long Phụng','den-tho-luong-van-chanh',93,
       'Từ sân cổng, chọn “Vào Trong” rồi “Đền Thờ” để theo trục vào chính điện. Điểm “Khu Mộ (500m)” mở một khu riêng ngoài sân đền.'),
     'osm-node-6052212185':thanhLuong,'osm-way-903827683':thanhLuong,'osm-way-903834500':thanhLuong,

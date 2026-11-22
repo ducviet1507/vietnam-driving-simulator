@@ -21,8 +21,6 @@ window.VietnamLandmarks=(()=>{
       start:[107.581668,16.465841],map:'https://www.openstreetmap.org/way/218427614',source:'https://svhtt.hue.gov.vn/tin-trong-tinh/khanh-thanh-cong-trinh-chieu-sang-my-thuat-ky-dai-hue.html'},
     {id:'ponagar',photo:'https://dulichso.khanhhoa.gov.vn/article/thap-ba-po-nagar-77f',name:'Tháp Bà Po Nagar',city:'Nha Trang',lon:109.195463,lat:12.265371,yaw:1.56,width:47,depth:58,
       start:[109.196350,12.265950],map:'https://www.openstreetmap.org/way/146780347',source:'https://vietnam.travel/vi/things-to-do/vietnams-cham-legacy/'},
-    {id:'nghinh',photo:'https://etime.danviet.vn/thap-nghinh-phong-bieu-tuong-moi-cua-kinh-te-du-lich-phu-yen-20231218103903301-d116297.html',name:'Tháp Nghinh Phong',city:'Tuy Hòa',lon:109.307256,lat:13.1163162,yaw:-2.13,width:38,depth:14,
-      start:[109.306441,13.115609],map:'https://www.openstreetmap.org/node/11055944805',source:'https://vietnamtourism.gov.vn/printer/54780?type=1'},
     {id:'rong',photo:'https://mia.vn/cam-nang-du-lich/ghe-nha-rong-kon-klor-chiem-nguong-net-dep-van-hoa-mien-cao-dac-sac-7869',name:'Nhà rông Kon Klor',city:'Kon Tum',lon:108.0344241,lat:14.3482379,yaw:-1.32,width:16.7,depth:9.9,
       start:[108.033765,14.347389],map:'https://www.openstreetmap.org/node/4133919102',source:'https://nongthon.vietnamtourism.gov.vn/thanh-pho-kon-tum-bao-ton-va-phat-huy-gia-tri-nghe-truyen-thong/'},
     {id:'station',photo:'https://thegioitiepthi.danviet.vn/ga-da-lat-chay-cac-chuyen-tau-co-phuc-vu-du-khach-den-voi-cao-nguyen-20240411210115688-d26878.html',name:'Ga Đà Lạt',city:'Đà Lạt',lon:108.4544254,lat:11.9415757,yaw:-.99,width:66,depth:17,scale:[1.27,1,1.07],
@@ -665,40 +663,6 @@ window.VietnamLandmarks=(()=>{
       }
       sanctuary(4,-1.5,8.8,23,'main');sanctuary(-6.8,-4.1,6.4,18,'south');
       sanctuary(-11.7,1.5,3.9,7.1,'east');sanctuary(4,-13.8,4.15,9,'west');
-    }
-    if(id==='nghinh'){
-      const stoneFaces=[0xaaa99e,0xb9b7a9,0xc7c4b6,0xb3b3a7,0xbebbad];
-      // Fifty basalt-inspired shafts on each side. The inward face follows a shared
-      // plane, preserving a clear passage between the two halves of the monument.
-      const indexedPrism=new T.CylinderGeometry(1,1,1,6,1,false,Math.PI/6);
-      const prism=indexedPrism.toNonIndexed();indexedPrism.dispose();prism.computeVertexNormals();
-      const rows=[7,8,7,8,7,6,4,3],radius=1.38;
-      for(let i=0;i<4;i++)box(i%2?0xbab8ac:0xc6c1b1,0,.12+i*.19,0,40-i*.7,.23,22-i*.68);
-      for(const side of [-1,1]){
-        const summit=side===1?35:30;
-        for(let i=0;i<rows.length;i++)for(let j=0;j<rows[i];j++){
-          const z=(j-(rows[i]-1)/2)*Math.sqrt(3)*radius;
-          const x=side*(1+radius+i*radius*1.5);
-          const shell=Math.max(i,Math.abs(z)/(radius*1.36));
-          const h=shell===0?summit:1.0+(summit-2)*Math.exp(-shell*.54);
-          stamp(prism,stoneFaces[(i*3+j)%stoneFaces.length],x,.82+h*.5,z,radius-.018,h,radius-.018);
-          // Fine horizontal cladding joints reveal the scale of the tall uprights.
-          for(let y=2.8;y<h;y+=2.8)stamp(prism,0x9a9b90,x,.82+y,z,radius-.009,.035,radius-.009);
-        }
-        // The narrow facing walls carry shallow incised coastal motifs.
-        const x=side*1.02;
-        box(0xa9aa9e,x,2.66,0,.12,3.7,14.6);
-        for(let i=0;i<7;i++){
-          const z=-6.2+i*2;
-          for(let j=0;j<3;j++){
-            const line=new T.Shape();line.moveTo(-.84,0);line.quadraticCurveTo(-.45,.32,0,.11);
-            line.quadraticCurveTo(.52,-.12,.9,.14);line.lineTo(.9,.22);
-            line.quadraticCurveTo(.48,-.02,0,.2);line.quadraticCurveTo(-.5,.39,-.84,.08);line.closePath();
-            profile(line,0x8c9086,x-side*.085,1.23+j*.28,z,.025,-side*Math.PI/2);
-          }
-        }
-      }
-      prism.dispose();
     }
     if(id==='rong'){
       const beam=0x443429,slat=0x674c34,deck=2.95;

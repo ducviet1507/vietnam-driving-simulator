@@ -51,6 +51,14 @@
       {name:'Bờ vịnh nhìn về Bãi Chùa',offset:[370,-570],height:100,viewAngle:-.41,viewRadius:912,viewElevation:.105,viewFov:62,
       description:'Từ phía tây vịnh nhìn về đông bắc, dọc theo bờ có Quốc lộ 29 đến khu di tích Bãi Chùa.'}]};
   const precincts={
+    'osm-way-1272966043':{name:'Hải đăng Gành Đèn',locality:'An Ninh Đông',formerProvince:'Phú Yên',start:[109.2930776,13.3628725],
+      mappedEntrance:true,visitOnArrival:true,arrivalNote:'Xe dừng ở cuối đường dân cư cạnh trạm. Đi bộ theo lối ven ghềnh tới cầu và tháp đèn.'},
+    'osm-node-11055944805':{name:'Tháp Nghinh Phong',locality:'Quảng trường Nghinh Phong',formerProvince:'Phú Yên',start:[109.3065001,13.1165356],
+      mappedEntrance:true,visitOnArrival:true,arrivalNote:'Từ Đường Độc Lập, xe dừng ở lối vào bãi phía tây bắc quảng trường. Từ đó đi bộ về phía biển tới hai khối tháp.'},
+    'osm-node-4674771389':{name:'Tháp Nhạn Tuy Hòa',locality:'Núi Nhạn',formerProvince:'Phú Yên',start:[109.2999132,13.0828095],
+      mappedEntrance:true,visitOnArrival:true,arrivalNote:'Xe dừng ở lối vào từ đường Lê Trung Kiên. Qua quầy vé dưới chân núi rồi theo lối bộ hoặc đi xe điện lên sân tháp.'},
+    'osm-node-4518976294':{name:'Đài tưởng niệm Núi Nhạn',locality:'Núi Nhạn',formerProvince:'Phú Yên',start:[109.2999132,13.0828095],
+      mappedEntrance:true,visitOnArrival:true,arrivalNote:'Từ lối vào phía đường Lê Trung Kiên, theo đường trên núi đến nhánh vào sân đài tưởng niệm.'},
     'osm-node-6052212185':{name:'Chùa Thanh Lương',locality:'Mỹ Quang Nam',formerProvince:'Phú Yên',start:[109.2956876,13.1809668],
       mappedEntrance:true,visitOnArrival:true,arrivalNote:'Xe dừng ở sân phía nam. Từ sân theo lối bộ đến chính điện, điện Quan Âm và hai hồ.'},
     'osm-node-12856400201':{name:'Đền thờ Lương Văn Chánh',locality:'Long Phụng, Phú Hòa 2',formerProvince:'Phú Yên',start:[109.2373975,13.0911589],
@@ -290,6 +298,17 @@
     [1504768248,'Đền Trung – Hùng Vương Tổ miếu','Phú Thọ','Hùng Sơn',105.3240986,21.3690193,105.322450,21.369750,189,'https://denhung.vn/tin-tuc/den-trung'],
   ];
   const existing = new Set(atlas.entries.map(site => site.id));
+  if(!existing.has('osm-node-11055944805'))atlas.entries.push({
+    id:'osm-node-11055944805',...precincts['osm-node-11055944805'],kind:'Công trình kiến trúc',region:'Trung Bộ',province:'Đắk Lắk',city:'Tuy Hòa',
+    lon:109.307256,lat:13.1163162,approachMeters:86,map:'https://www.openstreetmap.org/node/11055944805',source:'https://daklakvrtour.com/thap-nghinh-phong.html'});
+  if(!existing.has('phu-yen-gian-tho-thap-nhan'))atlas.entries.push({
+    id:'phu-yen-gian-tho-thap-nhan',name:'Gian thờ Thiên Y A Na trong Tháp Nhạn',kind:'Di tích',region:'Trung Bộ',province:'Đắk Lắk',formerProvince:'Phú Yên',city:'Tuy Hòa',locality:'Núi Nhạn',
+    lon:109.301589,lat:13.082314,start:[109.2999132,13.0828095],approachMeters:190,viewOf:['thap-nhan-tuy-hoa',3],mappedEntrance:true,visitOnArrival:true,
+    map:'https://www.openstreetmap.org/node/4674771389',source:'https://dsvh.gov.vn/thap-nhan-3238'});
+  if(!existing.has('osm-way-1272649341'))atlas.entries.push({
+    id:'osm-way-1272649341',name:'Quảng trường Nghinh Phong',kind:'Quảng trường',region:'Trung Bộ',province:'Đắk Lắk',formerProvince:'Phú Yên',city:'Tuy Hòa',locality:'Đường Độc Lập',
+    lon:109.3072662,lat:13.1162611,start:[109.3065001,13.1165356],approachMeters:88,viewOf:['nghinh',3],mappedEntrance:true,visitOnArrival:true,
+    map:'https://www.openstreetmap.org/way/1272649341',source:'https://daklakvrtour.com/thap-nghinh-phong.html'});
   // The national import merged the hall outline into the pagoda pin. The
   // measured hall and the ponds now have individual views within the grounds.
   delete atlas.aliases['osm-way-903827683'];
