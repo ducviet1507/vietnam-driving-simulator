@@ -112,6 +112,23 @@
 #tourCamera label{font-size:12px;color:#d8e6dc}
 #tourZoom{display:block;width:88px;accent-color:var(--lime);cursor:pointer}
 #tourReference{color:var(--lime);text-underline-offset:2px}
+.arcade #fieldDialog{width:min(1360px,97vw);max-width:97vw;max-height:96dvh;box-sizing:border-box;padding:clamp(10px,1.5vw,20px);background:#182722;color:#edf3ed;overflow:auto}
+#fieldDialog header,#fieldDialog footer{display:flex;align-items:center;justify-content:space-between;gap:.8rem;flex-wrap:wrap}
+#fieldDialog header,#fieldDialog footer{position:static;inset:auto;padding:0;background:none;pointer-events:auto}
+#fieldDialog h2{font-size:clamp(1.15rem,3vw,1.7rem);margin:0}
+#fieldStage{position:relative;height:clamp(140px,72dvh,850px);min-height:0;margin:.65rem 0;display:grid;grid-template:100% / 100%;place-items:center;background:#21332e;overflow:hidden}
+#fieldStage iframe,#fieldStage canvas,#fieldStage svg{display:block;width:100%;height:100%;min-height:0;border:0}
+#fieldStage svg{background:#e8e7d7;touch-action:none}
+#fieldStage canvas{touch-action:none;cursor:grab}
+#fieldStage canvas:active{cursor:grabbing}
+#fieldStage .scanZoom{position:absolute;bottom:.65rem;right:.65rem;display:flex;gap:.4rem}
+#fieldCaption{font-size:.93rem}
+#fieldCaption select{width:auto;max-width:100%}
+@media(max-height:600px){#fieldStage{height:calc(94dvh - 134px)}}
+#fieldDialog a{color:var(--lime)}
+#mapFixtureKey[hidden]{display:none}
+#mapFixtureKey .lampSwatch{background:#ffe298;border:1px solid #364742}
+#mapFixtureKey .bollardSwatch{background:#bb7560;border:1px solid #364742;border-radius:0}
 .arcade #sightPhoto{width:min(850px,94vw);max-height:90dvh;padding:clamp(12px,2vw,24px);overflow:auto;color:#edf3ed;background:#172521}
 #sightPhoto header{display:flex;align-items:center;justify-content:space-between;gap:1rem;margin-bottom:12px}
 #sightPhoto h2{margin:0;font-size:clamp(1.12rem,2.8vw,1.55rem)}

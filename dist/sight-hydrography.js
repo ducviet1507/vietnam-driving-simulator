@@ -71,7 +71,7 @@
   // Indexed grids retain a shared normal at neighbouring samples. Each stored
   // point can blend between local terrain and a level pool/cave datum. Rebuilds
   // always use the original section, never accumulate the previous deformation.
-  function surface(T,group,parts,material){
+  function surface(T,group,parts,material,section=false){
     const p=[],uv=[],c=[],weight=[],coverage=[],indices=[],colour=new T.Color();
     function grid(nx,ny,sample){
       const first=p.length/3;
@@ -91,7 +91,8 @@
       g.computeVertexNormals();g.computeBoundingSphere();
       const mesh=new T.Mesh(g,material);mesh.receiveShadow=true;mesh.castShadow=material.isMeshStandardMaterial;
       if(material.transparent)mesh.renderOrder=material.customProgramCacheKey()==='hydro-falling-water'?2:1;
-      group.add(mesh);parts.push({g,ys:Float32Array.from(weight,(_,i)=>p[3*i+1]),weight});
+      mesh.userData.surveySection=section;
+      group.add(mesh);parts.push({g,ys:Float32Array.from(weight,(_,i)=>p[3*i+1]),weight,section});
     }
     return {grid,finish};
   }
@@ -137,13 +138,13 @@
   function groundFit(group,parts,z,entrance=false){
     group.userData.fitGround=ground=>{
       const datum=ground(0,z);
-      for(const {g,ys,weight} of parts){
+      for(const {g,ys,weight,section} of parts){
         const pos=g.attributes.position;
         for(let i=0;i<pos.count;i++){
           const local=ground(pos.getX(i),pos.getZ(i));
           // The underlying terrain remains drivable. Follow an uphill cave
           // floor and emerging streambed where a level section would disappear.
-          const base=entrance||ys[i]<.2?Math.max(datum,local):datum;
+          const base=!section&&(entrance||ys[i]<.2)?Math.max(datum,local):datum;
           pos.setY(i,ys[i]+local+(base-local)*weight[i]);
         }
         pos.needsUpdate=true;g.computeVertexNormals();g.computeBoundingSphere();
@@ -156,7 +157,8 @@
     const sin=Math.sin(profile.yaw),cos=Math.cos(profile.yaw);
     const trace=profile.trace.map(([east,south])=>[east*cos-south*sin,east*sin+south*cos]);
     if(!trace.length)return ()=>0;
-    const cx=trace[2][0],cz=trace[2][1];
+    const [east,south]=profile.traceOrigin??profile.trace[2];
+    const cx=east*cos-south*sin,cz=east*sin+south*cos;
     const pts=[];
     for(const [x,z] of trace)if(!pts.length||z-cz>pts.at(-1)[1]+.1)pts.push([x-cx,z-cz]);
     return z=>{
@@ -176,7 +178,7 @@
     const ledge=clamp(w*.22+h*.13,1,9)*(tiers>1?1.3:1),undercut=p.form==='overhang';
     const dz=ledge/tiers,spread=clamp(w*.31+h*.09,1.8,13),phase=(seed%1597)*.013;
     const lip=x=>clamp(w*.097,.26,1.75)*(Math.sin(x/Math.max(2,w)*11+phase)*.75+Math.cos(x*.86+phase)*.24);
-    const xAt=(x,z)=>x+clamp(centre(z),-w*.32,w*.32);
+    const xAt=(x,z)=>x+centre(z);
     const toe=ledge-.68*dz,pz=toe+spread*.47;
     function cross(x,back){return x*(1-.14*back)+.02*w*Math.sin(phase+back*2.7);}
     for(let j=0;j<tiers;j++){
@@ -253,7 +255,7 @@
     }
     // A shallow elliptical pool abuts the foot of the last fall. Vary the
     // colour and foam by depth, with quiet margins against exposed bedrock.
-    pool.grid(54,11,(u,v)=>{
+    if(!p.mappedPool)pool.grid(54,11,(u,v)=>{
       const a=Math.PI*2*u,shore=1+.13*Math.sin(a*3+phase)+.074*Math.sin(a*7-phase);
       const x=Math.cos(a)*v*(w*.62+spread*.29)*shore,z=pz+Math.sin(a)*v*(spread+.67)*shore;
       const y=.12+.014*Math.sin(v*18+phase)*(1-v);
@@ -299,24 +301,42 @@
       const colour=stone(x,y,z,phase,false);
       return [x,y,z,x*.59,(y-z*.39)*.57,p.form==='basalt'?tint(colour,0x474a42,.67):colour,1-clamp((Math.abs(x)-w*.5)/wing,0,1)];
     });
-    // Extend the visible opening around a bend. Only the entrance section is
-    // illustrated; an entrance tag alone says nothing about a cave's interior.
-    rock.grid(32,12,(u,v)=>{
-      const x0=(u-.5)*w,[,lipY,z0]=front(x0,0);
-      const x=x0*(1-v*.27)+v*v*.35*w*Math.sin(phase),z=z0-v*depth;
+    // An exterior approach establishes the mouth, not an underground bend.
+    // Only extend along a passage if the survey actually traces one.
+    const passage=p.evidence==='passage'&&p.trace?.length>1;
+    const sin=Math.sin(p.yaw),cos=Math.cos(p.yaw);
+    const path=passage?p.trace.map(([e,s])=>[e*cos-s*sin,e*sin+s*cos]):[];
+    if(!passage)path.push([0,0],[0,-.65]);
+    const sections=[[0,0,0]];
+    for(let i=1;i<path.length;i++){
+      const [ax,az]=path[i-1],dx=path[i][0]-ax,dz=path[i][1]-az,len=Math.hypot(dx,dz);
+      const count=Math.ceil(len/2),along=sections.at(-1)[2];
+      for(let j=1;j<=count;j++)sections.push([ax-path[0][0]+dx*j/count,az-path[0][1]+dz*j/count,along+len*j/count]);
+    }
+    const last=sections.length-1,length=sections[last][2]||1;
+    function interior(x0,t){
+      const i=Math.round(t*last),[dx,dz,distance]=sections[i],v=distance/length;
+      const prev=sections[Math.max(0,i-1)],next=sections[Math.min(last,i+1)];
+      const tx=next[0]-prev[0],tz=next[1]-prev[1],span=Math.hypot(tx,tz)||1;
+      const lateral=x0*(1-v*.27),mouthZ=front(x0,0)[2]*Math.max(0,1-distance/2);
+      return [dx+lateral*(i?-tz/span:1),dz+mouthZ+lateral*(i?tx/span:0),v];
+    }
+    const lining=surface(T,group,parts,rockMaterial(T),true);
+    lining.grid(32,Math.max(1,last),(u,t)=>{
+      const x0=(u-.5)*w,[,lipY]=front(x0,0),[x,z,v]=interior(x0,t);
       const y=lipY*(1-.18*v)+.08*Math.sin(v*11+u*14+phase)*Math.sin(v*Math.PI);
       return [x,y,z,(x+z*.37)*.61,(z+y*.36)*.54,tint(0x999b8c,0x272f2c,v**.64),1];
     });
-    rock.grid(32,4,(u,v)=>{
-      const x0=(u-.5)*w,[,y,z]=front(x0,0);
-      return [x0*.73+.35*w*Math.sin(phase),y*.82*(1-v),z-depth-.13,
+    lining.grid(32,4,(u,v)=>{
+      const x0=(u-.5)*w,[,y]=front(x0,0),[x,z]=interior(x0,1);
+      return [x,y*.82*(1-v),z,
         u*3,v*2,0x252b28,1];
     });
-    rock.grid(22,9,(u,v)=>{
-      const x0=(u-.5)*w,[,,z0]=front(x0,0),x=x0*(1-v*.27)+v*v*.35*w*Math.sin(phase);
-      const z=z0+.46-v*(depth+.55),y=.092+.024*Math.sin(x*3+v*15)*v;
+    lining.grid(22,Math.max(1,last),(u,t)=>{
+      const [x,z,v]=interior((u-.5)*w,t),y=.092+.024*Math.sin(x*3+v*15)*v;
       return [x,y,z,x*.53,z*.53,tint(0x827e69,0x242b26,v**.55),1];
     });
+    lining.finish();
     rock.grid(38,8,(u,v)=>{
       const [x,y,z]=front((u*2-1)*wing,1);
       return [x,(1-v)**.82*y-.23*v,z-v*depth*1.03,x*.53,(z-v*depth)*.57,stone(x,y,z-v*depth,phase,false),1-v];
@@ -387,9 +407,10 @@
         if(isCave)cave(T,group,p,seed);else waterfall(T,group,p,seed);
         // Feather decorative rock returns into the terrain before the mapped
         // driving approach. Leave the measured opening and cascade untouched.
-        const limit=site.approachMeters-6;
+        const limit=Math.max(p.width*.66,site.approachMeters-6);
         if(limit>100)return;
         for(const mesh of group.children){
+          if(mesh.userData.surveySection||mesh.material.transparent)continue;
           const pos=mesh.geometry.attributes.position;
           let changed=false;
           for(let i=0;i<pos.count;i++){

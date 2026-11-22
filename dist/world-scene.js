@@ -499,7 +499,7 @@
         }return false;
       }
       function blocked(x,z,r){
-        return grounds.mapped(x+cx,z+cz)||obstruction(x,z,r);
+        return grounds.nearFixture(x,z,r)||grounds.mapped(x+cx,z+cz)||obstruction(x,z,r);
       }
       const waterAt=(x,z)=>sampleShore(x-cx,z-cz);
       const shoreBed=(x,z)=>shorePatch?.sample(x-cx,z-cz,true)?.bed;
@@ -743,7 +743,7 @@
           let last=null;
           for(let station=9;station<end-4;station+=spacing){
             const px=s.ax+s.fx*station+s.nx*(s.w+1.7),pz=s.az+s.fz*station+s.nz*(s.w+1.7);
-            if(blocked(px,pz,.45)){last=null;continue;}
+            if(blocked(px,pz,.45)||(s.w>6&&grounds.nearFixture(px,pz,spacing*.8,'lamp'))){last=null;continue;}
             const pole=registerObstacle({id:s.seed+':pole:'+station,kind:'pole',x:px,z:pz,radius:.12,parts:[]});
             instance('concrete',unitPole,px,3.65,pz,.17,7.3,.17,0,null,pole);
             const rot=Math.atan2(s.nx,s.nz);
@@ -1021,6 +1021,20 @@
         roadGroup.add(mesh);
       }
       material.white.side=material.yellow.side=T.DoubleSide;
+      // Full-scale lights require a recorded height. Locations without a
+      // physical measurement remain on the close-range driving map.
+      for(const f of grounds.streetFurniture){
+        if(!f.height||Math.hypot(f.x,f.z)>detailRadius)continue;
+        const {x,z,height:h}=f;
+        if(district.contact(cx+x,cz+z,.08))continue;
+        const width=f.diameter||(f.kind==='lamp'?.14:.12);
+        const owner=registerObstacle({id:'osm-node-'+f.id,kind:'pole',x,z,radius:width/2,height:h,parts:[]});
+        instance('steel',unitPole,x,h/2,z,width,h,width,0,null,owner);
+        if(f.kind==='lamp'){
+          instance('lantern',unitPole,x,h-.07,z,width*1.7,.14,width*1.7,0,null,owner);
+          streetBulbs.push(new T.Vector3(x,localGround(x,z)+h-.15,z));
+        }
+      }
       grounds.build(roadGroup,localGround,obstruction,registerObstacle,sampleShore,(kind,x,z,h,w,angle)=>{
         if(kind==='tea'){
           plantTree('tea',x,z,h,w,angle,0xebf2cd,null);return;
@@ -1634,7 +1648,7 @@
       markerPoint.project(camera);
       return markerPoint.z>0 && markerPoint.z<1 && Math.abs(markerPoint.x)<.92 && Math.abs(markerPoint.y)<.9 ? markerPoint : null;
     }
-    return {get sceneryChanged(){return districtRadius!==graphics.profile.districtRadius;},
+    return {get sceneryChanged(){return districtRadius!==graphics.profile.districtRadius;},get mappedFurniture(){return grounds.streetFurniture;},
       capturePhoto,hitDashboardMap,refreshMap,prepareShaders,projectSummit,weather,streetLife,accessLane:(x,z)=>grounds.accessLane(x,z),loadStructures:structures.load,preloadVehicle:loadModel,waterAt:(x,z,edge)=>{if(edge&&sceneGraph.tunnels.info(edge)?.bore&&tunnels.at(x,z,edge)!=null)return null;const wet=waterAt(x,z),deck=wet&&bridges?.at(x,z,edge);return wet&&deck!=null&&deck>=wet.level?null:wet;},terrainReady:relief.ready,grade:driveGrade,ground:driveGround,setRoads,queueRoads,loadRoads,advanceRoads,cancelRoads,districtDistance:(x,z)=>Math.hypot(x-originX,z-originZ),render,resize:graphics.resize,contact,loadDistrict:async(g,x,z)=>(await Promise.all([buildingSource.load(g,x,z),osmBuildings.load(g,x,z),relief.loadLocal(g,x,z),landscapeSource.load(g,x,z),groundSource.load(g,x,z),environment.load(g,x,z),amenities.load(g,x,z)])).some(Boolean),splash:(x,z,nx,nz,strength,level)=>driveFx.impact(x,z,nx,nz,strength,'water',level,.3),sightFootprint:(...args)=>district.footprint(...args),nearLandmark:(x,z)=>landmarks?.nearest(x,z),reactToContact:roadsideImpact.react,impact:(x,z,nx,nz,s,k,h=0,g,edge)=>driveFx.impact(x,z,nx,nz,s,k,driveGround(x,z,edge)+h,g),scrape:(x,y,z,vx,vz,edge)=>driveFx.scrape(x,driveGround(x,z,edge)+y,z,vx,vz),resetFx(){driveFx.reset();roadsideImpact.reset();sightings.reset();}};
   };
 })();

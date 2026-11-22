@@ -466,12 +466,16 @@
     build: chuaLinhUng
   }, {
     id: 'hoi-quan-phuc-kien', name: 'Hội quán Phúc Kiến', city: 'Hội An', province: 'Đà Nẵng', region: 'Trung Bộ', formerProvince: 'Quảng Nam',
-    lon: 108.32930, lat: 15.87748, start: [108.329365, 15.877176], yaw: 0.19, width: 20, depth: 10,
+    // Inner tam quan on footway 485160139. Start projects its Trần Phú junction (node 4779272265) onto the driving graph.
+    // Local +Z faces the street, 23° west of south per the survey:
+    // https://hoianheritage.net/vi/trao-doi-chuyen-nganh/chuyen-de-nghien-cuu-trao-doi/kien-truc-co-cac-hoi-quan-cua-nguoi-hoa-o-hoi-an-quang-nam-735.html
+    lon: 108.3307004, lat: 15.8777681, start: [108.330591, 15.877387], yaw: -23 * Math.PI / 180, width: 20, depth: 10,
+    catalogId: 'osm-way-320722329',
     solids: [[-7.2, 0, 1.4, 1.5], [-3.4, 0, 0.7, 1.8], [3.4, 0, 0.7, 1.8], [7.2, 0, 1.4, 1.5]],
     description: 'Cổng tam quan hồng son ba tầng mái ngói ống men xanh, đèn lồng đỏ và lưỡng long tranh châu nổi bật giữa phố cổ Hội An.',
     photo: 'https://vinwonders.com/vi/wonderpedia/news/hoi-quan-phuc-kien-hoi-an/',
-    source: 'https://vi.wikipedia.org/wiki/H%E1%BB%99i_qu%C3%A1n_Ph%C3%BAc_Ki%E1%BA%BFn',
-    map: 'https://www.openstreetmap.org/?mlat=15.87748&mlon=108.3293#map=19/15.87748/108.3293',
+    source: 'https://hoianheritage.net/uploads/download/hoi-quan-phuc-kien.pdf',
+    map: 'https://www.openstreetmap.org/node/4779272267',
     build: hoiQuanPhucKien
   });
 })();

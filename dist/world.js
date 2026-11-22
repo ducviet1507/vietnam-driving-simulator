@@ -186,7 +186,8 @@ async function startAt(place,restore=null,guided=null){
    const origin=Array.isArray(restore?.origin)&&restore.origin.length===2&&restore.origin.every(Number.isFinite)?restore.origin:place.slice(1);
    const graph=new VietnamRoads(indexData,...origin),start=graph.point(place[1],place[2]);
    // The departure map and the road graph can load from the same coordinates.
-   const previewWater=!gfx&&departure&&!guided?fetchWaterIndex().then(async index=>{
+   const previewOnly=!gfx&&departure&&!guided&&!site?.visitOnArrival;
+   const previewWater=previewOnly?fetchWaterIndex().then(async index=>{
      const lakes=new VietnamWater(index,graph);await lakes.load(start.x,start.z);return lakes;
    }).catch(()=>null):null;
    await graph.load(start.x,start.z);
@@ -236,7 +237,7 @@ async function startAt(place,restore=null,guided=null){
    if(Number.isFinite(restore?.yaw)){car.x=start.x;car.z=start.z;car.yaw=restore.yaw;trackRoad();}
    loadX=car.x;loadZ=car.z;streamRetry=0;
    departureWaterReady=null;
-   if(!gfx&&departure&&!guided){
+   if(previewOnly){
      // These departures have a responsive scene photograph. Their real road
      // map, atlas and planner are ready before we need a WebGL context.
      nearby=graph.nearby(car.x,car.z,560);
@@ -574,7 +575,7 @@ function drawDepartureMap(){
  g.beginPath();g.arc(c.width/2,c.height/2,5,0,Math.PI*2);g.fillStyle='#f2ffca';g.fill();
 }
 let mapPlaces=[];
-const drivingMap=createDrivingMap(()=>({graph:roads,car,edge:player.edge,water,duel,guide:guide||(!duel&&scenicTrace),places:mapPlaces,amenities:gfx.streetLife?.places||[]}));
+const drivingMap=createDrivingMap(()=>({graph:roads,car,edge:player.edge,water,duel,guide:guide||(!duel&&scenicTrace),places:mapPlaces,amenities:gfx.streetLife?.places||[],furniture:gfx.mappedFurniture}));
 function openDrivingMap(){
  if(mode!=='drive')return;
  mode='map';keySet.clear();save();
@@ -674,7 +675,7 @@ function frame(now){
    if(mode!=='loading'&&roads&&!document.hidden&&now>=nextWeatherCheck){nextWeatherCheck=now+2000;gfx.weather.locate(...roads.geo(car.x,car.z));}
    car.driving=mode==='drive';car.showroom=mode==='grid';
    vehicleLook.update(dt);
-   if(mode!=='loading'&&mode!=='error'&&mode!=='map'&&!$('postcard').open&&!document.hidden){
+   if(mode!=='loading'&&mode!=='error'&&mode!=='map'&&!$('postcard').open&&!$('fieldDialog').open&&!document.hidden){
      // Keep steering against the displayed road until the next district is complete.
      // Start inside the overlap, and spend more time if a fast car approaches its edge.
      const gap=gfx.districtDistance(car.x,car.z);
@@ -741,7 +742,7 @@ function startCustomClock(){
 }
 function prepareDrive(route){
  const address=new URL(location.href);
- for(const key of ['intro','search','collection','landmark','pass','plan','drive'])address.searchParams.delete(key);
+ for(const key of ['intro','search','collection','landmark','pass','plan','drive','view'])address.searchParams.delete(key);
  if(route.id)address.searchParams.set('drive',route.id);
  history.replaceState(null,'',address);
  for(const id of ['journeySetup','rest','guidedArrival'])if($(id).open)$(id).close();
@@ -808,6 +809,13 @@ function pause(){
 }
 $('launch').onclick=begin;$('pause').onclick=pause;
 const sightPhotos=createSightPhotos();
+const fieldViews=createSightFieldViews(async id=>{
+ const stop=allStops.get(id);if(!stop||mode!=='tour')return;
+ loadingStop(true);
+ try{await frameStop(stop);}
+ catch{inform('Chưa tải được cảnh công trình này.');}
+ finally{loadingStop(false);}
+});
 const sightSecrets=createSightSecrets(()=>car.sightView,driveAudio.souvenir);
 function frameAboveTourControls(){
  if(!car.sightView)return;
@@ -829,9 +837,14 @@ function showMonument(monument,viewIndex=0,collection=null){
  car.sightView={monument,data,x:monument.x+east,z:monument.z+south,height:view?.height??monument.height,
    angle,elevation:data.viewElevation??.27,zoom:1,hour:$('tourLight').value===''?null:Number($('tourLight').value)};
  $('tourZoom').value='1';sightPhotos.select(monument.data);
+ fieldViews.select(monument.data,collection);
  const description=[data.description,data.arrivalNote].filter(Boolean).join(' ');
  $('tourDescription').textContent=description;$('tourDescription').hidden=!description;
- $('tourTitle').textContent=monument.data.name;$('tourCamera').hidden=false;
+ if(view?.photoCredit){
+   const link=document.createElement('a');link.href='landmark-scans/CREDITS.txt';link.target='_blank';link.rel='noopener';
+   link.textContent=view.photoCredit;$('tourDescription').append(' ',link);
+ }
+ $('tourTitle').textContent=view?.title||monument.data.name;$('tourCamera').hidden=false;
  sightSecrets.select(collection||monument.data);
  const visit=visitsByStop.get(monument.data.id);
  $('complexStopLabel').hidden=!(views||data.complex||visit);
@@ -893,6 +906,17 @@ async function frameStop(stop){
    tags.architect?'Thiết kế của '+tags.architect+'.':''].filter(Boolean).join(' ');
  const data={...stop,width,depth,yaw,viewAngle:yaw,viewElevation:wide?.53:.39,description};
  data.views=[{name:'Toàn cảnh địa điểm'},surroundings(width,depth,height)];
+ if(footprint?.stelae?.length){
+   data.views[0]={name:'Toàn cảnh nhà bia',viewAngle:footprint.stelae[0].viewAngle,viewElevation:.14};
+   const metres=n=>n.toLocaleString('vi-VN',{minimumFractionDigits:2,maximumFractionDigits:2})+' m';
+   for(const stone of footprint.stelae){
+     const title='Bia khoa '+stone.year;
+     data.views.push({name:title,title,offset:[stone.x-x,stone.z-z],viewAngle:stone.viewAngle,viewElevation:.08,
+       viewRadius:Math.max(2.4,stone.width*2.15),height:stone.height*1.57,
+       description:'Bia cao '+metres(stone.height)+', rộng '+metres(stone.width)+'. Số đo và thứ tự trong nhà bia theo khảo cứu của Đào Thị Thúy Anh (2017).',
+       photoCredit:stone.year===1442?'Ảnh mặt bia của Ngokhong · CC BY-SA 3.0':null,arrivalNote:''});
+   }
+ }
  if(distance>=22&&distance<=350)data.views.push({name:'Từ phía đường ô tô',viewAngle:yaw,
    viewRadius:distance,viewElevation:.065,height:Math.min(8,height)});
  showMonument({data,x,z,height},0,collection);
@@ -1424,7 +1448,16 @@ async function fetchJSON(path){const r=await fetch(path);if(!r.ok)throw Error('C
    const findStop=id=>models.find(p=>p.id===id||p.catalogId===id)||tamChucParts.find(p=>p.id===id)||regionalVisits.find(p=>p.id===id)||catalogStop(id);
    if((stopId&&!findStop(stopId))||(!stopId&&savedId&&!findStop(savedId)))await VietnamTourism.loadAll();
    const landmark=stopId&&findStop(stopId)||(collection&&tamChuc);
-   if(landmark||stage)await startAt(tourPlace(landmark||stage));
+   if(landmark||stage){
+     const view=params.get('view'),direct=landmark&&(view==='field'||view==='plan');
+     const place=tourPlace(landmark||stage);
+     if(direct)place[3]={...place[3],visitOnArrival:true};
+     await startAt(place);
+     if(direct&&mode==='tour'){
+       const button=$(view==='plan'?'sitePlan':'fieldView');
+       if(!button.hidden)button.click();
+     }
+   }
    else if(params.get('drive')==='ba-sao')await startAt(baSaoDrive);
    else if(params.has('drive')){
      const route=(await getFeaturedDrives()).find(r=>r.id===params.get('drive'));

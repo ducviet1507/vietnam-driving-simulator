@@ -1,5 +1,22 @@
 TƯ LIỆU DỰNG MÔ HÌNH ĐỊA DANH VIỆT NAM
 
+Văn Miếu – Quốc Tử Giám
+Mặt bằng công trình, đường đi và cây lấy theo hình học OpenStreetMap. Sơ đồ của Trung tâm Hoạt động Văn hóa Khoa học Văn Miếu – Quốc Tử Giám xác định tên các khu tham quan. 82 bia dùng số đo và thứ tự nhà che trong phụ lục 1–2 của Đào Thị Thúy Anh (2017), trang 165–185. Khoảng cách giữa hai bia liền nhau trong cảnh được chia theo chiều dài nhà che. Tư liệu không ghi tọa độ riêng của từng bia.
+https://vanmieu.gov.vn/vi/introduction/visitor-information
+https://vanmieu.gov.vn/vi/doctoral-stelae-garden
+https://www.openstreetmap.org/way/1582902103
+https://www.slideshare.net/slideshow/luan-an-nghe-thuat-tao-hinh-bia-tien-si-o-van-mieu-quoc-tu-giam/216479471
+
+Bản quét và ảnh thực địa
+Tác giả, giấy phép, ngày ghi hình và các bước tối ưu ba bản quét ở Mỹ Sơn và đền Ngọc Sơn được ghi trong tệp đi kèm. Ở Huế, người xem mở các bản ghi hình do CyArk công bố. Từng tour ảnh thiên nhiên có đường dẫn tới đơn vị quay chụp ngay trong trình xem.
+https://vivu3d.com/landmark-scans/CREDITS.txt
+https://www.cyark.org/projects/tomb-of-tu-duc-complex-of-hue-monuments
+
+Đèn đường và cọc chắn
+Vị trí lấy từ các nút OpenStreetMap trong vùng 550 m quanh điểm tham quan. Bản đồ đánh dấu các nút này. Cảnh lái dựng những đèn hoặc cọc có chiều cao được ghi tại chính nút đó.
+https://download.geofabrik.de/asia/vietnam.html
+https://www.openstreetmap.org/copyright
+
 Các liên kết ảnh của atlas được đối chiếu theo đối tượng OpenStreetMap, thuộc tính hình ảnh P18 của Wikidata và Wikimedia Commons. Thông tin kiến trúc dùng các thẻ trên đúng đường bao công trình. Hình thu nhỏ trong danh sách mô hình là ảnh kết xuất của trò chơi.
 https://www.openstreetmap.org/copyright
 https://www.wikidata.org/wiki/Property:P18

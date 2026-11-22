@@ -1,21 +1,338 @@
 'use strict';
+const vanMieuArchitectureRefs=new Set(['w702185143','w702241280','w702241281',
+  'w702185144','w702185176','w702185189','w702241324','w702241325']);
+// Native Văn Miếu models use the monument's floor plans, photographs, and the
+// documented order and catalogue sizes of the 82 stelae (VanMieuSurvey).
+// Undimensioned roofs, timber, carving profiles, turtle bases and spacing are
+// visual reconstructions. No inscription text is synthesized.
+function createVanMieuArchitecture(T){
+  const colors={clay:0xb66d4c,ridge:0x8e8176,timber:0x653d2e,wood:0x875742,lacquer:0x9c3b2a,
+    granite:0x88887b,border:0x989889,brick:0xa97960,plaster:0xcec5af,bronze:0x827454,hide:0xc8aa81};
+  for(const k of Object.keys(colors))colors[k]=new T.Color(colors[k]);
+  const forms={box:new T.BoxGeometry(1,1,1),round:new T.CylinderGeometry(1,1,1,10),
+    ellipsoid:new T.SphereGeometry(1,10,5)};
+  return function draw(survey,ring,graph,put){
+    const stele=Boolean(survey.steleRows),drum=survey.kind==='drum',bell=survey.kind==='bell';
+    const gate=survey.ref==='w702185144'||survey.ref==='w702185176',hall=survey.ref==='w702185189';
+    const mainGate=survey.ref==='w702185143',sideGate=survey.ref==='w702241280'||survey.ref==='w702241281';
+    // World north is -z. Rows run from Khuê Văn Các to Đại Thành Môn. Each
+    // tablet lies parallel to its gallery and faces across it toward the well.
+    const site=window.VanMieuSurvey.byRef,centre=ref=>{
+      const xy=site.get(ref).rings[0].slice(0,-1);
+      return graph.point(xy.reduce((s,p)=>s+p[0],0)/xy.length,xy.reduce((s,p)=>s+p[1],0)/xy.length);
+    };
+    const khue=centre('w702185155'),dai=centre('w702185176'),well=centre('w37934144');
+    let tx=dai.x-khue.x,tz=dai.z-khue.z;
+    if(!stele)[tx,tz]=[-tz,tx];
+    const length=Math.hypot(tx,tz);tx/=length;tz/=length;
+    let ux=tx,uz=tz,longest=0;
+    for(let j=0;j<ring.length;j++){
+      const a=ring[j],b=ring[(j+1)%ring.length],dx=b.x-a.x,dz=b.y-a.y,len=Math.hypot(dx,dz),dot=dx*tx+dz*tz;
+      if(len>longest&&Math.abs(dot)>.88*len){longest=len;ux=dx/len*Math.sign(dot);uz=dz/len*Math.sign(dot);}
+    }
+    let vx=-uz,vz=ux;
+    const x0=ring[0].x,z0=ring[0].y;
+    const front=stele?well:graph.point(105.8353754,21.0273187);
+    if((front.x-x0)*vx+(front.z-z0)*vz<0){vx=-vx;vz=-vz;}
+    const us=ring.map(p=>(p.x-x0)*ux+(p.y-z0)*uz),vs=ring.map(p=>(p.x-x0)*vx+(p.y-z0)*vz);
+    const uMin=Math.min(...us),uMax=Math.max(...us),vMin=Math.min(...vs),vMax=Math.max(...vs);
+    const U=(uMax-uMin)/2,V=(vMax-vMin)/2;
+    const x=x0+ux*(uMax+uMin)/2+vx*(vMax+vMin)/2,z=z0+uz*(uMax+uMin)/2+vz*(vMax+vMin)/2;
+    const solids=[],stelae=[];
+    function corner(u,v){return new T.Vector2(x+ux*u+vx*v,z+uz*u+vz*v);}
+    function barrier(u,v,ru,rv){solids.push([[corner(u-ru,v-rv),corner(u+ru,v-rv),corner(u+ru,v+rv),corner(u-ru,v+rv)]]);}
+    function finishOf(tint){
+      if(tint===colors.granite||tint===colors.border)return 3;
+      if(tint===colors.wood||tint===colors.timber||tint===colors.lacquer)return 5;
+      if(tint===colors.plaster)return 6;
+      return 0;
+    }
+    function point(p,tint,finish=finishOf(tint),uv){
+      const [u,y,v]=p;
+      const tex=uv||(finish>=3?[u,y]:[u,v]);
+      put(x+ux*u+vx*v,y,z+uz*u+vz*v,tex[0],tex[1],tint,finish);
+    }
+    function planar(a,b,c){
+      const dx=b[0]-a[0],dy=b[1]-a[1],dz=b[2]-a[2],ex=c[0]-a[0],ey=c[1]-a[1],ez=c[2]-a[2];
+      const nx=Math.abs(dy*ez-dz*ey),ny=Math.abs(dz*ex-dx*ez),nz=Math.abs(dx*ey-dy*ex);
+      if(ny>nx&&ny>nz)return p=>[p[0],p[2]];
+      return nx>nz?p=>[p[2],p[1]]:p=>[p[0],p[1]];
+    }
+    function face(a,b,c,d,tint,finish=finishOf(tint)){
+      const map=finish>=3&&planar(a,b,c);
+      for(const p of [a,b,c,a,c,d])point(p,tint,finish,map&&map(p));
+    }
+    function solid(key,u,y,v,su,sy,sv,tint){
+      const geo=forms[key],ind=geo.index.array,positions=geo.attributes.position,uv=geo.attributes.uv,finish=finishOf(tint);
+      const pts=Array.from({length:positions.count},(_,i)=>[u+positions.getX(i)*su,y+positions.getY(i)*sy,v+positions.getZ(i)*sv]);
+      for(let j=0;j<ind.length;j+=3){
+        const projection=key==='box'&&planar(pts[ind[j]],pts[ind[j+1]],pts[ind[j+2]]);
+        for(let k=j;k<j+3;k++){
+          const i=ind[k],p=pts[i];
+          const tex=projection?projection(p):[u+.37*v+uv.getX(i)*Math.PI*(su+sv),y+(uv.getY(i)-.5)*sy*(key==='round'?1:2)];
+          point(p,tint,finish,tex);
+        }
+      }
+    }
+    function box(u,y,v,w,h,d,tint){solid('box',u,y,v,w,h,d,tint);}
+    const piers=survey.kind==='stelePavilion';
+    const raised=gate||drum||bell;
+    const floor=hall ? 0 : (raised ? .36 : .12);
+    const tallest=stele?Math.max(...survey.steleRows.map(a=>a.height)):0;
+    const eave=stele?Math.max(tallest+.76,piers?3.05:2.85):hall?4.5:gate?2.82:3.85;
+    const rise=stele?(piers?1.95:1.43):Math.min(3,V*.75);
+    const apron=Math.min(.32,V*.12);
+    box(0,floor/2-.18,0,(U-apron*.65)*2,floor+.36,(V-apron*.65)*2,colors.brick);
+    function roofTier(halfU,halfV,edge,pitch,offsetU=0,offsetV=0){
+      const gabled=gate||hall;
+      const hip=gabled?0:Math.min(halfU*.45,halfV*.73);
+      function roofPoint(s,t,side){
+        const end=Math.abs(s)**7,upturn=Math.min(.52,halfV*.17)*end;
+        return [offsetU+s*(halfU-hip*t),edge+pitch*(.70*t+.30*t*t)+(gabled?.18:1)*upturn*((1-t)**2+.23*t*t),
+          offsetV+side*halfV*(1-t)];
+      }
+      const segments=12,tiers=4;
+      for(const side of [-1,1]){
+        for(let j=0;j<segments;j++){
+          const s=2*j/segments-1,r=2*(j+1)/segments-1;
+          for(let k=0;k<tiers;k++)face(roofPoint(s,k/tiers,side),roofPoint(r,k/tiers,side),
+            roofPoint(r,(k+1)/tiers,side),roofPoint(s,(k+1)/tiers,side),colors.clay,1);
+          const a=roofPoint(s,0,side),b=roofPoint(r,0,side);
+          face(a,b,[b[0],b[1]-.12,b[2]],[a[0],a[1]-.12,a[2]],colors.timber);
+        }
+      }
+      for(const s of [-1,1])for(let k=0;k<tiers;k++){
+        const t=k/tiers,n=(k+1)/tiers;
+        face(roofPoint(s,t,-1),roofPoint(s,t,1),roofPoint(s,n,1),roofPoint(s,n,-1),
+          gabled?colors.plaster:colors.clay,gabled?0:1);
+      }
+      const cap=(s,side)=>{const [u,y]=roofPoint(s,1,1);return [u,y+.09+Math.abs(s)**8*.14,offsetV+side*.10];};
+      for(let k=0;k<segments;k++){
+        const s=2*k/segments-1,r=2*(k+1)/segments-1;
+        face(cap(s,-1),cap(r,-1),cap(r,1),cap(s,1),colors.ridge);
+        for(const side of [-1,1]){
+          const a=cap(s,side),b=cap(r,side);
+          face(a,b,[b[0],b[1]-.16,b[2]],[a[0],a[1]-.16,a[2]],colors.ridge);
+        }
+      }
+    }
+    function arch(u,v,halfWidth,halfDepth,halfOpening,spring,top,bottom=0){
+      // The round cutout runs through the full depth, so the portal also
+      // reads correctly when approached from the other courtyard.
+      const c=colors.plaster,postWidth=halfWidth-halfOpening;
+      for(const side of [-1,1]){
+        const centre=u+side*(halfOpening+postWidth/2);
+        box(centre,(bottom+top)/2,v,postWidth,top-bottom,2*halfDepth,c);
+        if(bottom<1)barrier(centre,v,postWidth/2,halfDepth);
+      }
+      const curve=t=>[u+halfOpening*Math.cos(t),spring+halfOpening*Math.sin(t)];
+      for(let j=0;j<10;j++){
+        const a=curve(j*Math.PI/10),b=curve((j+1)*Math.PI/10);
+        for(const side of [-1,1]){
+          const z=v+side*halfDepth;
+          face([a[0],a[1],z],[b[0],b[1],z],[b[0],top,z],[a[0],top,z],c);
+        }
+        face([a[0],a[1],v-halfDepth],[b[0],b[1],v-halfDepth],
+          [b[0],b[1],v+halfDepth],[a[0],a[1],v+halfDepth],c);
+      }
+      box(u,top+.045,v,2*halfWidth,.09,2*halfDepth,c);
+    }
+    if(mainGate||sideGate){
+      const lower=sideGate?3.08:4.40,aperture=sideGate?U*.63:U*.42;
+      arch(0,0,U,V,aperture,lower-aperture-.40,lower,floor);
+      box(0,lower+.12,0,U*2+.18,.19,V*2+.18,colors.ridge);
+      if(sideGate)return {solids,height:lower+.24};
+      // The upper storey has its own mapped outline. The bell suspended
+      // there is 2.10 m high with a 0.99 m mouth (monument operator).
+      const upper=site.get('w702185142').rings[0].slice(0,-1).map(p=>graph.point(...p));
+      const au=upper.map(p=>(p.x-x)*ux+(p.z-z)*uz),av=upper.map(p=>(p.x-x)*vx+(p.z-z)*vz);
+      const halfU=(Math.max(...au)-Math.min(...au))/2,halfV=(Math.max(...av)-Math.min(...av))/2;
+      const u=(Math.max(...au)+Math.min(...au))/2,v=(Math.max(...av)+Math.min(...av))/2;
+      const low=lower+.24,top=low+3.0;
+      for(const sign of [-1,1]){
+        for(let bay=-1;bay<=1;bay++)
+          arch(u+bay*halfU*2/3,v+sign*(halfV-.10),halfU/3,.10,halfU*.22,low+1.74,top,low);
+        box(u+sign*(halfU-.12),low+.38,v,.22,.76,2*halfV,colors.plaster);
+      }
+      const ih=survey.instrumentHeight,ir=survey.instrumentDiameter/2;
+      solid('round',u,top-ih*.56,v,ir*.85,ih*.74,ir*.85,colors.bronze);
+      solid('ellipsoid',u,top-ih*.18,v,ir*.85,ih*.18,ir*.85,colors.bronze);
+      solid('round',u,top-ih*.95,v,ir,ih*.10,ir,colors.bronze);
+      roofTier(halfU+.30,halfV+.30,top,.85,u,v);
+      roofTier(halfU*.80,halfV*.80,top+.67,.66,u,v);
+      return {solids,height:top+1.64};
+    }
+    roofTier(U,V,eave,rise);
+    // Columns and tie beams keep the approach and sides of the structures open.
+    const bays=survey.bays||(piers||drum||bell?1:5);
+    const rows=hall?survey.columns/(bays+1):gate?3:2;
+    const postU=U-Math.min(.60,U*.17),postV=V-Math.min(.48,V*.22);
+    const rad=piers?.34:drum||bell?.30:hall?.20:gate?.16:.125;
+    for(let j=0;j<rows;j++){
+      const v=-postV+2*postV*j/(rows-1);
+      box(0,eave-.15,v,2*postU+.18,.22,piers?.35:.19,colors.timber);
+      for(let k=0;k<=bays;k++){
+        const u=-postU+2*postU*k/bays,top=eave-.12;
+        box(u,floor+.085,v,rad*2.65,.17,rad*2.65,colors.granite);
+        if(piers)box(u,(floor+top)/2,v,rad*2,top-floor,rad*2,colors.plaster);
+        else solid('round',u,(floor+top)/2,v,rad,top-floor,rad,gate?colors.lacquer:colors.timber);
+        barrier(u,v,rad,rad);
+        if(j===0)box(u,eave-.13,0,.17,.22,2*postV+.25,colors.timber);
+      }
+    }
+    // Closed end gables frame the open bays of the hall and courtyard gates.
+    if(hall||gate)for(const sign of [-1,1]){
+      box(sign*postU,(floor+eave)/2,0,.20,eave-floor,postV*2,colors.plaster);
+      barrier(sign*postU,0,.10,postV);
+    }
+    if(gate){
+      if(survey.entranceSteps){
+        const n=survey.entranceSteps;
+        for(const sign of [-1,1])for(let k=1;k<n;k++){
+          const y=floor*k/n;
+          box(0,y/2,sign*(V+(n-k-.5)*.28),postU*2/bays,y,.29,colors.granite);
+        }
+      }
+      if(survey.doors)for(let k=0;k<bays;k++){
+        const u=-postU+(k+.5)*2*postU/bays;
+        // Fold each pair of doors back along the centre column line. This keeps
+        // the three documented openings clear while retaining the timber leaves.
+        for(const side of [-1,1])box(u+side*(postU/bays-rad-.03),floor+1.03,
+          -postU/bays*.5,.09,2.06,postU/bays,colors.wood);
+      }
+    }
+    if(drum||bell){
+      const h=survey.instrumentHeight,diameter=survey.instrumentDiameter;
+      if(drum){
+        // The maker's 2.65 m drum stands on a horizontal axis in a wood cradle.
+        const centre=floor+diameter*.52+.55;
+        for(const v of [-h*.32,h*.32]){
+          box(0,floor+.37,v,diameter*.82,.73,.13,colors.wood);
+          box(0,floor+.09,v,diameter*1.06,.18,.32,colors.timber);
+        }
+        const segments=24,circle=(a,r,v)=>[Math.cos(a)*r,centre+Math.sin(a)*r,v];
+        for(let j=0;j<segments;j++){
+          const a=2*Math.PI*j/segments,b=2*Math.PI*(j+1)/segments;
+          for(const sign of [-1,1]){
+            const end=sign*h/2,r=diameter*.5;
+            face(circle(a,r,end),circle(b,r,end),circle(b,r*1.12,0),circle(a,r*1.12,0),colors.lacquer);
+            for(const fraction of [.58,.88]){
+              const v1=end*(fraction-.018),v2=end*(fraction+.018);
+              const r1=r*(1.12-.12*(fraction-.018))+.012,r2=r*(1.12-.12*(fraction+.018))+.012;
+              face(circle(a,r1,v1),circle(b,r1,v1),circle(b,r2,v2),circle(a,r2,v2),colors.timber);
+            }
+            for(const p of [[0,centre,end],circle(a,r,end),circle(b,r,end)])point(p,colors.hide);
+          }
+        }
+      }else{
+        const foot=floor+.65;
+        solid('round',0,foot+h*.52,0,.68,h*.74,.68,colors.bronze);
+        solid('ellipsoid',0,foot+h*.85,0,.68,h*.15,.68,colors.bronze);
+        solid('round',0,foot+h*.09,0,.77,h*.18,.77,colors.bronze);
+        box(0,foot+h+(eave-foot-h)*.5,0,.10,eave-foot-h,.10,colors.timber);
+      }
+      barrier(0,0,drum?diameter*.56:.77,drum?h*.50:.77);
+    }
+    function tablet(u,height,width,year){
+      const photographed=year===1442,ru=width/2,rv=Math.min(.15,width*.14),base=floor+.33;
+      const curve=photographed?height*.135:width*.28;
+      // A turtle supports each tablet. Its head turns toward Thiên Quang well.
+      solid('ellipsoid',u,floor+.17,0,ru*.95,.22,width*.59,colors.granite);
+      solid('ellipsoid',u,floor+.17,width*.59,ru*.31,.17,width*.27,colors.granite);
+      for(const side of [-1,1])for(const end of [-1,1])
+        solid('ellipsoid',u+side*ru*.79,floor+.08,end*width*.27,ru*.27,.09,width*.19,colors.granite);
+      const profile=[[-ru,0],[ru,0]];
+      for(let k=0;k<=10;k++){
+        const a=k*Math.PI/10;
+        profile.push([Math.cos(a)*ru,height-curve+curve*Math.sin(a)]);
+      }
+      const place=([a,b],d)=>[u+a,base+b,d];
+      const mid=[0,height*.46];
+      const inset=p=>[p[0]*.86,p[1]*.90+height*.045];
+      for(let k=0;k<profile.length;k++){
+        const a=profile[k],b=profile[(k+1)%profile.length];
+        face(place(a,-rv),place(b,-rv),place(b,rv),place(a,rv),colors.granite);
+        for(const p of [a,b,mid])point(place(p,-rv),colors.granite);
+        if(photographed){
+          // Only the 1442 stele uses Ngokhong's photograph. The sign keeps
+          // the historic inscription legible from the actual viewing side.
+          const right=ux*vz-uz*vx;
+          for(const p of [a,b,mid])point(place(p,rv+.012),colors.granite,4,[.5+right*p[0]/width,p[1]/height]);
+        }else{
+          face(place(a,rv),place(b,rv),place(inset(b),rv+.012),place(inset(a),rv+.012),colors.border);
+          for(const p of [inset(a),inset(b),mid])point(place(p,rv+.012),colors.granite);
+        }
+      }
+      barrier(u,width*.09,ru,width*.66);
+    }
+    if(stele){
+      const entries=survey.steleRows,usable=2*(U-apron);
+      const gap=(usable-entries.reduce((sum,entry)=>sum+entry.width,0))/entries.length;
+      let end=-usable/2+gap/2;
+      entries.forEach(({year,height,width})=>{
+        const u=end+width/2;
+        tablet(u,height,width,year);
+        stelae.push({x:x+ux*u,z:z+uz*u,year,height,width,viewAngle:Math.atan2(vx,vz)});
+        end+=width+gap;
+      });
+    }
+    return {solids,stelae,height:eave+rise+.35};
+  };
+}
+
 function createTourDistrict(T,scene,plaster,structures,osmBuildings,nightLights){
   const parts=createVietnamOsmBuildings('sight-building-parts/',Infinity);
   const wall=plaster.clone();wall.vertexColors=true;wall.side=T.DoubleSide;
   const roof=new T.MeshStandardMaterial({vertexColors:true,side:T.DoubleSide,roughness:.9});
+  const grain={value:null},stelePhoto={value:null},photoReady={value:0};
+  function loadMonumentSurfaces(){
+    if(grain.value||typeof document==='undefined')return;
+    const loader=new T.TextureLoader();
+    grain.value=(typeof landmarkGrain!=='undefined'&&landmarkGrain)||loader.load('streetscape/surfaces/landmark-grain.webp');
+    grain.value.wrapS=grain.value.wrapT=T.RepeatWrapping;grain.value.anisotropy=4;
+    stelePhoto.value=loader.load('landmark-scans/van-mieu-1442-face.webp',()=>{photoReady.value=1;});
+    stelePhoto.value.colorSpace=T.SRGBColorSpace;stelePhoto.value.anisotropy=4;
+  }
   roof.onBeforeCompile=shader=>{
+    Object.assign(shader.uniforms,{monumentGrain:grain,stelePhoto,photoReady});
     const vary='varying vec2 visitorRoofUv; varying float visitorRoofFinish;\n';
     shader.vertexShader=vary+'attribute float roofFinish;\n'+shader.vertexShader.replace('#include <begin_vertex>',
       '#include <begin_vertex>\n visitorRoofUv=uv;visitorRoofFinish=roofFinish;');
-    shader.fragmentShader=vary+shader.fragmentShader.replace('#include <color_fragment>',`#include <color_fragment>
-      if(visitorRoofFinish>.5){
+    shader.fragmentShader=vary+'uniform sampler2D monumentGrain,stelePhoto; uniform float photoReady;\n'+
+      shader.fragmentShader.replace('#include <color_fragment>',`#include <color_fragment>
+      float naturalRelief=0.;
+      if(visitorRoofFinish>2.5){
+        vec2 metres=visitorRoofUv;
+        vec3 grain=texture2D(monumentGrain,metres*.56).rgb-.5;
+        if(abs(visitorRoofFinish-4.)<.25 && photoReady>.5){
+          diffuseColor.rgb=texture2D(stelePhoto,visitorRoofUv).rgb;
+        }else if(visitorRoofFinish<4.5){
+          float mineral=grain.g+.32*(texture2D(monumentGrain,metres*2.3).g-.5);
+          float weather=texture2D(monumentGrain,metres*.21+vec2(.16,.61)).r-.5;
+          diffuseColor.rgb*=vec3(1.+.66*mineral+.29*weather);
+          diffuseColor.rgb*=mix(vec3(1.),vec3(.79,.85,.72),smoothstep(-.05,.24,weather)*.52);
+          naturalRelief=.004*mineral;
+        }else if(visitorRoofFinish<5.5){
+          diffuseColor.rgb*=1.+.50*grain.b;naturalRelief=.002*grain.b;
+        }else{
+          float deposit=texture2D(monumentGrain,metres*vec2(.34,.16)).r-.5;
+          diffuseColor.rgb*=vec3(1.+.41*grain.r+.24*deposit);
+          naturalRelief=.0035*grain.r;
+        }
+      }else if(visitorRoofFinish>.5){
         vec2 tile=visitorRoofUv*vec2(5.8,3.6);
         vec2 aa=max(vec2(.001),fwidth(tile));float fade=1.-smoothstep(.14,.8,max(aa.x,aa.y));
         float crest=.5+.5*cos(tile.x*6.283);
         float lip=smoothstep(.71,.95,fract(tile.y));
         if(visitorRoofFinish>1.5)lip=0.;
         diffuseColor.rgb*=1.+fade*(.24*(crest-.5)-.16*lip);
-      }`);
+      }`).replace('#include <normal_fragment_maps>',`#include <normal_fragment_maps>
+        if(visitorRoofFinish>2.5 && abs(visitorRoofFinish-4.)>.25){
+          vec3 dx=dFdx(-vViewPosition),dy=dFdy(-vViewPosition);
+          vec3 across=cross(dy,normal),along=cross(normal,dx);
+          float area=dot(dx,across);
+          normal=normalize(normal-sign(area)*(across*dFdx(naturalRelief)+along*dFdy(naturalRelief))/max(abs(area),1.e-9));
+        }`);
   };
   // Window bays follow the measured edge length and the floor count. Shade them
   // in the wall pass, so a dense city block costs the same two draws on a phone.
@@ -57,6 +374,7 @@ function createTourDistrict(T,scene,plaster,structures,osmBuildings,nightLights)
   const roofs=[0x9f6757,0xa09a8e,0x798d92,0xaca69c].map(v=>new T.Color(v));
   const concrete=new T.Color(0x989186);
   const doorway=new T.Color(0x354647);
+  let vanMieuArchitecture;
   // Each material has one draw. Reuse its CPU buffer as the view moves, and
   // hand WebGL only the populated vertices when the new district is complete.
   let indexPromise,available,grid,scale=100000,loadedGraph,signature,loaded=[],serial=0;
@@ -89,14 +407,16 @@ function createTourDistrict(T,scene,plaster,structures,osmBuildings,nightLights)
     if(ring.length>1&&ring[0].equals(ring.at(-1)))ring.pop();
     return ring;
   }
-  function projectFootprint(raw,graph,projected){
-    const known=projected.get(raw);if(known)return known;
-    const rings=raw.map(r=>decode(r,graph)).filter(r=>r.length>=3);
+  function projectFootprint(raw,graph,projected,survey){
+    const key=survey?.rings||raw,known=projected.get(key);if(known)return known;
+    const rings=survey?survey.rings.map(ring=>ring.slice(0,-1).map(([lon,lat])=>{
+      const p=graph.point(lon,lat);return new T.Vector2(p.x,p.z);
+    })):raw.map(r=>decode(r,graph)).filter(r=>r.length>=3);
     if(!rings.length)return null;
     let minX=Infinity,minZ=Infinity,maxX=-Infinity,maxZ=-Infinity;
     for(const p of rings[0]){minX=Math.min(minX,p.x);minZ=Math.min(minZ,p.y);maxX=Math.max(maxX,p.x);maxZ=Math.max(maxZ,p.y);}
     const shape={rings,box:{minX,minZ,maxX,maxZ},flat:rings.flat()};
-    projected.set(raw,shape);
+    projected.set(key,shape);
     return shape;
   }
   function createView(parent){
@@ -108,20 +428,22 @@ function createTourDistrict(T,scene,plaster,structures,osmBuildings,nightLights)
     for(const b of cells.get(Math.floor(x/cell)+','+Math.floor(z/cell))||[]){
       if(b.bottom>2.2)continue;
       if(x<b.minX-r||z<b.minZ-r||x>b.maxX+r||z>b.maxZ+r)continue;
-      let inside=false,min=Infinity,px,pz;
-      for(const ring of b.rings){
-        for(let j=0,k=ring.length-1;j<ring.length;k=j++){
-          const a=ring[k],c=ring[j],dx=c.x-a.x,dz=c.y-a.y;
-          if((a.y>z)!==(c.y>z)&&x<a.x+(z-a.y)*dx/dz)inside=!inside;
-          const f=Math.max(0,Math.min(1,((x-a.x)*dx+(z-a.y)*dz)/(dx*dx+dz*dz||1)));
-          const xx=a.x+f*dx,zz=a.y+f*dz,d=(x-xx)**2+(z-zz)**2;
-          if(d<min){min=d;px=xx;pz=zz;}
+      for(const rings of b.solids||[b.rings]){
+        let inside=false,min=Infinity,px,pz;
+        for(const ring of rings){
+          for(let j=0,k=ring.length-1;j<ring.length;k=j++){
+            const a=ring[k],c=ring[j],dx=c.x-a.x,dz=c.y-a.y;
+            if((a.y>z)!==(c.y>z)&&x<a.x+(z-a.y)*dx/dz)inside=!inside;
+            const f=Math.max(0,Math.min(1,((x-a.x)*dx+(z-a.y)*dz)/(dx*dx+dz*dz||1)));
+            const xx=a.x+f*dx,zz=a.y+f*dz,d=(x-xx)**2+(z-zz)**2;
+            if(d<min){min=d;px=xx;pz=zz;}
+          }
         }
+        const d=Math.sqrt(min),depth=r+(inside?d:-d);
+        if(depth<=0||hit&&hit.depth>=depth)continue;
+        const dir=inside?-1:1;
+        hit={nx:d?dir*(x-px)/d:1,nz:d?dir*(z-pz)/d:0,depth,pointX:px,pointZ:pz,height:b.h,kind:'building',id:b.id};
       }
-      const d=Math.sqrt(min),depth=r+(inside?d:-d);
-      if(depth<=0||hit&&hit.depth>=depth)continue;
-      const dir=inside?-1:1;
-      hit={nx:d?dir*(x-px)/d:1,nz:d?dir*(z-pz)/d:0,depth,pointX:px,pointZ:pz,height:b.h,kind:'building',id:b.id};
     }
     return hit;
   }
@@ -200,6 +522,20 @@ function createTourDistrict(T,scene,plaster,structures,osmBuildings,nightLights)
     const replaced=new Set(pieces.flatMap(row=>[row[6]?.parent,row[6]?.sourceId]).filter(Boolean));
     const shells=[...(graph===loadedGraph?loaded:[]),...osmBuildings.rows(graph,cx,cz)];
     const surveyed=[...pieces,...shells.filter(row=>!replaced.has(row[0]))];
+    const monument=window.VanMieuSurvey;
+    if(monument?.byRef){
+      const anchor=graph.point(...monument.origin);
+      if(Math.hypot(anchor.x-cx,anchor.z-cz)<radius+400){
+        const mapped=new Set(surveyed.map(row=>row[0]));
+        // Some independently mapped gates have no building tag in the national
+        // tile. Use the original geometry for the architectural survey itself.
+        for(const f of monument.features){
+          if(mapped.has(f.ref)||(!f.steleRows&&!vanMieuArchitectureRefs.has(f.ref)))continue;
+          const [lon,lat]=f.rings[0][0];
+          surveyed.push([f.ref,'temple',0,0,[[Math.round(lon*scale),Math.round(lat*scale)]],'']);
+        }
+      }
+    }
     const extra=structures.rows(graph,cx,cz);
     // Satellite outlines can be displaced onto a carriageway. Only index the
     // road segments close enough to test a footprint in this view.
@@ -318,7 +654,11 @@ function createTourDistrict(T,scene,plaster,structures,osmBuildings,nightLights)
       if(ids.has(id)||landmarks?.modeledBuildings.has(id))continue;
       const first=graph.point(raw[0][0]/scale,raw[0][1]/scale);
       if(Math.abs(first.x-cx)>850||Math.abs(first.z-cz)>850)continue;
-      const outline=projectFootprint(raw,graph,projected);if(!outline)continue;
+      const survey=monument?.byRef?.get(id);
+      // The upper gate storey is already drawn on this mapped outline by
+      // the native main gate. A future national building tile may include it.
+      if(survey&&id==='w702185142'&&surveyedIds.has('w702185143'))continue;
+      const outline=projectFootprint(raw,graph,projected,survey);if(!outline)continue;
       const {rings,box,flat}=outline,outer=rings[0],{minX,minZ,maxX,maxZ}=box;
       const x=(minX+maxX)/2,z=(minZ+maxZ)/2;
       if(Math.hypot(x-cx,z-cz)>radius+Math.hypot(maxX-minX,maxZ-minZ)/2)continue;
@@ -344,7 +684,7 @@ function createTourDistrict(T,scene,plaster,structures,osmBuildings,nightLights)
         }));
         outline.foundation=foundation;outline.terrainRevision=terrainRevision;
       }
-      baseY=outline.foundation;
+      baseY=outline.foundation+(survey?.platformHeight||0);
       const profiles=outline.profiles;
       let seed=0;for(let i=0;i<id.length;i++)seed=(Math.imul(seed,31)+id.charCodeAt(i))>>>0;
       const warehouse=/warehouse|industrial|shed|garage|roof|barn/.test(kind);
@@ -353,7 +693,11 @@ function createTourDistrict(T,scene,plaster,structures,osmBuildings,nightLights)
       const pin=original&&pins.find(p=>p.x>=minX&&p.x<=maxX&&p.z>=minZ&&p.z<=maxZ&&insideBuilding(p.x,p.z,rings));
       const site=original&&(VietnamTourism.byId.get(ref)||pin?.site);
       const tagged=original&&(window.VietnamSightDetails?.[ref]||window.VietnamSightDetails?.[pin?.site.id]);
-      const detail=part?{...tagged,...part}:tagged;
+      const historicRoof=survey?.kind==='steleHouse'||survey?.kind==='stelePavilion'||survey?.kind==='wing'||
+        ['w702185144','w702185176','w702185189','w702241326'].includes(id);
+      let detail=part?{...tagged,...part}:tagged;
+      if(historicRoof)detail={...detail,building:'temple','roof:material':'roof_tiles'};
+      if(survey?.roofColour)detail={...detail,'roof:colour':survey.roofColour};
       const use=detail?.building||kind,faith=detail?.religion;
       const label=site?.name||'';
       opening=use==='temple'||['buddhist','vietnamese_folk','chinese_folk','Phật_Giáo'].includes(faith)||/^(chùa|đền|đình|miếu)\s/iu.test(label)?1:
@@ -369,6 +713,13 @@ function createTourDistrict(T,scene,plaster,structures,osmBuildings,nightLights)
       const block=Math.floor(x/70)+','+Math.floor(z/70);blocks.set(block,(blocks.get(block)||0)+1);
       for(let i=Math.floor((minX-12)/cell);i<=Math.floor((maxX+12)/cell);i++)for(let j=Math.floor((minZ-12)/cell);j<=Math.floor((maxZ+12)/cell);j++){
         const key=i+','+j;if(!cells.has(key))cells.set(key,[]);cells.get(key).push(b);
+      }
+      if(survey&&(survey.steleRows||vanMieuArchitectureRefs.has(id))){
+        loadMonumentSurfaces();
+        vanMieuArchitecture??=createVanMieuArchitecture(T);
+        const built=vanMieuArchitecture(survey,outer,graph,(px,py,pz,u,v,tint,finish)=>
+          vertex(batches[1],px,py,pz,u,v,tint,finish));
+        b.h=built.height;b.solids=built.solids;b.stelae=built.stelae;continue;
       }
       const [bLon,bLat]=graph.geo(x,z),zone=window.CentralStreetscapes?.zoneAt(bLon,bLat);
       const zWalls=zone?zone.walls:null,zRoofs=zone?zone.roofs:null;

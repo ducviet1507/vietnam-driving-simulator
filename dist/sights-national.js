@@ -295,37 +295,57 @@
     photo:'https://dinhdoclap.gov.vn/kien-truc-dinh-doc-lap/',description:'Các dải ban công chạy ngang mặt đứng. Lớp rèm hoa đá gợi hình đốt trúc, che nắng cho hành lang phía sau.'},palace);
 
   function lighthouse(T,{palette, group,stamp,round,tapered,box}){
-    const granite=0xc2ac86,band=0xa79779;
-    palette({stone: granite});
-    tapered(band,0,.55,0,4.6,4.35,1.1,1,8);
-    tapered(granite,0,16.35,0,3.85,2.55,30.7,1,8);
-    for(let i=0;i<6;i++)box(0x4a4a41,0,4+i*4.2,3.42-i*.17,.66,1.25,.24);
-    for(const [y,r,h] of [[31.8,2.95,.6],[32.32,3.45,.45],[32.73,3.67,.26]])stamp(round,band,0,y,0,r,h,r);
-    for(let i=0;i<20;i++){
-      const a=i*Math.PI/10;stamp(round,0x4d5047,3.32*Math.sin(a),33.35,3.32*Math.cos(a),.047,1.18,.047);
+    const granite=0xc7c5b8,band=0xb2afa5,iron=0x5c605d;
+    palette({stone:[granite,band],metal:iron});
+    // An octagonal plinth spans the 7.1 m OSM outline. Average shaft width across flats is 4 m.
+    const bodyBase=1.1,bodyTop=35,baseRadius=2.68,topRadius=1.65;
+    const radiusAt=y=>baseRadius+(topRadius-baseRadius)*(y-bodyBase)/(bodyTop-bodyBase);
+    function masonry(tint,y0,y1,r0,r1){
+      const stone=new T.CylinderGeometry(r1,r0,y1-y0,8);
+      stamp(stone,tint,0,(y1+y0)/2,0,1,1,1,Math.PI/8);stone.dispose();
     }
-    const rail=new T.TorusGeometry(3.32,.06,5,32);stamp(rail,0x55584d,0,33.88,0,1,1,1,0,Math.PI/2);rail.dispose();
-    stamp(round,0x86a5a3,0,34.7,0,2.05,3.55,2.05);
-    for(let i=0;i<10;i++){const a=i*Math.PI/5;stamp(round,0x535c57,2*Math.sin(a),34.7,2*Math.cos(a),.08,3.55,.08);}
-    tapered(0x62665a,0,37.15,0,2.65,.14,1.75,1,16);stamp(round,0x434a46,0,38.45,0,.07,1,.07);
-    const optic=new T.Mesh(new T.SphereGeometry(.55,14,9),new T.MeshBasicMaterial({color:0xffe7ae}));
-    optic.position.set(0,34.8,2.02);group.add(optic);
-    const glow=new T.PlaneGeometry(3.3,3.3),flare=new T.Mesh(glow,new T.ShaderMaterial({transparent:true,depthWrite:false,side:T.DoubleSide,
+    masonry(band,0,bodyBase,3.55,3.39);
+    masonry(granite,bodyBase,bodyTop,baseRadius,topRadius);
+    for(let i=0;i<6;i++){
+      const y=4+i*4.9,face=radiusAt(y)*Math.cos(Math.PI/8);
+      box(band,0,y,face,.81,1.43,.13);box(0x555650,0,y,face+.08,.58,1.12,.06);
+    }
+    for(const [y,r,h] of [[35.09,1.94,.26],[35.35,2.16,.32],[35.61,2.32,.24]])stamp(round,band,0,y,0,r,h,r);
+    for(let i=0;i<20;i++){
+      const a=i*Math.PI/10;stamp(round,iron,2.19*Math.sin(a),36.26,2.19*Math.cos(a),.04,1.06,.04);
+    }
+    const rail=new T.TorusGeometry(2.19,.045,6,32);stamp(rail,iron,0,36.78,0,1,1,1,0,Math.PI/2);rail.dispose();
+    stamp(round,iron,0,36.9,0,1.56,2.35,1.56);
+    const glassBottom=38.07,glassTop=40.41,glassHeight=glassTop-glassBottom;
+    const glass=new T.Mesh(new T.CylinderGeometry(1.49,1.49,glassHeight,12,1,true),
+      new T.MeshStandardMaterial({color:0xcad8d8,roughness:.18,transparent:true,opacity:.21,depthWrite:false}));
+    glass.position.y=(glassBottom+glassTop)/2;group.add(glass);
+    for(let i=0;i<12;i++){
+      const a=i*Math.PI/6;stamp(round,iron,1.49*Math.sin(a),glass.position.y,1.49*Math.cos(a),.047,glassHeight,.047);
+    }
+    tapered(iron,0,40.66,0,1.69,.21,.50,1,24);stamp(round,iron,0,40.95,0,.055,.10,.055);
+    // The 2019 station survey gives 66 m to the tower top and 65 m to the lens, both above chart datum.
+    const optic=new T.Mesh(new T.SphereGeometry(.29,16,12),new T.MeshBasicMaterial({color:0xffffff}));
+    optic.position.set(0,40,0);group.add(optic);
+    const glow=new T.PlaneGeometry(2,2),flare=new T.Mesh(glow,new T.ShaderMaterial({transparent:true,depthWrite:false,side:T.DoubleSide,
       uniforms:{beam:{value:0}},blending:T.AdditiveBlending,
       vertexShader:'varying vec2 lens;void main(){lens=uv*2.-1.;vec4 eye=modelViewMatrix*vec4(0.,0.,0.,1.);eye.xy+=position.xy;gl_Position=projectionMatrix*eye;}',
-      fragmentShader:'varying vec2 lens;uniform float beam;void main(){float r=dot(lens,lens);gl_FragColor=vec4(1.,.85,.58,exp(-r*8.)*beam);}'
+      fragmentShader:'varying vec2 lens;uniform float beam;void main(){float r=dot(lens,lens);gl_FragColor=vec4(1.,1.,.98,exp(-r*8.)*beam);}'
     }));
-    const cameraLocal=new T.Vector3(),motion=matchMedia('(prefers-reduced-motion: reduce)');
+    const motion=matchMedia('(prefers-reduced-motion: reduce)');
     flare.position.copy(optic.position);flare.renderOrder=2;group.add(flare);
-    flare.onBeforeRender=(_renderer,_scene,camera)=>{
-      camera.getWorldPosition(cameraLocal);group.worldToLocal(cameraLocal);
-      const time=motion.matches?0:performance.now()*.00048,angle=Math.atan2(cameraLocal.x,cameraLocal.z);
-      flare.material.uniforms.beam.value=.06+.77*Math.max(0,Math.cos(time-angle))**42;
+    const flashes=[0,3.4,6.8,13.4];
+    flare.onBeforeRender=()=>{
+      const phase=(performance.now()/1000)%20;
+      const on=flashes.some(start=>phase>=start&&phase<start+.1);
+      flare.material.uniforms.beam.value=motion.matches?.27:on?.9:.025;
+      optic.material.color.setScalar(motion.matches?.65:on?1:.32);
     };
   }
-  stop('ke-ga','osm-way-1272874768',{width:9.2,depth:9.2,yaw:-.45,solids:[[0,0,3.5,3.5]],
+  stop('ke-ga','osm-way-1272874768',{lon:107.9915556,lat:10.6951944,width:7.1,depth:7.1,yaw:-.35,solids:[[0,0,2.6,2.6]],
+    structureHeight:41,focalHeight:65,source:'https://cangvuhanghaibinhthuan.gov.vn/wp-content/uploads/2025/05/378-TBHH-TCTBDATHHMN-Den-Ke-Ga.pdf',
     photo:'https://commons.wikimedia.org/wiki/Category:K%C3%AA_G%C3%A0_Lighthouse',
-    description:'Thân tháp đá tám cạnh thu nhỏ dần về phía buồng đèn. Ban công kim loại vòng quanh đỉnh tháp trên đảo.'},lighthouse);
+    description:'Tháp đá granit xám trắng tám cạnh cao 41 m từ móng. Tâm đèn nằm ở cao độ 65 m so với mốc 0 hải đồ. Đèn chớp trắng theo nhóm ba rồi một trong chu kỳ 20 giây.'},lighthouse);
 
   function islets(T,{group}){
     // Horizontal sections traced from the bay authority's water-level photograph.

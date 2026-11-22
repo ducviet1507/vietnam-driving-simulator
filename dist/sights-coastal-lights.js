@@ -4,6 +4,8 @@
   const stops=window.VietnamSights??=[];
   const nationalRegister='https://www.vimawa.gov.vn/vi/noi-dung/hien-trang-he-thong-den-bien';
   const notices={
+    'hai-dang-hon-dau':{lon:106.816389,lat:20.666417,focalHeight:63.5,source:'https://www.thuvienhaiphong.org.vn/tin-tuc/hai-dang-hon-dau-anh-sang-tram-nam-giua-bien-troi-do-son'},
+    'hai-dang-dai-lanh':{focalHeight:110,source:nationalRegister},
     'hai-dang-phuoc-mai':{lon:109.250889,lat:13.761389,source:'https://cangvuhanghaiquynhon.gov.vn/index.aspx?id=5781&page=detail'},
     'hai-dang-sa-huynh':{lon:109.081528,lat:14.667778,source:'https://vmsa.vn/baodam/upload/files/TBHH/TBHH2025/685%281%29.pdf'},
     'hai-dang-ha-mai':{lon:107.454444,lat:20.718250,source:'https://vmsa.vn/thong-bao-hang-hai-247/quang-ninh-252/ve-viec-thay-doi-dac-tinh-hoat-dong-den-bien-ha-mai-11470-2.html'},
@@ -53,6 +55,7 @@
     const details=has('stoneTiers')?'Các tầng đế bát giác và thân tháp ốp đá nhìn ra bãi biển Bãi Cháy.':
       shaft+', '+paints[spec.paint]+'. '+(coastalPier?'Nhà trạm kê trên cọc. ':house?'Nhà trạm nằm dưới chân tháp. ':'')+
       (spec.estimatedHeight?'':'Chiều cao công trình khoảng '+formattedHeight+' m.');
+    const description=notice.focalHeight?details+' Tâm đèn ở cao độ '+String(notice.focalHeight).replace('.',',')+' m so với mốc 0 hải đồ.':details;
     const cliff=cliffs[id],radius=cliff?.radius??Math.max(8,height*1.37,Math.max(width,depth)*1.18);
     const views=[{name:cliff?'Toàn cảnh đảo và tháp':'Toàn cảnh tháp',viewRadius:radius},
       {name:spec.optic==='monument'?'Đài quan sát':'Đỉnh tháp',height:height*1.92,viewRadius:Math.max(7,diameter*2.25),viewElevation:.22}];
@@ -60,7 +63,7 @@
     // Coastal piles and tower platforms neither reserve infill around a harbour nor manufacture dry land.
     const boundary=[[-width/2,-depth/2],[width/2,-depth/2],[width/2,depth/2],[-width/2,depth/2]];
     stops.push({...entry,id,catalogId,...notice,photo,source:notice.source||nationalRegister,locality:page==='sprs'?'Trường Sa':entry.locality,
-      city:entry.province,kind:'Hải đăng',modelType:'lighthouse',description:details,structureHeight:height,
+      city:entry.province,kind:'Hải đăng',modelType:'lighthouse',description,structureHeight:height,
       yaw,width,depth,boundary,solids:solid,viewAngle:yaw+.57,viewElevation:.12,viewRadius:radius,
       views,build:(T,kit)=>{
         coastalLight(T,kit,spec,has);
@@ -92,7 +95,9 @@
   add('osm-way-1273268455', 'hai-dang-mui-ron', {height:16,diameter:3.3,shape:'round',paint:'grey',optic:'beacon',details:'cabin'}, 0.252, 'vnmnc', 'Mũi Ròn'); // Mũi Ròn
   add('osm-node-12813372159', 'hai-dang-diem-dien', {height:23,diameter:4.5,shape:'round',paint:'grey',optic:'lantern',details:'ribs8'}, 0, 'vnmn', 'Diêm Điền'); // Diêm Điền
   add('osm-way-1273268446', 'hai-dang-ba-lat', {height:34,diameter:4.7,shape:'oct',paint:'grey',optic:'lantern'}, 2.996, 'vnmn', 'Ba Lạt'); // Ba Lạt
-  add('osm-way-967471570', 'hai-dang-hon-dau', {height:22.7,diameter:4.8,shape:'oct',paint:'paleBlue',optic:'lantern',details:'twin'}, 2.983, 'vnmn', 'Hòn Dấu (2)'); // Hòn Dấu
+  // Two-storey station centered on the tower. OSM way 594845825 gives its rectangle and axis.
+  // Station specification as published by the operator: https://vmsa.vn/bao-hieu-hang-hai-249/he-thong-den-bien-286/den-bien-hon-dau-4306-2.html
+  add('osm-way-967471570', 'hai-dang-hon-dau', {height:22.7,diameter:5,shape:'oct',paint:'grey',optic:'lantern',details:'twin house2 whiteLight',house:[36.4,12.1]}, 3.2043, 'vnmn', 'Hòn Dấu (2)'); // Hòn Dấu
   add('osm-way-967471568', 'hai-dang-long-chau', {height:30,diameter:5.7,shape:'round',paint:'granite',optic:'lantern',details:'blackDome greyHouse2',house:[7.6,7.5]}, 0.392, 'vnmn', 'Long Châu (Xuy Nong Chao, Grande Norway Island)'); // Long Châu
   add('osm-way-229301316', 'hai-dang-vung-tau', {height:18,diameter:5.2,shape:'round',paint:'white',optic:'lantern',details:'ribs4 buttresses blackDome'}, 0.683, 'vnmsc', 'Vũng Tàu (Cap St.-Jacques) (3)'); // Vũng Tàu
   add('osm-node-2854454715', 'hai-dang-cao-trang', {height:8,diameter:2.7,shape:'hex',paint:'white',optic:'lantern',details:'trimBlue greenLight'}, 0, 'vnmsc', 'Cao Trang (2)'); // Cao Trang
@@ -153,7 +158,7 @@
   add('osm-way-1272966036', 'hai-dang-da-rang', {height:17,diameter:3.3,shape:'square',paint:'white',optic:'beacon',details:'house2',house:[12.1,12]}, -2.795, 'vnmsc', 'Đà Rằng (Tuy Hòa)'); // Đà Rằng
   add('osm-way-1272966043', 'hai-dang-ganh-den', {height:10,diameter:3,shape:'hex',paint:'redWhite',optic:'beacon'}, -2.632, 'vnmsc', 'Gành Đèn'); // Gành Đèn
   add('osm-way-1272966044', 'hai-dang-hon-nua', {height:10,diameter:3.2,shape:'hex',paint:'red',optic:'beacon'}, -0.607, 'vnmsc', 'Hòn Nưa'); // Hòn Nưa
-  add('osm-way-909041150', 'hai-dang-dai-lanh', {height:26.5,diameter:5.1,shape:'round',paint:'white',optic:'lantern',details:'blackDome'}, -0.482, 'vnmsc', 'Mũi Đại Lãnh (Mũi Điện, Cap Varella) (2)'); // Đại Lãnh
+  add('osm-way-909041150', 'hai-dang-dai-lanh', {height:25.6,diameter:5,shape:'round',paint:'white',optic:'lantern',details:'blackDome whiteLight'}, -0.482, 'vnmsc', 'Mũi Đại Lãnh (Mũi Điện, Cap Varella) (2)'); // Đại Lãnh
   add('osm-way-613351065', 'hai-dang-cua-tieu', {height:25,diameter:3.2,shape:'round',paint:'redWhite',optic:'beacon',details:'waist tidal6',house:[10.6,9.2]}, -0.856, 'vnms', 'Cửa Tiểu (Cua Thieu, Banc Norodom) (2)'); // Cửa Tiểu
   function coastalRock(T,group,cliff,yaw,height,views){
     const positions=[],colours=[],index=[],c=Math.cos(yaw),s=Math.sin(yaw),volcanic=cliff.high>100;
@@ -221,7 +226,7 @@
     const paintKeys=sequences[paint]||[paint];
     const bands=paint==='redWhiteRed'?[0,.16,.77]:paintKeys.map((_,i)=>i/paintKeys.length);
     const colourAt=t=>color[paintKeys[bands.reduce((index,edge,i)=>t>=edge?i:index,0)]];
-    const light=has('greenLight')?0xb9ffd6:has('redLight')?0xffa996:0xffe8ac;
+    const light=has('greenLight')?0xb9ffd6:has('redLight')?0xffa996:has('whiteLight')?0xffffff:0xffe8ac;
     const trim=has('trimMint')?color.greenTrim:has('trimBlue')||has('blueFrame')?color.blue:color.white;
     const frame=has('redFrame')?color.red:has('yellowFrame')?color.yellow:has('blueFrame')?color.blue:trim;
     const dome=has('blackDome')?color.charcoal:has('redFrame')?color.red:color.silver;

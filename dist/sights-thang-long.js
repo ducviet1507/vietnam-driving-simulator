@@ -340,16 +340,13 @@
     }
     ellipse(T,stamp,carved,0,9.04,0,.18,.20,.13);
     sign('奎 文 閣',0,6.55,2.036,1.55,.27,true);
-    for(const side of [-1,1]){
-      box(0x9b836c,side*9.33,.68,0,12.25,1.37,.36);box(0xbc9c7c,side*9.33,1.42,0,12.33,.12,.51);
-      tree(T,kit,side*8.5,-2.8,9.5,3.5);
-    }
+    // The precinct layer supplies surveyed trees and walls w702241341/342.
   }
   register('khue-van-cac',702185155,{name:'Khuê Văn Các',lon:105.835890,lat:21.028583,start:[105.8353754,21.0273187],approachMeters:null,
     visitOnArrival:true,arrivalNote:'Xe dừng trên phố Quốc Tử Giám, trước cổng chính Văn Miếu. Khuê Văn Các nằm bên trong, qua Đại Trung Môn.',
     yaw:-.353,width:6.6,depth:6.55,source:'https://www.vanmieu.gov.vn/vi/visit/architecture/khue-van-pavilion',photo:'https://www.vanmieu.gov.vn/vi/visit/architecture/khue-van-pavilion',
     boundary:[[-3.4,-3.4],[3.4,-3.4],[3.4,3.4],[-3.4,3.4]],reserve:(x,z,p)=>Math.abs(x)<8+p&&Math.abs(z)<14+p,
-    solids:[[-2.18,-2.18,.52,.52],[-2.18,2.18,.52,.52],[2.18,-2.18,.52,.52],[2.18,2.18,.52,.52],[-9.3,0,6.1,.18],[9.3,0,6.1,.18]],
+    solids:[[-2.18,-2.18,.52,.52],[-2.18,2.18,.52,.52],[2.18,-2.18,.52,.52],[2.18,2.18,.52,.52]],
     views:[{name:'Gác Khuê Văn',height:9.0,viewRadius:13,viewAngle:-.11,viewElevation:.075},{name:'Cửa sổ sao Khuê',height:12.0,viewRadius:7.5,viewAngle:-.17,viewElevation:.07}],
     description:'Bốn trụ gạch đỡ gác gỗ hai tầng mái giữa Văn Miếu. Bốn cửa sổ tròn có các thanh gỗ tỏa như tia sáng của sao Khuê. Gác được dựng năm 1805.'},pavilion);
 

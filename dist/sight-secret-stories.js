@@ -3,6 +3,7 @@
 // Clues belong to the tour camera. The little scenes in the reveals are original
 // keepsakes inspired by the place, including the imagined voices and movements.
 window.sightSecretStories = {
+  'van-mieu-quoc-tu-giam': ['ink', 'Nét mực bên giếng', 'Cửa sổ tròn của gác Khuê Văn soi xuống đâu?', 'Trên trang giấy hiện một vòng tròn đỏ. Bóng gác chạm mặt giếng Thiên Quang, giữa hai dãy nhà bia.'],
   'turtle': ['turtle', 'Bọt tăm Hồ Gươm', 'Ai vừa làm bóng Tháp Rùa rung lên?', 'Một chiếc mai nhỏ nổi lên giữa bóng tháp. Nó lặn mất, để lại ba vòng nước cứ rộng dần.'],
   'cathedral': ['wing', 'Chú gà đón gió', 'Trên nền hồng có ai biết gió từ đâu tới?', 'Chú gà trên đỉnh tháp xoay mỏ về phía sông Hàn. Một chiếc lông đồng lấp lánh trên nền trời.'],
   'market': ['gear', 'Một phút ở Bến Thành', 'Nếu đồng hồ chợ có túi, nó sẽ cất gì trong đó?', 'Từ mặt đồng hồ cửa Nam rơi ra một phút gói trong tờ giấy nâu. Mở ra còn thơm mùi cà phê chợ sớm.'],

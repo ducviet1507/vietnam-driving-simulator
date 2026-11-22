@@ -1,0 +1,55 @@
+'use strict';
+// Publisher-hosted photographic tours. Each key is the actual game destination.
+window.NatureFieldCaptures=(()=>{
+  function haiPhong(name,folder,scope){
+    const url='https://vr360dulich.haiphong.gov.vn/teracom-vr360/'+folder+'/index.htm';
+    return [{name,url,source:url,credit:'Hải Phòng Go · Sở Văn hóa, Thể thao và Du lịch Hải Phòng',scope}];
+  }
+  function phuYen(name,page,tour,scope){
+    return [{name,url:'https://daklakvrtour.com/tour/'+tour+'/index.html',
+      source:'https://daklakvrtour.com/'+page+'.html',credit:'Đắk Lắk – Phú Yên VR Tour',scope}];
+  }
+  function video(name,id,credit,scope){
+    return {name,url:'https://www.youtube-nocookie.com/embed/'+id,source:'https://www.youtube.com/watch?v='+id,credit,scope};
+  }
+  return {
+    'osm-node-3157796075':[
+      {name:'Theo đoàn thám hiểm vào Sơn Đoòng',url:'https://sondoong360.com/?media-name=THE%20ENTRANCE',
+        source:'https://edstrom.photo/projects/son-doong-360/',credit:'Martin Edström và đoàn Sơn Đoòng 360 · 2015',
+        scope:'Ảnh cầu và âm thanh thu tại hang, từ cửa hang qua dòng sông ngầm tới khu rừng dưới hố sụt.'},
+      video('Sơn Đoòng qua ống kính 360°','RLk0M70Rfig','Oxalis Adventure',
+        'Phim quay trong hang với lời kể của Hồ Khanh và Howard Limbert.')
+    ],
+    'osm-node-6358064546':[video('Trong lòng Hang Én','LGjfYE3me0Q','Oxalis Adventure',
+      'Phim 360° quay tại Hang Én trong Vườn quốc gia Phong Nha – Kẻ Bàng.')],
+    'osm-node-6474418794':haiPhong('Động Trung Trang','Dong-Trung-Trang',
+      'Theo cầu thang lên cửa động, nhìn các khoang đá và lối ra trên đảo Cát Bà.'),
+    'osm-node-4508895511':haiPhong('Hang Quân Y','Hang-Quan-Y',
+      'Từ cửa hang vào hành lang bệnh viện, phòng điều trị và phòng hậu phẫu.'),
+    'osm-node-3494799892':haiPhong('Động Hoa Cương','v3/Dong-Hoa-Cuong',
+      'Hai nhánh trong động, lối đi bên phải và cầu thang lên nhánh bên trái.'),
+    'osm-node-3494827665':haiPhong('Động Thiên Long','v3/Dong-Thien-Long',
+      'Nhìn từ cửa động rồi lần theo các điểm chụp trong lòng núi.'),
+    'hai-dang-hon-dau':haiPhong('Hải đăng và đảo Hòn Dấu','v2/Dao-Hon-Dau',
+      'Chọn “Ngọn Hải Đăng” để ngắm tháp đèn. Các điểm khác đưa tới cảng tàu và rừng trên đảo.'),
+    'osm-node-4858968321':haiPhong('Vịnh Lan Hạ','Vinh-Lan-Ha',
+      'Quan sát làng chài, đảo Năm Cát, bãi Vạn Bội và các bãi biển giữa vịnh.'),
+    'ban-gioc':[{name:'Thác Bản Giốc – Đức Thiên nhìn từ trên cao',url:'https://www.airpano.com/embed.php?3D=detian-falls',
+      source:'https://www.airpano.com/360photo/detian-falls/',credit:'Ảnh của Sergey Semenov · AirPano',
+      scope:'Ảnh cầu từ trên sông Quây Sơn và các điểm nhìn hai phía thác trên biên giới Việt Nam – Trung Quốc.'}],
+    'dray-nur':phuYen('Thác Dray Nur','thac-dray-nur',197,
+      'Ngắm dòng thác ở cự ly gần, bãi đá, cầu treo và lối vào hang cạnh thác.'),
+    'thac-vuc-hom':phuYen('Thác Vực Hòm','thac-vuc-hom',103,
+      'Năm điểm chụp ghi lại toàn cảnh, lòng thác, hai bên vách đá và góc từ trên cao.'),
+    'osm-node-10745434207':phuYen('Thác Vực Song','thac-vuc-song',402,
+      'Quan sát thác từ giữa lòng suối, từ bờ và từ trên cao.'),
+    'osm-node-5841472185':phuYen('Thác Cây Đu','thac-cay-du',333,
+      'Đi từ lối vào qua suối tới điểm chụp sát thác.'),
+    'ganh-da-dia':phuYen('Gành Đá Đĩa','ganh-da-dia',43,
+      'Các điểm chụp trải dọc bãi đá, cả lối phía nam, phía bắc và phần giữa gành.'),
+    'hai-dang-dai-lanh':phuYen('Hải đăng Đại Lãnh và Bãi Môn','mui-dien-bai-mon',46,
+      'Theo đường lên hải đăng, xem tháp từ phía đông và phía tây rồi nhìn xuống Bãi Môn.'),
+    'osm-node-9992439396':[video('Rừng tràm Trà Sư','d1s5-SnOPuQ','NguyenTai1001 Vlog',
+      'Phim thực địa 360° giữa vùng rừng tràm ở Tịnh Biên, An Giang.')]
+  };
+})();

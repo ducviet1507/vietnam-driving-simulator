@@ -17,6 +17,7 @@ import osmium
 from PIL import Image
 from shapely import STRtree
 from shapely.geometry import LineString, Point, Polygon
+from shapely.ops import substring
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -81,13 +82,13 @@ def read_sites():
     for(const file of files.slice(files.indexOf('tourism-catalog.js'),files.indexOf('vietnam-landmarks.js'))){
       if(!file.startsWith('sight-hydrography'))require('./dist/'+file);
     }
-    console.log(JSON.stringify({sites:VietnamTourism.entries,bespoke:(global.VietnamSights||[]).filter(s=>!s.surveyed).map(s=>[s.catalogId,s.lon,s.lat])}));"""
+    console.log(JSON.stringify({sites:VietnamTourism.entries,bespoke:(global.VietnamSights||[]).filter(s=>!s.surveyed).map(s=>[s.catalogId,s.lon,s.lat,s.kind])}));"""
     data = json.loads(subprocess.check_output(["node","-e",runner],cwd=ROOT))
     # Two POIs can describe the same attraction (e.g. a falls pin and a viewpoint).
     # Keep the existing surveyed-coordinate, hand-built scene wherever they overlap.
     return [s for s in data["sites"] if s["kind"] in NATURAL_KINDS and s["id"] not in UNSUITABLE and not any(
-        s["id"] == ref or abs(s["lon"]-x) < .00045 and abs(s["lat"]-y) < .00045
-        for ref,x,y in data["bespoke"] if x is not None and y is not None)]
+        s["id"] == ref or s["kind"] == kind and abs(s["lon"]-x) < .00045 and abs(s["lat"]-y) < .00045
+        for ref,x,y,kind in data["bespoke"] if x is not None and y is not None)]
 
 
 def get_context(source, sites):
@@ -204,14 +205,20 @@ def profile(site,tags,surroundings,heights):
         # player's view of its mouth from outside.
         factor = -1 if cave and tunnel else 1
         dx,dz = direction[0]/length*factor,direction[1]/length*factor
-        points = [along(d) for d in [-30,-12,0,12,30]]
-        lines.append((distance,way_id,kind,width,dx,dz,points,tunnel))
+        start = max(0, closest-55)
+        end = min(line.length, closest+55)
+        before = list(substring(line,start,closest).coords)
+        after = list(substring(line,closest,end).coords)
+        points = before + after[1:]
+        if reverse:
+            points.reverse()
+        lines.append((distance,way_id,kind,width,dx,dz,points,tunnel,near))
     line = min(lines,key=lambda l:(l[0],l[1]),default=None)
     explicit = bearing(tags.get("direction")) if cave else None
     if not line and explicit is None:
         return
     if explicit is None:
-        _,source,kind,way_width,dx,dz,points,tunnel = line
+        _,source,kind,way_width,dx,dz,points,tunnel,nearest = line
     else:
         dx,dz = math.sin(math.radians(explicit)),-math.cos(math.radians(explicit))
         source,kind,way_width,tunnel = 0,"direction",None,False
@@ -261,8 +268,11 @@ def profile(site,tags,surroundings,heights):
                 evidence="direction" if explicit is not None else "passage" if cave and tunnel else kind,
                 heightSource="tag" if h else "published" if documented_h else "estimate",
                 widthSource=width_from or "estimate",grade=round(min(1.6,slope),2))
-    if not cave:
+    if points and (not cave or tunnel):
         record["trace"]=[[round(u,1),round(v,1)] for u,v in points]
+        record["traceOrigin"]=[round(v,1) for v in nearest]
+    if not cave and any(poly.covers(Point(dx*offset,dz*offset)) for _,poly in polys for offset in (2,5,10)):
+        record["mappedPool"]=True
     if tags.get("intermittent")=="yes" or tags.get("seasonal")=="yes":
         record["intermittent"]=True
     if source_url:

@@ -8,7 +8,7 @@ function createDrivingMap(getView) {
     if (dialog.open && !frame) frame = requestAnimationFrame(() => { frame = 0; if (dialog.open) draw(); });
   }
   function draw() {
-    const {graph, car, edge, water, places, duel, guide, amenities} = getView();
+    const {graph, car, edge, water, places, duel, guide, amenities,furniture} = getView();
     const w = canvas.clientWidth, h = canvas.clientHeight, ratio = Math.min(devicePixelRatio || 1, 2);
     if (!w || !h) return;
     if (canvas.width !== Math.round(w * ratio) || canvas.height !== Math.round(h * ratio)) {
@@ -93,6 +93,16 @@ function createDrivingMap(getView) {
     g.save(); g.translate(vx, vy); g.rotate(car.yaw);
     g.beginPath(); g.moveTo(0,-13); g.lineTo(9,9); g.lineTo(0,5.5); g.lineTo(-9,9); g.closePath();
     g.fillStyle = '#153f35'; g.strokeStyle = '#fff'; g.lineWidth = 3; g.stroke(); g.fill(); g.restore();
+    let visibleFixtures=0;
+    if(zoom===0)for(const p of furniture||[]){
+      const x=px(p.worldX),y=py(p.worldZ);
+      if(x<0||y<0||x>w||y>h||Math.hypot(x-px(car.x),y-py(car.z))<13)continue;
+      g.beginPath();g.strokeStyle='#364742';g.lineWidth=1;
+      if(p.kind==='lamp'){g.fillStyle='#ffe298';g.arc(x,y,2.8,0,Math.PI*2);}
+      else{g.fillStyle='#bb7560';g.rect(x-2,y-2,4,4);}
+      g.fill();g.stroke();visibleFixtures++;
+    }
+    document.getElementById('mapFixtureKey').hidden=!visibleFixtures;
     const metres = [20, 50, 100, 200, 500, 1000].filter(m => m * scale <= Math.min(110, w * .27)).at(-1) || 20;
     const bar = document.getElementById('mapScale');
     bar.style.width = metres * scale + 'px'; bar.textContent = metres >= 1000 ? metres/1000 + ' km' : metres + ' m';

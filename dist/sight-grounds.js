@@ -3,7 +3,7 @@
 // pedestrian ways. The relief mesh supplies their elevation and doesn't need
 // another layer of nearly coplanar triangles.
 function createSightGrounds(T,small,source){
-  const base='sight-grounds/',canvas=document.createElement('canvas'),span=1120;
+  const canvas=document.createElement('canvas'),span=1120;
   canvas.width=canvas.height=small?768:1280;
   const pen=canvas.getContext('2d',{willReadFrequently:true});
   // Collision lookup and the shader can share the same top-to-bottom raster.
@@ -13,9 +13,14 @@ function createSightGrounds(T,small,source){
   const codes={sand:1,rock:2,lawn:3,orchard:3,tea:3,court:4,trail:5,walk:6,steps:6,drive:7};
   const surfaces={asphalt:1,concrete:2,'concrete:plates':2,gravel:3,wood:4,brick:5,
     sett:6,cobblestone:6,stone:6};
-  const cache=new Map(),states=source?.states||new WeakMap(),projections=source?.projections||new WeakMap();
-  let manifest,mask,fixtures=[],originX=0,originZ=0;
-  async function load(graph,x,z){
+  const projections=source?.projections||new WeakMap();
+  const datasets=source?.datasets||['sight-grounds/','sight-furniture/'].map(base=>({
+    base,states:new WeakMap(),cache:new Map(),manifest:null
+  }));
+  const occupiedCells=new Map();
+  let mask,fixtures=[],streetFurniture=[],originX=0,originZ=0;
+  async function loadLayer(layer,graph,x,z){
+    const {base,states,cache}=layer;
     const [lon,lat]=graph.geo(x,z),reach=span*.5+180;
     const W=Math.floor((lon-reach/graph.mx)*32),E=Math.floor((lon+reach/graph.mx)*32);
     const S=Math.floor((lat-reach/graph.my)*32),N=Math.floor((lat+reach/graph.my)*32);
@@ -25,9 +30,9 @@ function createSightGrounds(T,small,source){
     states.set(graph,state);
     state.job=(async()=>{
       try{
-        manifest??=fetch(base+'index.json').then(r=>{if(!r.ok)throw Error(r.status);return r.json();})
-          .then(index=>new Set(index.bundles)).catch(e=>{manifest=null;throw e;});
-        const available=await manifest,needed=new Set(),jobs=[];
+        layer.manifest??=fetch(base+'index.json').then(r=>{if(!r.ok)throw Error(r.status);return r.json();})
+          .then(index=>new Set(index.bundles)).catch(e=>{layer.manifest=null;throw e;});
+        const available=await layer.manifest,needed=new Set(),jobs=[];
         for(let i=W;i<=E;i++)for(let j=S;j<=N;j++){
           const key=Math.floor(i/8)+'_'+Math.floor(j/8);
           if(!available.has(key))continue;
@@ -43,6 +48,27 @@ function createSightGrounds(T,small,source){
       }catch{if(states.get(graph)===state)states.delete(graph);return false;}
     })();
     return state.job;
+  }
+  async function load(graph,x,z){
+    return (await Promise.all(datasets.map(layer=>loadLayer(layer,graph,x,z)))).some(Boolean);
+  }
+  // Index surveyed points before generating buildings or vegetation. All
+  // coordinates in this index are relative to this district's render origin.
+  function occupy(x,z,radius,kind){
+    const key=Math.floor(x/20)+','+Math.floor(z/20);
+    if(!occupiedCells.has(key))occupiedCells.set(key,[]);
+    occupiedCells.get(key).push({x,z,radius,kind});
+  }
+  function nearFixture(x,z,radius,kind){
+    const reach=radius+3;
+    for(let i=Math.floor((x-reach)/20);i<=Math.floor((x+reach)/20);i++){
+      for(let j=Math.floor((z-reach)/20);j<=Math.floor((z+reach)/20);j++){
+        for(const p of occupiedCells.get(i+','+j)||[]){
+          if((!kind||p.kind===kind)&&(x-p.x)**2+(z-p.z)**2<(radius+p.radius)**2)return true;
+        }
+      }
+    }
+    return false;
   }
   const displayed={visitorMap:{value:texture},visitorOrigin:{value:new T.Vector2()},visitorActive:{value:0}};
   function shade(shader){
@@ -81,14 +107,40 @@ function createSightGrounds(T,small,source){
   }
   function prepare(graph,cx,cz,landmarks){
     originX=cx;originZ=cz;fixtures=[];mask=null;uniforms.visitorActive.value=0;
-    const rows=states.get(graph)?.rows;
-    if(!rows?.length)return;
+    occupiedCells.clear();streetFurniture=[];
+    for(const [kind,id,lon,lat,height,diameter,tags] of datasets[1].states.get(graph)?.rows||[]){
+      const point=graph.point(lon/1e7,lat/1e7),x=point.x-cx,z=point.z-cz;
+      if(Math.abs(x)>span/2||Math.abs(z)>span/2)continue;
+      occupy(x,z,.4,kind);streetFurniture.push({kind,id,x,z,worldX:point.x,worldZ:point.z,height,diameter,tags});
+    }
+    if(!graph)return;
+    const rows=datasets[0].states.get(graph)?.rows||[];
     const ratio=canvas.width/span,half=span/2;
     if(!projections.has(graph))projections.set(graph,new WeakMap());
     const projected=projections.get(graph);
     const layers=[];
+    const survey=window.VanMieuSurvey,surveyOrigin=survey&&graph.point(...survey.origin);
+    const treePositions=new Set();
+    if(surveyOrigin&&Math.hypot(surveyOrigin.x-cx,surveyOrigin.z-cz)<1050){
+      for(const f of survey.features){
+        if(!['tree','courtyard','grass'].includes(f.kind))continue;
+        const rings=f.rings.map(r=>r.map(([lon,lat])=>{
+          const p=graph.point(lon,lat);return [p.x-cx,p.z-cz];
+        }));
+        if(f.kind==='tree'){
+          const [lon,lat]=f.rings[0][0],ring=rings[0];
+          treePositions.add(Math.round(lon*1e6)+','+Math.round(lat*1e6));
+          fixtures.push({kind:'tree',size:f.height,ring,rings,measuredPosition:true});
+          occupy(...ring[0],3,'tree');
+        }else{
+          const kind=f.kind==='grass'?'lawn':'court';
+          layers.push({kind,code:codes[kind],rings,finish:f.surface==='paving_stones'?'stone':f.surface});
+        }
+      }
+    }
     const modeledSteps=new Set((landmarks?.active||[]).flatMap(site=>site.data.modeledStairWays||[]));
     for(const [kind,size,raw,finish='',detail=0,wayId] of rows){
+      if(['tree','palm','pine'].includes(kind)&&treePositions.has(raw[0][0]+','+raw[0][1]))continue;
       let feature=projected.get(raw);
       if(!feature){
         let minX=Infinity,maxX=-Infinity,minZ=Infinity,maxZ=-Infinity;
@@ -111,6 +163,11 @@ function createSightGrounds(T,small,source){
       if(feature.maxX<cx-half-12||feature.minX>cx+half+12||feature.maxZ<cz-half-12||feature.minZ>cz+half+12)continue;
       const rings=feature.rings.map(r=>r.map(p=>[p.x-cx,p.z-cz]));
       const ring=rings[0];
+      if(ring.length===1)occupy(...ring[0],['tree','pine','palm'].includes(kind)?3:.8,kind);
+      if(kind==='avenue')for(let i=1;i<ring.length;i++){
+        const [x,z]=ring[i-1],[bx,bz]=ring[i],n=Math.ceil(Math.hypot(bx-x,bz-z)/8);
+        for(let j=0;j<n;j++)occupy(x+(bx-x)*(j+.5)/n,z+(bz-z)*(j+.5)/n,3,'avenue');
+      }
       const code=codes[kind];
       if(code)layers.push({kind,code,rings,size,finish});
       if((!code||['steps','orchard','tea'].includes(kind))&&!(kind==='steps'&&modeledSteps.has(wayId)))
@@ -274,11 +331,11 @@ function createSightGrounds(T,small,source){
         }
       }
     }
-    for(const {kind,ring,rings,size,finish:skin,detail} of fixtures){
+    for(const {kind,ring,rings,size,finish:skin,detail,measuredPosition} of fixtures){
       if(kind==='orchard'||kind==='tea'){rows(kind,rings);continue;}
       if(ring.length===1){
         const [x,z]=ring[0],gate=kind==='gate_post'||kind==='gate_pier';
-        if(Math.hypot(x,z)>close||(gate?mappedBlocked:blocked)(x,z,gate?.1:.45))continue;
+        if(Math.hypot(x,z)>close||(gate||measuredPosition?mappedBlocked:blocked)(x,z,gate?.1:.45))continue;
         const baseY=ground(x,z);
         if(gate){
           const stone=kind==='gate_pier',h=Math.min(5.5,size||(stone?1.95:1.6)),r=stone?.17:.062;
@@ -398,7 +455,8 @@ function createSightGrounds(T,small,source){
       infill.castShadow=infill.receiveShadow=true;group.add(infill);
     }
   }
-  return {load,prepare,shade,createView:()=>createSightGrounds(T,small,{states,projections,fenceMaterials,grain}),uniforms,
+  return {load,prepare,shade,nearFixture,get streetFurniture(){return streetFurniture;},
+    createView:()=>createSightGrounds(T,small,{datasets,projections,fenceMaterials,grain}),uniforms,
     display(view){displayed.visitorMap.value=view.uniforms.visitorMap.value;displayed.visitorOrigin.value.copy(view.uniforms.visitorOrigin.value);displayed.visitorActive.value=view.uniforms.visitorActive.value;},
     mapped:(x,z)=>groundCode(x,z)>0,accessLane:(x,z)=>groundCode(x,z)===codes.drive,build};
 }
