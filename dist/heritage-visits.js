@@ -74,7 +74,11 @@ const heritageVisits=[
   // https://daison.haiphong.gov.vn/van-hoa-xa-hoi/hai-phong-ban-hanh-muc-phi-tham-quan-moi-doi-voi-di-tich-danh-thang-837039
   ['vinh-ha-long-cat-ba','Vịnh Hạ Long – quần đảo Cát Bà',[
     'hon-trong-mai','osm-node-4730928605','osm-node-4730928606','osm-node-13570978422','osm-node-4508895511',
-    'osm-node-10821152105','osm-node-994065796','osm-node-3494811567','osm-node-3560283504','osm-node-5147203123','osm-node-6474418794',
+    'osm-node-10821152105','osm-node-994065796','osm-node-3494811567','osm-node-3560283504','osm-node-3887715188',
+    'hang-trong-bo-hon','osm-node-5147203123','osm-node-6474418794',
+  ]],
+  ['ben-beo-vinh-lan-ha','Từ Bến Bèo ra vịnh Lan Hạ',[
+    'osm-node-778791182','osm-relation-20057203','osm-node-13388093801','osm-node-4858968321',
   ]],
   // https://whc.unesco.org/en/list/678/documents/ and https://vdt.hueworldheritage.org.vn/vedientu
   ['di-tich-co-do-hue','Quần thể di tích Cố đô Huế',[

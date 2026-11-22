@@ -17,6 +17,7 @@
     ['osm-node-13388919549','Phủ Khống'],
     ['osm-way-1424042953','Hành cung Vũ Lâm'],
     ['osm-node-4387487189','Suối Nước Moọc'],
+    ['osm-node-3887715188','Hang Trinh Nữ'],
   ]);
   for (const site of atlas.entries) {
     if (names.has(site.id)) site.name = names.get(site.id);
@@ -26,7 +27,29 @@
   // The whole-property pin is at the centre of the UNESCO boundary. Its
   // cameras look southeast at the temples. Cars stay on the road by the gate.
   const mySonGate=[108.10911,15.77344];
+  // Phố Cái Bèo (w62343792) meets the visitor car park at this point.
+  const benBeo=[107.057865,20.731873];
+  const tuanChau=[106.9894,20.91974];
   const precincts={
+    'osm-node-3887715188':{
+      start:tuanChau,mappedEntrance:true,visitOnArrival:true,
+      arrivalNote:'Xe dừng ở cảng Tuần Châu. Hang Trinh Nữ nằm trên đảo Bồ Hòn.'},
+    'osm-node-4858968321':{
+      name:'Vịnh Lan Hạ',start:benBeo,mappedEntrance:true,visitOnArrival:true,
+      lookout:{lon:107.078406,lat:20.7299682,kind:'Điểm ngắm cảnh'},
+      description:'Từ điểm cao trên đảo Cát Dứa nhìn ra vịnh Lan Hạ. Trong mục cảnh thực 360° có thể đến bãi Vạn Bội và đảo Năm Cát.',
+      arrivalNote:'Xe dừng trên phố Cái Bèo, ở lối vào bãi xe của bến tàu.'},
+    'osm-relation-20057203':{
+      name:'Làng chài Cái Bèo',start:benBeo,mappedEntrance:true,visitOnArrival:true,
+      arrivalNote:'Từ Bến Bèo, thuyền đi giữa các đảo đá đến vùng làng chài.'},
+    'osm-node-13388093801':{
+      name:'Đảo Cát Dứa (Đảo Khỉ)',start:benBeo,mappedEntrance:true,visitOnArrival:true,
+      arrivalNote:'Xe dừng ở lối vào bãi xe Bến Bèo trên đảo Cát Bà.',
+      description:'Một bãi cát nằm dưới sườn bắc, bãi thứ hai nép về phía tây nam. Giữa hai bãi là sống đảo đá vôi.',
+      // Beach polygons w208896430 and w208896431, and the summit n6293770430.
+      views:[{name:'Bãi cát ở mũi bắc',offset:[15,-16],viewAngle:3.04,viewRadius:91,viewElevation:.28,height:6},
+        {name:'Bãi phía tây nam đảo Cát Dứa',offset:[-124,226],viewAngle:-.97,viewRadius:112,viewElevation:.3,height:6},
+        {name:'Sống đảo giữa hai bãi',offset:[-86,122],viewAngle:1.04,viewRadius:207,viewElevation:.52,height:9}]},
     'osm-way-198804451':{
       name:'Tháp A10 – Mỹ Sơn',start:mySonGate,mappedEntrance:true,visitOnArrival:true,
       arrivalNote:'Xe dừng ở cổng khu di tích Mỹ Sơn.',viewOf:['my-son-nhom-a',1]},
@@ -70,6 +93,21 @@
     [1504768248,'Đền Trung – Hùng Vương Tổ miếu','Phú Thọ','Hùng Sơn',105.3240986,21.3690193,105.322450,21.369750,189,'https://denhung.vn/tin-tuc/den-trung'],
   ];
   const existing = new Set(atlas.entries.map(site => site.id));
+  if(!existing.has('osm-node-778791182'))atlas.entries.push({
+    id:'osm-node-778791182',name:'Bến Bèo',region:'Bắc Bộ',province:'Hải Phòng',city:'Hải Phòng',locality:'Cát Bà',
+    kind:'Bến tàu',lon:107.0589122,lat:20.732131,start:benBeo,approachMeters:113,mappedEntrance:true,visitOnArrival:true,
+    map:'https://www.openstreetmap.org/node/778791182',
+    source:'https://haiphong.gov.vn/diem-bao-ve-hai-phong/diem-bao-hang-ngay-ve-hai-phong-ngay-7-4-2026-881575',
+    description:'Phố Cái Bèo kết thúc bên cầu tàu. Các bến nhỏ nối theo bờ về phía nam. Từ đây tàu ra làng chài và vịnh Lan Hạ.',
+    views:[{name:'Cầu tàu ở cuối phố Cái Bèo',offset:[-1,-4],viewAngle:2.06,viewRadius:67,viewElevation:.34,height:5},
+      {name:'Dọc bờ Bến Bèo',offset:[-13,44],viewAngle:-2.91,viewRadius:144,viewElevation:.41,height:8}]
+  });
+  if(!existing.has('osm-node-5246605623'))atlas.entries.push({
+    id:'osm-node-5246605623',name:'Hang Trống',region:'Bắc Bộ',province:'Quảng Ninh',city:'Vịnh Hạ Long',
+    locality:'Đảo Bồ Hòn',kind:'Hang động',lon:107.1074494,lat:20.8404008,start:tuanChau,
+    approachMeters:15100,mappedEntrance:true,visitOnArrival:true,map:'https://www.openstreetmap.org/node/5246605623',
+    source:'https://whc.unesco.org/document/192087'
+  });
   // Pò Giả Mải is the local name of Đảo Bà Góa. The way is tagged as an
   // island and has no tourism tag in the national catalogue import.
   if(!existing.has('osm-way-591309599'))atlas.entries.push({

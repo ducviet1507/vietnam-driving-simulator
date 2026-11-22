@@ -868,8 +868,9 @@ function showMonument(monument,viewIndex=0,collection=null){
 async function frameStop(stop){
  const collection=stop.stops?stop:null;
  if(stop.stops)stop=stop.stops[0];
- await VietnamTourism.loadRegion(stop.lon,stop.lat);
- const {x,z}=roads.point(stop.lon,stop.lat);
+ const location=stop.lookout||stop;
+ await VietnamTourism.loadRegion(location.lon,location.lat);
+ const {x,z}=roads.point(location.lon,location.lat);
  if(Math.hypot(x-(tourCenter?.x??viewX),z-(tourCenter?.z??viewZ))>285){
    tourGraph??=new VietnamRoads(indexData,roads.lon,roads.lat);
    loadStructuresNear(tourGraph,x,z);
@@ -899,7 +900,7 @@ async function frameStop(stop){
      {name:'Cận cảnh địa danh'},surroundings(data.width,data.depth,authored.height)]};
    return showMonument(authored,0,collection);
  }
- const footprint=gfx.sightFootprint(stop,x,z);
+ const footprint=stop.lookout?null:gfx.sightFootprint(stop,x,z);
  const wide=stop.km||['Hồ','Vịnh','Khu bảo tồn','Vườn quốc gia','Đỉnh núi','Bãi biển','Điểm ngắm cảnh'].includes(stop.kind);
  const tags=window.VietnamSightDetails?.[stop.id]||{};
  const extent=footprint?[footprint.maxX-footprint.minX,footprint.maxZ-footprint.minZ]:tags.extent;
@@ -912,7 +913,7 @@ async function frameStop(stop){
  const data={...stop,width,depth,yaw,viewAngle:yaw,viewElevation:wide?.53:.39,description};
  data.views=stop.views?[...stop.views]:
    (footprint&&!footprint.stelae?.length?gfx.footprintViews(footprint,x,z,approach.x,approach.z):null)
-   ||(!footprint?landscapeTourViews(stop.kind,x,z,yaw,gfx.ground,gfx.waterAt):null)
+   ||(!footprint?landscapeTourViews(location.kind,x,z,yaw,gfx.ground,gfx.waterAt):null)
    ||[{name:'Toàn cảnh địa điểm'},surroundings(width,depth,height)];
  if(footprint?.stelae?.length){
    data.views[0]={name:'Toàn cảnh nhà bia',viewAngle:footprint.stelae[0].viewAngle,viewElevation:.14};

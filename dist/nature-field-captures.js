@@ -1,8 +1,9 @@
 'use strict';
 // Publisher-hosted photographic tours. Each key is the actual game destination.
 window.NatureFieldCaptures=(()=>{
-  function haiPhong(name,folder,scope){
-    const url='https://vr360dulich.haiphong.gov.vn/teracom-vr360/'+folder+'/index.htm';
+  function haiPhong(name,folder,scope,media){
+    const url='https://vr360dulich.haiphong.gov.vn/teracom-vr360/'+folder+'/index.htm'+
+      (media?'?media-name='+encodeURIComponent(media):'');
     return [{name,url,source:url,credit:'Hải Phòng Go · Sở Văn hóa, Thể thao và Du lịch Hải Phòng',scope}];
   }
   function phuYen(name,page,tour,scope){
@@ -36,8 +37,15 @@ window.NatureFieldCaptures=(()=>{
       'Nhìn từ cửa động rồi lần theo các điểm chụp trong lòng núi.'),
     'hai-dang-hon-dau':haiPhong('Hải đăng và đảo Hòn Dấu','v2/Dao-Hon-Dau',
       'Chọn “Ngọn Hải Đăng” để ngắm tháp đèn. Các điểm khác đưa tới cảng tàu và rừng trên đảo.'),
-    'osm-node-4858968321':haiPhong('Vịnh Lan Hạ','Vinh-Lan-Ha',
-      'Quan sát làng chài, đảo Năm Cát, bãi Vạn Bội và các bãi biển giữa vịnh.'),
+    // The tour player matches these media names exactly, including its
+    // published combination of precomposed letters and combining tone marks.
+    'osm-node-4858968321':[
+      ...haiPhong('Toàn cảnh vịnh Lan Hạ','Vinh-Lan-Ha','Nhìn từ trên cao xuống các dải đảo và luồng nước.'),
+      ...haiPhong('Làng chài nhìn từ trên cao','Vinh-Lan-Ha','Quan sát các bè nổi giữa những sườn đá.','Flycam La\u0300ng Cha\u0300i'),
+      ...haiPhong('Bãi tắm Vạn Bội','Vinh-Lan-Ha','Nhìn từ mép bãi cát ra vịnh.','Ba\u0303i Tă\u0301m Va\u0323n Bô\u0323i'),
+      ...haiPhong('Đảo Năm Cát','Vinh-Lan-Ha','Xem cảnh thực địa ở đảo Năm Cát.','Đa\u0309o Năm Ca\u0301t')
+    ],
+    'osm-node-13388093801':haiPhong('Đảo Cát Dứa (Đảo Khỉ)','Vinh-Lan-Ha','Ảnh cầu trên đảo Cát Dứa.','Đảo Khỉ'),
     'ban-gioc':[{name:'Thác Bản Giốc – Đức Thiên nhìn từ trên cao',url:'https://www.airpano.com/embed.php?3D=detian-falls',
       source:'https://www.airpano.com/360photo/detian-falls/',credit:'Ảnh của Sergey Semenov · AirPano',
       scope:'Ảnh cầu từ trên sông Quây Sơn và các điểm nhìn hai phía thác trên biên giới Việt Nam – Trung Quốc.'}],

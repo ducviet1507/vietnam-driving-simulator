@@ -309,6 +309,16 @@ try {
     await page.locator('#tourCamera').waitFor({state:'visible'});
     assert.equal(await page.locator('#tourTitle').innerText(),'Thác Đỗ Quyên');
     console.log('PASS Bạch Mã waterfall builds on its terrain');
+    await go('/?landmark=osm-node-4858968321&view=tour');
+    await page.locator('#tourCamera').waitFor({state:'visible'});
+    const bay=await page.evaluate(()=>{
+      const {monument}=car.sightView,site=monument.data;
+      const summit=roads.point(site.lookout.lon,site.lookout.lat),marker=roads.point(site.lon,site.lat);
+      return {atLookout:Math.hypot(monument.x-summit.x,monument.z-summit.z),
+        fromMarker:Math.hypot(monument.x-marker.x,monument.z-marker.z),photos:NatureFieldCaptures[site.id].length};
+    });
+    assert.ok(bay.atLookout<1&&bay.fromMarker>2000&&bay.photos>=4,'Lan Hạ tour must open on Cát Dứa and keep its offshore Atlas pin');
+    console.log('PASS Lan Hạ island lookout and photographic views');
 
     await go('/cup');
     await page.locator('#launch').click();
