@@ -18,6 +18,12 @@ window.NatureFieldCaptures=(()=>{
     'Nhìn từ bờ tây ra vịnh và các triền núi bao quanh. Chọn “Bè Nuôi Tôm- Cá” trong ảnh để hạ thấp góc nhìn xuống khu bè.');
   const honYen=phuYen('Hòn Yến, bãi san hô và vùng bè','hon-yen',62,
     'Ảnh mở trên doi đá phía tây Hòn Yến. Chọn “Bãi San Hô” để nhìn từ gần bờ hoặc “Góc Đông Nam” để nhìn từ ngoài khơi về hai hòn.');
+  function muiDien(name,scope){
+    return phuYen(name,'mui-dien-bai-mon',46,'Ảnh mở ở toàn cảnh Mũi Điện. '+scope);
+  }
+  function honNua(name,scope){
+    return phuYen(name,'hon-nua',171,'Ảnh mở trên cao ở Hòn Nưa. '+scope);
+  }
   function baiChua(name,scope){
     return phuYen(name,'tau-khong-so',116,'Ảnh mở ở toàn cảnh Bãi Chùa. '+scope);
   }
@@ -47,6 +53,13 @@ window.NatureFieldCaptures=(()=>{
       'Từ góc toàn cảnh phía đèo Quán Cau, chọn “Cận Cảnh” để ra giữa đầm. Hai điểm “Cầu An Cư” và “Cầu An Hải” cho thấy các dòng nước nối với đầm.'),
     'osm-node-4472649089':phuYen('Từ cầu Bình Phú ra đầm Cù Mông','dam-cu-mong',162,
       'Ảnh mở ở cầu Bình Phú. Chọn hướng bắc để xem vùng bè và các ao ven bờ, hoặc tới cửa đầm để nhìn ra biển.'),
+    'osm-way-160203374':muiDien('Bãi Môn và đường men sườn núi','Chọn “Bãi Môn” để xuống bãi cát. Từ đó, “Lên Hải Đăng” đưa bạn lên lối đi có lan can nhìn lại bãi.'),
+    'osm-way-909041150':muiDien('Ban công và cầu thang hải đăng Đại Lãnh','Chọn “Hải Đăng” để tới ban công đèn. Từ đây có thể vòng sang mặt tây hoặc vào cầu thang trong tháp.'),
+    'phu-yen-bia-mom-rang-dong':muiDien('Bia, sân cờ và chòi nghỉ trên mỏm Rạng Đông','Chọn “Điểm Cực Đông” để tới sân có bia. Từ sân nhìn ngược qua những tảng đá về phía hải đăng trên cao.'),
+    'osm-way-50540459':honNua('Vòng quanh Hòn Nưa','Chọn “View Từ Mặt Tây” để nhìn toàn đảo hoặc “Bãi Biển” để xuống bãi.'),
+    'osm-way-481006392':honNua('Bãi cát phía tây đảo','Chọn “Bãi Biển” để nhìn dọc bờ cát, sau đó chọn “Góc Nam” hoặc “Góc Bắc” để xem hai đầu bãi.'),
+    'osm-way-481006394':honNua('Toàn cảnh bờ đá Hòn Nưa','Góc trên cao cho thấy các mỏm đá quanh đảo. Bấm “Góc Bắc” để chuyển sang đầu bắc của bãi cát phía tây.'),
+    'osm-way-1272966044':honNua('Hải đăng trên sườn Hòn Nưa','Chọn “Hải Đăng” để nhìn về tháp đỏ và mái nhà trạm trên sườn núi.'),
     'osm-way-804128824':phuYen('Sân, thánh đường và hang trưng bày Mằng Lăng','nha-tho-mang-lang',69,
       'Từ ảnh trên cao, chọn các điểm ngay nhà thờ để xem mặt đứng, hai hành lang và cung thánh. Hang trưng bày sách Quốc ngữ nằm bên sân.'),
     'osm-node-11565227115':vungRoBay,

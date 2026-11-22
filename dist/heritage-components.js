@@ -39,6 +39,8 @@
   atlas.aliases['osm-node-1805807506']='osm-way-1244769154';
   const dambriEntrance=[107.7445308,11.6412412],vungRoEntrance=[109.4191949,12.8776377];
   const honYenLane=[109.3045388,13.2267462],honYenSource='https://daklakvrtour.com/hon-yen.html';
+  const baiMonParking=[109.4491036,12.8939039],baiMonSource='https://daklakvrtour.com/mui-dien-bai-mon.html';
+  const baiHuongRoad=[109.4291998,12.881748],honNuaSource='https://csdl.vietnamtourism.gov.vn/dest/?item=616';
   const dambriSource='https://www.dambri.com.vn/vi/tin-tuc/tin-tuc-damb-ri/mot-ngay-o-khu-du-lich-thac-damb-ri-381.html';
   const baiChuaSource='https://daklakvrtour.com/tau-khong-so.html';
   const vungRoBay={locality:'Vũng Rô',formerProvince:'Phú Yên',start:[109.414242,12.871188],mappedEntrance:true,visitOnArrival:true,
@@ -49,6 +51,15 @@
       {name:'Bờ vịnh nhìn về Bãi Chùa',offset:[370,-570],height:100,viewAngle:-.41,viewRadius:912,viewElevation:.105,viewFov:62,
       description:'Từ phía tây vịnh nhìn về đông bắc, dọc theo bờ có Quốc lộ 29 đến khu di tích Bãi Chùa.'}]};
   const precincts={
+    'osm-way-160203374':{name:'Bãi Môn',locality:'Mũi Điện',formerProvince:'Phú Yên',start:baiMonParking,
+      mappedEntrance:true,visitOnArrival:true,source:baiMonSource,
+      arrivalNote:'Xe rẽ từ Quốc lộ 29 vào đường dịch vụ, dừng ở khu vé và sân đỗ trước cầu bộ. Từ đây đi bộ xuống bãi cát hoặc theo lối lên hải đăng.'},
+    'osm-way-909041150':{name:'Hải đăng Đại Lãnh',locality:'Mũi Điện',formerProvince:'Phú Yên',start:baiMonParking,
+      mappedEntrance:true,visitOnArrival:true,source:baiMonSource,
+      arrivalNote:'Xe dừng ở khu vé Bãi Môn. Qua cầu đi bộ, theo đường bậc lên hải đăng Đại Lãnh trên Mũi Điện.'},
+    'osm-way-1272966044':{name:'Hải đăng Hòn Nưa',locality:'Đảo Hòn Nưa',formerProvince:'Phú Yên',start:baiHuongRoad,
+      mappedEntrance:true,visitOnArrival:true,source:honNuaSource,
+      arrivalNote:'Xe dừng trên Quốc lộ 29 ở Bãi Hương, cạnh lối xuống bến. Sau chặng ca nô sang Hòn Nưa, từ bãi phía tây đi bộ lên hải đăng.'},
     // This legacy pin is inside the northern water polygon of Đầm Cù Mông,
     // among floating cages. The Ô Loan marker is 39.7 km farther south.
     'osm-node-4472649089':{name:'Vùng bè phía bắc đầm Cù Mông',locality:'Bắc đầm Cù Mông',city:'Sông Cầu',formerProvince:'Phú Yên',
@@ -275,6 +286,32 @@
     [1504768248,'Đền Trung – Hùng Vương Tổ miếu','Phú Thọ','Hùng Sơn',105.3240986,21.3690193,105.322450,21.369750,189,'https://denhung.vn/tin-tuc/den-trung'],
   ];
   const existing = new Set(atlas.entries.map(site => site.id));
+  if(!existing.has('phu-yen-loi-xuong-bai-huong'))atlas.entries.push({
+    id:'phu-yen-loi-xuong-bai-huong',name:'Lối xuống bè ở Bãi Hương',kind:'Bến thuyền',region:'Trung Bộ',
+    province:'Đắk Lắk',formerProvince:'Phú Yên',city:'Vũng Rô',locality:'Bãi Hương',lon:109.4291764,lat:12.8811792,
+    start:baiHuongRoad,approachMeters:63,mappedEntrance:true,visitOnArrival:true,source:honNuaSource,
+    map:'https://www.openstreetmap.org/?mlat=12.8811792&mlon=109.4291764#map=19/12.8811792/109.4291764',
+    arrivalNote:'Xe dừng trên Quốc lộ 29 ở Bãi Hương. Từ đường làng, các cầu dẫn hẹp nối bờ với những bè neo trong vịnh.'});
+  if(!existing.has('phu-yen-bia-mom-rang-dong'))atlas.entries.push({
+    id:'phu-yen-bia-mom-rang-dong',name:'Bia đón bình minh ở mỏm Rạng Đông',kind:'Điểm ngắm cảnh',region:'Trung Bộ',
+    province:'Đắk Lắk',formerProvince:'Phú Yên',city:'Hòa Xuân',locality:'Mũi Điện',lon:109.457759,lat:12.895377,
+    start:baiMonParking,approachMeters:952,mappedEntrance:true,visitOnArrival:true,source:baiMonSource,
+    map:'https://www.openstreetmap.org/?mlat=12.895377&mlon=109.457759#map=19/12.895377/109.457759',
+    arrivalNote:'Xe ở lại sân đỗ Bãi Môn. Từ đường lên hải đăng có nhánh bậc đi xuống mỏm đá đặt bia và cột cờ.'});
+  for(const [way,name,kind,lon,lat,view] of [
+    [50540459,'Đảo Hòn Nưa','Đảo',109.3937833,12.8303358,null],
+    [481006392,'Bãi chính phía tây Hòn Nưa','Bãi biển',109.3915258,12.8284471,1],
+    [481006394,'Ghềnh đá đông bắc Hòn Nưa','Ghềnh đá',109.39662,12.8320521,3]
+  ]){
+    const id='osm-way-'+way;
+    if(existing.has(id))continue;
+    const distance=Math.hypot((lon-baiHuongRoad[0])*111320*Math.cos(lat*Math.PI/180),(lat-baiHuongRoad[1])*110900);
+    atlas.entries.push({id,name,kind,lon,lat,start:baiHuongRoad,approachMeters:Math.round(distance),region:'Trung Bộ',
+      province:'Đắk Lắk',formerProvince:'Phú Yên',city:'Vũng Rô',locality:'Đảo Hòn Nưa',
+      ...(view===null?{}:{viewOf:['hon-nua-phu-yen',view]}),mappedEntrance:true,visitOnArrival:true,
+      map:'https://www.openstreetmap.org/way/'+way,source:honNuaSource,
+      arrivalNote:'Xe ở lại Bãi Hương trên bờ vịnh Vũng Rô. Ca nô qua vịnh tới bãi phía tây Hòn Nưa.'});
+  }
   // OSM maps the two closed island shorelines independently of the mainland viewpoint.
   for(const [way,name,lon,lat,approachMeters,view] of [
     [151569083,'Hòn Yến',109.30878,13.22564,476,null],

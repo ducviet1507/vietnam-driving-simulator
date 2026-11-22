@@ -23,7 +23,7 @@ MAIN = {'motorway', 'trunk', 'primary', 'secondary', 'tertiary'}
 DENIED = {'no', 'private', 'agricultural', 'forestry'}
 PLACE_TYPES = {'city', 'town'}
 # Mapped lanes used for free driving at the HUST landmark. Several have
-# restricted real-world access. Only these service ways enter the game graph.
+# restricted real-world access.
 HUST_LANES = {
     36730545, 179997645, 183423974, 596802413, 596802451, 596802481, 596802483,
     787639813, 824886232, 856290137, 856290139, 856290140, 856290141, 856290142,
@@ -33,10 +33,16 @@ HUST_LANES = {
     1207074263, 1207074264, 1207215785, 1217463137, 1217463138, 1217463139,
 }
 
+# Bãi Môn visitor parking branches from QL29 before the footbridge. Keep
+# existing national edge IDs stable when splitting the highway at this fork.
+BAI_MON_LANE, BAI_MON_HIGHWAY = 770106904, 605830153
+BAI_MON_JOIN, BAI_MON_PARKING = 5138500073, 7189274555
+BAI_MON_HIGHWAY_EXTENSION, BAI_MON_ACCESS_EDGE = 50000001, 50000002
+
 
 def permitted(way):
     tags = way.tags
-    if tags.get('highway') == 'service':
+    if tags.get('highway') == 'service' and way.id != BAI_MON_LANE:
         return way.id in HUST_LANES and len(way.nodes) >= 2
     access = next((tags.get(k) for k in ('motorcar', 'motor_vehicle', 'vehicle', 'access') if k in tags), '')
     return access not in DENIED and tags.get('area') != 'yes' and len(way.nodes) >= 2
@@ -169,6 +175,27 @@ def short_runs(refs, junctions, virtual_ids):
             run = [run[-1]]
 
 
+def driving_runs(way_id, refs, junctions, virtual_ids):
+    """Yield the legacy road segmentation plus the surveyed visitor fork."""
+    if way_id == BAI_MON_LANE:
+        node_ids = [ref for ref, _, _ in refs]
+        join, parking = node_ids.index(BAI_MON_JOIN), node_ids.index(BAI_MON_PARKING)
+        drive = refs[min(join,parking):max(join,parking)+1]
+        for run, metres in short_runs(drive, (), virtual_ids):
+            yield run, metres, BAI_MON_ACCESS_EDGE
+        return
+    for run, metres in short_runs(refs, junctions, virtual_ids):
+        fork = None
+        if way_id == BAI_MON_HIGHWAY:
+            fork = next((i for i, pt in enumerate(run[1:-1], 1) if pt[0] == BAI_MON_JOIN), None)
+        if fork is None:
+            yield run, metres, None
+        else:
+            # 'metres' is counted once for the original stretch of highway.
+            yield run[:fork+1], metres, None
+            yield run[fork:], 0, BAI_MON_HIGHWAY_EXTENSION
+
+
 def build(source, output, residential):
     classes = MAIN | {k+'_link' for k in MAIN} | {'unclassified', 'living_street', 'service'}
     if residential:
@@ -178,7 +205,7 @@ def build(source, output, residential):
     # remain separate unless their source ways actually share a node ID.
     nodes, junctions = set(), set()
     for w in osmium.FileProcessor(source, osmium.osm.WAY).with_filter(selected):
-        if permitted(w):
+        if permitted(w) and w.id != BAI_MON_LANE:
             for n in w.nodes:
                 if n.ref in nodes:
                     junctions.add(n.ref)
@@ -215,7 +242,7 @@ def build(source, output, residential):
             continue
         name = road_label(w.tags)
         if kind == 'service':
-            name = name or 'Đường nội bộ Bách khoa'
+            name = name or ('Đường vào Bãi Môn' if w.id == BAI_MON_LANE else 'Đường nội bộ Bách khoa')
         direction = w.tags.get('oneway:motorcar',w.tags.get('oneway',''))
         one_way = int(direction in ('yes','true','1','-1','reverse') or (direction == '' and (w.tags.get('junction')=='roundabout' or kind=='motorway')))
         if direction in ('-1','reverse'):
@@ -230,15 +257,16 @@ def build(source, output, residential):
             line = simplify([(x,y) for _,x,y in refs],300)
             if max(abs(line[-1][0]-line[0][0]),abs(line[-1][1]-line[0][1])) >= 700:
                 overview.append([v for pt in line for v in pt])
-        for run, travelled in short_runs(refs,junctions,virtual_ids):
+        for run, travelled, extra_id in driving_runs(w.id,refs,junctions,virtual_ids):
             line = simplify([(a,b) for _,a,b in run],1 if kind == 'service' else 3)
             if len(set(line)) >= 2:
                 coords = [v for pt in line for v in pt]
-                edge_id += 1
+                if extra_id is None:
+                    edge_id += 1
                 if patrol_lane:
                     # Keep downstream IDs stable for the existing traffic and route tiles.
                     continue
-                row = compact([edge_id,run[0][0],run[-1][0],name,kind,one_way,coords])
+                row = compact([extra_id or edge_id,run[0][0],run[-1][0],name,kind,one_way,coords])
                 for tile in tiles_touched(line):
                     tiles[tile].append(row)
                 roads[kind] += 1

@@ -615,3 +615,18 @@ https://vietnamtourism.vn/index.php/tourism/items/2809/2
 Ghim n4472649089 nằm giữa các bè ở đầu bắc đầm Cù Mông. Vị trí và hướng của các cụm ô lồng trong cảnh lấy theo ảnh nhìn từ trên cao. Kích thước từng ô, các khung nổi và mái chòi được giản lược. Ảnh 360° của tỉnh mở ở cầu Bình Phú, từ đó có thể chọn phía bắc đầm.
 https://daklakvrtour.com/dam-cu-mong.html
 https://www.arcgis.com/apps/mapviewer/index.html?basemap=satellite&center=109.2149,13.625206&level=18
+
+Bãi Môn, hải đăng Đại Lãnh và mỏm Rạng Đông
+Đường vào khu vé theo đoạn đường dịch vụ nối Quốc lộ 29 với bãi xe trước cầu bộ. Các điểm ảnh trên đường bậc, sân trạm, hai phía ban công và sân bia giúp xác định hướng ngắm. Nhà trạm có hành lang vòm và sân thượng lát gạch dọc theo sườn phía tây nam tháp. Mặt bia, đĩa mặt trời, sân cờ và chòi nghỉ được đối chiếu với ảnh tại mỏm. Cao độ khoảng 33 m ở chân bia được nội suy từ lưới địa hình 15 m. Hình dáng cửa suối Bãi Môn thay đổi theo mùa.
+https://www.openstreetmap.org/way/770106904
+https://www.openstreetmap.org/relation/12341630
+https://daklakvrtour.com/mui-dien-bai-mon.html
+https://daklakvrtour.com/tour/332/index.html
+https://registry.opendata.aws/terrain-tiles/
+
+Bãi Hương và Hòn Nưa
+Ảnh vệ tinh tháng 7/2023 và tháng 3/2025 cho thấy cầu dẫn xuống bè ở cùng đoạn bờ Bãi Hương. Bố cục bè trong mô hình theo ảnh tháng 3/2025. Từ chỗ dừng trên QL29 đến bãi phía tây Hòn Nưa khoảng 7,26 km đường chim bay. Đường bờ đảo, bãi cát và ghềnh đông bắc được đối chiếu riêng. Vị trí thuyền, mực triều và các khe đá nhỏ là phần mô phỏng.
+https://www.arcgis.com/home/item.html?id=356472a9dc3942a28c6c0ad2294d0751
+https://www.arcgis.com/home/item.html?id=83b1b21c156f4c62a6dc0d90b088879c
+https://www.openstreetmap.org/way/50540459
+https://daklakvrtour.com/hon-nua.html

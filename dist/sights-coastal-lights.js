@@ -59,14 +59,23 @@
     const cliff=cliffs[id],radius=cliff?.radius??Math.max(8,height*1.37,Math.max(width,depth)*1.18);
     const views=[{name:cliff?'Toàn cảnh đảo và tháp':'Toàn cảnh tháp',viewRadius:radius},
       {name:spec.optic==='monument'?'Đài quan sát':'Đỉnh tháp',height:height*1.92,viewRadius:Math.max(7,diameter*2.25),viewElevation:.22}];
+    if(spec.coastView)views.push(spec.coastView);
     const solid=coastalPier?[]:[[0,0,width*.48,depth*.48]];
     // Coastal piles and tower platforms neither reserve infill around a harbour nor manufacture dry land.
     const boundary=[[-width/2,-depth/2],[width/2,-depth/2],[width/2,depth/2],[-width/2,depth/2]];
+    const station=has('daiLanhStation');
+    if(station){
+      Object.assign(views[0],{name:'Từ sân trạm nhìn lên hải đăng',offset:[-1,5],height:20,viewAngle:-.05,viewRadius:41,viewElevation:.04,viewFov:57,viewBase:'monument'});
+      solid.push([-3,27,5.5,20],[-11.5,11.5,4.5,4.5]);
+    }
     stops.push({...entry,id,catalogId,...notice,photo,source:notice.source||nationalRegister,locality:page==='sprs'?'Trường Sa':entry.locality,
       city:entry.province,kind:'Hải đăng',modelType:'lighthouse',description,structureHeight:height,
       yaw,width,depth,boundary,solids:solid,viewAngle:yaw+.57,viewElevation:.12,viewRadius:radius,
+      ...(station?{modeledBuildings:['r12341630'],
+        reserve:(x,z,r)=>(Math.abs(x)<5+r&&Math.abs(z)<7+r)||(x>-16.5-r&&x<12+r&&z>6-r&&z<48+r)}:{}),
       views,build:(T,kit)=>{
         coastalLight(T,kit,spec,has);
+        if(station)daiLanhStation(T,kit);
         if(cliff)coastalRock(T,kit.group,cliff,yaw,height,views);
       }});
   }
@@ -157,8 +166,81 @@
   add('osm-way-1273256839', 'hai-dang-son-cha', {height:15.5,diameter:4,shape:'round',paint:'paleBlue',optic:'lantern'}, 0.504, 'vnmnc', 'Sơn Chà'); // Sơn Chà
   add('osm-way-1272966036', 'hai-dang-da-rang', {height:17,diameter:3.3,shape:'square',paint:'white',optic:'beacon',details:'house2',house:[12.1,12]}, -2.795, 'vnmsc', 'Đà Rằng (Tuy Hòa)'); // Đà Rằng
   add('osm-way-1272966043', 'hai-dang-ganh-den', {height:10,diameter:3,shape:'hex',paint:'redWhite',optic:'beacon'}, -2.632, 'vnmsc', 'Gành Đèn'); // Gành Đèn
-  add('osm-way-1272966044', 'hai-dang-hon-nua', {height:10,diameter:3.2,shape:'hex',paint:'red',optic:'beacon'}, -0.607, 'vnmsc', 'Hòn Nưa'); // Hòn Nưa
-  add('osm-way-909041150', 'hai-dang-dai-lanh', {height:25.6,diameter:5,shape:'round',paint:'white',optic:'lantern',details:'blackDome whiteLight'}, -0.482, 'vnmsc', 'Mũi Đại Lãnh (Mũi Điện, Cap Varella) (2)'); // Đại Lãnh
+  // The province's Hòn Nưa drone photographed the red beacon from node5,
+  // about 39 m east-northeast of the tower. https://daklakvrtour.com/hon-nua.html
+  add('osm-way-1272966044','hai-dang-hon-nua',{
+    height:10,diameter:3.2,shape:'hex',paint:'red',optic:'beacon',
+    coastView:{name:'Tháp đỏ trên sườn Hòn Nưa',height:11,viewBase:'monument',viewRadius:43.4,
+      viewAngle:1.933,viewElevation:.46,viewFov:60,
+      description:'Nhìn từ trên cao ở phía đông bắc, qua ngọn đèn đỏ về sườn đảo và vùng biển bên kia.'}
+  },-.607,'vnmsc','Hòn Nưa');
+  // Node12 is on the west balcony, looking toward Bãi Môn. Nodes12 and 13
+  // both show the yellow lantern pedestal. https://daklakvrtour.com/mui-dien-bai-mon.html
+  add('osm-way-909041150','hai-dang-dai-lanh',{
+    height:25.6,diameter:5,shape:'round',paint:'white',optic:'lantern',details:'blackDome whiteLight daiLanhStation',lanternBase:'yellow',
+    coastView:{name:'Từ ban công phía tây nhìn xuống Bãi Môn',offset:[-492.5,-47.9],height:-65/.46,viewBase:'monument',
+      viewRadius:499.6,viewAngle:1.473,viewElevation:.176,viewFov:62,
+      description:'Từ vòng ban công cạnh bệ đèn màu vàng nhìn về phía tây. Dải cát Bãi Môn nằm bên dưới, giữa hai sườn núi.'}
+  },-.482,'vnmsc','Mũi Đại Lãnh (Mũi Điện, Cap Varella) (2)');
+  // OSM r12341630 includes the western yard. Field panoramas 12, 13 and 15
+  // show the long eastern arcade, its tiled roof terrace and a short west wing.
+  function daiLanhStation(T,{box,stamp,palette,group}){
+    const ochre=0xe4ad61,cream=0xf4d594,terracotta=0xb96e4b,shutter=0x61797d;
+    const floor=3.9,deck=floor+4.2,bay=5,front=3.15,first=7;
+    const paving=0xbb8b69;
+    palette({plaster:[ochre,cream],tile:[terracotta,paving]});
+    box(0xa4987f,7.35,1.25,27,8.9,5.08,40);
+    const court=new T.PlaneGeometry(8.9,40,6,24);
+    court.rotateX(-Math.PI/2);court.translate(7.35,0,27);
+    const surface=new T.Mesh(court,new T.MeshStandardMaterial({color:paving,roughness:.96}));
+    surface.receiveShadow=true;group.add(surface);
+    const previous=group.userData.fitGround;
+    group.userData.fitGround=ground=>{
+      previous?.(ground);
+      const positions=court.attributes.position;
+      for(let i=0;i<positions.count;i++){
+        const surfaceHeight=ground(positions.getX(i),positions.getZ(i));
+        positions.setY(i,Math.max(floor-.007,surfaceHeight+.13));
+      }
+      positions.needsUpdate=true;court.computeVertexNormals();court.computeBoundingSphere();
+    };
+    box(0x9c8f75,-2.35,.95,27,11.1,5.9,40.2);
+    box(ochre,-3.65,floor+1.95,27,8.35,3.9,40);
+    box(cream,-2.35,deck-.22,27,11.45,.46,40.65);
+    box(terracotta,-2.35,deck+.03,27,11.12,.14,40.25);
+    box(ochre,-11.75,1.9,11.6,8.1,10.8,9.0);
+    box(cream,-11.75,deck-.66,11.6,8.55,.34,9.45);
+    box(terracotta,-11.75,deck-.43,11.6,8.30,.17,9.18);
+    const opening=new T.Shape(),spring=floor+1.95,crown=floor+3.45;
+    opening.moveTo(-bay/2,deck-.35);opening.lineTo(bay/2,deck-.35);
+    opening.lineTo(bay/2,spring);opening.lineTo(bay*.42,spring);
+    opening.quadraticCurveTo(bay*.39,crown,0,crown);opening.quadraticCurveTo(-bay*.39,crown,-bay*.42,spring);
+    opening.lineTo(-bay/2,spring);opening.closePath();
+    const arch=new T.ExtrudeGeometry(opening,{depth:.43,bevelEnabled:false,curveSegments:8});
+    for(let i=0;i<8;i++){
+      const z=first+(i+.5)*bay;
+      stamp(arch,ochre,front-.44,0,z,1,1,1,Math.PI/2);
+      box(shutter,.55,floor+1.34,z, .12,2.64,1.50);
+      box(cream,.64,floor+2.70,z,.21,.18,1.84);
+      if(i%2===0)box(cream,-2.35,deck+.13,z+bay/2,11.06,.08,.22);
+    }
+    arch.dispose();
+    for(let i=0;i<=8;i++){
+      const z=first+i*bay;
+      box(ochre,front-.28,floor+.96,z,.56,1.96,.79);
+      box(cream,front-.28,floor+.15,z,.71,.30,1.02);
+      box(ochre,front-.25,deck+.63,z,.42,1.16,.46);
+    }
+    for(const x of [-7.86,front-.25]){
+      box(cream,x,deck+.30,27,.25,.26,40.25);
+      box(cream,x,deck+1.16,27,.33,.17,40.40);
+      for(let z=first;z<=47;z+=.94)box(ochre,x,deck+.73,z,.16,.71,.18);
+    }
+    for(const z of [first,47]){
+      box(cream,-2.39,deck+1.16,z,11.45,.20,.33);
+      for(let x=-7.72;x<3.2;x+=.94)box(ochre,x,deck+.63,z,.18,1.05,.18);
+    }
+  }
   add('osm-way-613351065', 'hai-dang-cua-tieu', {height:25,diameter:3.2,shape:'round',paint:'redWhite',optic:'beacon',details:'waist tidal6',house:[10.6,9.2]}, -0.856, 'vnms', 'Cửa Tiểu (Cua Thieu, Banc Norodom) (2)'); // Cửa Tiểu
   function coastalRock(T,group,cliff,yaw,height,views){
     const positions=[],colours=[],index=[],c=Math.cos(yaw),s=Math.sin(yaw),volcanic=cliff.high>100;
@@ -540,7 +622,7 @@
     }else{
       const h=height-galleryY,n=has('squareCap')?4:optic==='monument'?8:12;
       const lr=optic==='monument'?Math.min(2.55,deckR*.78):lanternR,plinth=galleryY+h*.20,glassTop=galleryY+h*.64;
-      section(frame,tx,tz,galleryY,plinth,lr*1.03,lr,n);
+      section(color[spec.lanternBase]??frame,tx,tz,galleryY,plinth,lr*1.03,lr,n);
       const transparent=new T.MeshPhysicalMaterial({color:0x95b6bc,metalness:.08,roughness:.17,transparent:true,
         opacity:optic==='monument'?.64:.38,depthWrite:false,side:T.DoubleSide});
       const panes=new T.Mesh(new T.CylinderGeometry(lr,lr,glassTop-plinth,n,1,true),transparent);

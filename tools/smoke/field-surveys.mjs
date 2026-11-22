@@ -13,7 +13,8 @@ for(const name of scripts.slice(scripts.indexOf('sight-details.js'),scripts.inde
   runInContext(readFileSync(file(name),'utf8'),context,{filename:name});
 }
 const {VanMieuSurvey:survey,VietnamLandmarks,VietnamTourism,NatureFieldCaptures,VietnamHydrography}=context;
-const access=JSON.parse(readFileSync(file('vn-roads/index.json'),'utf8')).sightAccess.stops;
+const roadIndex=JSON.parse(readFileSync(file('vn-roads/index.json'),'utf8'));
+const access=roadIndex.sightAccess.stops;
 for(const site of [...VietnamLandmarks.entries,...VietnamTourism.entries]){
   if(site.mappedEntrance)assert.ok(!access[site.catalogId||site.id],site.name+' still has a generated access road');
   if(site.viewOf){
@@ -27,6 +28,18 @@ for(const site of [...VietnamLandmarks.entries,...VietnamTourism.entries]){
 const birdReserveRoads=JSON.parse(gunzipSync(readFileSync(file('vn-roads/422_36.gz'))));
 assert.ok(birdReserveRoads.some(row=>row[3].includes('Hưng')&&row.slice(1,3).includes(7820762922)));
 assert.ok(!birdReserveRoads.some(row=>row.slice(1,3).includes(4770759122)));
+// At Bãi Môn, the parking lane meets both directions of QL29. Visitors leave
+// the car at the ticket area and continue toward the cape on foot.
+const routeNetwork=createRequire(import.meta.url)('../../dist/route-network-core.js');
+const capeTile='437_51',capeRoads=JSON.parse(gunzipSync(readFileSync(file('vn-roads/'+capeTile+'.gz'))));
+const capeTraffic=JSON.parse(gunzipSync(readFileSync(file('vn-traffic/'+capeTile+'.gz'))));
+const capeGraph=new routeNetwork.Tile(roadIndex,capeTile,capeRoads,capeTraffic);
+const lane=50000002,northbound=50000001,southApproach=706075;
+const canTurn=(from,to)=>capeGraph.arcs[capeGraph.byId.get(from)].next.includes(capeGraph.byId.get(to));
+assert.ok(canTurn(southApproach,lane)&&canTurn(-northbound,lane)&&canTurn(-lane,northbound)&&canTurn(-lane,-southApproach));
+const beach=VietnamTourism.entries.find(s=>s.id==='osm-way-160203374');
+const parking=routeNetwork.nearest(beach.start,capeRoads);
+assert.ok(parking.id===lane&&parking.error<4,'Bãi Môn must start beside its ticket area');
 // The memorial on the traffic island and the grave at 1 Phan Đình Phùng
 // have separate photos and destinations even though they honour the same person.
 const goCongStops=runInContext("heritageVisits.find(v=>v[0]==='pho-cu-go-cong')[2]",context);
