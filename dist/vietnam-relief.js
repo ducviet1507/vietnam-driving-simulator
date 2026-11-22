@@ -30,7 +30,7 @@ function createVietnamRelief(T,scene,compact,landscapes,tunnelCut,landWidth,cave
             // and upland lakes. Only the fallback ocean estimate uses altitude.
             float ocean=(1.-smoothstep(.5,5.,altitude))*(1.-smoothstep(.018,.070,dot(sampledDiffuseColor.rgb,vec3(.2126,.7152,.0722))));
             float water=mix(ocean,sightMappedWater,sightCoverage);
-            gl_FragColor.rgb=mix(gl_FragColor.rgb,${sightOpenWaterColour},sightMappedWater);
+            gl_FragColor.rgb=mix(gl_FragColor.rgb,${sightOpenWaterColour},water);
             float waterHaze=1.-exp(-fogDensity*fogDensity*vFogDepth*vFogDepth);
             haze=mix(haze,max(haze,waterHaze),water);
           }

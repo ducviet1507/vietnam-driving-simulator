@@ -1,6 +1,7 @@
 'use strict';
 
 Object.assign(window.sightSecretStories, {
+  'vung-chua-dao-yen':['shell','Qua hàng phi lao','Đứng giữa các thân phi lao ở Vũng Chùa, đường chân trời có bị ngắt ở đâu?','Một sườn đảo nhô lên giữa biển. Mép rừng xanh thoải dần xuống bãi sáng màu ở bờ tây Đảo Yến.'],
   'phat-vien-dong-duong': ['arch','Thanh đá giữa hai trụ','Qua các thanh chống ở Tháp Sáng, tìm một đường ngang bằng đá nằm giữa hai trụ cửa.','Đầu bút đi lên theo vết gạch vỡ rồi rẽ ngang trên thanh đá. Dưới nét ngang ấy, hai trụ vẫn để ngỏ một lối cho mắt nhìn xuyên sang phía bên kia.'],
   'thap-phu-dien': ['drop','Giữa lòng cồn cát','Qua cửa phía đông ở Phú Diên, có gì còn lại giữa bốn bức tường gạch?','Từ ba bậc cửa, một nét bút luồn vào lòng tháp và dừng ở bệ thờ nhỏ. Phía trên trang ký họa, mái nhà kính hắt một quầng xanh xuống phần diềm mái xưa.'],
   'thap-yang-prong': ['wing','Mỏ chim ở mép rừng','Hãy lần theo diềm mái Yang Prong ra góc tháp để tìm chiếc mỏ quặp.','Bên mảng gạch phủ rêu, một chiếc mỏ nhỏ ngoặt xuống từ góc mái. Người vẽ nối nó với đường cong của tán rừng, rồi chừa trắng một khoảng trời ngay bên dưới.'],

@@ -138,6 +138,17 @@ for(const name of readdirSync(file('landmark-scans/')).filter(f=>f.endsWith('.gl
 }
 const three=createRequire(import.meta.url)('../../dist/three.min.js');
 const T={...three,TextureLoader:class{load(){return new three.Texture();}}};
+// Đảo Yến is outside the road district when the visitor is on the beach.
+// Its sampled summit and concave coastline must remain visible in that view.
+const vungChua=VietnamLandmarks.entries.find(s=>s.id==='vung-chua-dao-yen'),bayScene=new T.Group();
+context.atob=atob;vungChua.build(T,{group:bayScene});bayScene.userData.fitGround(()=>0);
+const yen=bayScene.getObjectByName('Đảo Yến – bờ và sườn đảo');
+assert.ok(Math.hypot(yen.position.x,yen.position.z)>1300);
+const coastline=yen.geometry.boundingBox;
+assert.ok(coastline.max.y>65&&coastline.max.y<72&&coastline.min.y<0);
+assert.ok(coastline.max.z-coastline.min.z>870&&coastline.max.x-coastline.min.x>575);
+const islandPeak=coastline.max.y;bayScene.userData.fitGround(()=>4.5);
+assert.ok(Math.abs(yen.geometry.boundingBox.max.y-islandPeak-4.5)<1e-4);
 // The Hiêu terraces follow a long, shallow reach even after terrain is reloaded.
 // A generic waterfall at this pin produces a tall isolated wall.
 const hieu=VietnamLandmarks.entries.find(s=>s.id==='osm-node-6215416985');

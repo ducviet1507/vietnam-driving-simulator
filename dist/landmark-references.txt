@@ -817,3 +817,28 @@ https://commons.wikimedia.org/?curid=93540481
 https://commons.wikimedia.org/?curid=93540483
 https://commons.wikimedia.org/?curid=93540484
 https://creativecommons.org/licenses/by-sa/3.0/
+
+Vũng Chùa – Đảo Yến, xã Phú Trạch, Quảng Trị (Quảng Đông, Quảng Bình cũ)
+
+Điểm mang tên Vũng Chùa trên OSM là tâm vũng. Để ngắm Hòn Nồm từ đất liền, xe dừng trên đường nhựa cạnh điểm ngắm 6841107787 ở bãi phía tây Mũi Rồng. Góc nhìn từ sườn đồi dùng lối đi bộ 841553891 và bãi xe 884243608. Tọa độ khảo sát 17.923944, 106.494083 ở trang 52–53 báo cáo của Sở Khoa học và Công nghệ Quảng Bình nằm trong bãi xe.
+https://quangbinhtourism.vn/diem-du-lich/khac/vung-chua-dao-yen.html
+https://dulich.quangtri.gov.vn/vi/daoyenvungchua
+https://skhcn.quangbinh.gov.vn/3cms/upload/khcn/File/KQKHCN/BaoCaoTongHop3DQB.pdf
+https://www.openstreetmap.org/node/11563767582
+https://www.openstreetmap.org/node/6841107787
+https://www.openstreetmap.org/way/884243619
+https://www.openstreetmap.org/way/884243608
+https://www.openstreetmap.org/way/841553891
+
+Mép bãi cát và đường bao Đảo Yến theo OSM. Lưới độ cao và màu bề mặt đảo được lấy từ trang địa hình gốc của ViVu3D ở ô N17E106, dùng Copernicus DEM và ảnh Sentinel-2 của ESA WorldCover 2021. Mô hình thể hiện vùng lõm giữa sườn bắc và mũi thấp phía nam. Vị trí cây phi lao, ánh sáng và độ cao của máy ảnh ở sườn đồi là ước lượng. Ảnh Đảo Yến từ hàng cây của Linhcandng và hai ảnh vịnh của Genghiskhan có giấy phép CC BY-SA 3.0.
+https://www.openstreetmap.org/way/61973139
+https://www.openstreetmap.org/node/10303616063
+https://registry.opendata.aws/copernicus-dem/
+https://esa-worldcover.org/en/data-access
+https://commons.wikimedia.org/?curid=93540011
+https://commons.wikimedia.org/?curid=30735829
+https://commons.wikimedia.org/?curid=30735831
+
+Hai cây phi lao trong ảnh của Linhcandng được tách nền và dùng làm chất liệu có độ trong suốt trên bãi cát. Chất liệu vung-chua-phi-lao.webp dùng cùng giấy phép CC BY-SA 3.0.
+https://commons.wikimedia.org/?curid=93540011
+https://creativecommons.org/licenses/by-sa/3.0/

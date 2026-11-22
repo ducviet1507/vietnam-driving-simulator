@@ -198,6 +198,9 @@ def main():
         for x in range(math.floor((lon-.007)*GRID), math.floor((lon+.007)*GRID)+1):
             for y in range(math.floor((lat-.007)*GRID), math.floor((lat+.007)*GRID)+1):
                 degrees[x//GRID,y//GRID].add((x,y))
+    # The elevated view of Đảo Yến also looks across the sea beyond the road
+    # and stop coordinates. Include the coast, the island and its seaward side.
+    degrees[106,17].update((106*GRID+x,17*GRID+y) for x in (14,15,16) for y in (28,29,30))
     OUT.mkdir(exist_ok=True)
     with ThreadPoolExecutor(16) as workers, ThreadPoolExecutor(6) as groups:
         jobs = [groups.submit(build, degree, cells, workers) for degree,cells in sorted(degrees.items())]

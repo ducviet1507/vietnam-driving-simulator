@@ -56,6 +56,8 @@
       description:'Từ phía tây vịnh nhìn về đông bắc, dọc theo bờ có Quốc lộ 29 đến khu di tích Bãi Chùa.'}]};
   const laVangGate=[107.1947094,16.7101806],laVangMap='https://maps.giolelavang.com/';
   const precincts={
+    'osm-node-11563767582':{name:'Vũng Chùa – Đảo Yến',city:'Phú Trạch',locality:'Thọ Sơn, Quảng Đông',formerProvince:'Quảng Bình',
+      start:[106.4881775,17.9226739],visitOnArrival:true,mappedEntrance:true,source:'https://quangbinhtourism.vn/diem-du-lich/khac/vung-chua-dao-yen.html'},
     'osm-node-8250669293':{name:'Hoành Sơn Quan trên đỉnh Đèo Ngang',city:'Hoành Sơn',locality:'Đèo Ngang, giáp Hà Tĩnh và Quảng Trị',
       province:'Hà Tĩnh',start:[106.4697041,17.9568173],mappedEntrance:true,visitOnArrival:true,map:'https://www.openstreetmap.org/node/8250669293',
       source:'https://vietnamtourism.vn/index.php/news/items/27340'},
@@ -414,6 +416,17 @@
     atlas.entries.push({id,name,lon,lat,start,city,locality,formerProvince,source,region:'Trung Bộ',province:precincts[anchor].province||'Quảng Trị',kind:'Di tích',
       mappedEntrance:true,visitOnArrival:true,approachMeters:Math.round(Math.hypot((lon-start[0])*111320*Math.cos(lat*Math.PI/180),(lat-start[1])*110900)),
       ...(model?{viewOf:[model,index]}:{}),map:precincts[anchor].map||'https://www.openstreetmap.org/'+osm.split('-').slice(1).join('/')});
+  }
+  const vungChua=precincts['osm-node-11563767582'];
+  for(const [id,name,kind,lon,lat,index,map] of [
+    ['osm-node-6841107787','Bãi biển Vũng Chùa nhìn ra Đảo Yến','Điểm ngắm cảnh',106.4881227,17.9222823,1,'https://www.openstreetmap.org/node/6841107787'],
+    ['vung-chua-tu-doi-tho-son','Đảo Yến từ sườn đồi Thọ Sơn','Điểm ngắm cảnh',106.4946445,17.924499,2,'https://www.openstreetmap.org/way/841553891'],
+    ['osm-way-61973139','Đảo Yến (Hòn Nồm), Vũng Chùa','Đảo',106.4956151,17.911567,3,'https://www.openstreetmap.org/way/61973139'],
+  ]){
+    if(existing.has(id))continue;
+    const start=index===2?[106.4939762,17.9238382]:vungChua.start;
+    atlas.entries.push({...vungChua,id,name,kind,lon,lat,start,map,viewOf:['vung-chua-dao-yen',index],region:'Trung Bộ',province:'Quảng Trị',
+      approachMeters:Math.round(Math.hypot((lon-start[0])*105930,(lat-start[1])*110900))});
   }
   const bay=precincts['osm-relation-16028816'];
   for(const [id,name,lon,lat,start,index,arrivalNote] of [

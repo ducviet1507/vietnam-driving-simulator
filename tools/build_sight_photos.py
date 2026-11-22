@@ -37,6 +37,9 @@ GRAPHIC = re.compile(r"(?:^|[ _-])(logo|locator|brochure|floor plan|plan of|coat
 
 # Audited Commons file pages for sites without a specific upstream photograph.
 REVIEWED = {
+    "osm-node-11563767582": "File:Đảo Yến, Quảng Đông, Quảng Trạch, Quảng Bình.jpeg",
+    "osm-node-6841107787": "File:Vung Chua beach.jpg",
+    "vung-chua-tu-doi-tho-son": "File:Vung Chua and Yen islet.jpg",
     "osm-node-8250669293": "File:Hoành Sơn quan 5.jpeg",
     "deo-ngang-mat-nam-hoanh-son-quan": "File:Hoành Sơn quan 4.jpeg",
     "deo-ngang-bac-da-thien-ly": "File:Hoành Sơn quan 6.jpeg",
