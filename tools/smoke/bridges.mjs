@@ -109,4 +109,22 @@ function checkFork(cx,cz){
   return opened.map(o=>o.id);
 }
 assert.deepEqual(checkFork(0,0),checkFork(83,-41),'opening is stable across district origins');
+
+// Suppress generic piers along the full routed Nhật Lệ 1 deck. The older
+// 260 m model covered only the middle of the crossing.
+const nhatLeContext={window:{}};
+runInNewContext(readFileSync(new URL('../../dist/sights-cau-nhat-le.js',import.meta.url),'utf8'),nhatLeContext);
+const nhatLe=nhatLeContext.window.VietnamSights[0];
+world.window.VietnamLandmarks={entries:[nhatLe]};
+const dongHoi=Object.assign(Object.create(proto),{lon:nhatLe.lon,lat:nhatLe.lat,my:110900,
+  mx:111320*Math.cos(nhatLe.lat*Math.PI/180),visitorEdges:new Set(),footbridgeTiles:{}});
+const sourceRows=JSON.parse(gunzipSync(readFileSync(new URL('../../dist/vn-roads/426_69_1_3.gz',import.meta.url))));
+const crossing=dongHoi.decodeEdge(sourceRows.find(row=>row[0]===3498353));
+const quay=dongHoi.decodeEdge(sourceRows.find(row=>row[0]===37323));
+dongHoi.bridges={profiles:new Map([[crossing.id,{bridge:true}]])};
+const quayside=world.createBridgeDistrict(dongHoi,[crossing,quay],0,0,()=>0);
+for(const station of [0,crossing.length/2,crossing.length])assert.ok(quayside.authoredAt(crossing,station));
+const parked=dongHoi.point(...nhatLe.start);
+assert.ok(dongHoi.nearest(parked.x,parked.z,[quay]).error<4);
+assert.ok(dongHoi.nearest(parked.x,parked.z,[crossing]).error>40**2);
 console.log('Bridge decks, approaches, stacked crossings, Nga Ba Hue slip-road clearance and road tracking passed.');

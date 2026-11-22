@@ -2,6 +2,9 @@
 // Anchor a regional visit on an existing road arrival. Each stop keeps its own
 // coordinates and the camera can move out to an island while the car stays parked.
 const heritageVisits=[
+  ['dong-hoi-ven-song-nhat-le','Ven sông Nhật Lệ – từ tượng Mẹ Suốt đến tháp chuông Tam Tòa',[
+    'osm-node-8716478190','dong-hoi-phu-dieu-me-suot','dong-hoi-hang-cau-me-suot','osm-node-5323866724','dong-hoi-toan-canh-cau-nhat-le','osm-way-343077412',
+  ]],
   ['quang-binh-quan-hai-mat-cong','Quảng Bình Quan – hai mặt cổng giữa Lê Lợi và Quang Trung',[
     'osm-node-8706712863','quang-binh-quan-mat-quang-trung','quang-binh-quan-vuon-le-loi',
   ]],

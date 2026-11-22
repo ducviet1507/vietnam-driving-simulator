@@ -3,6 +3,7 @@
 // Clues belong to the tour camera. The little scenes in the reveals are original
 // keepsakes inspired by the place, including the imagined voices and movements.
 window.sightSecretStories = {
+  'dong-hoi-ven-song-nhat-le':['sail','Phù điêu bên mái chèo','Ở phía đường Quách Xuân Kỳ có thể thấy gì dưới chân tượng Mẹ Suốt?','Các gương mặt được chạm nổi trên mũi thuyền. Phía hướng ra sông có những nếp đá hình sóng.'],
   'quang-binh-quan-hai-mat-cong':['arch','Hai mặt của cổng','Bên nào của Quảng Bình Quan mở ra khu vườn nhỏ?','Mặt có vòm gạch và khu vườn quay về đường Lê Lợi. Phía đối diện, từ đường Quang Trung có thể thấy các bậc lên gác.'],
   'la-vang-tu-cong-den-linh-dai':['leaf','Ba cây bên Linh đài','Tượng Đức Mẹ La Vang đứng giữa những cây gì?','Ba cây đa bằng bê tông cốt thép bao quanh tượng ở Linh đài. Từ tháp chuông cũ, có thể thấy Linh đài ở phía đông.'],
   'hai-ben-tha-hoa-thach-han':['sail','Hai bờ sông Thạch Hãn','Bến tám cạnh nằm ở bờ nào?','Bến tám cạnh nằm trước đền tưởng niệm ở An Đôn, bên bờ bắc. Từ bậc đá trước nhà hành lễ ở bờ nam, có thể nhìn sang bến.'],

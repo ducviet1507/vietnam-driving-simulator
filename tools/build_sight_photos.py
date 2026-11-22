@@ -37,6 +37,11 @@ GRAPHIC = re.compile(r"(?:^|[ _-])(logo|locator|brochure|floor plan|plan of|coat
 
 # Audited Commons file pages for sites without a specific upstream photograph.
 REVIEWED = {
+    "osm-node-5323866724": "File:Cau Nhat Le.JPG",
+    "dong-hoi-toan-canh-cau-nhat-le": "File:Nhật Lệ river.jpg",
+    "osm-node-8716478190": "File:Tượng Mẹ Suốt bên sông Nhật Lệ, Đồng Hới, Quảng Bình.jpeg",
+    "dong-hoi-phu-dieu-me-suot": "File:Tượng Mẹ Suốt bên sông Nhật Lệ 3, Đồng Hới, Quảng Bình.jpeg",
+    "dong-hoi-hang-cau-me-suot": "File:Tượng Mẹ Suốt bên sông Nhật Lệ 2, Đồng Hới, Quảng Bình.jpeg",
     "osm-node-8706712863": "File:Quảng Bình quan, Đồng Hới, Quảng Bình.jpeg",
     "quang-binh-quan-mat-quang-trung": "File:QuangBinhGate.jpg",
     "quang-binh-quan-vuon-le-loi": "File:Quảng Bình quan.jpg",

@@ -35,6 +35,8 @@
   const huongSonParking=[105.7877197,20.614076];
   const tuanChau=[106.9894,20.91974];
   // The tower footprint and the park boundary lead to the same visitor tour.
+  atlas.aliases['osm-way-979538328']='osm-node-5323866724';
+  atlas.aliases['osm-way-1085506314']='osm-node-5323866724';
   atlas.aliases['osm-way-940004472']='osm-node-8706712863';
   atlas.aliases['osm-way-1228794103']='osm-relation-15805643';
   atlas.aliases['osm-node-1805807506']='osm-way-1244769154';
@@ -53,6 +55,10 @@
       description:'Từ phía tây vịnh nhìn về đông bắc, dọc theo bờ có Quốc lộ 29 đến khu di tích Bãi Chùa.'}]};
   const laVangGate=[107.1947094,16.7101806],laVangMap='https://maps.giolelavang.com/';
   const precincts={
+    'osm-node-5323866724':{name:'Cầu Nhật Lệ 1',city:'Đồng Hới',locality:'Sông Nhật Lệ',formerProvince:'Quảng Bình',start:[106.6242889,17.4711827],
+      mappedEntrance:true,visitOnArrival:true,source:'https://nhandan.vn/quang-binh-thong-xe-cau-nhat-le-post470815.html'},
+    'osm-node-8716478190':{name:'Tượng đài Mẹ Suốt',city:'Đồng Hới',locality:'Công viên bên sông Nhật Lệ',formerProvince:'Quảng Bình',
+      start:[106.6269387,17.4654104],mappedEntrance:true,visitOnArrival:true,source:'https://svhttdl.quangtri.gov.vn/chi-tiet/-/view-article/1/1647938258475/1786420807291'},
     'osm-node-8706712863':{name:'Quảng Bình Quan',city:'Đồng Hới',locality:'Đồng Hới',formerProvince:'Quảng Bình',start:[106.6246407,17.4632662],
       mappedEntrance:true,visitOnArrival:true,source:'https://baoquangtri.vn/dat-va-nguoi-quang-binh/201912/quang-binh-quan-cong-trinh-van-hoa-lich-su-tieu-bieu-2172445/'},
     'osm-way-305408028':{name:'Tháp chuông cũ ở La Vang',city:'Hải Lăng',locality:'Trung tâm hành hương La Vang',start:laVangGate,
@@ -345,6 +351,11 @@
   ];
   const existing = new Set(atlas.entries.map(site => site.id));
   const monumentStops=[
+    ['dong-hoi-toan-canh-cau-nhat-le','Toàn cảnh đầu cầu Nhật Lệ 1 từ phía Quách Xuân Kỳ',106.623917,17.47125,'osm-node-5323866724','cau-nhat-le',1],
+    ['dong-hoi-le-bo-hanh-cau-nhat-le','Lề bộ hành cầu Nhật Lệ 1', 106.6264180,17.4721693,'osm-node-5323866724','cau-nhat-le',2],
+    ['osm-node-8716478190','Tượng đài Mẹ Suốt',106.6270915,17.4654799,'osm-node-8716478190',null,null],
+    ['dong-hoi-phu-dieu-me-suot','Phù điêu dưới tượng đài Mẹ Suốt',106.627087,17.465473,'osm-node-8716478190','tuong-dai-me-suot',1],
+    ['dong-hoi-hang-cau-me-suot','Hàng cau bên tượng đài Mẹ Suốt',106.627028,17.465407,'osm-node-8716478190','tuong-dai-me-suot',2],
     ['osm-node-8706712863','Quảng Bình Quan',106.6240516,17.4633364,'osm-node-8706712863',null,null],
     ['quang-binh-quan-mat-quang-trung','Mặt Quảng Bình Quan phía đường Quang Trung',106.6241040,17.4633542,'osm-node-8706712863','quang-binh-quan',1],
     ['quang-binh-quan-vuon-le-loi','Vườn phía Lê Lợi và hai tầng mái Quảng Bình Quan',106.6238777,17.4633770,'osm-node-8706712863','quang-binh-quan',2],

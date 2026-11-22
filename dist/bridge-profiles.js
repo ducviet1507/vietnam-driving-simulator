@@ -164,7 +164,7 @@ function bridgeGroundEdges(graph,edges){
 
 // Lengths of the scenery meshes already authored for these individual bridges.
 // Only their occupied deck footprint suppresses the standard rail and pier kit.
-const modeledBridgeLengths={'cau-rong':636,'cau-truong-tien':402,'cau-nhat-le':260,
+const modeledBridgeLengths={'cau-rong':636,'cau-truong-tien':402,'cau-nhat-le':635,
   'cau-song-han':260,'cau-tran-thi-ly':320,'cau-thuan-phuoc':360,'cau-treo-kon-klor':215,
   'cau-cua-hoi':360,'cau-ben-thuy':230,'cau-yen-xuan':230,'cau-ham-rong':164};
 

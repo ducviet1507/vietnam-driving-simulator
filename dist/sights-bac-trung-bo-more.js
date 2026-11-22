@@ -112,45 +112,6 @@
     });
   }
 
-  // 6. Cầu Nhật Lệ 1 (Đồng Hới — cầu vòm thép bắc qua sông Nhật Lệ)
-  function cauNhatLe(T, kit) {
-    A.steelTrussBridge(T, kit, {
-      len: 260, w: 14.5, spans: 5, archH: 10.2,
-      steel: 0xd4d9dc, steelDark: 0x8a979e, pierColor: 0x9e9a8f, arched: true
-    });
-  }
-
-  // 7. Tượng đài Mẹ Suốt (Bến đò sông Nhật Lệ, Đồng Hới)
-  function tuongDaiMeSuot(T, kit) {
-    const stone = 0xc6c6b8, pedestal = 0x656c68;
-    kit.palette({stone:[stone,pedestal,0x939990,0xb7b8ab]});
-    kit.palette({stone});
-    kit.box(pedestal, 0,.15,0,7.8,.30,6.1);
-    kit.box(0x939990, 0,.48,0,5.7,.37,4.3);
-    kit.box(pedestal, 0,1.08,0,4.6,.83,3.25);
-    A.plaque(T, kit, 'MẸ SUỐT ANH HÙNG', 0,1.10,1.65,2.75,.42,{bg:'#58605e',fg:'#e6d19c',frame:false});
-    const hull = A.carving(T,kit,stone,0,1.48,0,1);
-    hull.sweep([[0,0,0,1.65,1.27],[-.14,.28,.06,1.47,1.09],[-.09,.53,.12,1.14,.96],
-      [0,.82,.16,1.26,.98],[.08,1.04,.12,1.20,.92],[.12,1.22,.10,.88,.74]],.11,24);
-    for (const s of [-1,1]) {
-      hull.sweep([[s*1.38,.19,.54,.07,.10],[s*1.12,.43,.85,.10,.09],[s*.87,.64,.91,.09,.09],
-        [s*.49,.74,1.04,.10,.09],[s*.24,.86,1.08,.08,.09],[s*.20,.97,1.01,.04,.05]]);
-    }
-    hull.finish();
-    const base = 2.67, h = 4.32;
-    A.statueFigure(T, kit, stone, 0,base,0,h,{headcloth:true,
-      rightArm:[[-.137,.722,.079],[.051,.728,.123],[.085,.732,.126]],
-      leftArm:[[.143,.62,.022],[.11,.502,.135],[.128,.475,.138]]});
-    const oar = A.carving(T,kit,0xb7b8ab,0,base,0,h);
-    oar.sweep([[.21,-.035,.15,.041,.013],[.203,.035,.15,.049,.017],[.171,.20,.145,.032,.018],
-      [.156,.322,.14,.015,.015],[.072,.756,.128,.015,.015]],0,12);
-    // Wind lifts the loose cloth behind the planted figure.
-    oar.sweep([[.105,.335,-.065,.079,.030],[.218,.409,-.098,.086,.028],[.284,.470,-.153,.047,.025],
-      [.3,.514,-.171,.007,.010]],.18);
-    oar.finish();
-    A.trees(T, kit, [{ x: -7.8, z: -5.5, h: 7.4, kind: 'palm' }, { x: 7.8, z: -5.5, h: 7.2, kind: 'palm' }]);
-  }
-
   // 8. Hải đăng Nhật Lệ (Cửa biển Nhật Lệ, Đồng Hới)
   function haiDangNhatLe(T, kit) {
     A.lighthouse(T, kit, {
@@ -197,25 +158,6 @@
       map: 'https://www.openstreetmap.org/node/4409318890',
       source: 'https://sknc.qdnd.vn/dia-chi-do/vang-danh-nga-ba-nghen-501999',
       build: tuongDaiXoVietCanLoc
-    },
-    
-    {
-      id: 'cau-nhat-le', name: 'Cầu Nhật Lệ', city: 'Đồng Hới', province: 'Quảng Trị', formerProvince: 'Quảng Bình',
-      lon: 106.627250, lat: 17.472435, yaw: -2.8726, width: 200, depth: 17,
-      viewAngle: -2.25, viewElevation: 0.22,
-      start: [106.62635, 17.47218], viewDistance: 1550,
-      solids: [[0, -7.8, 130, 0.7], [0, 7.8, 130, 0.7]],
-      map: 'https://www.openstreetmap.org/#map=17/17.47244/106.62725',
-      source: 'https://quangbinhtourism.vn/',
-      build: cauNhatLe
-    },
-    {
-      id: 'tuong-dai-me-suot', name: 'Tượng đài Mẹ Suốt', city: 'Đồng Hới', province: 'Quảng Trị', formerProvince: 'Quảng Bình',
-      lon: 106.625480, lat: 17.466880, yaw: -1.166, width: 18, depth: 16,
-      start: [106.625308, 17.466812],
-      map: 'https://www.openstreetmap.org/#map=18/17.46688/106.62548',
-      source: 'https://dulichquangtri.vn/diem-du-lich/tuong-dai-me-suot/',
-      build: tuongDaiMeSuot
     }
   ];
 
