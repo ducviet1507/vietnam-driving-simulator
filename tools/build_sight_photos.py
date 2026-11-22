@@ -37,6 +37,9 @@ GRAPHIC = re.compile(r"(?:^|[ _-])(logo|locator|brochure|floor plan|plan of|coat
 
 # Audited Commons file pages for sites without a specific upstream photograph.
 REVIEWED = {
+    "osm-way-76041615": "File:Cổ thụ ở ao Bà Ôm.jpg",
+    "ao-ba-om-mat-nuoc": "File:Ao Bà Om, Trà Vinh.jpg",
+    "ao-ba-om-loi-cat": "File:Vui chơi ở ao Bà Ôm.jpg",
     "vung-chua-bai-xe-khu-mo": "File:Mộ Đại tướng Võ Nguyên Giáp.jpeg",
     "osm-node-11563767582": "File:Đảo Yến, Quảng Đông, Quảng Trạch, Quảng Bình.jpeg",
     "osm-node-6841107787": "File:Vung Chua beach.jpg",

@@ -2,6 +2,7 @@
 
 Object.assign(window.sightSecretStories, {
   'mieu-ba-chua-xu-nui-sam': ['ridge', 'Ba vành ngói xanh', 'Từ sân miếu, hãy đếm những lần mái ngói xanh rút vào bên trên chánh điện.', 'Một vành mái che cả hàng cột; vành tiếp theo lọt vào trong, vành trên cùng hứng nắng. Ba mép ngói cùng in lên nền trời Châu Đốc.'],
+  'ao-ba-om':['leaf','Vòm rễ ở Ao Vuông','Ở gốc cổ thụ, khoảng sáng phía dưới rễ có hình gì?','Một nhánh rễ đi ngang từ thân rồi hạ xuống cát, tạo thành một vòm thấp. Những cây sao, dầu quanh ao có nhiều dáng rễ khác nhau.'],
   'khu-mo-vo-nguyen-giap':['leaf','Tiếng chuông ở Vũng Chùa','Quả chuông treo dưới hai tầng mái có tên gì?','Vũng Chùa Hồng Chung là bốn chữ trên quả chuông đồng gần khu mộ. Dưới sườn núi Thọ là vũng biển nhìn ra Đảo Yến.'],
   'chua-tay-an-nui-sam': ['shell', 'Đôi voi dưới mái vòm', 'Hai tượng voi đứng dưới chân lầu, mỗi con có bao nhiêu ngà?', 'Voi sẫm màu mang hai ngà, voi trắng mang sáu ngà. Sau lưng chúng, những vành vòm Tây An nhô lên trên thềm gạch.'],
   'lang-thoai-ngoc-hau': ['ink', 'Khoảng sân Sơn Lăng', 'Qua cửa vòm trắng, hãy tìm ba ngôi mộ cùng quay mặt về phía cổng.', 'Mộ Thoại Ngọc Hầu ở giữa, hai bên là mộ hai phu nhân. Từ trên bậc đá, bạn nhìn thấy khoảng sân nối cả ba ngôi mộ.'],

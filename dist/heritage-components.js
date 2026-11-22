@@ -424,6 +424,20 @@
       mappedEntrance:true,visitOnArrival:true,approachMeters:Math.round(Math.hypot((lon-start[0])*111320*Math.cos(lat*Math.PI/180),(lat-start[1])*110900)),
       ...(model?{viewOf:[model,index]}:{}),map:map||precincts[anchor].map||'https://www.openstreetmap.org/'+osm.split('-').slice(1).join('/')});
   }
+  // The pond is in the water layer. Add its public shore visits to the Atlas.
+  const baOmStart=[106.3056618,9.9178216],baOmSource='https://vietnamtourism.vn/index.php/tourism/items/1395';
+  for(const [id,name,kind,lon,lat,index] of [
+    ['osm-way-76041615','Ao Bà Om (Ao Vuông), danh thắng Trà Vinh','Hồ',106.3040311,9.9176883,null],
+    ['ao-ba-om-mat-nuoc','Lá sen và mặt nước Ao Bà Om','Điểm ngắm cảnh',106.3039108,9.9169125,1],
+    ['ao-ba-om-loi-cat','Lối cát dưới rừng cây cổ thụ ở Ao Bà Om','Điểm ngắm cảnh',106.3028523,9.917422,2],
+    ['ao-ba-om-tu-tren-cao','Bốn bờ Ao Vuông nhìn từ phía chùa Âng','Điểm ngắm cảnh',106.3040311,9.9176883,3],
+  ]){
+    if(existing.has(id))continue;
+    atlas.entries.push({id,name,kind,lon,lat,start:baOmStart,city:'Nguyệt Hóa',province:'Vĩnh Long',formerProvince:'Trà Vinh',
+      locality:'Ao Vuông, Trà Vinh',region:'Nam Bộ',source:baOmSource,map:'https://www.openstreetmap.org/way/76041615',
+      approachMeters:Math.round(Math.hypot((lon-baOmStart[0])*109650,(lat-baOmStart[1])*110900)),
+      mappedEntrance:true,visitOnArrival:true,...(index===null?{}:{viewOf:['ao-ba-om',index]})});
+  }
   const vungChua=precincts['osm-node-11563767582'];
   for(const [id,name,kind,lon,lat,index,map] of [
     ['osm-node-6841107787','Bãi biển Vũng Chùa nhìn ra Đảo Yến','Điểm ngắm cảnh',106.4881227,17.9222823,1,'https://www.openstreetmap.org/node/6841107787'],

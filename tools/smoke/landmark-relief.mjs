@@ -88,6 +88,14 @@ for(const [x,z] of [[0,0],[45,70],[-65,-85]]){
   const altitude=square.altitude(plaza.x+x,plaza.z+z);
   assert.ok(altitude>=7.80&&altitude<=8.151);
 }
+const pondGraph={geo:(x,z)=>[106.30403+x/109650,9.91766-z/110900],
+  point:(lon,lat)=>({x:(lon-106.30403)*109650,z:(9.91766-lat)*110900})};
+// A surface raster sees the tall crowns lining Ao Bà Om. Open-water pixels
+// set the pond datum while the relief outside its grove retains the survey.
+const pond=relief.prepare(pondGraph,{elevation:(x,z)=>Math.abs(x)<45&&Math.abs(z)<28?5:26,elevationWeight:()=>1});
+for(const [x,z] of [[0,0],[-80,22],[72,-30],[32,48]])close(pond.altitude(x,z),5);
+assert.ok(pond.altitude(-140,0)>5&&pond.altitude(-140,0)<8);
+close(pond.altitude(-285,0),26);
 vm.runInContext(readFileSync(new URL('../../dist/drivetrain.js',import.meta.url),'utf8'),context);
 const body={reverseDelay:0},downhill={grade:-.16,top:35,power:8,reverse:true};
 let speed=1.2;

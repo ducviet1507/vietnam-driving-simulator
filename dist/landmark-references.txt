@@ -866,3 +866,21 @@ https://creativecommons.org/licenses/by-sa/3.0/
 Hai phần mộ hướng ra biển. Phó Giáo sư Đặng Bích Hà an táng ngày 29/9/2024. Bài ảnh VOV ngày 3/1/2026 ghi nhận lối lát đá, lan can gỗ, mái che và sườn cỏ. Ảnh dâng hương ngày 25/8/2026 cho thấy bàn gỗ, lư ba chân và đồ thờ. Kích thước, cao độ và vị trí tương đối của các chi tiết sân viếng là ước lượng. Hai bài ảnh được dẫn để người tham quan đối chiếu.
 https://vov.vn/xa-hoi/hang-nghin-nguoi-dang-huong-tai-mo-dai-tuong-vo-nguyen-giap-dau-nam-moi-2026-post1258583.vov
 https://vov.vn/chinh-tri/dang-huong-tuong-nho-dai-tuong-vo-nguyen-giap-tai-vung-chua-dao-yen-post1327197.vov
+
+Ao Bà Om (Ao Vuông), phường Nguyệt Hóa, tỉnh Vĩnh Long
+
+Cục Du lịch Quốc gia Việt Nam ghi nhận quanh ao có gò cát và cây sao, dầu cổ thụ với rễ trồi lên mặt đất. Cổng thông tin Vĩnh Long ghi nhận Ao Bà Om được xếp hạng danh lam thắng cảnh quốc gia ngày 20/7/1994. Đường bờ lấy từ OSM 76041615, cũng là mặt ao đã có trong lớp thủy hệ của ViVu3D. Xe đỗ ở đường vào phía đông, tại nút nối đường 1161849235 và 1465070930. Các góc ngắm trên gò là vị trí mô phỏng. Từng gốc cây và mảng thực vật thủy sinh không có tọa độ khảo sát riêng.
+https://vietnamtourism.vn/index.php/tourism/items/1395
+https://vinhlong.gov.vn/du-khach-old/diadanh_test
+https://www.openstreetmap.org/way/76041615
+https://www.openstreetmap.org/way/1161849235
+https://www.openstreetmap.org/way/1465070930
+
+Khối độ cao Copernicus ghi nhận cả tán rừng quanh ao. Mặt bằng ven bờ trong cảnh lấy mốc từ trung vị của năm điểm trên phần nước thoáng, nối dần về địa hình gốc bên ngoài gò. Cao độ tương đối của gò cát là ước lượng theo ảnh.
+
+Hai ảnh của Bùi Thụy Đào Nguyên ngày 17/3/2013 cho thấy thân thẳng, rễ nổi và nền cát. Dáng gốc trong góc nhìn gần được ước theo ảnh “Cổ thụ ở ao Bà Ôm”. Chất liệu ao-ba-om-vo-cay.webp và ao-ba-om-nen-cat.webp được cắt từ hai ảnh gốc và cân bằng độ sáng để phủ lên bề mặt 3D. Hai chất liệu dùng giấy phép CC BY-SA 3.0. Ảnh mặt ao của ASM cho thấy cuống và lá sen cạnh bờ, ánh nước và dải cây phía đối diện. Mật độ sen thay đổi theo mùa.
+https://commons.wikimedia.org/?curid=25228817
+https://commons.wikimedia.org/?curid=25228818
+https://commons.wikimedia.org/?curid=34578946
+https://creativecommons.org/licenses/by-sa/3.0/
+https://bvhttdl.mediacdn.vn/documents/181351/512002/3636070998181679.pdf
