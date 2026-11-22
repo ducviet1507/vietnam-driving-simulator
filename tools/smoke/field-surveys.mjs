@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import {readFileSync,readdirSync} from 'node:fs';
 import {createRequire} from 'node:module';
 import {createContext,runInContext} from 'node:vm';
+import {gunzipSync} from 'node:zlib';
 
 const file=name=>new URL('../../dist/'+name,import.meta.url);
 const context=createContext({matchMedia:()=>({matches:true})});
@@ -21,6 +22,20 @@ for(const site of [...VietnamLandmarks.entries,...VietnamTourism.entries]){
     assert.ok(Number.isInteger(index)&&model?.views?.[index],site.name+' points to an unknown model camera');
   }
 }
+// Cars reach the Hứa Hòa Hưng gate. The patrol lane inside the bird reserve
+// used to appear as a residential street and as a route to the observation deck.
+const birdReserveRoads=JSON.parse(gunzipSync(readFileSync(file('vn-roads/422_36.gz'))));
+assert.ok(birdReserveRoads.some(row=>row[3].includes('Hưng')&&row.slice(1,3).includes(7820762922)));
+assert.ok(!birdReserveRoads.some(row=>row.slice(1,3).includes(4770759122)));
+// The memorial on the traffic island and the grave at 1 Phan Đình Phùng
+// have separate photos and destinations even though they honour the same person.
+const goCongStops=runInContext("heritageVisits.find(v=>v[0]==='pho-cu-go-cong')[2]",context);
+const graveId='dong-thap-lang-mo-truong-dinh',statueId='osm-node-10608268024';
+assert.ok(goCongStops.includes(graveId)&&!goCongStops.includes(statueId));
+const grave=VietnamLandmarks.entries.find(site=>site.catalogId===graveId);
+const statue=VietnamTourism.entries.find(site=>site.id===statueId);
+const graveDistance=Math.hypot((grave.lon-statue.lon)*109500,(grave.lat-statue.lat)*110900);
+assert.ok(graveDistance>100&&graveDistance<200);
 const ids=new Set([...VietnamLandmarks.entries,...VietnamTourism.entries].map(s=>s.id));
 // Keep the two cross-province homonyms separate, and the Hương Sơn approach
 // at the coach station even when a direct link selects a stop up the mountain.
@@ -44,6 +59,7 @@ assert.ok(Math.hypot((thachDong.lon-104.475072)*109500,(thachDong.lat-10.4108219
 assert.deepEqual([...thachDong.start],[104.47545,10.410973]);
 const haTien=runInContext("heritageVisits.find(v=>v[0]==='binh-san-thach-dong-ha-tien')[2]",context);
 const photographs=JSON.parse(readFileSync(file('sight-photos/index.json'),'utf8'));
+assert.notEqual(photographs[graveId].file,photographs[statueId].file);
 for(const id of haTien){
   const pin=VietnamTourism.entries.find(site=>site.id===id);
   assert.ok(pin.mappedEntrance,pin.name);

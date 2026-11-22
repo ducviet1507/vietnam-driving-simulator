@@ -188,7 +188,7 @@ def build(source, output, residential):
     tiles = collections.defaultdict(list)
     overview, cities = [], []
     roads = collections.Counter()
-    edges = 0
+    edge_id = 0
     total_km = 0
     way_count = 0
     bounds = [180,90,-180,-90]
@@ -220,7 +220,12 @@ def build(source, output, residential):
         one_way = int(direction in ('yes','true','1','-1','reverse') or (direction == '' and (w.tags.get('junction')=='roundabout' or kind=='motorway')))
         if direction in ('-1','reverse'):
             refs.reverse()
-        way_count += 1
+        # At the Bạc Liêu bird sanctuary the public road ends at the gate.
+        # Inside, this mapped residential way is the reserve's patrol lane.
+        # https://baoxaydung.vn/ca-mau-dau-tu-gan-20-ty-dong-nang-cap-duong-vao-vuon-chim-bac-lieu-192260317183220202.htm
+        patrol_lane = w.id == 1035601774
+        if not patrol_lane:
+            way_count += 1
         if kind in {'trunk','motorway','primary'}:
             line = simplify([(x,y) for _,x,y in refs],300)
             if max(abs(line[-1][0]-line[0][0]),abs(line[-1][1]-line[0][1])) >= 700:
@@ -229,8 +234,11 @@ def build(source, output, residential):
             line = simplify([(a,b) for _,a,b in run],1 if kind == 'service' else 3)
             if len(set(line)) >= 2:
                 coords = [v for pt in line for v in pt]
-                edges += 1
-                row = compact([edges,run[0][0],run[-1][0],name,kind,one_way,coords])
+                edge_id += 1
+                if patrol_lane:
+                    # Keep downstream IDs stable for the existing traffic and route tiles.
+                    continue
+                row = compact([edge_id,run[0][0],run[-1][0],name,kind,one_way,coords])
                 for tile in tiles_touched(line):
                     tiles[tile].append(row)
                 roads[kind] += 1
@@ -252,6 +260,7 @@ def build(source, output, residential):
         timestamp=reader.header().get('osmosis_replication_timestamp')
     with source.open('rb') as f:
         digest=hashlib.file_digest(f,'sha256').hexdigest()
+    edges = sum(roads.values())
     index=dict(tiles=files,edges=edges,ways=way_count,oneWayEdges=counts['oneWay'],roadKm=round(total_km),
                classes=dict(sorted(roads.items())),bytes=total_bytes,bounds=bounds,osmTimestamp=timestamp,
                sourceSha256=digest,attribution='© OpenStreetMap contributors',license='ODbL 1.0')

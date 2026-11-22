@@ -2,6 +2,12 @@
 // Anchor a regional visit on an existing road arrival. Each stop keeps its own
 // coordinates and the camera can move out to an island while the car stays parked.
 const heritageVisits=[
+  ['pho-cu-go-cong','Phố cổ Gò Công – Đình Trung, lăng Trương Định và Nhà Đốc Phủ Hải',[
+    'osm-way-907749065','dong-thap-lang-mo-truong-dinh','osm-way-1272644423',
+  ]],
+  ['sa-dec-nha-co-lang-hoa','Sa Đéc – nhà cổ và làng hoa',[
+    'osm-node-5227610721','osm-node-13518302230',
+  ]],
   ['suoi-cham-thac-hieu-pu-luong','Pù Luông – guồng nước suối Chàm và thác Hiêu',[
     'osm-node-13508679485','osm-node-6215416985',
   ]],

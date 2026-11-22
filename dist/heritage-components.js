@@ -36,7 +36,22 @@
   const tuanChau=[106.9894,20.91974];
   // The tower footprint and the park boundary lead to the same visitor tour.
   atlas.aliases['osm-way-1228794103']='osm-relation-15805643';
+  atlas.aliases['osm-node-1805807506']='osm-way-1244769154';
   const precincts={
+    // Lê Văn Giáo meets the eastern entrance walk (w769479510) at n6466763187.
+    'osm-way-1244769154':{locality:'Cao Lãnh',start:[105.63325,10.4467407],mappedEntrance:true,visitOnArrival:true,
+      arrivalNote:'Xe dừng cạnh cổng phía đường Lê Văn Giáo. Đi bộ qua cổng mộ và hồ sen để tới nơi an nghỉ của cụ Phó bảng Nguyễn Sinh Sắc.'},
+    'osm-node-8437362637':{locality:'Long Hưng A',source:'https://csdl.vietnamtourism.gov.vn/dest/?item=1045',
+      start:[105.6705179,10.3514116],mappedEntrance:true,visitOnArrival:true,
+      arrivalNote:'Xe dừng trên Đường huyện 69, ở lối vào phía tây nam khu du lịch. Từ đây có đường vào khuôn viên.',
+      description:'Trong khu du lịch văn hóa Phương Nam có Nam Phương Linh Từ, các dãy hành lang, nhà chuông, nhà trống và bảo tàng. Mở ảnh toàn cảnh để xem các công trình ở cự ly gần.'},
+    // Hứa Hòa Hưng (w484331811) ends where the pedestrian approaches begin.
+    'osm-relation-17189464':{start:[105.7207283,9.2426326],mappedEntrance:true,visitOnArrival:true,
+      arrivalNote:'Xe dừng trước cổng Vườn chim trên đường Hứa Hòa Hưng. Từ đây lối đi bộ dẫn vào khu trưng bày và các điểm ngắm chim.'},
+    'osm-way-907749065':{start:[106.674909,10.360361],mappedEntrance:true,visitOnArrival:true,
+      arrivalNote:'Xe dừng trên đường Rạch Gầm, bên cửa hông đình. Mặt võ ca nhìn về phố Phan Chu Trinh và chợ Gò Công.'},
+    'osm-way-1272644423':{name:'Nhà Đốc Phủ Hải',kind:'Di tích',start:[106.6749700,10.3621709],mappedEntrance:true,visitOnArrival:true,
+      source:'https://dulich.dongthap.gov.vn/vi/nhadocphuhai',arrivalNote:'Xe dừng trên đường Hai Bà Trưng, gần cổng số 49. Từ đây đi qua sân tới tiền sảnh của ngôi nhà.'},
     // w686360197 follows the stream through the waterfall pin. Visitors leave
     // their cars on the approach road and walk the last stretch into Bản Hiêu.
     'osm-node-6215416985':{name:'Thác Hiêu – Pù Luông',locality:'Bản Hiêu',start:[105.21903,20.46099],
@@ -143,6 +158,34 @@
     [1504768248,'Đền Trung – Hùng Vương Tổ miếu','Phú Thọ','Hùng Sơn',105.3240986,21.3690193,105.322450,21.369750,189,'https://denhung.vn/tin-tuc/den-trung'],
   ];
   const existing = new Set(atlas.entries.map(site => site.id));
+  // The inscription faces the short southwestern court. The other main hall
+  // across the roof ridge is the shrine of the Đặng family. The OSM pin
+  // called Chùa Nam Phương lies outside the northern enclosure.
+  if(!existing.has('dong-thap-nam-phuong-linh-tu'))atlas.entries.push({
+    id:'dong-thap-nam-phuong-linh-tu',name:'Nam Phương Linh Từ',region:'Nam Bộ',province:'Đồng Tháp',city:'Lấp Vò',locality:'Long Hưng A',
+    kind:'Di tích',lon:105.672435,lat:10.352504,start:[105.6705179,10.3514116],approachMeters:242,mappedEntrance:true,visitOnArrival:true,
+    source:'https://dulichphuongnam.vn/den-tho-nam-phuong-linh-tu.html',map:'https://www.openstreetmap.org/?mlat=10.352504&mlon=105.672435#map=19/10.352504/105.672435',
+    description:'Chính điện mở về sân phía tây nam, nơi có bia khắc tên Nam Phương Linh Từ. Ngôi điện có bảy gian, hai chái và sáu mươi cột.',
+    arrivalNote:'Xe dừng ở lối vào khu văn hóa Phương Nam trên Đường huyện 69. Từ đó đi bộ qua sân tới chính điện.'
+  });
+  // The grave and temple are on the same plot at 1 Phan Đình Phùng. The
+  // monument on the traffic island (n10608268024) has its own Atlas record.
+  if(!existing.has('dong-thap-lang-mo-truong-dinh'))atlas.entries.push({
+    id:'dong-thap-lang-mo-truong-dinh',name:'Mộ và đền thờ Trương Định',region:'Nam Bộ',province:'Đồng Tháp',city:'Gò Công',locality:'Gò Công',
+    kind:'Lăng mộ',lon:106.674073,lat:10.3596791,start:[106.6741120,10.3598779],approachMeters:22,mappedEntrance:true,visitOnArrival:true,
+    source:'https://dongthap.gov.vn/web/cong-thong-tin-dtp/tin-tuc/chi-tiet?id=10570971',map:'https://www.openstreetmap.org/?mlat=10.3596791&mlon=106.674073#map=19/10.3596791/106.674073',
+    description:'Giữa phố Gò Công, phần mộ của Trương Định nằm trong khu tường bao, trước ngôi đền. Hai tấm bia có mái che ở đầu khu mộ.',
+    arrivalNote:'Xe dừng trên đường Phan Đình Phùng gần cổng số 1. Đi qua cổng vào khu mộ và đền.'
+  });
+  // A nursery on Đường Hoa Sa Đéc. The OSM garden pin is on its service lane.
+  // Park at the lane's intersection with the public road (n3423656227).
+  if(!existing.has('osm-node-13518302230'))atlas.entries.push({
+    id:'osm-node-13518302230',name:'Làng hoa Sa Đéc – vườn hoa Tân Quy Đông',region:'Nam Bộ',province:'Đồng Tháp',city:'Sa Đéc',locality:'Tân Quy Đông',
+    kind:'Điểm tham quan',lon:105.7456238,lat:10.3184773,start:[105.7451432,10.3176824],approachMeters:103,mappedEntrance:true,visitOnArrival:true,
+    map:'https://www.openstreetmap.org/node/13518302230',source:'https://dulich.dongthap.gov.vn/vi/camera360',photo:'https://vr3d.com.vn/dongthap/langhoasadec/',
+    description:'Từ đường hoa Sa Nhiên – Cai Dao, các lối nhỏ dẫn vào những nhà vườn của Tân Quy Đông. Ảnh cầu cho thấy các luống cây và hoa ở nhiều vị trí trong làng.',
+    arrivalNote:'Xe dừng trên Đường Hoa Sa Đéc, ở đầu lối vào vườn. Từ đây đi bộ vào các luống hoa.'
+  });
   // The water wheels beside the rice fields have a separate pin from the reserve
   // boundary and the bamboo raft landing. The approach ends on village road w888275965.
   if(!existing.has('osm-node-13508679485'))atlas.entries.push({

@@ -17,7 +17,43 @@ window.NatureFieldCaptures=(()=>{
     const url='https://smarttravel-vr.mobifone.vn/vr-tour/khu-di-tich-go-thap/'+scene;
     return {name,url,source:url,credit:'Khu di tích Gò Tháp · Smart Travel MobiFone Khu vực 9',scope};
   }
+  function dongThap(folder,scene,name,scope){
+    const url='https://vr3d.com.vn/'+folder+'/?startscene='+scene;
+    return {name,url,source:url,credit:'Cổng du lịch tỉnh Đồng Tháp · VR3D',scope};
+  }
+  function nguyenSinhSac(scene,name,scope){
+    // The publisher serves X-Frame-Options: SAMEORIGIN. Use its original viewer.
+    const source='https://dongthap.hochiminh.vn/?startscene='+scene+'&skipintro=true';
+    return {name,source,credit:'Cổng thông tin điện tử Hồ Chí Minh',scope:scope+' Ảnh mở trong tab riêng.'};
+  }
   return {
+    'osm-way-1244769154':[
+      dongThap('dongthap/nguyensinhsac','scene_kdtnss-canh-2-30m','Toàn cảnh làng Hòa An','Nhìn từ trên cao xuống khu cây xanh, các mái nhà và ao nước trong khu di tích.'),
+      nguyenSinhSac('pano74','Bậc lên vòm mộ','Nhìn gần các bậc đá và mái vòm trắng che nơi an nghỉ của cụ Nguyễn Sinh Sắc.'),
+      nguyenSinhSac('pano75','Bên dưới vòm lá sen','Đứng dưới vòm nhìn về phần mộ, bàn thờ và khoảng sân bên ngoài.'),
+      nguyenSinhSac('pano14','Cổng vào khu di tích','Góc chụp ngoài đường cho thấy cổng, trạm nhỏ và lối vào dưới hàng cây.'),
+      dongThap('dongthap/nguyensinhsac','scene_kdtnss-canh-7','Phòng trưng bày','Nhìn quanh phòng, xem các vật dụng trưng bày và cảnh quan được giới thiệu trên tường.'),
+      dongThap('dongthap/nguyensinhsac','scene_kdtnss-canh-13','Nhà gỗ ở làng Hòa An','Điểm chụp bên mái hiên, nơi có thể nhìn dọc vách gỗ và lối đi dưới tán cây.')
+    ],
+    'osm-node-13518302230':[
+      dongThap('dongthap/langhoasadec','scene_lhsd-canh-3-30m','Đường hoa nhìn từ trên cao','Theo trục đường xuyên qua khu trồng hoa, nhìn các nhà vườn ở hai bên.'),
+      dongThap('dongthap/langhoasadec','scene_lhsd-canh-15-30m','Luống cây kiểng tán tròn','Nhìn ngang qua những dãy chậu cây được tỉa tán tròn.'),
+      dongThap('dongthap/langhoasadec','scene_lhsd-canh-16-30m','Những hàng cây giống','Góc chụp tại vườn cho thấy khoảng cách giữa các hàng cây và lối đi bên luống.'),
+      dongThap('dongthap/langhoasadec','scene_lhsd-canh-17-30m','Những luống hoa đang nở','Từ lối giữa vườn nhìn sang các luống hoa màu cam và phần nhà vườn bên kia đường.'),
+      dongThap('dongthap/langhoasadec','scene_lhsd-canh-20-30m','Vườn bên Đường Hoa Sa Đéc','Góc từ trên cao ở gần ghim của vườn, nhìn xuống các hàng chậu và mái nhà.')
+    ],
+    'dong-thap-nam-phuong-linh-tu':[
+      dongThap('public/phuongnam','scene_vuonhoasancanh1','Mái đền nhìn từ vườn phía tây','Từ phía tây nhìn qua vườn và mặt nước tới cụm mái của hai ngôi điện.'),
+      dongThap('public/phuongnam','scene_vuonhoasancanh2','Sân đền nhìn từ vườn phía đông nam','Góc nhìn chéo qua hàng cây cho thấy mái ngói, sân và những dãy hành lang.')
+    ],
+    'osm-node-8437362637':[
+      dongThap('public/phuongnam','scene_View_flycam_-_t___ng_quan_1','Toàn cảnh khu văn hóa Phương Nam','Từ trên cao nhìn dọc trục qua các sân, dãy hành lang và mái đền.'),
+      dongThap('public/phuongnam','scene_View_m___t______t_-_Nh___Chu__ng','Nhà Chuông','Điểm nhìn dưới mái gỗ, cạnh quả chuông và bộ khung treo.'),
+      dongThap('public/phuongnam','scene_View_m___t______t_-_Nh___Tr___ng','Nhà Trống','Đứng bên chiếc trống lớn, nhìn qua hàng cột ra ngoài sân.'),
+      dongThap('public/phuongnam','scene_View_m___t______t_-_____n_T____Thu','Đàn Tế Thu','Quan sát bậc lên và khoảng sân phía trước đàn.'),
+      dongThap('public/phuongnam','scene_View_m___t_____t_nh___c____nam_b____-_Nh___xay_l__a_','Nhà xay lúa','Xem gian nhà mái lá và các dụng cụ đặt bên trong.'),
+      dongThap('public/phuongnam','scene_PNam_museum1','Bảo tàng Phương Nam','Góc chụp trong nhà trưng bày hiện vật của khu văn hóa.')
+    ],
     'osm-node-8459780109':[
       goThap('Toàn cảnh Gò Tháp','64c1dfd73ac0811fa5dbafcc','Nhìn từ trên cao xuống giồng đất, các mái nhà và đồng ruộng bao quanh khu di tích.'),
       goThap('Nền đền Vishnu ở Gò Tháp Mười','64c7810b3ac0811fa5dbb038','Quan sát phế tích gạch tại điểm khai quật.'),

@@ -37,6 +37,12 @@ GRAPHIC = re.compile(r"(?:^|[ _-])(logo|locator|brochure|floor plan|plan of|coat
 
 # Audited Commons file pages for sites without a specific upstream photograph.
 REVIEWED = {
+    "dong-thap-lang-mo-truong-dinh": "File:Đền và mộ Trương Định.JPG",
+    "osm-node-10608268024": "File:Tượng Trương Định.jpg",
+    "osm-node-13518302230": "File:Làng hoa Tân Quy Đông.jpg",
+    "osm-way-1272644423": "File:Dinh Đốc phủ Hải - Tp.Gò Công.jpg",
+    "osm-way-1244769154": "File:Mộ Nguyễn Sinh Sắc (1862–1929).jpg",
+    "osm-relation-17189464": "File:Khu du lịch sinh thái Vườn chim Bạc Liêu.jpg",
     "osm-node-2669659389": "File:Chua Huong 069.jpg",
     "osm-node-8459780109": "File:Ruins of Go Thap Muoi, Go Thap archaeological site.jpg",
     "osm-node-5227610721": "File:La maison de Huynh Thuy Le (Sa Dec, Vietnam) (6662996139).jpg",
@@ -145,6 +151,7 @@ def matched_entities(rows, names):
 
 def references(pbf):
     extract = ("global.window=global;require('./dist/tourism-catalog.js');require('./dist/sight-details.js');"
+               "require('./dist/heritage-components.js');"
                "console.log(JSON.stringify(VietnamTourism.entries.map(s=>[s.id,s.lon,s.lat,s.kind,VietnamSightDetails[s.id]?.photo,s.name])))")
     rows = json.loads(subprocess.check_output(["node", "-e", extract], cwd=ROOT))
     places = {key: (lon, lat, kind) for key, lon, lat, kind, _photo, _name in rows}
