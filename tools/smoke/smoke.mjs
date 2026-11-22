@@ -114,6 +114,9 @@ async function checkTouchPedals(page) {
     expected=>['a','w','s','shift'].every(key=>held(key)===expected.includes(key)),keys,{timeout:10000});
   // Slide straight up and back with one thumb while the other thumb steers.
   const aboveGas = {...nitro,x:gas.x};
+  // Hold the service brake while checking the thumb transitions. Otherwise the
+  // time spent delivering touch events can steer the car off the lakeside road.
+  await page.keyboard.down('Space');
   await touch('touchStart',steer,gas);
   await expectInputs('a','w');
   await touch('touchMove',steer,aboveGas);
@@ -122,6 +125,7 @@ async function checkTouchPedals(page) {
   await expectInputs('a','w');
   await touch('touchEnd');
   await expectInputs();
+  await page.keyboard.up('Space');
   await touch('touchStart',nitro);
   await expectInputs('w','shift');
   await page.waitForFunction(()=>document.getElementById('nitro').value<99 && Number(document.getElementById('speed').textContent)>0);
