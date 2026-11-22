@@ -678,16 +678,21 @@ function frame(now){
    vehicleLook.update(dt);
    if(mode!=='loading'&&mode!=='error'&&mode!=='map'&&!$('postcard').open&&!$('fieldDialog').open&&!document.hidden){
      // Keep steering against the displayed road until the next district is complete.
-     // Start inside the overlap, and spend more time if a fast car approaches its edge.
+     // Look ahead at cruising speed so the next district starts building inside the overlap.
      const gap=gfx.districtDistance(car.x,car.z);
-     const readyToRefresh=gfx.advanceRoads(mode==='drive'&&gap>245?12:5);
+     const speed=mode==='drive'?Math.hypot(car.vx||0,car.vz||0):0;
+     const lead=speed?Math.min(4,155/speed):0;
+     const aheadX=car.x+(car.vx||0)*lead,aheadZ=car.z+(car.vz||0)*lead;
+     const moved=mode==='drive'&&Math.hypot(aheadX-viewX,aheadZ-viewZ)>125+Math.min(65,speed*2);
+     // A late scenery download can start a second build at the departure point.
+     // Once the car leaves, spend that work on the road ahead instead.
+     const leavingRefresh=moved&&speed>22&&gfx.districtDistance(viewX,viewZ)<1;
+     const readyToRefresh=leavingRefresh||gfx.advanceRoads(mode==='drive'&&gap>210?10:4);
      if(readyToRefresh){
        if(gfx.sceneryChanged)pendingDistrict=districtView;
-       if((mode==='drive'&&Math.hypot(car.x-viewX,car.z-viewZ)>125)||(pendingDistrict&&mode!=='tour')){
-         // Centre the next district farther along the actual velocity vector.
-         const lead=mode==='drive'?Math.min(2,85/(Math.hypot(car.vx,car.vz)||1)):0;
-         refreshView(gfx.queueRoads,car.x+(car.vx||0)*lead,car.z+(car.vz||0)*lead);
-       }else if(pendingDistrict){
+       if(moved||(pendingDistrict&&mode!=='tour'&&speed<22)){
+         refreshView(gfx.queueRoads,aheadX,aheadZ);
+       }else if(pendingDistrict&&mode==='tour'){
          const {edges,x,z,waterways,graph}=pendingDistrict;
          pendingDistrict=null;gfx.queueRoads(edges,x,z,waterways,graph);
        }

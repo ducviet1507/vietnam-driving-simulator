@@ -66,6 +66,7 @@ function createWorldStreetLife(T,scene,small,environment,amenities,prepareActor)
     candidates.sort((a,b)=>a.rank-b.rank);
     const paths=[];
     for(const p of candidates){
+      yield;
       if(paths.length>=(small?6:11))break;
       if(paths.some(q=>Math.hypot(q.x-p.x,q.z-p.z)<5))continue;
       let valid=true;

@@ -317,7 +317,7 @@
       const localGround=(x,z)=>terrain.ground(cx+x,cz+z);
       const landmarks=landmarkSource?yield* landmarkSource.prepareSteps(graph,cx,cz,terrain.ground,bridges?.signatureHeight):null;
       yield;
-      grounds.prepare(graph,cx,cz,landmarks);
+      yield* grounds.prepare(graph,cx,cz,landmarks);
       yield;
       if(streamed&&grounds.uniforms.visitorActive.value){
         renderer.initTexture(grounds.uniforms.visitorMap.value);
@@ -338,8 +338,11 @@
       const gx=Math.round(cx/terrain.step)*terrain.step,gz=Math.round(cz/terrain.step)*terrain.step,positions=land.geometry.attributes.position;
       const showCover=yield* coverMap.prepare(graph,gx,gz);
       land.position.set(gx-cx,-.17,gz-cz);
-      for(let i=0;i<positions.count;i++)positions.setZ(i,terrain.ground(gx+positions.getX(i),gz-positions.getY(i)));
-      positions.needsUpdate=true;land.geometry.computeVertexNormals();land.geometry.computeBoundingSphere();
+      for(let i=0;i<positions.count;i++){
+        if((i&255)===0)yield;
+        positions.setZ(i,terrain.ground(gx+positions.getX(i),gz-positions.getY(i)));
+      }
+      positions.needsUpdate=true;yield* updateTerrainNormals(T,land.geometry);land.geometry.computeBoundingSphere();
       const natural=localGround;
       const complexCenter=graph?.point(105.7956,20.5528);
       const innerPrecinct=complexCenter&&Math.hypot(complexCenter.x-cx,complexCenter.z-cz)<1500;
@@ -447,7 +450,7 @@
         while(waterPixel<wetMask.length&&!wetMask[waterPixel])waterPixel+=4;
         if(waterPixel>=wetMask.length)wetMask=null;
         if(wetMask){
-          const field=waterBankField(wetMask,current.getImageData(0,0,maskSize,maskSize).data,maskSize,1/maskScale);
+          const field=yield* waterBankField(wetMask,current.getImageData(0,0,maskSize,maskSize).data,maskSize,1/maskScale);
           fieldPixels=field;yield;
           shorePatch=yield* buildMappedShoreSteps(T,{mask:wetMask,field,size:maskSize,scale:maskScale,maskX,maskZ,cx,cz,gx,gz,landWidth,land,landIndex,
             ground:localGround,pools,group:roadGroup,waterMaterial:waterSurface.material});
@@ -1036,7 +1039,7 @@
           streetBulbs.push(new T.Vector3(x,localGround(x,z)+h-.15,z));
         }
       }
-      grounds.build(roadGroup,localGround,obstruction,registerObstacle,sampleShore,(kind,x,z,h,w,angle)=>{
+      yield* grounds.build(roadGroup,localGround,obstruction,registerObstacle,sampleShore,(kind,x,z,h,w,angle)=>{
         if(kind==='tea'){
           plantTree('tea',x,z,h,w,angle,0xebf2cd,null);return;
         }
@@ -1128,18 +1131,29 @@
       const showSigns=yield* signs.prepare(graph,edges,cx,cz,(x,z,r)=>!blocked(x-cx,z-cz,r)&&!contact(x,z,r),signGround,registerObstacle);
       // Three otherwise computes these bounds during the first draw of the
       // new district. Warm them while the previous scene is still visible.
-      const meshes=[...roadGroup.children,...district.group.children,land];
+      const meshes=[...roadGroup.children,...district.group.children,land],boundPoint=new T.Vector3();
       for(let i=0;i<meshes.length;i++){
         const mesh=meshes[i];
         if(mesh.isInstancedMesh){if(!mesh.boundingSphere)mesh.computeBoundingSphere();}
-        else if(mesh.geometry&&!mesh.geometry.boundingSphere)mesh.geometry.computeBoundingSphere();
+        else if(mesh.geometry&&!mesh.geometry.boundingSphere){
+          const geometry=mesh.geometry,positions=geometry.attributes.position;
+          if(positions?.count>4096&&!geometry.morphAttributes.position){
+            // A box encloses the same vertices and takes only one interruptible pass.
+            const box=new T.Box3();
+            for(let j=0;j<positions.count;j++){
+              box.expandByPoint(boundPoint.fromBufferAttribute(positions,j));
+              if((j&2047)===2047)yield;
+            }
+            geometry.boundingBox=box;geometry.boundingSphere=box.getBoundingSphere(new T.Sphere());
+          }else geometry.computeBoundingSphere();
+        }
         if(mesh.children.length)meshes.push(...mesh.children);
         if((i & 7)===0)yield;
       }
       if(streamed&&driveWarmed){
         const pending=new T.Group(),owner=job;
         pending.children.push(roadGroup,district.group,land,...(landmarks?.active||[]).map(site=>site.mesh));
-        yield {ready:warmMaterials(pending,()=>job!==owner).catch(error=>console.warn('District shader preparation',error))};
+        yield {ready:warmMaterials(pending,()=>job!==owner,true).catch(error=>console.warn('District shader preparation',error))};
       }
       yield;
       // Publish geometry and its complete contact index in the same frame.
@@ -1579,10 +1593,10 @@
     }
     let driveWarmed=false;
     const actorPrograms=new Map(),preparedPrograms=new WeakSet(),uploadedTextures=new WeakMap();
-    async function warmMaterials(object,canceled=()=>false){
+    async function warmMaterials(object,canceled=()=>false,streamed=false){
       const programs=new Set(),textures=new Set();
-      function compile(){
-        for(const mat of renderer.compile(object,camera,scene)){
+      function compile(batch){
+        for(const mat of renderer.compile(batch,camera,scene)){
           // A material can have separate screen, reflection and instancing
           // programs. A concurrent draw changes its currentProgram.
           for(const program of renderer.properties.get(mat).programs.values()){
@@ -1594,8 +1608,25 @@
           }
         }
       }
-      if(graphics.profile.waterWidth)waterSurface.prepare(renderer,graphics.profile,compile);
-      compile();
+      function compileBatch(batch){
+        if(graphics.profile.waterWidth)waterSurface.prepare(renderer,graphics.profile,()=>compile(batch));
+        compile(batch);
+      }
+      if(streamed){
+        // The same road and building materials recur at every origin. Warm new
+        // surfaces in small batches while the driver still sees the previous district.
+        const fresh=[],batch=new T.Group();
+        object.traverse(node=>{
+          if(!node.material)return;
+          const materials=Array.isArray(node.material)?node.material:[node.material];
+          if(materials.some(mat=>!renderer.properties.get(mat).programs?.size))fresh.push(node);
+        });
+        for(let i=0;i<fresh.length&&!canceled();i+=8){
+          batch.children=fresh.slice(i,i+8);
+          compileBatch(batch);
+          if(i+8<fresh.length)await new Promise(resolve=>setTimeout(resolve,0));
+        }
+      }else compileBatch(object);
       while((programs.size||textures.size)&&!canceled()){
         const end=performance.now()+2;
         for(const program of programs){

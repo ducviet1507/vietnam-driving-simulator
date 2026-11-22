@@ -547,7 +547,9 @@ function createTourDistrict(T,scene,plaster,structures,osmBuildings,nightLights)
     // Satellite outlines can be displaced onto a carriageway. Only index the
     // road segments close enough to test a footprint in this view.
     const roadCells=new Map(),roadCell=48;
+    let roadSegments=0;
     for(const edge of edges)for(let n=1;n<edge.points.length;n++){
+      if((++roadSegments&63)===0)yield;
       const a=edge.points[n-1],b=edge.points[n],w=worldRoadHalfWidth(edge),dx=b.x-a.x,dz=b.z-a.z;
       const segment={a,dx,dz,length2:dx*dx+dz*dz,w};
       const margin=w+18;
@@ -663,7 +665,7 @@ function createTourDistrict(T,scene,plaster,structures,osmBuildings,nightLights)
       .map(site=>({...graph.point(site.lon,site.lat),site}));
     let rowIndex=0;
     for(const [id,kind,tagH,levels,raw,shape,part] of [...surveyed,...extra]){
-      if((rowIndex++ & 15)===0)yield;
+      if((rowIndex++ & 3)===0)yield;
       if(ids.has(id)||landmarks?.modeledBuildings.has(id))continue;
       const first=graph.point(raw[0][0]/scale,raw[0][1]/scale);
       if(Math.abs(first.x-cx)>850||Math.abs(first.z-cz)>850)continue;

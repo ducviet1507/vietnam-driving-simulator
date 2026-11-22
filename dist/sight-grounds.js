@@ -147,13 +147,15 @@ function createSightGrounds(T,small,source){
         diffuseColor.rgb=mix(diffuseColor.rgb,tint*grain,sampleGround.a*(1.-bankWet)*.92);
       }`);
   }
-  function prepare(graph,cx,cz,landmarks){
+  function* prepare(graph,cx,cz,landmarks){
+    let work=0;
     originX=cx;originZ=cz;fixtures=[];mask=null;uniforms.visitorActive.value=0;
     memorialAt=memorialGroundsNear(graph,cx,cz);
     fenceModels=(landmarks?.active||[]).filter(site=>site.data.replacesFence);
     wallModels=(landmarks?.active||[]).filter(site=>site.data.replacesWall);
     occupiedCells.clear();streetFurniture=[];
     for(const [kind,id,lon,lat,height,diameter,tags] of datasets[1].states.get(graph)?.rows||[]){
+      if((++work & 127)===0)yield;
       const point=graph.point(lon/1e7,lat/1e7),x=point.x-cx,z=point.z-cz;
       if(Math.abs(x)>span/2||Math.abs(z)>span/2)continue;
       occupy(x,z,.4,kind);streetFurniture.push({kind,id,x,z,worldX:point.x,worldZ:point.z,height,diameter,tags});
@@ -188,6 +190,7 @@ function createSightGrounds(T,small,source){
     }
     const modeledSteps=new Set((landmarks?.active||[]).flatMap(site=>site.data.modeledStairWays||[]));
     for(const [kind,size,raw,finish='',detail=0,wayId] of rows){
+      if((++work & 31)===0)yield;
       if(['tree','palm','pine'].includes(kind)&&treePositions.has(raw[0][0]+','+raw[0][1]))continue;
       let feature=projected.get(raw);
       if(!feature){
@@ -235,6 +238,7 @@ function createSightGrounds(T,small,source){
       return 'rgb('+Math.round(code*255/8)+' '+Math.round((surfaces[finish]||0)*255/8)+' '+coverageByte+')';
     }
     for(const {code,rings,finish,coverageByte} of layers){
+      if((++work & 31)===0)yield;
       if(code>=4)continue;
       pen.beginPath();
       for(const ring of rings)trace(ring,true);
@@ -248,6 +252,7 @@ function createSightGrounds(T,small,source){
     pen.globalCompositeOperation='source-over';
     // An approach can run through a modeled gate and into its courtyard.
     for(const {kind,code,rings,size,finish,coverageByte} of layers){
+      if((++work & 31)===0)yield;
       if(code===4){
         pen.beginPath();
         for(const ring of rings)trace(ring,true);
@@ -316,7 +321,7 @@ function createSightGrounds(T,small,source){
     const mat=new T.MeshLambertMaterial({color:style==='mesh'?0x727b72:0x4d5554,map,alphaTest:.23,side:T.DoubleSide});
     fenceMaterials.set(style,mat);return mat;
   }
-  function build(group,ground,blocked,obstacle,water,plant,mappedBlocked=blocked){
+  function* build(group,ground,blocked,obstacle,water,plant,mappedBlocked=blocked){
     const pos=[],rgb=[],uv=[],finish=[],colour=new T.Color();
     const panels=new Map(),posts=new Set();
     function quad(a,b,c,d,tint,code=0){
@@ -380,7 +385,9 @@ function createSightGrounds(T,small,source){
         }
       }
     }
+    let work=0;
     for(const {kind,ring,rings,size,finish:skin,detail,measuredPosition} of fixtures){
+      if((++work & 7)===0)yield;
       if(kind==='orchard'||kind==='tea'){rows(kind,rings);continue;}
       if(ring.length===1){
         const [x,z]=ring[0],gate=kind==='gate_post'||kind==='gate_pier';

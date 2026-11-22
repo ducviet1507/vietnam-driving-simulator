@@ -8,18 +8,29 @@ function createWorldLandCover(T,environment){
   const palette={10:[48,74,44],20:[108,120,75],30:[141,151,88],40:[167,161,93],
     50:[142,139,128],60:[169,151,127],70:[220,226,225],80:[77,113,122],
     90:[101,129,93],95:[57,99,72],100:[143,151,110]};
-  let spare=new Uint8Array(rgba.length);
+  let spare=new Uint8Array(rgba.length),displayedGraph,displayedRevision;
   function* prepare(graph,x,z){
-    const left=x-metres/2,top=z-metres/2,rgba=spare;
-    rgba.set(texture.image.data);
-    for(let j=0;j<side;j++)for(let i=0;i<side;i++){
-      if(i===0&&j%8===0)yield;
-      const wx=left+(i+.5)*metres/side,wz=top+(j+.5)*metres/side;
-      const cover=environment.sample(graph,wx,wz).cover,tint=palette[cover],k=(j*side+i)*4;
-      if(tint){rgba[k]=tint[0];rgba[k+1]=tint[1];rgba[k+2]=tint[2];}
-      rgba[k+3]=tint?(cover===40?255:170):0;
+    const left=x-metres/2,top=z-metres/2,rgba=spare,pitch=metres/side;
+    const dx=(left-origin.x)/pitch,dz=(top-origin.y)/pitch,revision=environment.revision;
+    const overlap=graph===displayedGraph&&revision===displayedRevision&&Number.isInteger(dx)&&Number.isInteger(dz);
+    const previous=texture.image.data;
+    for(let j=0;j<side;j++){
+      if(j%4===0)yield;
+      const row=j+dz,start=Math.max(0,-dx),end=Math.min(side,side-dx);
+      const reuse=overlap&&row>=0&&row<side&&end>start;
+      for(let i=0;i<side;){
+        if(reuse&&i===start){
+          const offset=(row*side+start+dx)*4;
+          rgba.set(previous.subarray(offset,offset+(end-start)*4),(j*side+i)*4);
+          i=end;continue;
+        }
+        const cover=environment.sample(graph,left+(i+.5)*pitch,top+(j+.5)*pitch).cover,tint=palette[cover],k=(j*side+i)*4;
+        rgba[k]=tint?.[0]||0;rgba[k+1]=tint?.[1]||0;rgba[k+2]=tint?.[2]||0;
+        rgba[k+3]=tint?(cover===40?255:170):0;i++;
+      }
     }
     return ()=>{
+      displayedGraph=graph;displayedRevision=revision;
       origin.set(left,top);spare=texture.image.data;texture.image.data=rgba;texture.needsUpdate=true;
     };
   }

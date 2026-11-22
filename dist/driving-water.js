@@ -191,14 +191,16 @@ window.createDrivingWater = function(T, mapped) {
 
 // Two chamfer passes estimate the distance to the dry bank on the merged mask.
 // Shared polygon cuts, map tile seams and islands therefore need no special edges.
-window.waterBankField = function(mask,current,size,metres) {
+window.waterBankField = function*(mask,current,size,metres) {
   const depth=new Float32Array(size*size),out=new Uint8Array(size*size*4);
   for(let i=0;i<depth.length;i++){
+    if((i&2047)===0)yield;
     const alpha=mask[i*4+3];
     depth[i]=alpha>=250?24:alpha/255*metres*.5;
   }
   for(const step of [1,-1]){
     for(let n=0;n<depth.length;n++){
+      if((n&2047)===0)yield;
       const i=step===1?n:depth.length-1-n;
       if(!depth[i])continue;
       const x=i%size,j=i-size*step;
@@ -210,6 +212,7 @@ window.waterBankField = function(mask,current,size,metres) {
     }
   }
   for(let i=0;i<depth.length;i++){
+    if((i&2047)===0)yield;
     const j=i*4,a=current[j+3]/255;
     out[j]=128+(current[j]-128)*a;out[j+1]=128+(current[j+1]-128)*a;
     out[j+2]=Math.round(depth[i]*255/24);out[j+3]=255;

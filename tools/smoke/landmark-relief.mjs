@@ -14,9 +14,29 @@ class ElevationImage {
 const context=vm.createContext({window:{},Image:ElevationImage,performance,
   createPassSurface:()=>({select(){}}),document:{createElement:()=>({getContext:()=>({
     drawImage(){},getImageData:()=>({data:new Uint8Array(16)})})})}});
-for(const file of ['shore-terrain','vietnam-relief','cave-openings'])
+for(const file of ['shore-terrain','vietnam-relief','cave-openings','world-land-cover'])
   vm.runInContext(readFileSync(new URL('../../dist/'+file+'.js',import.meta.url),'utf8'),context);
 const graph={geo:(x,z)=>[107+x/106000,16-z/111000]};
+let samples=0;
+const environment={revision:0,sample(g,x,z){
+  samples++;
+  return {cover:[10,20,40,60][(Math.abs(x+3*z)>>4)%4]};
+}};
+const cover=context.createWorldLandCover(T,environment);
+function paint(layer,x,z){
+  const preparation=layer.prepare(graph,x,z);
+  let step=preparation.next();
+  while(!step.done)step=preparation.next();
+  step.value();
+  const shader={uniforms:{},fragmentShader:''};layer.shade(shader);
+  return shader.uniforms.coverMap.value.image.data;
+}
+paint(cover,0,0);samples=0;
+const shifted=paint(cover,128,-160);
+assert.ok(samples>0&&samples<128*128/4,'Only sample newly exposed ground on a rebase');
+assert.deepEqual(shifted,paint(context.createWorldLandCover(T,environment),128,-160));
+environment.revision++;samples=0;paint(cover,128,-160);
+assert.equal(samples,128*128,'A new raster tile must refresh the whole texture');
 const survey={elevation:(x,z)=>300+.40*x-.17*z,elevationWeight:()=>1};
 const relief=context.createVietnamRelief(T,scene,true,{},null,2048);
 await relief.ready;

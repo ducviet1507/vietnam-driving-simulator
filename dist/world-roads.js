@@ -19,7 +19,7 @@ class VietnamRoads {
    this.tunnelData=index.tunnelData;
    this.mx=111320*Math.cos(lat*Math.PI/180);this.my=110900;
    this.cache=new Map();this.edges=new Map();this.nodes=new Map();this.buckets=new Map();
-   this.turnOptions=new Map();this.stamp=0;
+   this.turnOptions=new Map();this.edgeCells=new WeakMap();this.stamp=0;
  }
  point(lon,lat){return {x:(lon-this.lon)*this.mx,z:(this.lat-lat)*this.my};}
  geo(x,z){return [this.lon+x/this.mx,this.lat-z/this.my];}
@@ -63,33 +63,49 @@ class VietnamRoads {
    const signature=keys.join(','),stamp=++this.stamp;if(this.signature===signature)return;
    const tiles=await Promise.all(keys.map(k=>this.tile(k)));
    if(stamp!==this.stamp)return;
-   const fresh=new Map(),nodes=new Map(),buckets=new Map();
+   const fresh=new Map(),nodes=new Map(),buckets=new Map(),updatedTags=[];
+   const streaming=this.edges.size>0;
+   let rowsSeen=0,deadline=performance.now()+3;
    const trafficById=new Map();
    for(const {details} of tiles)if(details)for(const [id,tags] of Object.entries(details))trafficById.set(Number(id),tags);
    for(const {rows} of tiles)for(const row of rows){
+     if(streaming&&(++rowsSeen&63)===0&&performance.now()>=deadline){
+       if(globalThis.scheduler?.yield)await scheduler.yield();
+       else await new Promise(resolve=>setTimeout(resolve,0));
+       if(stamp!==this.stamp)return;
+       deadline=performance.now()+3;
+     }
      const [id,start,end]=row;if(fresh.has(id))continue;
      let edge=this.edges.get(id);
      if(!edge){
        edge=this.decodeEdge(row);if(!edge)continue;
      }
      if(!edge.traffic&&trafficById.has(id)){
-       edge.traffic=trafficById.get(id);
-       edge.controls=(edge.traffic.controls||[]).map(([node,lon,lat,flags,direction])=>{
+       const traffic=trafficById.get(id);
+       const controls=(traffic.controls||[]).map(([node,lon,lat,flags,direction])=>{
          const p=this.point(lon/1e5,lat/1e5);
          const s=node===start?0:node===end?edge.length:this.nearest(p.x,p.z,[edge]).s;
          return {node,s,flags,direction};
        });
+       if(this.edges.has(id))updatedTags.push({edge,traffic,controls});
+       else Object.assign(edge,{traffic,controls});
      }
      fresh.set(id,edge);
      for(const n of new Set([start,end])){if(!nodes.has(n))nodes.set(n,[]);nodes.get(n).push(edge);}
      // Sample a long straight segment too, so the spatial index covers its middle.
-     const cells=new Set();
-     for(let i=1;i<edge.points.length;i++){
-       const a=edge.points[i-1],b=edge.points[i],count=Math.ceil((edge.dist[i]-edge.dist[i-1])/120);
-       for(let j=0;j<=count;j++){const f=j/count;cells.add(Math.floor((a.x+(b.x-a.x)*f)/300)+','+Math.floor((a.z+(b.z-a.z)*f)/300));}
+     let cells=this.edgeCells.get(edge);
+     if(!cells){
+       cells=new Set();
+       for(let i=1;i<edge.points.length;i++){
+         const a=edge.points[i-1],b=edge.points[i],count=Math.ceil((edge.dist[i]-edge.dist[i-1])/120);
+         for(let j=0;j<=count;j++){const f=j/count;cells.add(Math.floor((a.x+(b.x-a.x)*f)/300)+','+Math.floor((a.z+(b.z-a.z)*f)/300));}
+       }
+       this.edgeCells.set(edge,cells);
      }
      for(const k of cells){if(!buckets.has(k))buckets.set(k,[]);buckets.get(k).push(edge);}
    }
+   // Existing cursors can still be using these edges while a replacement is being built.
+   for(const {edge,traffic,controls} of updatedTags)Object.assign(edge,{traffic,controls});
    this.edges=fresh;this.nodes=nodes;this.buckets=buckets;
    this.turnOptions.clear();this.lastNearby=null;
    this.bridges=buildBridgeProfiles(this,this.bridgeDetails);

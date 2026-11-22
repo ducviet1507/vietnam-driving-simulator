@@ -1,7 +1,7 @@
 'use strict';
 // Load local raster tiles around the active drive; every lookup is synchronous.
 function createVietnamEnvironment(){
-  let manifest, manifestRequest, active=new Map(), signature=null, version=0;
+  let manifest, manifestRequest, active=new Map(), signature=null, version=0, revision=0;
   const pending=new Map(), estimates=new Float32Array(256);
   for(let i=1;i<256;i++)estimates[i]=2**((i-1)/20)-1;
 
@@ -54,6 +54,7 @@ function createVietnamEnvironment(){
     const loaded=new Map();
     tiles.forEach((result,i)=>{if(result.status==='fulfilled')loaded.set(keys[i],result.value);});
     const changed=loaded.size!==active.size||[...loaded.keys()].some(key=>!active.has(key));
+    if(changed)revision++;
     active=loaded;
     signature=loaded.size===keys.length?next:null;
     return changed;
@@ -71,5 +72,5 @@ function createVietnamEnvironment(){
     return {population:density?estimates[density]:null,
             cover:bytes[manifest.populationSize**2+index(manifest.coverSize)]||null};
   }
-  return {load,sample};
+  return {load,sample,get revision(){return revision;}};
 }
