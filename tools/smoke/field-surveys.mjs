@@ -144,6 +144,20 @@ const hieu=VietnamLandmarks.entries.find(s=>s.id==='osm-node-6215416985');
 const cascade=new T.Group();
 context.atob=atob;
 for(const renderer of ['tree-scan-data.js','tree-models.js'])runInContext(readFileSync(file(renderer),'utf8'),context);
+// The mapped northern flight descends to the pass road. Reloading a district
+// must refit the steps to the new terrain without accumulating the old slope.
+const pass=VietnamLandmarks.entries.find(site=>site.id==='hoanh-son-quan'),summit=new T.Group();
+assert.equal(pass.catalogId,'osm-node-8250669293');
+pass.build(T,{group:summit,palette(){},box(){},profile(){}});
+summit.add(new T.Mesh(new T.BoxGeometry(),new T.MeshBasicMaterial()));
+const flight=summit.getObjectByName('Hoành Sơn Quan stone flight').geometry;
+const stairs=flight.attributes.position,startHeights=[];
+assert.ok(Math.min(...Array.from({length:stairs.count},(_,i)=>stairs.getZ(i)))<-50);
+summit.userData.fitGround((x,z)=>.31*z);
+for(let i=0;i<stairs.count;i++)startHeights.push(stairs.getY(i));
+assert.ok(Math.min(...startHeights)<-15 && Math.max(...startHeights)>.4);
+summit.userData.fitGround((x,z)=>.31*z+2);
+for(let i=0;i<stairs.count;i++)assert.ok(Math.abs(stairs.getY(i)-startHeights[i]-2)<2e-6);
 hieu.build(T,{group:cascade});
 const bed=cascade.children.find(mesh=>mesh.material.customProgramCacheKey()==='hydro-shallow-stream');
 assert.ok(bed,hieu.name);

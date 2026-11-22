@@ -381,52 +381,6 @@
     A.plaque(T, kit, 'SÂN BAY TÀ CƠN - KHE SANH', 1.5, 5.2, -6.9, 8.8, 1.02, { bg: '#6e2119', fg: '#f8e082' });
   }
 
-  // 10. Hoành Sơn Quan (Đỉnh Đèo Ngang — 1833) — Iconic weathered Minh Mạng stone mountain-pass arch gate
-  function hoanhSonQuan(T, kit) {
-    const { box, stamp, round } = kit;
-    const mossStone = 0x7c796c, darkBrick = 0x625d51, lichen = 0x6c755e, rampart = 0x8a8576, pathStone = 0x9b9586;
-    kit.palette({brick: darkBrick});
-
-    // Mountain-pass stone terrace & historic stepped mandarin highway (Thiên lý Bắc – Nam)
-    box(0x5d6e4c, 0, 0.16, 0, 30, 0.32, 22);
-    box(pathStone, 0, 0.38, 0, 6.4, 0.28, 21.6);
-    A.steps(kit, 0, 8.6, 5.8, 2.8, 5, 0.16, 0.46, 0x898477);
-    A.steps(kit, 0, -8.6, 5.8, 2.8, 5, 0.16, 0.46, 0x898477);
-
-    // Iconic vaulted fortress pass gate spanning the summit road (4.2m wide x 5.2m tall masonry citadel block)
-    A.vaultedBay(T, kit, 0, 0, 10.8, 6.2, 2.35, 2.65, 5.4, mossStone, rampart, darkBrick);
-    // Mossy weathering stone patches & stepped crenelated Nguyễn battlements (tường hoa mai) on top
-    box(rampart, 0, 6.38, 0, 11.4, 0.38, 5.8);
-    for (let x = -5.2; x <= 5.2; x += 1.3) {
-      for (const f of [-1, 1]) {
-        box(mossStone, x, 7.05, f * 2.58, 0.82, 1.05, 0.44);
-        box(lichen, x, 7.62, f * 2.58, 0.90, 0.18, 0.50);
-      }
-    }
-    // Sweeping stone mountain rampart wing walls extending left & right down the flanks of Đèo Ngang!
-    for (const s of [-1, 1]) {
-      box(mossStone, s * 9.2, 2.45, 0, 8.2, 4.6, 2.8);
-      box(darkBrick, s * 9.2, 4.88, 0, 8.4, 0.28, 3.0);
-      for (let k = 0; k < 4; k++) {
-        box(rampart, s * (6.2 + k * 2.0), 5.38, 1.15, 0.95, 0.78, 0.42);
-      }
-      // Corner watch buttress piers
-      box(darkBrick, s * 13.4, 2.6, 0, 2.2, 5.0, 3.4);
-    }
-
-    // Historic 1833 stone inscription lintel "HOÀNH SƠN QUAN" on both northern & southern faces!
-    A.plaque(T, kit, 'HOÀNH SƠN QUAN', 0, 5.45, 2.86, 4.4, 0.72, { bg: '#9b9484', fg: '#3b352c', border: 0x5c574b });
-    A.plaque(T, kit, 'HOÀNH SƠN QUAN', 0, 5.45, -2.86, 4.4, 0.72, { ry: Math.PI, bg: '#9b9484', fg: '#3b352c', border: 0x5c574b });
-
-    // Wind-swept mountain pines clinging to Đèo Ngang ridge
-    A.trees(T, kit, [
-      { x: -13.2, z: -5.6, h: 8.8, kind: 'pine' },
-      { x: 13.2, z: -5.6, h: 9.2, kind: 'pine' },
-      { x: -12.6, z: 6.4, h: 7.8, kind: 'pine' },
-      { x: 12.6, z: 6.4, h: 8.2, kind: 'pine' }
-    ]);
-  }
-
   (window.VietnamSights ??= []).push(
     {
       id: 'bao-tang-tinh-thanh-hoa', name: 'Bảo tàng tỉnh Thanh Hóa', city: 'Thanh Hóa', province: 'Thanh Hóa', region: 'Trung Bộ',
@@ -521,17 +475,6 @@
       source: 'https://vi.wikipedia.org/wiki/S%C3%A2n_bay_T%C3%A0_C%C6%A1n',
       map: 'https://www.openstreetmap.org/?mlat=16.65355&mlon=106.72405#map=17/16.65355/106.72405',
       build: sanBayTaCon
-    },
-    {
-      id: 'hoanh-son-quan', name: 'Hoành Sơn Quan (Đỉnh Đèo Ngang)', city: 'Quảng Trạch', province: 'Quảng Trị', region: 'Trung Bộ',
-      lon: 106.469689, lat: 17.956345, start: [106.469659, 17.956815], yaw: -3.080,
-      width: 30, depth: 22,
-      solids: [...A.archPiers(0, 0, 10.8, 2.35, 5.4), [-9.2, 0, 4.2, 1.5], [9.2, 0, 4.2, 1.5]],
-      description: 'Cửa ải đá xây năm 1833 đời vua Minh Mạng ngay trên đỉnh Đèo Ngang giữa Hà Tĩnh và Quảng Trị, gồm vòm cuốn rêu phong, tường thành hoa mai và bậc đá thiên lý Bắc – Nam.',
-      photo: 'https://vi.wikipedia.org/wiki/Ho%C3%A0nh_S%C6%A1n_Quan',
-      source: 'https://vi.wikipedia.org/wiki/Ho%C3%A0nh_S%C6%A1n_Quan',
-      map: 'https://www.openstreetmap.org/?mlat=17.956345&mlon=106.469689#map=18/17.956345/106.469689',
-      build: hoanhSonQuan
     }
   );
 })();

@@ -56,6 +56,9 @@
       description:'Từ phía tây vịnh nhìn về đông bắc, dọc theo bờ có Quốc lộ 29 đến khu di tích Bãi Chùa.'}]};
   const laVangGate=[107.1947094,16.7101806],laVangMap='https://maps.giolelavang.com/';
   const precincts={
+    'osm-node-8250669293':{name:'Hoành Sơn Quan trên đỉnh Đèo Ngang',city:'Hoành Sơn',locality:'Đèo Ngang, giáp Hà Tĩnh và Quảng Trị',
+      province:'Hà Tĩnh',start:[106.4697041,17.9568173],mappedEntrance:true,visitOnArrival:true,map:'https://www.openstreetmap.org/node/8250669293',
+      source:'https://vietnamtourism.vn/index.php/news/items/27340'},
     'osm-node-6346469056':{name:'Bia thành Đồng Hới và đoạn tường bên cầu Nam Thành',city:'Đồng Hới',locality:'Cầu Nam Thành',
       formerProvince:'Quảng Bình',start:[106.6234532,17.465947],mappedEntrance:true,visitOnArrival:true,
       source:'https://vnexpress.net/dau-tich-thoi-vua-minh-mang-con-lai-o-thanh-dong-hoi-3295094.html'},
@@ -366,6 +369,10 @@
   ];
   const existing = new Set(atlas.entries.map(site => site.id));
   const monumentStops=[
+    ['osm-node-8250669293','Hoành Sơn Quan trên đỉnh Đèo Ngang',106.4696886,17.9563451,'osm-node-8250669293',null,null],
+    ['deo-ngang-bac-da-thien-ly','Bậc đá đường thiên lý phía bắc Hoành Sơn Quan',106.469665,17.956568,'osm-node-8250669293','hoanh-son-quan',1],
+    ['deo-ngang-mat-nam-hoanh-son-quan','Mặt nam và lối vòm qua Hoành Sơn Quan',106.469682,17.956304,'osm-node-8250669293','hoanh-son-quan',2],
+    ['deo-ngang-loi-vao-duong-cu','Lối lên Hoành Sơn Quan từ đường đèo cũ',106.4697039,17.956804,'osm-node-8250669293','hoanh-son-quan',3],
     ['osm-node-6346469056','Bia thành Đồng Hới và đoạn tường bên cầu Nam Thành',106.6233244,17.4663521,'osm-node-6346469056',null,null],
     ['dong-hoi-tuong-gach-cau-nam','Tường gạch cũ bên cầu Nam Thành',106.623244,17.466321,'osm-node-6346469056','bia-thanh-dong-hoi',1],
     ['dong-hoi-mui-thanh-dong-bac','Mũi thành đông bắc Đồng Hới và lối đi ven hào',106.623923,17.470658,'dong-hoi-mui-thanh-dong-bac',null,null],
@@ -404,7 +411,7 @@
     if(existing.has(id))continue;
     const {start,city,locality,formerProvince,source}=precincts[anchor];
     const osm=id.startsWith('osm-')?id:anchor;
-    atlas.entries.push({id,name,lon,lat,start,city,locality,formerProvince,source,region:'Trung Bộ',province:'Quảng Trị',kind:'Di tích',
+    atlas.entries.push({id,name,lon,lat,start,city,locality,formerProvince,source,region:'Trung Bộ',province:precincts[anchor].province||'Quảng Trị',kind:'Di tích',
       mappedEntrance:true,visitOnArrival:true,approachMeters:Math.round(Math.hypot((lon-start[0])*111320*Math.cos(lat*Math.PI/180),(lat-start[1])*110900)),
       ...(model?{viewOf:[model,index]}:{}),map:precincts[anchor].map||'https://www.openstreetmap.org/'+osm.split('-').slice(1).join('/')});
   }
