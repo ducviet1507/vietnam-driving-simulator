@@ -134,12 +134,15 @@
   const footprint=[[-6.5,46.4],[6.7,46.2],[6.6,44.3],[43.9,7.1],[46.8,7.1],[46.7,-6.4],[43.7,-6.4],
     [6.8,-43.3],[6.8,-46.2],[-6.8,-46.3],[-6.8,-43.3],[-43.8,-6],[-46.8,-6],[-46.6,7.2],[-43.7,7.2],[-6.5,44.0]];
   register(37629143,{yaw:museumYaw,width:93.6,depth:93.4,boundary:footprint,
-    modeledBuildings:Array.from({length:17},(_,i)=>'w'+(1305814741+i)),
+    // The local building tile splits the parent into five residual shells.
+    // Match its full feature IDs as well as the separate OSM part geometries.
+    modeledBuildings:['r17910844:part',...Array.from({length:5},(_,i)=>'w37629143:shell:'+i),
+      ...Array.from({length:17},(_,i)=>['w'+(1305814741+i),'w'+(1305814741+i)+':part']).flat()],
     reserve:(x,z,p)=>Math.abs(x)+Math.abs(z)<52+p&&Math.max(Math.abs(x),Math.abs(z))<47+p||z>42-p&&z<62+p&&Math.abs(x)<14+p,
     solids:Array.from({length:9},(_,i)=>{const x=(i-4)*8;return [x,0,4,Math.min(36.1,43-Math.abs(x))];}),
     source:'https://baotanghochiminh.vn/gioi-thieu-chung-ve-trung-bay-thuong-xuyen-cua-bao-tang-ho-chi-minh.htm',
     arrivalNote:'Xe dừng trên phố Ngọc Hà, cách tâm bảo tàng khoảng 130 m theo đường thẳng. Góc ngắm chính ở phía bậc thang trước sảnh.',
-    views:[view('Khối sen trắng từ sân trước',museumYaw,0,19.5,20.4,63,-.09,-.036),
+    views:[view('Khối sen trắng từ sân trước',museumYaw,0,19.5,28.2,68,-.09,-.07),
       view('Phù điêu trên tiền sảnh',museumYaw,0,40.7,25.0,23,.13,.08)],
     description:'Bốn cánh bê tông trắng vươn khỏi tầng kính phía dưới. Từ sân trước, bậc đá dẫn vào sảnh dưới khối phù điêu nổi hình cờ, sao và búa liềm.'},
   (T,kit)=>{
@@ -230,5 +233,24 @@
       box(0xa6a08c,x,1.03,57.55,4.72,.14,5.72);
       box(0x77845e,x,1.14,57.55,4.21,.11,5.18);
     }
+    // The terrain raster picks up the roof of the museum. Seat the rigid
+    // building at its centre and carry the actual steps down to the forecourt.
+    // Real slab undersides also extend down to the sampled ground at each corner.
+    let originals;
+    kit.group.userData.fitGround=ground=>{
+      const mesh=kit.group.children.find(child=>child.geometry?.hasAttribute('finishKind'));
+      if(!mesh)return;
+      const geo=mesh.geometry,p=geo.attributes.position;
+      originals??=p.array.slice();
+      const foot=ground(0,61.7);
+      for(let i=0;i<p.count;i++){
+        const x=originals[i*3],y=originals[i*3+1],z=originals[i*3+2];
+        if(y>2.01)continue;
+        const t=Math.max(0,Math.min(1,(z-42)/19.7)),ramp=t*t*(3-2*t);
+        const level=y+foot*ramp;
+        p.setY(i,y<=.002?Math.min(level,ground(x,z)-.06):level);
+      }
+      p.needsUpdate=true;geo.computeVertexNormals();geo.computeBoundingBox();geo.computeBoundingSphere();
+    };
   });
 })();

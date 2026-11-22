@@ -42,7 +42,8 @@ export async function packJourneyData(client) {
       groups.push({file,sites:sites.map(({solids,boundary,modeledBuildings,...entry})=>entry)});
       // The small registration stubs are bundled in their original parser
       // positions. This preserves ordering and overrides between model packs.
-      await writeFile(path.join(client,name),'(window.VietnamSights??=[]).push(...VietnamTourism.modelGroups['+slot+'].sites);\n');
+      const stub = `'use strict';\n(window.VietnamSights??=[]).push(...VietnamTourism.modelGroups[${slot}].sites);\n`;
+      await writeFile(path.join(client,name),stub);
     }
   }
   const atlas = context.VietnamTourism, details = context.VietnamSightDetails;
