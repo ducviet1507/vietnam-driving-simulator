@@ -40,7 +40,7 @@ function save(){
  try{localStorage.setItem('taylai.world.trip',JSON.stringify({lon,lat,navigation,label:source[0],destination:source[3]?.id,distance,passes,dir:player.dir,edge:player.edge.id,yaw:car.yaw,origin:[roads.lon,roads.lat]}));}catch{}
 }
 function parkOnRoad(){
- const p=roads.sample(player,stance());car.flood=null;car.wading=null;car.accessLane=false;car.offroad=false;car.edge=player.edge;car.deckLift=roads.roadLevel(player.edge,player.s);DriveBody.reset(car);Object.assign(car,p);cooldown=1;
+ const p=roads.sample(player,stance());car.flood=null;car.wading=null;car.accessLane=false;car.offroad=false;car.edge=player.edge;car.deckLift=roads.roadLevel(player.edge,player.s);DriveBody.reset(car);Object.assign(car,p);car.parked=true;cooldown=1;
 }
 function trackRoad(){
  const around=roads.nearby(car.x,car.z,22);
@@ -439,7 +439,9 @@ function waterStep(dt){
 }
 function tick(dt){
  cooldown=Math.max(0,cooldown-dt);streamRetry=Math.max(0,streamRetry-dt);
- const gas=held('w','arrowup'),reverse=held('s','arrowdown'),brake=held(' '),boost=!car.wading&&held('shift')&&nitro>1&&!reverse&&!brake;
+ const gas=held('w','arrowup'),reverse=held('s','arrowdown');
+ if(gas||reverse)car.parked=false;
+ const brake=car.parked||held(' '),boost=!car.wading&&held('shift')&&nitro>1&&!reverse&&!brake;
  nitro=clamp(nitro+(boost?-27:held('shift')?0:6)*dt,0,100);
  const x=car.x,z=car.z;
  DriveBody.step(car,{grade:gfx.grade(car.x,car.z,car.yaw,car.edge),gas,reverse,brake,boost,steer:Number(held('d','arrowright'))-Number(held('a','arrowleft')),power:car.spec.power,top:car.spec.top},dt);

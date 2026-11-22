@@ -75,6 +75,18 @@ function createVietnamRelief(T,scene,compact,landscapes,tunnelCut,landWidth){
   const nodes=new Float64Array(cacheSide*cacheSide),nodeX=new Int32Array(nodes.length),nodeZ=new Int32Array(nodes.length);
   nodes.fill(NaN);
   const base=graph&&pixels?elevation(...uvAt(0,0,graph)):0;
+  const hoanKiem=graph?.point?.(105.8521,21.02865);
+  function localDatum(x,z,surface){
+    if(!hoanKiem)return surface-base;
+    const east=(x-hoanKiem.x)/340,south=(z-hoanKiem.z)/525;
+    if(Math.abs(east)>=1.55||Math.abs(south)>=1.55)return surface-base;
+    // Hanoi H1-1B, decision 1360/QĐ-UBND §4.5.2.2: ground formation 8.4–11.5 m.
+    // Roofs and trees in the DSM otherwise create a 10% descent into Hồ Gươm.
+    // Keep small changes in the street grade. The mapped shoreline supplies the bank and bed.
+    const formation=T.MathUtils.clamp(8.4+(surface-8.4)*.10,8.4,11.5);
+    const blend=1-T.MathUtils.smoothstep(Math.hypot(east,south),.85,1.55);
+    return surface+(formation-surface)*blend-base;
+  }
   function height(x,z,u,v){
     let regional=elevation(u,v);
     if(activePass){
@@ -84,7 +96,7 @@ function createVietnamRelief(T,scene,compact,landscapes,tunnelCut,landWidth){
       if(weight)regional+=(p.grid.elevation(tx,tz)-regional)*weight;
     }
     const centre=landscapes.elevation(x,z);
-    if(centre===null)return regional-base;
+    if(centre===null)return localDatum(x,z,regional);
     // A surface model can include a roof or a tree crown. Remove isolated spikes
     // over one survey pixel while retaining the full rise between valley and ridge.
     const west=landscapes.elevation(x-32,z)??centre,east=landscapes.elevation(x+32,z)??centre;
@@ -92,7 +104,7 @@ function createVietnamRelief(T,scene,compact,landscapes,tunnelCut,landWidth){
     const average=(north+south+east+west)*.25;
     const cleaned=.75*Math.min(centre,Math.max(west,east,north,south)+2)+.25*average;
     const weight=landscapes.elevationWeight(x,z);
-    return regional+(cleaned-regional)*weight-base;
+    return localDatum(x,z,regional+(cleaned-regional)*weight);
   }
   function node(i,j){
     const key=(j&cacheMask)*cacheSide+(i&cacheMask);

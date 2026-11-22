@@ -42,4 +42,15 @@ for(let i=0;i<300&&horizon.position.x!==512;i++)relief.update(512,0);
 assert.equal(horizon.position.x,512);checkEdge(-1024,64);
 const noSurvey=relief.prepare(graph,{elevation:()=>null});
 close(noSurvey.ground(17,-13),0);
+const lakeside=relief.prepare({...graph,point:()=>({x:0,z:0})},
+  {elevation:(x,z)=>19+.10*x,elevationWeight:()=>1});
+const lakeStreet=lakeside.altitude(0,0);
+assert.ok(lakeStreet>=8.4&&lakeStreet<=11.5);
+assert.ok(Math.abs(lakeside.grade(0,0,Math.PI/2))<.02);
+close(lakeside.altitude(1000,0),119);
+vm.runInContext(readFileSync(new URL('../../dist/drivetrain.js',import.meta.url),'utf8'),context);
+const body={reverseDelay:0},downhill={grade:-.16,top:35,power:8,reverse:true};
+let speed=1.2;
+for(let i=0;i<135;i++)speed=context.window.DriveBody.forwardSpeed(body,downhill,1/90,speed);
+assert.ok(speed<-.4,'The car should reverse uphill after braking to a stop.');
 console.log('PASS full-scale survey relief, driving grade and streamed horizon');

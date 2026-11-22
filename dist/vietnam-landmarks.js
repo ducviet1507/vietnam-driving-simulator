@@ -3,7 +3,7 @@ window.VietnamLandmarks=(()=>{
   // OSM footprint centres and axes in WGS84. Positive local Z is the principal façade.
   const entries=[
     {id:'turtle',photo:'https://kienthuc.net.vn/he-lo-hinh-anh-can-canh-ben-trong-thap-rua-ho-guom-post997231.html',name:'Tháp Rùa',city:'Hà Nội',lon:105.852293,lat:21.027873,yaw:0,width:4.54,depth:6.28,
-      start:[105.853697,21.027313],map:'https://www.openstreetmap.org/way/178995269',
+      start:[105.853615,21.02761],bearing:8,map:'https://www.openstreetmap.org/way/178995269',
       source:'https://scov.gov.vn/dat-nuoc-con-nguoi/dat-nuoc-viet-nam/ho-guom-dep-tuyet-qua-goc-nhin-la.html'},
     {id:'cathedral',photo:'https://danangfantasticity.com/en/culture-en/danang-cathedral',name:'Nhà thờ Con Gà',city:'Đà Nẵng',lon:108.2230584,lat:16.0666828,yaw:1.492,width:20,depth:46,
       start:[108.223797,16.067551],map:'https://www.openstreetmap.org/way/404714309',

@@ -90,8 +90,10 @@ window.DriveBody={
    const limit=input.top+(input.boost?9:0);
    let drive=input.gas?input.power:0;
    if(input.boost&&forward>=-.3)drive+=13;
-   c.brake=input.brake||input.reverse&&forward>.35;c.boost=input.boost&&!c.brake&&forward>=-.3;
-   c.reverseDelay=input.reverse&&forward<.35?c.reverseDelay+dt:0;
+   c.reverseDelay=input.reverse&&forward<=.35?c.reverseDelay+dt:0;
+   // Keep the brake engaged through the direction change on a downhill start.
+   c.brake=input.brake||input.reverse&&(forward>.35||!input.gas&&c.reverseDelay<=.28&&forward>=0);
+   c.boost=input.boost&&!c.brake&&forward>=-.3;
    if(input.reverse&&c.reverseDelay>.28&&!input.gas&&forward>-5)drive=-4.4;
    if(forward>=limit&&drive>0)drive=0;
    const drag=(c.offroad?1.65:.48)+(c.offroad?.013:.0031)*forward*forward+(c.brake?(c.spec?.braking??17):0);

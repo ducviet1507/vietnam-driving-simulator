@@ -36,6 +36,9 @@ async function storeGzip(file) {
   await writeFile(file+".gz",gzipSync(await readFile(file),{level:9}));
   await rm(file);
 }
+for (const name of ["vn-roads/overview.json","vn-structures/source-index.json"]) {
+  await storeGzip(path.join(client,name));
+}
 for (const directory of ["streetscape","traffic"]) {
   const folder = path.join(client,directory);
   for (const name of await readdir(folder)) {
