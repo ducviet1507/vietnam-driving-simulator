@@ -95,6 +95,7 @@ function createVietnamRelief(T,scene,compact,landscapes,tunnelCut,landWidth,cave
   const plaza=graph?.point?.(105.83560,21.03695);
   const ao=graph?.point?.(106.30403,9.91766);
   const ang=graph?.point?.(106.30346,9.91596);
+  const museum=graph?.point?.(106.30479,9.9161553);
   let pondStage,pondEdges;
   function localDatum(x,z,surface){
     if(!hoanKiem)return surface-base;
@@ -121,6 +122,13 @@ function createVietnamRelief(T,scene,compact,landscapes,tunnelCut,landWidth,cave
       if(court<35){
         const formation=pondStage+1.65+T.MathUtils.clamp((surface-pondStage)*.025,0,.35);
         surface=formation+(surface-formation)*T.MathUtils.smoothstep(court,1,35);
+      }
+      // The museum courtyard and shared approach occupy the same low ground.
+      // Remove the canopy return under the building and the path to its gate.
+      const museumEdge=Math.max(Math.abs(x-museum.x)-55,Math.abs(z-museum.z)-23);
+      if(museumEdge<29){
+        const formation=pondStage+1.81+T.MathUtils.clamp((surface-pondStage)*.012,0,.18);
+        surface=formation+(surface-formation)*T.MathUtils.smoothstep(museumEdge,0,29);
       }
       return surface-base;
     }

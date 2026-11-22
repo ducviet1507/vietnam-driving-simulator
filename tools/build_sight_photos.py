@@ -37,6 +37,9 @@ GRAPHIC = re.compile(r"(?:^|[ _-])(logo|locator|brochure|floor plan|plan of|coat
 
 # Audited Commons file pages for sites without a specific upstream photograph.
 REVIEWED = {
+    "osm-node-4793310552": "File:Bảo tàng Khmer ở Trà Vinh.jpg",
+    "bao-tang-khmer-cong-vao": "File:Bảo tàng văn hóa dân tộc Khmer tỉnh Trà Vinh.jpg",
+    "bao-tang-khmer-dan-ngu-am": "File:Khmer style gong.JPG",
     "osm-way-288574348": "File:Chính điện chùa Âng.jpg",
     "chua-ang-hanh-lang": "File:Chùa Âng.jpg",
     "osm-way-76041615": "File:Cổ thụ ở ao Bà Ôm.jpg",

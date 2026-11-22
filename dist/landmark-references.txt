@@ -896,3 +896,18 @@ https://www.openstreetmap.org/way/76041682
 https://commons.wikimedia.org/?curid=25293197
 https://commons.wikimedia.org/?curid=25228819
 https://creativecommons.org/licenses/by-sa/3.0/
+
+Bảo tàng Văn hóa dân tộc Khmer, phường Nguyệt Hóa, tỉnh Vĩnh Long
+
+Bảo tàng Lịch sử quốc gia mô tả nhà hai tầng và các phòng trưng bày về đời sống, văn hóa, nghệ thuật Khmer. Báo cáo quý I/2026 của Sở Văn hóa, Thể thao và Du lịch Vĩnh Long xác nhận địa chỉ và tên chi nhánh Trà Vinh. Vị trí tòa nhà theo OpenStreetMap. Kích thước nhà, vị trí cổng và cách sắp nhạc cụ trong mô hình được ước lượng từ hình ảnh.
+https://baotanglichsuquocgia.vn/vi/Articles/3096/16337/bao-tang-van-hoa-dan-toc-khmer-tinh-tra-vinh.html
+https://svhttdl.vinhlong.gov.vn/Portals/1040/2026/BAO%20CAO/20032026/11.3.%20BAO%20CAO%20QUY%20I.2026.SVHTTDL.signed.pdf
+https://www.openstreetmap.org/node/4793310552
+https://baocamau.vn/index.php/bao-tang-van-hoa-dan-toc-khmer-a34094.html
+
+Mặt tiền và cổng bảo tàng do Bùi Thụy Đào Nguyên chụp ngày 17/3/2013 (CC BY-SA 3.0). Hai mảng chạm và dòng chữ Khmer trên mặt tiền được cắt, chỉnh phối cảnh và tách nền thành chất liệu bao-tang-khmer-phu-dieu.webp và bao-tang-khmer-chu-noi.webp, cùng giấy phép. Ảnh “Khmer style gong” của Tonbi ko (CC BY-SA 4.0) ghi lại các khung cồng, trống và đàn gỗ trên bục trưng bày. Chất liệu bao-tang-khmer-mat-cong.webp là phần mặt cồng cắt và chỉnh phối cảnh từ ảnh này, dùng giấy phép CC BY-SA 4.0.
+https://commons.wikimedia.org/?curid=25223209
+https://commons.wikimedia.org/?curid=25331929
+https://creativecommons.org/licenses/by-sa/3.0/
+https://commons.wikimedia.org/?curid=42774900
+https://creativecommons.org/licenses/by-sa/4.0/

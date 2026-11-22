@@ -424,6 +424,22 @@
       mappedEntrance:true,visitOnArrival:true,approachMeters:Math.round(Math.hypot((lon-start[0])*111320*Math.cos(lat*Math.PI/180),(lat-start[1])*110900)),
       ...(model?{viewOf:[model,index]}:{}),map:map||precincts[anchor].map||'https://www.openstreetmap.org/'+osm.split('-').slice(1).join('/')});
   }
+  const museumStart=[106.3043554,9.9161497];
+  for(const [id,name,lon,lat,index] of [
+    ['osm-node-4793310552','Bảo tàng Văn hóa dân tộc Khmer Trà Vinh',106.3049965,9.9161553,null],
+    ['bao-tang-khmer-cong-vao','Cổng vào Bảo tàng Văn hóa dân tộc Khmer',106.3044358,9.9161531,1],
+    ['bao-tang-khmer-phu-dieu','Phù điêu và ô kính tam giác ở Bảo tàng Khmer',106.3048677,9.9161548,2],
+    ['bao-tang-khmer-dan-ngu-am','Dàn nhạc ngũ âm tại Bảo tàng Khmer Trà Vinh',106.3050257,9.9161553,3],
+  ]){
+    const info={id,name,lon,lat,start:museumStart,city:'Nguyệt Hóa',province:'Vĩnh Long',formerProvince:'Trà Vinh',
+      locality:'Bảo tàng Khmer, Trà Vinh',region:'Nam Bộ',kind:index===null?'Bảo tàng':'Điểm ngắm cảnh',
+      source:'https://baotanglichsuquocgia.vn/vi/Articles/3096/16337/bao-tang-van-hoa-dan-toc-khmer-tinh-tra-vinh.html',
+      map:'https://www.openstreetmap.org/node/4793310552',visitOnArrival:true,mappedEntrance:true,
+      approachMeters:Math.round(Math.hypot((lon-museumStart[0])*109650,(lat-museumStart[1])*110900)),
+      ...(index===null?{}:{viewOf:['bao-tang-khmer-tra-vinh',index]})};
+    if(existing.has(id))Object.assign(atlas.entries.find(p=>p.id===id),info);
+    else atlas.entries.push(info);
+  }
   const ang=atlas.entries.find(p=>p.id==='osm-way-288574348');
   if(ang){
     Object.assign(ang,{city:'Nguyệt Hóa',formerProvince:'Trà Vinh',mappedEntrance:true,visitOnArrival:true});
