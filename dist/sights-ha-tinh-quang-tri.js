@@ -147,64 +147,6 @@
     window.CentralArch.curvedRoof(T, kit, 0, 2.65, 3.6, 5.1, 1.45, 0.62, tile, cream, ochre, 0.32);
   }
 
-  // 3. Quảng Bình Quan – Đồng Hới (Quảng Trị / Quảng Bình cũ)
-  function quangBinhQuan(T, kit) {
-    const {box, stamp, outline, profile, round, sign} = kit;
-    const brick = [0xa25b43, 0x944e39, 0xae664b, 0x8a4834];
-    const plaster = 0xd8cdb5, stone = 0x868176, tile = 0x8c3f2e, dark = 0x3b2821;
-    kit.palette({plaster, stone, tile});
-
-    // Circular/octagonal stone island plinth (like the real roundabout monument in Đồng Hới)
-    box(stone, 0, 0.25, 0, 17.6, 0.5, 13.4);
-    box(plaster, 0, 0.54, 0, 16.4, 0.16, 12.2);
-
-    // Massive arched brick 1639 fortification base with central vaulted passageway
-    const base = new T.Shape();
-    base.moveTo(-6.6, 0); base.lineTo(-2.15, 0); base.lineTo(-2.15, 2.55);
-    base.absarc(0, 2.55, 2.15, Math.PI, 0, true);
-    base.lineTo(2.15, 0); base.lineTo(6.6, 0); base.lineTo(6.15, 5.35); base.lineTo(-6.15, 5.35); base.closePath();
-    profile(base, brick[0], 0, 0.6, -4.1, 8.2);
-    // Brick masonry texture & arch voussoirs on both front & rear faces
-    for (const face of [-1, 1]) {
-      const fz = face * 4.14;
-      for (let i = 0; i < 13; i++) {
-        const a = i * Math.PI / 13, b = (i + 1) * Math.PI / 13 - 0.012, pt = (q, t) => [q * Math.cos(t), q * Math.sin(t)];
-        outline([pt(2.15, a), pt(2.48, a), pt(2.48, b), pt(2.15, b)], i % 2 ? plaster : stone, 0, 3.15, fz - 0.05, 0.12);
-      }
-      for (let row = 0; row < 5; row++) {
-        for (const s of [-1, 1]) box(brick[(row + (s > 0 ? 1 : 0)) % 4], s * 4.25, 1.15 + row * 0.9, fz, 3.6, 0.8, 0.08);
-      }
-    }
-    // Recessed open fortress doors
-    for (const s of [-1, 1]) box(dark, s * 1.85, 2.0, 0, 0.16, 3.2, 1.45, s * 0.24);
-    box(plaster, 0, 5.45, 4.18, 3.65, 0.74, 0.14);
-    sign('QUẢNG BÌNH QUAN', 0, 5.45, 4.27, 3.35, 0.5);
-
-    // Ornate parapet terrace with battlements & lotus corners
-    box(plaster, 0, 6.08, 0, 12.9, 0.28, 8.7);
-    for (const f of [-1, 1]) {
-      for (let i = -4; i <= 4; i++) box(plaster, i * 1.45, 6.62, f * 4.12, 0.82, 0.84, 0.36);
-    }
-    for (const s of [-1, 1]) {
-      for (let j = -2; j <= 2; j++) box(plaster, s * 6.22, 6.62, j * 1.65, 0.36, 0.84, 0.82);
-    }
-
-    // Upper Watchtower (Vọng Lâu) — distinctive double-tier curved-eave roof of Quảng Bình Quan
-    box(plaster, 0, 7.65, 0, 8.4, 2.85, 5.4);
-    for (const x of [-4.05, -1.35, 1.35, 4.05]) for (const z of [-2.55, 2.55]) stamp(round, 0x7b2d23, x, 7.65, z, 0.18, 2.9, 0.18);
-    for (const f of [-1, 1]) for (const dx of [-2.4, 0, 2.4]) box(0x52281f, dx, 7.65, f * 2.74, 1.25, 1.85, 0.08);
-    window.CentralArch.curvedRoof(T, kit, 0, 9.05, 0, 11.4, 7.4, 1.45, tile, plaster, plaster, 0.32);
-
-    box(0x8d4031, 0, 10.95, 0, 5.8, 1.55, 3.6);
-    for (const f of [-1, 1]) for (const dx of [-1.45, 1.45]) box(dark, dx, 10.95, f * 1.84, 1.05, 0.92, 0.08);
-    window.CentralArch.curvedRoof(T, kit, 0, 11.65, 0, 8.2, 5.4, 1.42, tile, plaster, plaster, 0.28);
-
-    // Finial crest on summit
-    const orb = new T.SphereGeometry(0.28, 10, 8);
-    stamp(orb, 0xcba14a, 0, 13.38, 0, 1, 1.15, 0.5);
-    orb.dispose();
-  }
-
   // 5. Thành cổ Quảng Trị. The mound and the south gate have separate mapped foundations.
   function thanhCoQuangTri(T, kit) {
     const {palette, stamp, box, tapered, round, place} = kit;
@@ -367,15 +309,6 @@
     source: 'https://vi.wikipedia.org/wiki/Khu_l%C6%B0u_ni%E1%BB%87m_Nguy%E1%BB%85n_Du',
     map: 'https://www.openstreetmap.org/node/7261144420',
     build: nguyenDu
-  }, {
-    id: 'quang-binh-quan', name: 'Quảng Bình Quan', city: 'Đồng Hới', province: 'Quảng Trị', region: 'Trung Bộ', formerProvince: 'Quảng Bình',
-    lon: 106.62265, lat: 17.46572, start: [106.622696, 17.465590], yaw: 0.33, width: 18, depth: 14,
-    solids: [[-4.4, 0, 2.2, 4.1], [4.4, 0, 2.2, 4.1]],
-    description: 'Cổng thành lịch sử xây năm 1639 tại trung tâm Đồng Hới với vòm gạch lớn, tường thành lỗ châu mai và vọng lâu hai tầng mái đao cong.',
-    photo: 'https://quangbinhtourism.vn/quang-binh-quan/',
-    source: 'https://vi.wikipedia.org/wiki/Qu%E1%BA%A3ng_B%C3%ACnh_Quan',
-    map: 'https://www.openstreetmap.org/?mlat=17.46572&mlon=106.62265#map=18/17.46572/106.62265',
-    build: quangBinhQuan
   }, {
     id: 'thanh-co-quang-tri', memorialVisit: true, name: 'Thành cổ Quảng Trị', city: 'Quảng Trị', province: 'Quảng Trị', region: 'Trung Bộ',
     lon: 107.1895097, lat: 16.7539213, start: [107.18741, 16.75449], yaw: -.288, width: 50, depth: 50,

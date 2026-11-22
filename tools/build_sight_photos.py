@@ -37,6 +37,15 @@ GRAPHIC = re.compile(r"(?:^|[ _-])(logo|locator|brochure|floor plan|plan of|coat
 
 # Audited Commons file pages for sites without a specific upstream photograph.
 REVIEWED = {
+    "osm-node-8706712863": "File:Quảng Bình quan, Đồng Hới, Quảng Bình.jpeg",
+    "quang-binh-quan-mat-quang-trung": "File:QuangBinhGate.jpg",
+    "quang-binh-quan-vuon-le-loi": "File:Quảng Bình quan.jpg",
+    "osm-way-305408028": "File:Tháp chuông La Vang.JPG",
+    "osm-node-3100293997": "File:Tượng đài đức Mẹ La Vang (toàn cảnh).png",
+    "osm-node-14309236352": "File:Sông Thạch Hãn (kiến trúc bên bờ, nhà tưởng niệm thả hoa), Tết năm 2018 (2).jpg",
+    "quang-tri-hanh-lang-ben-nam": "File:Sông Thạch Hãn (tam cấp), Tết năm 2018 (1).jpg",
+    "quang-tri-tu-ben-nam-nhin-an-don": "File:Sông Thạch Hãn, Tết năm 2018 (1).jpg",
+    "quang-tri-den-ben-bac": "File:Sông Thạch Hãn, Tết năm 2018 (6).jpg",
     "quang-binh-mat-tay-tam-toa": "File:Di tích Nhà thờ Tam Tòa 2, Đồng Hới, Quảng Bình.jpeg",
     "quang-binh-nen-nha-tho-tam-toa": "File:Tam Toa Church, Dong Hoi.jpg",
     "osm-node-11663933869": "File:Cầu Hiền Lương, Quảng Trị.jpeg",
@@ -86,6 +95,7 @@ REVIEWED = {
 # Some upstream images show a namesake building, person, symbol or previous
 # location of a ride. These are not documentary photographs of the mapped site.
 REJECTED = {
+    ("osm-way-690204938", "File:La Vang Church (Built 1928, Destroyed 1972) September, 1967.jpg"),
     ("osm-way-503561771", "File:Da Lat - Linh Phuoc Temple 03.jpg"),
     ("osm-way-503561771", "File:Linh Phuoc Pagoda 01.jpg"),
     ("osm-node-13119009964", "File:Ngô Minh Chiêu.jpg"),

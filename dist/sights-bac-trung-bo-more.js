@@ -159,48 +159,6 @@
     });
   }
 
-  // 10. Thánh địa La Vang (Hải Lăng, Quảng Trị — Tháp chuông cổ & Linh đài Đức Mẹ)
-  function thanhDiaLaVang(T, kit) {
-    const { box, stamp, round, tapered } = kit;
-    const brick = 0x9c553d, agedStone = 0xb8aa92, cream = 0xefe6d2, gold = 0xdcb24e;
-    kit.palette({brick, plaster: cream});
-
-    // Broad pilgrimage stone square
-    box(0x9a9488, 0, 0.32, 0, 30, 0.64, 24);
-
-    // Iconic weathered 3-story historic brick Bell Tower ruins of the old La Vang Basilica (on left)
-    const bx = -7.2, bz = -1.5;
-    box(brick, bx, 3.6, bz, 5.8, 6.6, 5.8);
-    box(agedStone, bx, 7.0, bz, 6.2, 0.35, 6.2);
-    box(brick, bx, 9.8, bz, 4.8, 5.2, 4.8);
-    box(agedStone, bx, 12.5, bz, 5.2, 0.32, 5.2);
-    box(brick, bx, 14.8, bz, 3.9, 4.2, 3.9);
-    // Open arched bell-tower windows & ruined crenellated parapet crown
-    for (const [wy, ww, wh] of [[3.6, 2.0, 3.4], [9.8, 1.6, 2.8], [14.8, 1.3, 2.2]]) {
-      for (const f of [-1, 1]) {
-        box(0x281e1a, bx, wy, bz + f * (ww * 1.45), ww, wh, 0.18);
-        box(0x281e1a, bx + f * (ww * 1.45), wy, bz, 0.18, wh, ww);
-      }
-    }
-    for (const sx of [-1.5, 0, 1.5]) box(brick, bx + sx, 17.3, bz + 1.85, 0.85, 0.8, 0.35);
-
-    // Linh Đài Đức Mẹ La Vang — Vietnamese curved-tile canopy shrine + white marble Marian statue (on right)
-    const lx = 6.4, lz = 0.5;
-    box(cream, lx, 1.1, lz, 10.6, 1.0, 10.6);
-    A.steps(kit, lx, lz + 6.0, 6.2, 1.4, 4, 0.25, 0.34, cream);
-    for (const dx of [-4.2, 4.2]) for (const dz of [-4.2, 4.2]) {
-      stamp(round, cream, lx + dx, 4.5, lz + dz, 0.28, 5.8, 0.28);
-    }
-    A.curvedRoof(T, kit, lx, 7.4, lz, 12.4, 12.4, 2.35, 0x2f6d7e, gold, gold, 0.20);
-    // White marble pedestal & Marian statue beneath the shrine canopy
-    box(0xdfd9cc, lx, 2.4, lz, 2.2, 1.6, 2.2);
-    tapered(0xf5f2ea, lx, 4.4, lz, 0.65, 0.38, 2.4, 0.85, 10);
-    const head = new T.SphereGeometry(0.35, 10, 8);
-    stamp(head, 0xf5f2ea, lx, 5.85, lz); head.dispose();
-    A.plaque(T, kit, 'THÁNH ĐỊA LA VANG', 0, 1.65, 10.8, 6.4, 0.84, { bg: '#efe4c8', fg: '#5a3022' });
-    A.trees(T, kit, [{ x: -13.2, z: -7.5, h: 10.0, kind: 'banyan' }, { x: 13.5, z: -7.2, h: 9.5, kind: 'banyan' }]);
-  }
-
   const sights = [
     {
       id: 'chua-huong-tich-ha-tinh', name: 'Chùa Hương Tích', city: 'Can Lộc', province: 'Hà Tĩnh',
@@ -258,15 +216,6 @@
       map: 'https://www.openstreetmap.org/#map=18/17.46688/106.62548',
       source: 'https://dulichquangtri.vn/diem-du-lich/tuong-dai-me-suot/',
       build: tuongDaiMeSuot
-    },
-    
-    {
-      id: 'thanh-dia-la-vang', name: 'Thánh địa La Vang', city: 'Hải Lăng', province: 'Quảng Trị',
-      lon: 107.192250, lat: 16.716650, yaw: 1.850, width: 30, depth: 24,
-      start: [107.192890, 16.716826], viewDistance: 1300,
-      map: 'https://www.openstreetmap.org/#map=17/16.71665/107.19225',
-      source: 'https://quangtritourism.gov.vn/',
-      build: thanhDiaLaVang
     }
   ];
 

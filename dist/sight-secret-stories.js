@@ -3,6 +3,9 @@
 // Clues belong to the tour camera. The little scenes in the reveals are original
 // keepsakes inspired by the place, including the imagined voices and movements.
 window.sightSecretStories = {
+  'quang-binh-quan-hai-mat-cong':['arch','Hai mặt của cổng','Bên nào của Quảng Bình Quan mở ra khu vườn nhỏ?','Mặt có vòm gạch và khu vườn quay về đường Lê Lợi. Phía đối diện, từ đường Quang Trung có thể thấy các bậc lên gác.'],
+  'la-vang-tu-cong-den-linh-dai':['leaf','Ba cây bên Linh đài','Tượng Đức Mẹ La Vang đứng giữa những cây gì?','Ba cây đa bằng bê tông cốt thép bao quanh tượng ở Linh đài. Từ tháp chuông cũ, có thể thấy Linh đài ở phía đông.'],
+  'hai-ben-tha-hoa-thach-han':['sail','Hai bờ sông Thạch Hãn','Bến tám cạnh nằm ở bờ nào?','Bến tám cạnh nằm trước đền tưởng niệm ở An Đôn, bên bờ bắc. Từ bậc đá trước nhà hành lễ ở bờ nam, có thể nhìn sang bến.'],
   'ganh-da-dia-den-ganh-den':['beacon','Từ bậc đá đến chân đèn','Qua Gành Đá Đĩa về phía bắc, dấu hiệu nào hiện rõ trên tháp đèn?','Trên những tảng đá ở Gành Đèn, các khoang sơn đỏ và trắng xen nhau trên sáu mặt tháp.'],
   'nui-nhan-tuy-hoa':['wing','Hai dáng hình trên núi Nhạn','Sau khi rời sân tháp gạch, có thể gặp hình cánh nhạn ở đâu?','Ở phía nam ngọn núi, những cánh nhạn trong kiến trúc đài tưởng niệm vươn lên trên mái nhà bia.'],
   'nha-trung-bay-hien-luong':['echo','Hai chiếc loa trước thềm','Chi tiết nào nằm hai bên cầu thang trong ảnh nhà trưng bày?','Hai loa hình nón hướng ra sân. Sau bậc thềm là nhà trưng bày về đời sống hai bờ sông Bến Hải trong những năm chia cắt.'],

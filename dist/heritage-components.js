@@ -35,6 +35,7 @@
   const huongSonParking=[105.7877197,20.614076];
   const tuanChau=[106.9894,20.91974];
   // The tower footprint and the park boundary lead to the same visitor tour.
+  atlas.aliases['osm-way-940004472']='osm-node-8706712863';
   atlas.aliases['osm-way-1228794103']='osm-relation-15805643';
   atlas.aliases['osm-node-1805807506']='osm-way-1244769154';
   const dambriEntrance=[107.7445308,11.6412412],vungRoEntrance=[109.4191949,12.8776377];
@@ -50,7 +51,20 @@
       description:'Từ bờ tây nhìn qua khoảng nước về sườn núi bên kia vịnh.'},
       {name:'Bờ vịnh nhìn về Bãi Chùa',offset:[370,-570],height:100,viewAngle:-.41,viewRadius:912,viewElevation:.105,viewFov:62,
       description:'Từ phía tây vịnh nhìn về đông bắc, dọc theo bờ có Quốc lộ 29 đến khu di tích Bãi Chùa.'}]};
+  const laVangGate=[107.1947094,16.7101806],laVangMap='https://maps.giolelavang.com/';
   const precincts={
+    'osm-node-8706712863':{name:'Quảng Bình Quan',city:'Đồng Hới',locality:'Đồng Hới',formerProvince:'Quảng Bình',start:[106.6246407,17.4632662],
+      mappedEntrance:true,visitOnArrival:true,source:'https://baoquangtri.vn/dat-va-nguoi-quang-binh/201912/quang-binh-quan-cong-trinh-van-hoa-lich-su-tieu-bieu-2172445/'},
+    'osm-way-305408028':{name:'Tháp chuông cũ ở La Vang',city:'Hải Lăng',locality:'Trung tâm hành hương La Vang',start:laVangGate,
+      mappedEntrance:true,visitOnArrival:true,source:laVangMap},
+    'osm-node-3100293997':{name:'Linh đài Ba Cây Đa – Đức Mẹ La Vang',city:'Hải Lăng',locality:'Trung tâm hành hương La Vang',start:laVangGate,
+      mappedEntrance:true,visitOnArrival:true,source:laVangMap,viewOf:['thanh-dia-la-vang',1]},
+    'osm-way-690204938':{name:'Vương cung Thánh đường La Vang mới',city:'Hải Lăng',locality:'Trung tâm hành hương La Vang',start:laVangGate,
+      lon:107.19577,lat:16.70552,mappedEntrance:true,visitOnArrival:true,source:laVangMap,viewOf:['thanh-dia-la-vang',2]},
+    'osm-node-14309236352':{name:'Nhà hành lễ và bến thả hoa bờ Nam sông Thạch Hãn',city:'Quảng Trị',locality:'Bờ nam sông Thạch Hãn',
+      start:[107.185303,16.754760],mappedEntrance:true,visitOnArrival:true,source:'https://dulich.quangtri.gov.vn/vi/benthahoabonamthachhan'},
+    'osm-node-10605991202':{name:'Tượng đài và bến thả hoa bờ Bắc sông Thạch Hãn',city:'Quảng Trị',locality:'An Đôn',start:[107.1823027,16.7562374],
+      mappedEntrance:true,visitOnArrival:true,source:'https://dsvh.gov.vn/di-tich-lich-su-thanh-co-quang-tri-va-nhung-dia-diem-luu-niem-su-kien-81-ngay-dem-nam-1972-2975'},
     'osm-way-343077412':{name:'Chứng tích tháp chuông Tam Tòa',city:'Đồng Hới',locality:'Công viên Đồng Mỹ',formerProvince:'Quảng Bình',
       start:[106.6230958,17.4750631],mappedEntrance:true,visitOnArrival:true,source:'https://myquangbinh.vn/vi/nhathotamtoa',
       arrivalNote:'Xe dừng ở làn đường Nguyễn Du phía công viên. Từ lối đi bộ có thể nhìn xuyên cửa vòm về nền nhà thờ cũ bên sông Nhật Lệ.'},
@@ -331,6 +345,15 @@
   ];
   const existing = new Set(atlas.entries.map(site => site.id));
   const monumentStops=[
+    ['osm-node-8706712863','Quảng Bình Quan',106.6240516,17.4633364,'osm-node-8706712863',null,null],
+    ['quang-binh-quan-mat-quang-trung','Mặt Quảng Bình Quan phía đường Quang Trung',106.6241040,17.4633542,'osm-node-8706712863','quang-binh-quan',1],
+    ['quang-binh-quan-vuon-le-loi','Vườn phía Lê Lợi và hai tầng mái Quảng Bình Quan',106.6238777,17.4633770,'osm-node-8706712863','quang-binh-quan',2],
+    ['osm-way-305408028','Tháp chuông cũ ở La Vang',107.19547570,16.70697798,'osm-way-305408028',null,null],
+    ['osm-node-3100290389','Cổng chính và Công trường Mân Côi ở La Vang',107.1947094,16.7101806,'osm-way-305408028','thanh-dia-la-vang',3],
+    ['quang-tri-hanh-lang-ben-nam','Hành lang và thang đá bờ nam sông Thạch Hãn',107.1850883,16.7547129,'osm-node-14309236352','ben-tha-hoa-bo-nam-thach-han',1],
+    ['quang-tri-tu-ben-nam-nhin-an-don','Từ bậc bến Thạch Hãn nhìn sang An Đôn',107.1850483,16.7548234,'osm-node-14309236352','ben-tha-hoa-bo-nam-thach-han',2],
+    ['quang-tri-bia-ben-bac','Bia đá bên bến tám cạnh bờ bắc',107.1828266,16.7555459,'osm-node-10605991202','tuong-dai-bo-bac-thach-han',2],
+    ['quang-tri-den-ben-bac','Đền tưởng niệm và bến tám cạnh ở An Đôn',107.1826360,16.7556078,'osm-node-10605991202','tuong-dai-bo-bac-thach-han',1],
     ['quang-binh-mat-tay-tam-toa','Mặt tây tháp chuông Tam Tòa',106.6233257,17.474978,'osm-way-343077412','nha-tho-tam-toa',0],
     ['quang-binh-nen-nha-tho-tam-toa','Nền nhà thờ Tam Tòa cũ và trụ gạch',106.62357,17.47495,'osm-way-343077412','nha-tho-tam-toa',1],
     ['osm-node-11663933869','Cầu Hiền Lương lịch sử',107.0518184,17.0043601,'osm-node-1016631030',null,null],
