@@ -14,6 +14,7 @@ import itertools
 import json
 import math
 from pathlib import Path
+from typing import NamedTuple
 
 import osmium
 
@@ -33,16 +34,27 @@ HUST_LANES = {
     1207074263, 1207074264, 1207215785, 1217463137, 1217463138, 1217463139,
 }
 
-# Bãi Môn visitor parking branches from QL29 before the footbridge. Keep
-# existing national edge IDs stable when splitting the highway at this fork.
-BAI_MON_LANE, BAI_MON_HIGHWAY = 770106904, 605830153
-BAI_MON_JOIN, BAI_MON_PARKING = 5138500073, 7189274555
-BAI_MON_HIGHWAY_EXTENSION, BAI_MON_ACCESS_EDGE = 50000001, 50000002
+class VisitorLane(NamedTuple):
+    road: int
+    junction: int
+    parking: int
+    road_extension: int
+    access_edge: int
+    name: str
+
+
+# Preserve the IDs of existing road and traffic edges. At Vịnh Mốc the
+# surveyed centreline ends at the coach yard. The yard polygon is not a road.
+VISITOR_LANES = {
+    770106904: VisitorLane(605830153, 5138500073, 7189274555, 50000001, 50000002, 'Đường vào Bãi Môn'),
+    87308497: VisitorLane(904141450, 1015102537, 1015102865, 50000003, 50000004, 'Đường vào sân đón khách Vịnh Mốc'),
+}
+VISITOR_FORKS = {lane.road: lane for lane in VISITOR_LANES.values()}
 
 
 def permitted(way):
     tags = way.tags
-    if tags.get('highway') == 'service' and way.id != BAI_MON_LANE:
+    if tags.get('highway') == 'service' and way.id not in VISITOR_LANES:
         return way.id in HUST_LANES and len(way.nodes) >= 2
     access = next((tags.get(k) for k in ('motorcar', 'motor_vehicle', 'vehicle', 'access') if k in tags), '')
     return access not in DENIED and tags.get('area') != 'yes' and len(way.nodes) >= 2
@@ -176,24 +188,24 @@ def short_runs(refs, junctions, virtual_ids):
 
 
 def driving_runs(way_id, refs, junctions, virtual_ids):
-    """Yield the legacy road segmentation plus the surveyed visitor fork."""
-    if way_id == BAI_MON_LANE:
+    """Yield the original road segmentation and any surveyed visitor fork."""
+    lane = VISITOR_LANES.get(way_id)
+    if lane:
         node_ids = [ref for ref, _, _ in refs]
-        join, parking = node_ids.index(BAI_MON_JOIN), node_ids.index(BAI_MON_PARKING)
+        join, parking = node_ids.index(lane.junction), node_ids.index(lane.parking)
         drive = refs[min(join,parking):max(join,parking)+1]
         for run, metres in short_runs(drive, (), virtual_ids):
-            yield run, metres, BAI_MON_ACCESS_EDGE
+            yield run, metres, lane.access_edge
         return
+    lane = VISITOR_FORKS.get(way_id)
     for run, metres in short_runs(refs, junctions, virtual_ids):
-        fork = None
-        if way_id == BAI_MON_HIGHWAY:
-            fork = next((i for i, pt in enumerate(run[1:-1], 1) if pt[0] == BAI_MON_JOIN), None)
+        fork = next((i for i, pt in enumerate(run[1:-1], 1) if pt[0] == lane.junction), None) if lane else None
         if fork is None:
             yield run, metres, None
         else:
             # 'metres' is counted once for the original stretch of highway.
             yield run[:fork+1], metres, None
-            yield run[fork:], 0, BAI_MON_HIGHWAY_EXTENSION
+            yield run[fork:], 0, lane.road_extension
 
 
 def build(source, output, residential):
@@ -205,7 +217,7 @@ def build(source, output, residential):
     # remain separate unless their source ways actually share a node ID.
     nodes, junctions = set(), set()
     for w in osmium.FileProcessor(source, osmium.osm.WAY).with_filter(selected):
-        if permitted(w) and w.id != BAI_MON_LANE:
+        if permitted(w) and w.id not in VISITOR_LANES:
             for n in w.nodes:
                 if n.ref in nodes:
                     junctions.add(n.ref)
@@ -241,8 +253,8 @@ def build(source, output, residential):
         if len(refs) != len(w.nodes):
             continue
         name = road_label(w.tags)
-        if kind == 'service':
-            name = name or ('Đường vào Bãi Môn' if w.id == BAI_MON_LANE else 'Đường nội bộ Bách khoa')
+        if kind == 'service' and not name:
+            name = VISITOR_LANES[w.id].name if w.id in VISITOR_LANES else 'Đường nội bộ Bách khoa'
         direction = w.tags.get('oneway:motorcar',w.tags.get('oneway',''))
         one_way = int(direction in ('yes','true','1','-1','reverse') or (direction == '' and (w.tags.get('junction')=='roundabout' or kind=='motorway')))
         if direction in ('-1','reverse'):

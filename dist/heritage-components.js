@@ -51,6 +51,28 @@
       {name:'Bờ vịnh nhìn về Bãi Chùa',offset:[370,-570],height:100,viewAngle:-.41,viewRadius:912,viewElevation:.105,viewFov:62,
       description:'Từ phía tây vịnh nhìn về đông bắc, dọc theo bờ có Quốc lộ 29 đến khu di tích Bãi Chùa.'}]};
   const precincts={
+    'osm-way-343077412':{name:'Chứng tích tháp chuông Tam Tòa',city:'Đồng Hới',locality:'Công viên Đồng Mỹ',formerProvince:'Quảng Bình',
+      start:[106.6230958,17.4750631],mappedEntrance:true,visitOnArrival:true,source:'https://myquangbinh.vn/vi/nhathotamtoa',
+      arrivalNote:'Xe dừng ở làn đường Nguyễn Du phía công viên. Từ lối đi bộ có thể nhìn xuyên cửa vòm về nền nhà thờ cũ bên sông Nhật Lệ.'},
+    'osm-node-1016631030':{name:'Kỳ đài Hiền Lương ở bờ bắc',city:'Vĩnh Linh',locality:'Đôi bờ Hiền Lương – Bến Hải',
+      start:[107.0502153,17.0062013],lon:107.0502703,lat:17.0057033,viewOf:['hien-luong',2],mappedEntrance:true,visitOnArrival:true,
+      source:'https://dsvh.gov.vn/di-tich-lich-su-doi-bo-hien-luong-ben-hai-2974',
+      arrivalNote:'Xe dừng trên đường nhánh sát sân phía bắc Kỳ đài. Đi bộ ra sân để nhìn bệ tranh gốm và cột cờ.'},
+    'osm-node-4411036589':{name:'Tượng đài Khát vọng thống nhất ở bờ nam',city:'Gio Linh',locality:'Bờ nam sông Bến Hải',
+      lon:107.053335,lat:17.00232,start:[107.0528599,17.0027101],viewOf:['hien-luong',3],mappedEntrance:true,visitOnArrival:true,
+      arrivalNote:'Xe dừng ở đường bờ nam, chỗ rẽ vào khu tưởng niệm. Đi bộ ra mép hồ để nhìn tượng người mẹ và người con.',
+      source:'https://dsvh.gov.vn/di-tich-lich-su-doi-bo-hien-luong-ben-hai-2974'},
+    'osm-node-1016631101':{city:'Vĩnh Linh',locality:'Bờ bắc sông Bến Hải',start:[107.0502153,17.0062013],mappedEntrance:true,visitOnArrival:true,
+      searchNames:'Bảo tàng lịch sử Cầu Hiền Lương',source:'https://dsvh.gov.vn/di-tich-lich-su-doi-bo-hien-luong-ben-hai-2974'},
+    'osm-node-1016630618':{name:'Cửa số 3 địa đạo Vịnh Mốc',city:'Vĩnh Linh',locality:'Di tích Vịnh Mốc',start:[107.1101055,17.074208],
+      mappedEntrance:true,visitOnArrival:true,source:'https://dsvh.gov.vn/di-tich-lich-su-dia-dao-vinh-moc-va-he-thong-lang-ham-vinh-linh-2989',
+      arrivalNote:'Xe theo đường dịch vụ qua cổng, dừng ở mép sân đón khách. Từ đây đi bộ tới cửa tham quan.'},
+    'osm-node-1016631618':{name:'Cửa số 4 và bờ biển Vịnh Mốc',city:'Vĩnh Linh',locality:'Di tích Vịnh Mốc',
+      start:[107.1101055,17.074208],viewOf:['dia-dao-vinh-moc',4],mappedEntrance:true,visitOnArrival:true,
+      arrivalNote:'Xe ở sân đón khách. Tại cửa số 4, bậc thang dẫn xuống bờ cuội ven biển.'},
+    'osm-node-1016630582':{name:'Bảo tàng địa đạo Vịnh Mốc',city:'Vĩnh Linh',locality:'Di tích Vịnh Mốc',
+      start:[107.1101055,17.074208],mappedEntrance:true,visitOnArrival:true,
+      arrivalNote:'Xe vào đến mép sân đón khách rồi tiếp tục đi bộ. Nhà trưng bày bổ sung và cửa số 3 có các điểm tham quan riêng.'},
     'osm-way-232410041':{name:'Bảo tàng Phú Yên – Bảo tàng Đắk Lắk cơ sở 2',city:'Tuy Hòa',locality:'151 Trần Phú',formerProvince:'Phú Yên',
       searchNames:'Bảo tàng Đắk Lắk cơ sở 2 · 151 Trần Phú',
       start:[109.3018625,13.095609],mappedEntrance:true,visitOnArrival:true,source:'https://daklakvrtour.com/bao-tang-phu-yen.html',
@@ -308,6 +330,23 @@
     [1504768248,'Đền Trung – Hùng Vương Tổ miếu','Phú Thọ','Hùng Sơn',105.3240986,21.3690193,105.322450,21.369750,189,'https://denhung.vn/tin-tuc/den-trung'],
   ];
   const existing = new Set(atlas.entries.map(site => site.id));
+  const monumentStops=[
+    ['quang-binh-mat-tay-tam-toa','Mặt tây tháp chuông Tam Tòa',106.6233257,17.474978,'osm-way-343077412','nha-tho-tam-toa',0],
+    ['quang-binh-nen-nha-tho-tam-toa','Nền nhà thờ Tam Tòa cũ và trụ gạch',106.62357,17.47495,'osm-way-343077412','nha-tho-tam-toa',1],
+    ['osm-node-11663933869','Cầu Hiền Lương lịch sử',107.0518184,17.0043601,'osm-node-1016631030',null,null],
+    ['quang-tri-vach-son-cau-hien-luong','Vạch sơn giữa cầu Hiền Lương',107.05172136,17.0043849,'osm-node-1016631030','hien-luong',1],
+    ['quang-tri-san-don-khach-vinh-moc','Sân đón khách Vịnh Mốc',107.11027,17.074375,'osm-node-1016630618','dia-dao-vinh-moc',1],
+    ['quang-tri-nha-trung-bay-vinh-moc','Nhà trưng bày bổ sung ở Vịnh Mốc',107.111735,17.073766,'osm-node-1016630618','dia-dao-vinh-moc',2],
+    ['quang-tri-phong-ho-sinh-vinh-moc','Gian hộ sinh được trưng bày ở Vịnh Mốc',107.112718,17.073904,'osm-node-1016630618','dia-dao-vinh-moc',3],
+  ];
+  for(const [id,name,lon,lat,anchor,model,index] of monumentStops){
+    if(existing.has(id))continue;
+    const {start,city,locality,formerProvince,source}=precincts[anchor];
+    const osm=id.startsWith('osm-')?id:anchor;
+    atlas.entries.push({id,name,lon,lat,start,city,locality,formerProvince,source,region:'Trung Bộ',province:'Quảng Trị',kind:'Di tích',
+      mappedEntrance:true,visitOnArrival:true,approachMeters:Math.round(Math.hypot((lon-start[0])*111320*Math.cos(lat*Math.PI/180),(lat-start[1])*110900)),
+      ...(model?{viewOf:[model,index]}:{}),map:'https://www.openstreetmap.org/'+osm.split('-').slice(1).join('/')});
+  }
   const bay=precincts['osm-relation-16028816'];
   for(const [id,name,lon,lat,start,index,arrivalNote] of [
     ['phu-yen-cu-lao-vung-su','Cù lao nhỏ ngoài bãi thúng Vũng Sứ',109.29028,13.41449,bay.start,2,

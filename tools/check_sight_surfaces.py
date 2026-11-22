@@ -48,8 +48,16 @@ AUDIT = """async coordinates=>{
     return ctx.getImageData(0,0,img.width,img.height);
   }
   const band=n=>n<2?n:n<158?2:n<=178?3:n<204?4:5;
-  let samples=0,totalError=0,largest=0,land=0;
+  async function checkWaterPage(name){
+    const original=await raster(name+'-water.png'),encoded=await raster(name+'-water.webp');
+    if(original.width!==encoded.width||original.height!==encoded.height)throw Error('Water dimensions differ '+name);
+    const oldPixels=new Uint32Array(original.data.buffer),newPixels=new Uint32Array(encoded.data.buffer);
+    for(let i=0;i<oldPixels.length;i++)if(oldPixels[i]!==newPixels[i])throw Error('Water pixel differs at '+name+' '+i);
+    return oldPixels.length;
+  }
+  let samples=0,totalError=0,largest=0,land=0,waterPixels=0;
   for(const [name,anchors] of pages){
+    waterPixels+=await checkWaterPage(name);
     const source=await raster(name+'.png'),packed=await raster(name+'.surface.webp');
     const a=source.data,b=packed.data;
     if(source.width!==packed.width||source.height!==packed.height)throw Error('Dimension mismatch '+name);
@@ -70,10 +78,11 @@ AUDIT = """async coordinates=>{
     geo(x,z){return [lon+x/this.mx,lat-z/this.my];},point(x,y){return {x:(x-lon)*this.mx,z:(lat-y)*this.my};}});
   const layer=createSightLandscapes(THREE);
   for(const [lon,lat] of [[105.840426,21.036771],[106.6999,10.7798],[103.8414,22.3332]]){
-    const g=graph(lon,lat);await layer.load(g,0,0);layer.setOrigin(g);
-    if(!layer.visible||layer.elevation(0,0)===null)throw Error('Runtime page loading failed at '+[lon,lat]);
+    const g=graph(lon,lat);await layer.load(g,0,0);
+    const view=layer.prepare(g);layer.activate(view);
+    if(!view.visible||view.elevation(0,0)===null)throw Error('Runtime page loading failed at '+[lon,lat]);
   }
-  return {pages:pages.size,samples,maxHeightError:largest,meanHeightError:totalError/samples,meanLandError:totalError/land,
+  return {pages:pages.size,samples,waterPixels,maxHeightError:largest,meanHeightError:totalError/samples,meanLandError:totalError/land,
     inputAnchors:coordinates.length,coveredAnchors:counts.filter(n=>n===4).length,
     validAnchors:counts.filter((n,id)=>n===4&&!missing[id]).length,maxAnchorError:Math.max(...interpolation)};
 }"""

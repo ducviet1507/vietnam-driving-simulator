@@ -24,6 +24,7 @@ from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 import tifffile
 from pack_sight_surfaces import pack_pages, stops
+from pack_sight_water import pack_water_mask
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -183,7 +184,9 @@ def build_water(index):
                     if key in values:
                         tile = Image.fromarray((values[key][0] == 80).astype('uint8'))
                         mask.paste(tile, (i%8*size,i//8*size))
-                mask.save(OUT/f'{name}-{start//32}-water.png',transparency=0,bits=1,optimize=True)
+                source = OUT/f'{name}-{start//32}-water.png'
+                mask.save(source,transparency=0,bits=1,optimize=True)
+                pack_water_mask(source)
     with ThreadPoolExecutor(12) as workers, ThreadPoolExecutor(4) as batches:
         list(batches.map(pack,groups.items()))
 

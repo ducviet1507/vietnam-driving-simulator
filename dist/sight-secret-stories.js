@@ -5,6 +5,10 @@
 window.sightSecretStories = {
   'ganh-da-dia-den-ganh-den':['beacon','Từ bậc đá đến chân đèn','Qua Gành Đá Đĩa về phía bắc, dấu hiệu nào hiện rõ trên tháp đèn?','Trên những tảng đá ở Gành Đèn, các khoang sơn đỏ và trắng xen nhau trên sáu mặt tháp.'],
   'nui-nhan-tuy-hoa':['wing','Hai dáng hình trên núi Nhạn','Sau khi rời sân tháp gạch, có thể gặp hình cánh nhạn ở đâu?','Ở phía nam ngọn núi, những cánh nhạn trong kiến trúc đài tưởng niệm vươn lên trên mái nhà bia.'],
+  'nha-trung-bay-hien-luong':['echo','Hai chiếc loa trước thềm','Chi tiết nào nằm hai bên cầu thang trong ảnh nhà trưng bày?','Hai loa hình nón hướng ra sân. Sau bậc thềm là nhà trưng bày về đời sống hai bờ sông Bến Hải trong những năm chia cắt.'],
+  'doi-bo-hien-luong-ben-hai':['sail','Hai màu trên sông','Đứng ở vạch trắng giữa cầu và nhìn về Kỳ đài, lan can có màu gì?','Lan can phía bắc sơn xanh. Phía nam là nửa cầu màu vàng và tượng mẹ con nhìn qua sông.'],
+  'vinh-moc-tu-san-den-bo-bien':['shell','Bờ cuội ngoài cửa số 4','Sau khoảng tối ở cửa số 4, lối bậc mở ra đâu?','Từ bậc cuối thấy bờ cuội và mặt biển Vĩnh Linh. Trong khu di tích còn có sân đón khách, nhà trưng bày và gian hộ sinh.'],
+  'chung-tich-tam-toa':['arch','Nhìn qua vòm Tam Tòa','Từ phía đường Nguyễn Du, qua cửa vòm có thể thấy gì ở nền nhà thờ cũ?','Một trụ gạch còn đứng trên nền phía đông tháp, về hướng sông Nhật Lệ.'],
   'nha-trung-bay-phu-yen':['arch','Chiếc trống ở lối vào','Từ sân Trần Phú, nhìn vào khoảng trống giữa hai cánh nhà. Nó gợi hình gì?','Khoảng cửa sảnh phác hình chiếc trống đồng. Dải cột trắng phía trên xòe ra như chiếc mũ vua Hùng.'],
   'vung-su-den-vung-chao':['sail','Hai bờ vũng','Ở bãi thúng dưới chùa Liên Phú, nhìn ra mặt nước có thể thấy gì?','Một cù lao nhỏ phủ cây nằm ngoài Vũng Sứ. Xa hơn về phía bắc là mũi cây và bãi triều Vũng Chào.'],
   'chua-thanh-luong-hai-ho':['drop','Hai mặt nước trong sân chùa','Tượng Quan Âm Nam Hải nhô lên từ hồ nào?','Ở hồ Long Ẩn, bàn tay và vai tượng nhô lên trên mặt nước. Thủy tạ nằm ở hồ Long Thủy, phía trước chính điện.'],

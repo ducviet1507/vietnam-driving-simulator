@@ -205,62 +205,6 @@
     orb.dispose();
   }
 
-  // 4. Kỳ đài & Cầu Hiền Lương – Sông Bến Hải (Vĩnh Linh, Quảng Trị)
-  function hienLuong(T, {palette, box, stamp, round, tapered, sign, wavingFlag}) {
-    const stone = 0x9b988e, white = 0xe6e3da, darkGranite = 0x52524f;
-    const red = 0xb82924, gold = 0xdfb847, northBlue = 0x2e6b9e, southYellow = 0xdcb43e;
-    palette({stone: [stone, darkGranite]});
-
-    // Broad ceremonial riverfront plaza & 3-tier monumental pedestal of Kỳ đài Hiền Lương
-    box(stone, 0, 0.22, 0, 22.0, 0.44, 18.0);
-    box(white, 0, 0.72, -1.0, 14.5, 0.64, 11.5);
-    for (let st = 0; st < 4; st++) box(white, 0, 0.14 + st * 0.2, 5.8 - st * 0.42, 6.2, 0.2, 0.48);
-
-    // Tall concrete base pavilion (Đài tưởng niệm Vĩ tuyến 17)
-    box(white, 0, 2.75, -1.0, 8.8, 3.45, 6.8);
-    for (const s of [-1, 1]) {
-      box(darkGranite, s * 4.55, 2.75, -1.0, 0.42, 3.65, 7.1);
-      // Flanking sculpted historical relief wings
-      box(0xb79f80, s * 7.2, 2.35, -2.0, 4.6, 2.75, 0.72, -s * 0.22);
-      box(darkGranite, s * 7.2, 3.85, -2.0, 4.9, 0.28, 0.92, -s * 0.22);
-    }
-    // Red band & golden star plaque on front face
-    box(red, 0, 3.65, 2.45, 5.2, 1.05, 0.14);
-    sign('KỲ ĐÀI HIỀN LƯƠNG · VĨ TUYẾN 17', 0, 2.35, 2.46, 5.4, 0.62);
-    box(gold, 0, 3.65, 2.54, 0.62, 0.62, 0.06, 0, 0, Math.PI / 4);
-
-    // Towering 34m-scale Flag Tower Mast (Cột cờ Hiền Lương) with stylized steel ribs
-    box(white, 0, 6.2, -1.0, 4.2, 3.6, 4.2);
-    for (const dx of [-1.8, 1.8]) for (const dz of [-1.8, 1.8]) box(darkGranite, dx, 6.2, -1.0 + dz, 0.45, 3.7, 0.45);
-    tapered(white, 0, 14.5, -1.0, 1.45, 0.52, 13.4, 1, 8);
-    stamp(round, 0xcad0d4, 0, 25.5, -1.0, 0.22, 11.2, 0.22);
-    // Giant waving red-and-gold national flag on top
-    wavingFlag(8.4, 5.6, 0.22, 30.8, -1.0);
-
-    // Iconic symbolic 2-tone Blue & Yellow steel-truss Hiền Lương Bridge monument span beside the plaza
-    const bx = 0, bz = 9.2, spanW = 24.0;
-    box(stone, bx, 0.32, bz, spanW + 2.0, 0.64, 5.2);
-    for (const half of [-1, 1]) {
-      const col = half < 0 ? northBlue : southYellow; // Iconic North Blue / South Yellow paint!
-      const x0 = half < 0 ? -spanW / 2 : 0;
-      for (const side of [-1, 1]) {
-        const z = bz + side * 2.1;
-        box(col, x0 + spanW / 4, 0.85, z, spanW / 2, 0.24, 0.24);
-        box(col, x0 + spanW / 4, 3.65, z, spanW / 2 - 1.2, 0.24, 0.24);
-        for (let b = 0; b <= 4; b++) {
-          const px = x0 + b * (spanW / 8);
-          box(col, px, 2.25, z, 0.2, 2.8, 0.2);
-          if (b < 4) {
-            box(col, px + spanW / 16, 2.25, z, 3.8, 0.14, 0.14, 0, 0, 0.72);
-            box(col, px + spanW / 16, 2.25, z, 3.8, 0.14, 0.14, 0, 0, -0.72);
-          }
-        }
-      }
-    }
-    // White demarcation line right down the center of the bridge
-    box(white, 0, 0.68, bz, 0.28, 0.1, 4.6);
-  }
-
   // 5. Thành cổ Quảng Trị. The mound and the south gate have separate mapped foundations.
   function thanhCoQuangTri(T, kit) {
     const {palette, stamp, box, tapered, round, place} = kit;
@@ -403,49 +347,6 @@
     window.CentralArch.curvedRoof(T, kit, 0, 7.86, 0, 4.07, 4.18, .86, tile, dark, dark, .28);
   }
 
-  // 6. Chứng tích Nhà thờ Tam Tòa – Đồng Hới (Quảng Trị / Quảng Bình cũ)
-  function nhaThoTamToa(T, {palette, box, stamp, outline, profile, tapered}) {
-    const brick = [0x9f5d44, 0x8f523b, 0xab694e, 0x7a4734];
-    const plaster = 0xc9be9f, moss = 0x5d6949, stone = 0x8e897d, dark = 0x352a24;
-    palette({plaster, stone});
-
-    // Riverside lawn stone base & low memorial fence
-    box(stone, 0, 0.18, 0, 15.6, 0.36, 15.6);
-    for (const [fx, fz, fw, fd] of [[0, -7.4, 15.0, 0.34], [-7.4, 0, 0.34, 15.0], [7.4, 0, 0.34, 15.0]]) {
-      box(plaster, fx, 0.72, fz, fw, 0.78, fd);
-    }
-
-    // Iconic Surviving Portuguese-Gothic Red-Brick Bell Tower Ruin (Tháp chuông Tam Tòa)
-    const bx = 0, bz = 1.6;
-    // Lower arched portal facade with jagged bombed-out nave walls extending behind
-    const front = new T.Shape();
-    front.moveTo(-4.4, 0); front.lineTo(-1.45, 0); front.lineTo(-1.45, 2.3);
-    front.absarc(0, 2.3, 1.45, Math.PI, 0, true);
-    front.lineTo(1.45, 0); front.lineTo(4.4, 0); front.lineTo(4.4, 7.6);
-    front.lineTo(2.9, 7.6); front.lineTo(2.9, 13.8); front.lineTo(0, 16.5); front.lineTo(-2.9, 13.8);
-    front.lineTo(-2.9, 7.6); front.lineTo(-4.4, 7.6); front.closePath();
-    profile(front, brick[0], bx, 0.36, bz - 1.65, 3.3);
-
-    // Recessed Gothic bell-arch opening at upper belfry level
-    outline([[-1.15, 0], [1.15, 0], [1.15, 2.4], [0.65, 3.25], [0, 3.75], [-0.65, 3.25], [-1.15, 2.4]], dark, bx, 8.9, bz + 1.68, 0.16);
-    outline([[-1.15, 0], [1.15, 0], [1.15, 2.4], [0.65, 3.25], [0, 3.75], [-0.65, 3.25], [-1.15, 2.4]], dark, bx, 8.9, bz - 1.82, 0.16);
-    // Classical Portuguese pilaster trims & broken cornices
-    for (const s of [-1, 1]) {
-      box(plaster, s * 4.25, 4.1, bz + 1.68, 0.56, 7.3, 0.24);
-      box(plaster, s * 2.75, 10.6, bz + 1.68, 0.48, 6.2, 0.24);
-      // Jagged ruined side nave masonry stubs extending back (-Z)
-      outline([[0, 0], [7.2, 0], [7.2, 1.3], [5.1, 2.4], [3.2, 3.8], [1.4, 5.4], [0, 6.6]], brick[1], s * 4.15, 0.36, bz - 1.6, 0.55, Math.PI / 2);
-      // Side buttress columns
-      box(brick[2], s * 4.15, 1.85, bz - 4.4, 0.85, 2.9, 0.85);
-    }
-    // Horizontal stone mouldings & mossy weathered top
-    for (const y of [4.8, 7.75, 13.6]) box(plaster, bx, y, bz, y > 8 ? 6.1 : 9.1, 0.3, 3.65);
-    box(moss, 1.4, 14.2, bz, 1.8, 0.65, 1.6);
-    // Tall slender cross silhouette atop the surviving gable
-    box(plaster, bx, 17.85, bz, 0.22, 2.4, 0.22);
-    box(plaster, bx, 18.4, bz, 1.25, 0.22, 0.22);
-  }
-
   (window.VietnamSights ??= []).push({
     id: 'nga-ba-dong-loc', memorialVisit: true, name: 'Tháp Chuông Ngã ba Đồng Lộc', city: 'Can Lộc', province: 'Hà Tĩnh', region: 'Trung Bộ',
     lon: 105.740227, lat: 18.398218, start: [105.738368, 18.398306], yaw: -1.52, width: 24, depth: 24,
@@ -476,15 +377,6 @@
     map: 'https://www.openstreetmap.org/?mlat=17.46572&mlon=106.62265#map=18/17.46572/106.62265',
     build: quangBinhQuan
   }, {
-    id: 'hien-luong', name: 'Kỳ đài & Cầu Hiền Lương', city: 'Vĩnh Linh', province: 'Quảng Trị', region: 'Trung Bộ',
-    lon: 107.050216, lat: 17.005652, start: [107.050818, 17.005837], yaw: 1.88, viewElevation: 0.21, width: 28, depth: 26,
-    solids: [[0, -1, 4.5, 3.6], [0, 9.2, 12.2, 2.5]],
-    description: 'Kỳ đài giới tuyến Vĩ tuyến 17 với lá cờ Tổ quốc tung bay bên sông Bến Hải và nhịp cầu giàn thép hai màu xanh – vàng lịch sử.',
-    photo: 'https://vinwonders.com/vi/wonderpedia/news/cau-hien-luong-song-ben-hai/',
-    source: 'https://vi.wikipedia.org/wiki/C%E1%BA%A7u_Hi%E1%BB%81n_L%C6%B0%C6%A1ng',
-    map: 'https://www.openstreetmap.org/node/1016631030',
-    build: hienLuong
-  }, {
     id: 'thanh-co-quang-tri', memorialVisit: true, name: 'Thành cổ Quảng Trị', city: 'Quảng Trị', province: 'Quảng Trị', region: 'Trung Bộ',
     lon: 107.1895097, lat: 16.7539213, start: [107.18741, 16.75449], yaw: -.288, width: 50, depth: 50,
     solids: [[0, 0, 18.8, 4.6], [0, 0, 17.1, 8.8], [0, 0, 13.8, 13.6],
@@ -508,14 +400,5 @@
     photo: 'https://vnexpress.net/thanh-co-quang-tri-xua-va-nay-4938680.html',
     map: 'https://www.openstreetmap.org/way/1137794040',
     build: congTienQuangTri
-  }, {
-    id: 'nha-tho-tam-toa', name: 'Chứng tích Nhà thờ Tam Tòa', city: 'Đồng Hới', province: 'Quảng Trị', region: 'Trung Bộ', formerProvince: 'Quảng Bình',
-    lon: 106.623350, lat: 17.474978, start: [106.623100, 17.474978], yaw: -1.57, width: 17, depth: 17,
-    solids: [[-3.1, 1.6, 1.4, 1.8], [3.1, 1.6, 1.4, 1.8], [-4.15, -2.5, 0.6, 3.6], [4.15, -2.5, 0.6, 3.6]],
-    description: 'Tháp chuông gạch đỏ kiến trúc Bồ Đào Nha còn lưu giữ bên bờ sông Nhật Lệ – chứng tích chiến tranh nổi tiếng tại Đồng Hới.',
-    photo: 'https://quangbinhtourism.vn/nha-tho-tam-toa/',
-    source: 'https://vi.wikipedia.org/wiki/Nh%C3%A0_th%E1%BB%9D_Tam_T%C3%B2a',
-    map: 'https://www.openstreetmap.org/way/343077412',
-    build: nhaThoTamToa
   });
 })();

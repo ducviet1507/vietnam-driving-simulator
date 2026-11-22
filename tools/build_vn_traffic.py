@@ -14,7 +14,7 @@ from pathlib import Path
 
 import osmium
 
-from build_vn_roads import BAI_MON_JOIN, MAIN, compact, driving_runs, permitted, simplify
+from build_vn_roads import VISITOR_LANES, MAIN, compact, driving_runs, permitted, simplify
 
 
 def number(text, maximum, unit=""):
@@ -126,8 +126,9 @@ def build(source, roads, output):
     for key in keys:
         for row in rows(key):
             junctions.update(row[1:3])
-    # driving_runs splits the QL29 fork after preserving its old 1.8 km segments.
-    junctions.discard(BAI_MON_JOIN)
+    # driving_runs inserts these visitor forks after preserving the original
+    # national segmentation, including virtual vertices on long roads.
+    junctions.difference_update(lane.junction for lane in VISITOR_LANES.values())
     controls, restrictions, linked, skipped = road_controls(source)
     print("Matching OSM ways and controls", flush=True)
     classes = MAIN | {k + "_link" for k in MAIN} | {"unclassified", "residential", "living_street", "service"}

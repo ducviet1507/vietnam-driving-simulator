@@ -49,7 +49,7 @@ function sightRasterPages(base,grid,extensions){
 const sightOpenWaterColour='fogColor*vec3(.36,.54,.59)';
 function createSightLandscapes(T){
   const grid=32,size=96,side=3*size;
-  const coarse=sightRasterPages('sight-landscapes/',grid,['.webp','.surface.webp','-water.png']);
+  const coarse=sightRasterPages('sight-landscapes/',grid,['.webp','.surface.webp','-water.webp']);
   const fine=sightRasterPages('sight-imagery/',grid*4,['.webp']);
   const supplement=sightRasterPages('sight-elevation/',grid,['.png']),extraSize=80;
   let front,spare;

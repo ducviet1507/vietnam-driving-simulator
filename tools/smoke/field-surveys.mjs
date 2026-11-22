@@ -40,6 +40,18 @@ assert.ok(canTurn(southApproach,lane)&&canTurn(-northbound,lane)&&canTurn(-lane,
 const beach=VietnamTourism.entries.find(s=>s.id==='osm-way-160203374');
 const parking=routeNetwork.nearest(beach.start,capeRoads);
 assert.ok(parking.id===lane&&parking.error<4,'Bãi Môn must start beside its ticket area');
+// The real lane at Vịnh Mốc ends where its centreline opens into the coach
+// yard. The public footpaths through the museum grounds are visited on foot.
+const vinhMocTile='428_68',museumLane=50000004;
+const museumRoads=JSON.parse(gunzipSync(readFileSync(file('vn-roads/'+vinhMocTile+'.gz'))));
+const museumTraffic=JSON.parse(gunzipSync(readFileSync(file('vn-traffic/'+vinhMocTile+'.gz'))));
+const museumGraph=new routeNetwork.Tile(roadIndex,vinhMocTile,museumRoads,museumTraffic);
+for(const [from,to] of [[2885243,museumLane],[-50000003,museumLane],[-museumLane,50000003],[-museumLane,-2885243]]){
+  assert.ok(museumGraph.arcs[museumGraph.byId.get(from)].next.includes(museumGraph.byId.get(to)));
+}
+const museumGate=VietnamTourism.entries.find(s=>s.id==='osm-node-1016630618');
+const museumParking=routeNetwork.nearest(museumGate.start,museumRoads);
+assert.ok(museumParking.id===museumLane&&museumParking.error<3,'Vịnh Mốc must park at the coach yard');
 // The memorial on the traffic island and the grave at 1 Phan Đình Phùng
 // have separate photos and destinations even though they honour the same person.
 const goCongStops=runInContext("heritageVisits.find(v=>v[0]==='pho-cu-go-cong')[2]",context);

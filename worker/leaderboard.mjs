@@ -232,7 +232,9 @@ async function serveGameAsset(request, env, url) {
   } else if (isText) {
     url.pathname += ".bin";
   }
-  if (/^\/sight-landscapes\/N\d{2}E\d{3}-\d+\.png$/.test(pathname)) {
+  if (/^\/sight-landscapes\/N\d{2}E\d{3}-\d+-water\.png$/.test(pathname)) {
+    url.pathname = pathname.replace(/\.png$/,".webp");
+  } else if (/^\/sight-landscapes\/N\d{2}E\d{3}-\d+\.png$/.test(pathname)) {
     url.pathname = pathname.replace(/\.png$/,".surface.webp");
   }
   const roadTile = (request.method === "GET" || request.method === "HEAD")

@@ -159,38 +159,6 @@
     });
   }
 
-  // 9. Địa đạo Vịnh Mốc (Vĩnh Linh, Quảng Trị)
-  function diaDaoVinhMoc(T, kit) {
-    const { box, stamp, round } = kit;
-    const redEarth = 0x8e4c36, grassHill = 0x52753b, timber = 0x5c3c28, stone = 0x8c8578;
-
-    // Red basalt coastal hillside mound housing the underground village tunnels
-    const hill = new T.SphereGeometry(1, 20, 12, 0, Math.PI * 2, 0, Math.PI * 0.52);
-    kit.palette({timber, stone});
-    stamp(hill, grassHill, 0, -0.2, -3.5, 14.5, 6.2, 10.5);
-    stamp(hill, redEarth, 0, -0.2, 2.2, 7.6, 4.4, 4.6);
-    hill.dispose();
-
-    // Reinforced arched stone-and-timber tunnel entrance portal (Cửa địa đạo)
-    A.vaultedBay(T, kit, 0, 5.4, 5.2, 3.6, 1.45, 1.75, 2.6, stone, redEarth, 0x3b3028);
-    box(0x1b1614, 0, 1.5, 4.4, 2.8, 3.0, 0.4);
-    for (const s of [-1, 1]) stamp(round, timber, s * 1.6, 1.75, 6.8, 0.16, 3.5, 0.16);
-    box(timber, 0, 3.55, 6.8, 3.8, 0.28, 0.35);
-    A.plaque(T, kit, 'ĐỊA ĐẠO VỊNH MỐC', 0, 4.15, 6.82, 4.4, 0.68, { bg: '#6e231a', fg: '#f6d874' });
-
-    // Ventilation shafts peeking out of the hillside & exhibition pavilion on left
-    for (const [vx, vz] of [[-5.2, -2.0], [5.8, -3.5], [1.2, -7.2]]) {
-      stamp(round, stone, vx, 4.8, vz, 0.42, 2.2, 0.42);
-      stamp(round, 0x6b655c, vx, 5.95, vz, 0.58, 0.18, 0.58);
-    }
-    box(0xe6dbc4, -12.0, 2.1, 4.2, 7.6, 3.8, 6.2);
-    A.gabledRoof(T, kit, -12.0, 4.0, 4.2, 8.0, 6.6, 1.75, 0x994230, 0xd8ccb2, { alongX: true });
-    A.trees(T, kit, [
-      { x: 10.8, z: 3.5, h: 8.8, kind: 'banyan' }, { x: -8.5, z: -7.2, h: 9.2, kind: 'pine' },
-      { x: 8.8, z: -7.5, h: 8.5, kind: 'pine' }
-    ]);
-  }
-
   // 10. Thánh địa La Vang (Hải Lăng, Quảng Trị — Tháp chuông cổ & Linh đài Đức Mẹ)
   function thanhDiaLaVang(T, kit) {
     const { box, stamp, round, tapered } = kit;
@@ -292,14 +260,6 @@
       build: tuongDaiMeSuot
     },
     
-    {
-      id: 'dia-dao-vinh-moc', name: 'Địa đạo Vịnh Mốc', city: 'Vĩnh Linh', province: 'Quảng Trị',
-      lon: 107.112150, lat: 17.074950, yaw: 1.758, width: 32, depth: 24,
-      start: [107.112712, 17.075052], viewDistance: 1200,
-      map: 'https://www.openstreetmap.org/#map=17/17.07495/107.11215',
-      source: 'https://dsvh.gov.vn/',
-      build: diaDaoVinhMoc
-    },
     {
       id: 'thanh-dia-la-vang', name: 'Thánh địa La Vang', city: 'Hải Lăng', province: 'Quảng Trị',
       lon: 107.192250, lat: 16.716650, yaw: 1.850, width: 30, depth: 24,

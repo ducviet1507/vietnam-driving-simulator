@@ -37,6 +37,15 @@ GRAPHIC = re.compile(r"(?:^|[ _-])(logo|locator|brochure|floor plan|plan of|coat
 
 # Audited Commons file pages for sites without a specific upstream photograph.
 REVIEWED = {
+    "quang-binh-mat-tay-tam-toa": "File:Di tích Nhà thờ Tam Tòa 2, Đồng Hới, Quảng Bình.jpeg",
+    "quang-binh-nen-nha-tho-tam-toa": "File:Tam Toa Church, Dong Hoi.jpg",
+    "osm-node-11663933869": "File:Cầu Hiền Lương, Quảng Trị.jpeg",
+    "quang-tri-vach-son-cau-hien-luong": "File:Cầu Hiền Lương (nhìn từ bờ Nam).JPG",
+    "osm-node-1016631030": "File:Cột cờ cầu Hiền Lương, Vĩnh Linh, Quảng Trị.jpeg",
+    "osm-node-1016631101": "File:Nhà bảo tàng Hiền Lương - panoramio.jpg",
+    "osm-node-4411036589": "File:Đài tưởng niệm Hiền Lương bờ nam - panoramio.jpg",
+    "osm-node-1016630618": "File:Địa đạo Vịnh Mốc.jpg",
+    "quang-tri-phong-ho-sinh-vinh-moc": "File:Maternity Room in Vinh Moc tunnel.JPG",
     "osm-way-232410041": "File:Bảo tàng Phú Yên.jpg",
     "phu-yen-canh-nha-bao-tang": "File:Phu Yen Museum.JPG",
     "phu-yen-gian-tho-thap-nhan": "File:Nhan Tower 3.jpg",
