@@ -323,6 +323,18 @@ try {
     assert.ok(bay.atLookout<1&&bay.fromMarker>2000&&bay.photos>=4,'Lan Hạ tour must open on Cát Dứa and keep its offshore Atlas pin');
     console.log('PASS Lan Hạ island lookout and photographic views');
 
+    await go('/?landmark=phu-yen-mui-cay-vung-chao&view=tour');
+    await page.locator('#tourCamera').waitFor({state:'visible'});
+    const cape=await page.evaluate(()=>{
+      const {monument,data}=car.sightView,port=roads.point(109.2902731,13.4461723);
+      return {model:monument.data.id,angle:data.viewAngle,expectedAngle:monument.data.views?.[3]?.viewAngle,
+        parkingError:Math.hypot(port.x-car.x,port.z-car.z)};
+    });
+    assert.equal(cape.model,'vinh-xuan-dai');
+    assert.equal(cape.angle,cape.expectedAngle);
+    assert.ok(cape.parkingError<8,'Direct access to the distant cove must park at its own harbour');
+    console.log('PASS Vũng Chào harbour arrival and camera on the shared bay model');
+
     await page.setViewportSize({width:320,height:568});
     await go('/?landmark=osm-node-2089305122&view=tour');
     const panel=page.locator('#tourCamera'),notes=page.locator('#tourInfo summary');

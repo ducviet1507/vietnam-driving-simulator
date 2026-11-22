@@ -5,6 +5,8 @@
 window.sightSecretStories = {
   'ganh-da-dia-den-ganh-den':['beacon','Từ bậc đá đến chân đèn','Qua Gành Đá Đĩa về phía bắc, dấu hiệu nào hiện rõ trên tháp đèn?','Trên những tảng đá ở Gành Đèn, các khoang sơn đỏ và trắng xen nhau trên sáu mặt tháp.'],
   'nui-nhan-tuy-hoa':['wing','Hai dáng hình trên núi Nhạn','Sau khi rời sân tháp gạch, có thể gặp hình cánh nhạn ở đâu?','Ở phía nam ngọn núi, những cánh nhạn trong kiến trúc đài tưởng niệm vươn lên trên mái nhà bia.'],
+  'nha-trung-bay-phu-yen':['arch','Chiếc trống ở lối vào','Từ sân Trần Phú, nhìn vào khoảng trống giữa hai cánh nhà. Nó gợi hình gì?','Khoảng cửa sảnh phác hình chiếc trống đồng. Dải cột trắng phía trên xòe ra như chiếc mũ vua Hùng.'],
+  'vung-su-den-vung-chao':['sail','Hai bờ vũng','Ở bãi thúng dưới chùa Liên Phú, nhìn ra mặt nước có thể thấy gì?','Một cù lao nhỏ phủ cây nằm ngoài Vũng Sứ. Xa hơn về phía bắc là mũi cây và bãi triều Vũng Chào.'],
   'chua-thanh-luong-hai-ho':['drop','Hai mặt nước trong sân chùa','Tượng Quan Âm Nam Hải nhô lên từ hồ nào?','Ở hồ Long Ẩn, bàn tay và vai tượng nhô lên trên mặt nước. Thủy tạ nằm ở hồ Long Thủy, phía trước chính điện.'],
   'tuy-an-mang-lang-o-loan-hon-yen':['shell','Hai hòn ngoài bờ Nhơn Hội','Nhìn từ Mũi Yến ra biển, hòn nào nằm gần đất liền hơn?','Hòn Đụn thấp nằm gần bờ. Qua một khoảng nước nữa là khối Hòn Yến cao hơn, có những vách đá dốc.'],
   'tu-bai-mon-len-mui-dien':['beacon','Từ bãi cát lên ngọn đèn','Từ bãi nhìn thấy đèn biển ở đâu?','Tháp đèn đứng trên mũi núi phía nam Bãi Môn. Men theo lối bộ trên sườn có thể nhìn lại cửa suối trước khi đến khu hải đăng.'],

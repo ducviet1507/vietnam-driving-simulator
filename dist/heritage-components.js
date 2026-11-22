@@ -51,6 +51,16 @@
       {name:'Bờ vịnh nhìn về Bãi Chùa',offset:[370,-570],height:100,viewAngle:-.41,viewRadius:912,viewElevation:.105,viewFov:62,
       description:'Từ phía tây vịnh nhìn về đông bắc, dọc theo bờ có Quốc lộ 29 đến khu di tích Bãi Chùa.'}]};
   const precincts={
+    'osm-way-232410041':{name:'Bảo tàng Phú Yên – Bảo tàng Đắk Lắk cơ sở 2',city:'Tuy Hòa',locality:'151 Trần Phú',formerProvince:'Phú Yên',
+      searchNames:'Bảo tàng Đắk Lắk cơ sở 2 · 151 Trần Phú',
+      start:[109.3018625,13.095609],mappedEntrance:true,visitOnArrival:true,source:'https://daklakvrtour.com/bao-tang-phu-yen.html',
+      arrivalNote:'Xe dừng trên đường Trần Phú trước cổng bảo tàng. Từ cổng, qua sân lát gạch đến hai cánh nhà và sảnh chính.'},
+    'osm-relation-16028816':{city:'Sông Cầu',locality:'Vịnh Xuân Đài',formerProvince:'Phú Yên',start:[109.2943552,13.414665],
+      mappedEntrance:true,visitOnArrival:true,source:'https://daklakvrtour.com/vinh-xuan-dai.html',
+      arrivalNote:'Xe dừng trên đường làng ở Dân Phú 2, gần bờ Vũng Sứ phía dưới chùa Liên Phú.'},
+    'osm-node-5841472185':{city:'Sông Cầu',locality:'Bình Nông, Xuân Thọ',formerProvince:'Phú Yên',start:[109.17807246,13.48849790],
+      mappedEntrance:true,visitOnArrival:true,source:'https://daklakvrtour.com/thac-cay-du.html',
+      arrivalNote:'Xe dừng trên ĐT.644 cạnh lối rẽ vào vườn. Từ đây đi bộ đến lòng suối và bờ đá dưới thác.'},
     'osm-way-1272966043':{name:'Hải đăng Gành Đèn',locality:'An Ninh Đông',formerProvince:'Phú Yên',start:[109.2930776,13.3628725],
       mappedEntrance:true,visitOnArrival:true,arrivalNote:'Xe dừng ở cuối đường dân cư cạnh trạm. Đi bộ theo lối ven ghềnh tới cầu và tháp đèn.'},
     'osm-node-11055944805':{name:'Tháp Nghinh Phong',locality:'Quảng trường Nghinh Phong',formerProvince:'Phú Yên',start:[109.3065001,13.1165356],
@@ -298,6 +308,29 @@
     [1504768248,'Đền Trung – Hùng Vương Tổ miếu','Phú Thọ','Hùng Sơn',105.3240986,21.3690193,105.322450,21.369750,189,'https://denhung.vn/tin-tuc/den-trung'],
   ];
   const existing = new Set(atlas.entries.map(site => site.id));
+  const bay=precincts['osm-relation-16028816'];
+  for(const [id,name,lon,lat,start,index,arrivalNote] of [
+    ['phu-yen-cu-lao-vung-su','Cù lao nhỏ ngoài bãi thúng Vũng Sứ',109.29028,13.41449,bay.start,2,
+      'Xe dừng ở Dân Phú 2. Từ trạm ảnh trên Vũng Sứ, hướng nhìn quay ra cù lao nhỏ đối diện bãi thúng.'],
+    ['phu-yen-mui-cay-vung-chao','Mũi cây và bãi triều Vũng Chào',109.284422,13.447853,[109.2902731,13.4461723],3,
+      'Xe dừng ở cuối đường dân cư trên sân cảng cá Vũng Chào. Góc ngắm từ trên cao nhìn xuống mũi cây và bãi triều ở phía tây bắc cảng.'],
+  ]){
+    if(existing.has(id))continue;
+    atlas.entries.push({...bay,id,name,kind:'Điểm ngắm cảnh',region:'Trung Bộ',province:'Đắk Lắk',lon,lat,start,arrivalNote,
+      approachMeters:Math.round(Math.hypot((lon-start[0])*108280,(lat-start[1])*110900)),viewOf:['vinh-xuan-dai',index],
+      map:'https://www.openstreetmap.org/relation/16028816'});
+  }
+  const museumComponents=[
+    ['phu-yen-canh-nha-bao-tang','Cánh tây nam của Bảo tàng Phú Yên',109.3021277,13.0948197,1],
+    ['phu-yen-sanh-trong-dong','Sảnh trống đồng của Bảo tàng Phú Yên',109.302344,13.094969,2],
+  ];
+  for(const [id,name,lon,lat,index] of museumComponents){
+    if(existing.has(id))continue;
+    const museum=precincts['osm-way-232410041'];
+    atlas.entries.push({...museum,id,name,kind:'Bảo tàng',region:'Trung Bộ',province:'Đắk Lắk',lon,lat,
+      approachMeters:Math.round(Math.hypot((lon-museum.start[0])*108430,(lat-museum.start[1])*110900)),
+      viewOf:['bao-tang-phu-yen',index],map:'https://www.openstreetmap.org/way/232410041'});
+  }
   if(!existing.has('osm-node-11055944805'))atlas.entries.push({
     id:'osm-node-11055944805',...precincts['osm-node-11055944805'],kind:'Công trình kiến trúc',region:'Trung Bộ',province:'Đắk Lắk',city:'Tuy Hòa',
     lon:109.307256,lat:13.1163162,approachMeters:86,map:'https://www.openstreetmap.org/node/11055944805',source:'https://daklakvrtour.com/thap-nghinh-phong.html'});

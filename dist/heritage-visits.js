@@ -2,6 +2,12 @@
 // Anchor a regional visit on an existing road arrival. Each stop keeps its own
 // coordinates and the camera can move out to an island while the car stays parked.
 const heritageVisits=[
+  ['vung-su-den-vung-chao','Vịnh Xuân Đài – từ bãi thúng Vũng Sứ đến mũi cây Vũng Chào',[
+    'osm-relation-16028816','phu-yen-cu-lao-vung-su','phu-yen-mui-cay-vung-chao',
+  ]],
+  ['nha-trung-bay-phu-yen','Bảo tàng Phú Yên – từ sân Trần Phú vào sảnh trống đồng',[
+    'osm-way-232410041','phu-yen-canh-nha-bao-tang','phu-yen-sanh-trong-dong',
+  ]],
   ['ganh-da-dia-den-ganh-den','Từ Gành Đá Đĩa đến hải đăng Gành Đèn',[
     'osm-way-1229067977','osm-way-1272966043',
   ]],

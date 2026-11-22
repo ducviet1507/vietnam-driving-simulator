@@ -886,7 +886,9 @@ function showMonument(monument,viewIndex=0,collection=null,stopId=monument.data.
 async function frameStop(stop){
  const collection=stop.stops?stop:null;
  if(stop.stops)stop=stop.stops[0];
- const location=stop.lookout||stop;
+ // A mapped stop can select a camera kilometres from the model origin.
+ // Load the district containing the model before applying its camera offset.
+ const location=(stop.viewOf&&allStops.get(stop.viewOf[0]))||stop.lookout||stop;
  await VietnamTourism.loadRegion(location.lon,location.lat);
  const {x,z}=roads.point(location.lon,location.lat);
  if(Math.hypot(x-(tourCenter?.x??viewX),z-(tourCenter?.z??viewZ))>285){

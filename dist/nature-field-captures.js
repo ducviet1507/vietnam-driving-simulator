@@ -28,6 +28,10 @@ window.NatureFieldCaptures=(()=>{
     'Chọn “Lối Vào” để xuống sân trước chính điện. Từ đây, “Quan Âm Linh Ứng” dẫn tới điện thờ, còn “Quan Âm Nam Hải” dẫn ra hồ Long Ẩn có tượng nhô lên khỏi mặt nước.');
   const nghinhPhong=phuYen('Quảng trường, khe gió và hai tháp Nghinh Phong','thap-nghinh-phong',40,
     'Chọn “Vào Trong” để nhìn dọc khe giữa hai tháp. “View Bên Hông” mở góc bên sườn. Từ đó có thể ra bờ biển hoặc chuyển sang ảnh ban đêm.');
+  const baoTangPhuYen=phuYen('Từ sân Bảo tàng Phú Yên tới sảnh và các phòng trưng bày','bao-tang-phu-yen',51,
+    'Chọn “Vào Trong” để đến sảnh trống đồng. Hai lối phía đông và phía tây dẫn vào các phòng trưng bày. Ở sân trước, chọn “Khu Ngoài Trời” để đến vườn hiện vật.');
+  const vinhXuanDai=phuYen('Ba vũng ven bờ vịnh Xuân Đài','vinh-xuan-dai',66,
+    'Chọn “Vũng Sứ” để đến vùng nước dưới chùa Liên Phú ở Dân Phú 2. Ở toàn cảnh trung tâm còn có các góc chụp riêng của Vũng Chào và Vũng Mắm.');
   function baiChua(name,scope){
     return phuYen(name,'tau-khong-so',116,'Ảnh mở ở toàn cảnh Bãi Chùa. '+scope);
   }
@@ -48,6 +52,8 @@ window.NatureFieldCaptures=(()=>{
     return {name,source,credit:'Cổng thông tin điện tử Hồ Chí Minh',scope:scope+' Ảnh mở trong tab riêng.'};
   }
   return {
+    'osm-way-232410041':baoTangPhuYen,'phu-yen-canh-nha-bao-tang':baoTangPhuYen,'phu-yen-sanh-trong-dong':baoTangPhuYen,
+    'osm-relation-16028816':vinhXuanDai,'phu-yen-cu-lao-vung-su':vinhXuanDai,'phu-yen-mui-cay-vung-chao':vinhXuanDai,
     'osm-node-4510077892':phuYen('Từ chân Đèo Cả lên đỉnh Đá Bia','nui-da-bia',115,
       'Ảnh mở ở toàn cảnh chân núi. Theo các điểm chuyển cảnh để xem đường bậc, sườn núi và phiến đá trên đỉnh.'),
     'osm-way-151569083':honYen,

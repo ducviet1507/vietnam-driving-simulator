@@ -37,6 +37,8 @@ GRAPHIC = re.compile(r"(?:^|[ _-])(logo|locator|brochure|floor plan|plan of|coat
 
 # Audited Commons file pages for sites without a specific upstream photograph.
 REVIEWED = {
+    "osm-way-232410041": "File:Bảo tàng Phú Yên.jpg",
+    "phu-yen-canh-nha-bao-tang": "File:Phu Yen Museum.JPG",
     "phu-yen-gian-tho-thap-nhan": "File:Nhan Tower 3.jpg",
     "osm-way-1229067977": "File:Basalt rocks at Gành Đá Đĩa.jpg",
     "osm-way-160203374": "File:Bãi Môn (30090810327).jpg",

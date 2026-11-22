@@ -668,3 +668,28 @@ https://vov.vn/du-lich/nhung-con-mat-cua-bien-728528.vov
 https://daklakvrtour.com/ganh-da-dia.html
 https://www.openstreetmap.org/way/800155655
 https://www.openstreetmap.org/way/1241373880
+
+Bảo tàng Phú Yên
+Đường bao bản đồ là cả khu đất bảo tàng. Nhà trưng bày có hai cánh dài và sảnh quay ra sân phía tây bắc. Ảnh chính diện, ảnh cánh tây nam và ảnh 360° bên trong ghi lại ba góc riêng. Mái đo từ ảnh vệ tinh, còn cao độ theo tỷ lệ trong ảnh. Xe dừng tại cổng 151 Trần Phú. Đây là cơ sở 2 của Bảo tàng Đắk Lắk sau quyết định hợp nhất năm 2026.
+https://dsvh.gov.vn/khanh-thanh-bao-tang-phu-yen-va-may-nhiem-vu-can-tiep-tuc-giai-quyet-403
+https://daklakvrtour.com/bao-tang-phu-yen.html
+https://phuyen.baodaklak.vn/kinh-te/202505/kien-truc-doc-dao-cua-bao-tang-phu-yen-8121581/
+https://vpubnd.daklak.gov.vn/CMS/Content/VanBan/2026/11.2026/3709_Q%C4%90_UBND.pdf
+
+Vịnh Xuân Đài
+Đường bờ vịnh lấy theo bản đồ. Hai máy ảnh trên cao của tỉnh có tọa độ riêng ở Vũng Sứ và Vũng Chào. Cảnh Vũng Sứ nhìn về bãi thúng ở Dân Phú 2 dưới chùa Liên Phú. Cảnh Vũng Chào nhìn xuống doi cây và bãi triều. Người đến thẳng Vũng Chào có điểm dừng riêng ở sân cảng cá. Số thúng và mực triều thay đổi theo thời điểm.
+Địa hình lấy mẫu từ Mapzen Terrain Tiles. Tâm, trục và kích thước mái nhà được rút gọn từ đường bao Google Open Buildings v3 (Google Research, CC BY 4.0). Cao độ mái và màu nhà được ước lượng theo ảnh hiện trường.
+https://registry.opendata.aws/terrain-tiles/
+https://sites.research.google/gr/open-buildings/
+https://creativecommons.org/licenses/by/4.0/
+https://daklakvrtour.com/vinh-xuan-dai.html
+https://daklakvrtour.com/chua-lien-phu.html
+https://www.openstreetmap.org/relation/16028816
+https://www.openstreetmap.org/way/800191922
+
+Thác Cây Đu
+Ghim du lịch nằm trong vườn phía nam thác. Sáu ảnh 360° dùng chung một cặp tọa độ mẫu. Vị trí thác được đối chiếu bằng vũng dưới chân thác, hai gờ đá và tấm ván qua dòng thoát trên ảnh vệ tinh và ảnh chụp ngày 22/6/2025. Bề mặt nước mô phỏng mùa nước thấp trong ảnh. Xe dừng trên ĐT.644 cạnh lối rẽ.
+https://daklakvrtour.com/thac-cay-du.html
+https://phuyen.baodaklak.vn/141/220676/vi-vu-o-thac-cay-du.html
+https://www.openstreetmap.org/node/5841472185
+https://www.openstreetmap.org/way/1448358262
