@@ -190,17 +190,31 @@ async function serveGameAsset(request, env, url) {
       if (redirectHttp) url.protocol = "https:";
       return Response.redirect(url.href, 301);
     }
-    if (pathname === "/trailer/qua-mot-khuc-cua.mp4") {
+    const scan = /^\/landmark-scans\/(?:my-son|my-son-g4|den-ngoc-son)\.glb$/.test(pathname);
+    if (scan || pathname === "/trailer/qua-mot-khuc-cua.mp4") {
       const upstreamHeaders = new Headers({"Accept-Encoding":"identity"});
       for (const name of ["Range","If-Range","If-None-Match","If-Modified-Since"]) {
         if (request.headers.has(name)) upstreamHeaders.set(name,request.headers.get(name));
       }
-      const media = await fetch(trailerUrl,{method:request.method,headers:upstreamHeaders});
+      const url = scan ? new URL(".."+pathname,trailerUrl).href : trailerUrl;
+      const options = {method:request.method,headers:upstreamHeaders};
+      let media;
+      try {
+        media = await fetch(url,options);
+      } catch (error) {
+        if (!scan) throw error;
+      }
+      if (scan && (!media || media.status>=500 || [403,404,429].includes(media.status))) {
+        await media?.body?.cancel();
+        const mirror = url.replace(/^https:\/\/raw\.githubusercontent\.com\/([^/]+\/[^/]+)\/([0-9a-f]{40})\//,
+          "https://cdn.jsdelivr.net/gh/$1@$2/");
+        media = await fetch(mirror,options);
+      }
       const headers = new Headers();
       for (const name of ["Accept-Ranges","Content-Range","Content-Length","ETag","Last-Modified","Cache-Control"]) {
         if (media.headers.has(name)) headers.set(name,media.headers.get(name));
       }
-      if (media.ok) headers.set("Content-Type","video/mp4");
+      if (media.ok) headers.set("Content-Type",scan?"model/gltf-binary":"video/mp4");
       return new Response(media.body,{status:media.status,headers});
     }
   }

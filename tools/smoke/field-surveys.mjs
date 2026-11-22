@@ -58,4 +58,22 @@ for(const [id,p] of Object.entries(VietnamHydrography).filter(([,p])=>p.evidence
     assert.ok(distance<.02,id+' has a displaced passage centre');
   }
 }
+const upstream='https://raw.githubusercontent.com/tang-vu/vietnam-driving-simulator/'+'1'.repeat(40)+'/dist/trailer/qua-mot-khuc-cua.mp4';
+const calls=[];
+const workerText=readFileSync(new URL('../../worker/leaderboard.mjs',import.meta.url),'utf8');
+const worker=createContext({URL,Headers,Response,Request,trailerUrl:upstream,
+  fetch:async (url,options)=>{
+    calls.push([String(url),options.method,options.headers.get('Range')]);
+    return String(url).includes('raw.githubusercontent.com')?new Response(null,{status:503}):
+      new Response(new Uint8Array([103,108,84,70]),{status:206,headers:{'Content-Range':'bytes 0-3/32'}});
+  }});
+runInContext(workerText.slice(workerText.indexOf('async function serveGameAsset('),workerText.indexOf('export default')),worker);
+const url=new URL('https://vivu3d.com/landmark-scans/my-son.glb');
+const response=await worker.serveGameAsset(new Request(url,{headers:{Range:'bytes=0-3'}}),{},url);
+assert.equal(response.status,206);assert.equal(response.headers.get('Content-Type'),'model/gltf-binary');
+assert.equal(response.headers.get('Content-Range'),'bytes 0-3/32');
+assert.deepEqual([...new Uint8Array(await response.arrayBuffer())],[103,108,84,70]);
+assert.equal(calls.length,2);assert.equal(calls[1][2],'bytes=0-3');
+assert.ok(calls[0][0].endsWith('/dist/landmark-scans/my-son.glb'));
+assert.ok(calls[1][0].startsWith('https://cdn.jsdelivr.net/gh/tang-vu/vietnam-driving-simulator@'+'1'.repeat(40)+'/dist/'));
 console.log('PASS survey stops, stele measurements, embedded 3D scans, photographic destinations and mapped cave passages');

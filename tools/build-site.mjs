@@ -30,6 +30,11 @@ try {
 }
 // The public trailer streams from this exact GitHub revision through the Worker.
 await rm(path.join(client,trailerPath));
+// The three full-resolution captures stream through the Worker at their
+// public URLs, pinned to the same source revision as the rest of this build.
+for (const name of ["my-son","my-son-g4","den-ngoc-son"]) {
+  await rm(path.join(client,"landmark-scans",name+".glb"));
+}
 await Promise.all([packRoadAssets(client),prepareSightSurfaces(client)]);
 // The Worker serves the original bytes at each public URL.
 async function storeGzip(file) {
