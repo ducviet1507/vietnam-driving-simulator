@@ -396,7 +396,7 @@
     water.grid(18,205,(u,t)=>{
       const z=-31+219*t,u2=2*u-1,d=channel(z)+u2*(line(z)+.22*Math.cos(z*.72+u2*2)+.14*Math.sin(z*.93+u2*4));
       const strands=.58*Math.sin(u*48+1.3*Math.sin(z*.13)+z*.046)+.27*Math.cos(u*76-z*.051);
-      const tint=z<-.8?(a>.85?0x9ea69a:0x688e84):(strands>.11?0xe0e8df:strands>-.42?0xb6cdc3:0x93b4a9);
+      const tint=z<-.8?(Math.abs(u2)>.85?0x9ea69a:0x688e84):(strands>.11?0xe0e8df:strands>-.42?0xb6cdc3:0x93b4a9);
       return [spine(z)+d,granite(z,d)+.19+.055*strands,z,tint,.89+.09*Math.cos(z*.19+u*5)];
     });
     for(const [lo,hi,side] of [[18,46,-1],[57,79,1],[98,134,-1],[146,168,1]]){

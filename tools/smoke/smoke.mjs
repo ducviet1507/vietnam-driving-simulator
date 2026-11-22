@@ -293,6 +293,10 @@ try {
     await page.locator('#complexStop').selectOption('stop/cau-tau-914');
     await page.waitForFunction(()=>document.querySelector('#tourTitle').textContent==='Cầu tàu 914');
     console.log('PASS Atlas heritage routes, stop search and touring from a parked car');
+    await page.goto(base+'/?landmark=thac-do-quyen-bach-ma&view=tour',{waitUntil:'domcontentloaded'});
+    await page.locator('#tourCamera').waitFor({state:'visible'});
+    assert.equal(await page.locator('#tourTitle').innerText(),'Thác Đỗ Quyên');
+    console.log('PASS Bạch Mã waterfall builds on its terrain');
 
     await go('/cup');
     await page.locator('#launch').click();
