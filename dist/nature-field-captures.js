@@ -24,6 +24,8 @@ window.NatureFieldCaptures=(()=>{
   function honNua(name,scope){
     return phuYen(name,'hon-nua',171,'Ảnh mở trên cao ở Hòn Nưa. '+scope);
   }
+  const thanhLuong=phuYen('Hai hồ và chính điện chùa Thanh Lương','chua-thanh-luong',55,
+    'Chọn “Lối Vào” để xuống sân trước chính điện. Từ đây, “Quan Âm Linh Ứng” dẫn tới điện thờ, còn “Quan Âm Nam Hải” dẫn ra hồ Long Ẩn có tượng nhô lên khỏi mặt nước.');
   function baiChua(name,scope){
     return phuYen(name,'tau-khong-so',116,'Ảnh mở ở toàn cảnh Bãi Chùa. '+scope);
   }
@@ -53,6 +55,10 @@ window.NatureFieldCaptures=(()=>{
       'Từ góc toàn cảnh phía đèo Quán Cau, chọn “Cận Cảnh” để ra giữa đầm. Hai điểm “Cầu An Cư” và “Cầu An Hải” cho thấy các dòng nước nối với đầm.'),
     'osm-node-4472649089':phuYen('Từ cầu Bình Phú ra đầm Cù Mông','dam-cu-mong',162,
       'Ảnh mở ở cầu Bình Phú. Chọn hướng bắc để xem vùng bè và các ao ven bờ, hoặc tới cửa đầm để nhìn ra biển.'),
+    'osm-node-12856400201':phuYen('Đền thờ và cây bồ đề ở Long Phụng','den-tho-luong-van-chanh',93,
+      'Từ sân cổng, chọn “Vào Trong” rồi “Đền Thờ” để theo trục vào chính điện. Điểm “Khu Mộ (500m)” mở một khu riêng ngoài sân đền.'),
+    'osm-node-6052212185':thanhLuong,'osm-way-903827683':thanhLuong,'osm-way-903834500':thanhLuong,
+    'osm-way-903834501':thanhLuong,'osm-way-903834502':thanhLuong,
     'osm-way-160203374':muiDien('Bãi Môn và đường men sườn núi','Chọn “Bãi Môn” để xuống bãi cát. Từ đó, “Lên Hải Đăng” đưa bạn lên lối đi có lan can nhìn lại bãi.'),
     'osm-way-909041150':muiDien('Ban công và cầu thang hải đăng Đại Lãnh','Chọn “Hải Đăng” để tới ban công đèn. Từ đây có thể vòng sang mặt tây hoặc vào cầu thang trong tháp.'),
     'phu-yen-bia-mom-rang-dong':muiDien('Bia, sân cờ và chòi nghỉ trên mỏm Rạng Đông','Chọn “Điểm Cực Đông” để tới sân có bia. Từ sân nhìn ngược qua những tảng đá về phía hải đăng trên cao.'),

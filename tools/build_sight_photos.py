@@ -37,6 +37,7 @@ GRAPHIC = re.compile(r"(?:^|[ _-])(logo|locator|brochure|floor plan|plan of|coat
 
 # Audited Commons file pages for sites without a specific upstream photograph.
 REVIEWED = {
+    "osm-way-1229067977": "File:Basalt rocks at Gành Đá Đĩa.jpg",
     "osm-way-160203374": "File:Bãi Môn (30090810327).jpg",
     "osm-way-909041150": "File:Mũi Điện (42093374024).jpg",
     "phu-yen-bia-mom-rang-dong": "File:Dien Cape 3.jpg",

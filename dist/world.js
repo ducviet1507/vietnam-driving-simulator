@@ -845,15 +845,15 @@ const narrowTour=matchMedia('(max-width:720px) and (orientation:portrait), (max-
 function fitTourNotes(){tourInfo.open=!narrowTour.matches;}
 fitTourNotes();narrowTour.addEventListener('change',fitTourNotes);
 tourSummary.onclick=e=>{if($('tourDescription').hidden)e.preventDefault();};
-function showMonument(monument,viewIndex=0,collection=null){
+function showMonument(monument,viewIndex=0,collection=null,stopId=monument.data.id){
  const views=monument.data.views,view=views?.[viewIndex];
  const data=view?{...monument.data,...view,id:monument.data.id,name:monument.data.name}:monument.data;
  const portraitOverview=monument.data.id==='tam-chuc'&&innerWidth<innerHeight;
  const angle=portraitOverview?data.yaw-.27:(data.viewAngle??(data.yaw+.23));
  const [east,south]=view?.offset??[0,0];
- car.sightView={monument,data,x:monument.x+east,z:monument.z+south,height:view?.height??monument.height,
+ car.sightView={monument,data,stopId,x:monument.x+east,z:monument.z+south,height:view?.height??monument.height,
    angle,elevation:data.viewElevation??.27,zoom:1,hour:$('tourLight').value===''?null:Number($('tourLight').value)};
- const visit=visitsByStop.get(monument.data.id);
+ const visit=collection||visitsByStop.get(stopId)||visitsByStop.get(monument.data.id);
  $('tourZoom').value='1';sightPhotos.select(monument.data);
  fieldViews.select(monument.data,collection||visit);
  const description=[data.description,data.arrivalNote].filter(Boolean).join(' ');
@@ -900,7 +900,7 @@ async function frameStop(stop){
  if(stop===tamChucOverview)return showMonument({data:stop,x,z,height:75});
  if(stop.viewOf){
    const [modelId,view]=stop.viewOf,site=gfx.nearLandmark(x,z,modelId);
-   if(site?.data.views?.[view])return showMonument(site,view,collection);
+   if(site?.data.views?.[view])return showMonument(site,view,collection,stop.id);
  }
  const authored=gfx.nearLandmark(x,z,stop.id);
  const approach=roads.point(...stop.start),dx=approach.x-x,dz=approach.z-z;
@@ -981,7 +981,7 @@ $('complexStop').onchange=async e=>{
  const collection=e.target.value.startsWith('visit/')?regionalVisits.find(v=>'visit/'+v.id===e.target.value):null;
  const stopId=e.target.value.startsWith('stop/')?e.target.value.slice(5):null;
  if(!collection&&!stopId&&mode==='tour'&&car.sightView?.monument.data.views){
-   showMonument(car.sightView.monument,Number(e.target.value));return;
+   showMonument(car.sightView.monument,Number(e.target.value),null,car.sightView.stopId);return;
  }
  const stop=collection||(stopId?destinations.find(s=>s.id===stopId):e.target.value==='tam-chuc'?tamChucOverview:tamChucParts.find(s=>s.id===e.target.value));
  if(mode!=='tour'||!stop)return;
@@ -1173,7 +1173,7 @@ for(const model of models){
  for(const site of local.length?local:tourismSites){
    const d=(site.lon-model.lon)**2+(site.lat-model.lat)**2;
    if(d<best){best=d;closest=site;}
-   if(d<.003**2&&(normalize(model.name)===normalize(site.name)||model.map&&model.map===site.map))modeledStops.set(site.id,model);
+   if(!site.viewOf&&d<.003**2&&(normalize(model.name)===normalize(site.name)||model.map&&model.map===site.map))modeledStops.set(site.id,model);
  }
  if(model.catalogId)modeledStops.set(model.catalogId,model);
  if(closest){model.region??=closest.region;model.province??=closest.province;}
@@ -1206,6 +1206,12 @@ const regionalVisits=heritageVisits.map(([id,name,ids])=>{
  for(const stop of stops)visitsByStop.set(stop.id,visit);
  return visit;
 }).filter(Boolean);
+// A precinct may consist entirely of separate mapped stops around one model.
+// Its canonical Atlas card should also offer the itinerary.
+for(const visit of regionalVisits)for(const stop of visit.stops){
+ const modelId=stop.viewOf?.[0];
+ if(modelId&&!visitsByStop.has(modelId))visitsByStop.set(modelId,visit);
+}
 const destinations=[...models,...regionalVisits,...mountainPlaces,...catalog];
 VietnamTourism.onEntries=sites=>{
  for(const site of sites){
@@ -1495,7 +1501,7 @@ async function fetchJSON(path){const r=await fetch(path);if(!r.ok)throw Error('C
      if(view==='tour'&&mode==='tour'&&params.has('goc')){
        const monument=car.sightView?.monument;
        const index=monument?.data.views?.findIndex(v=>v.id===params.get('goc'));
-       if(index>=0)showMonument(monument,index);
+       if(index>=0)showMonument(monument,index,null,car.sightView.stopId);
      }
      if(direct&&mode==='tour'&&view!=='tour'){
        const button=$(view==='plan'?'sitePlan':'fieldView');

@@ -3,6 +3,7 @@
 // Clues belong to the tour camera. The little scenes in the reveals are original
 // keepsakes inspired by the place, including the imagined voices and movements.
 window.sightSecretStories = {
+  'chua-thanh-luong-hai-ho':['drop','Hai mặt nước trong sân chùa','Tượng Quan Âm Nam Hải nhô lên từ hồ nào?','Ở hồ Long Ẩn, bàn tay và vai tượng nhô lên trên mặt nước. Thủy tạ nằm ở hồ Long Thủy, phía trước chính điện.'],
   'tuy-an-mang-lang-o-loan-hon-yen':['shell','Hai hòn ngoài bờ Nhơn Hội','Nhìn từ Mũi Yến ra biển, hòn nào nằm gần đất liền hơn?','Hòn Đụn thấp nằm gần bờ. Qua một khoảng nước nữa là khối Hòn Yến cao hơn, có những vách đá dốc.'],
   'tu-bai-mon-len-mui-dien':['beacon','Từ bãi cát lên ngọn đèn','Từ bãi nhìn thấy đèn biển ở đâu?','Tháp đèn đứng trên mũi núi phía nam Bãi Môn. Men theo lối bộ trên sườn có thể nhìn lại cửa suối trước khi đến khu hải đăng.'],
   'bai-huong-ra-hon-nua':['sail','Qua vịnh tới bãi cát','Rời Bãi Hương bằng ca nô, bãi cát chính nằm ở mặt nào của Hòn Nưa?','Bãi nằm ở phía tây đảo, giữa các doi đá. Từ trên bãi có thể nhìn ngược về bờ vịnh Vũng Rô.'],

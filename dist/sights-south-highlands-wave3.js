@@ -331,54 +331,6 @@
     }
   }
 
-  // 7. Chùa Thanh Lương (Tuy An, Đắk Lắk / Phú Yên) — Coral-stone & coconut-shell pagoda with Hồ Vô Cực emerging Quan Âm!
-  function chuaThanhLuong(T, kit) {
-    const { box, stamp, round, tapered } = kit;
-    const coral = 0xded4be, coralDark = 0xb8ad96, coconutWood = 0x4e3222, tile = 0x8e422e, gold = 0xdba944, emeraldPool = 0x26858a, marble = 0xf2f0ea;
-    kit.palette({tile, stone: marble});
-
-    // Coastal coral-stone courtyard
-    box(0xc5bba4, 0, 0.16, 1.0, 28, 0.32, 26);
-
-    // Signature Hồ Vô Cực (Emerald Infinity Pool) on front-right with the famous emerging white Quan Âm Bồ Tát!
-    const px = 4.6, pz = 6.2;
-    box(coralDark, px, 0.38, pz, 11.4, 0.62, 7.8);
-    box(emeraldPool, px, 0.54, pz, 10.4, 0.34, 6.8);
-    // Floating carved white-marble bust & serene outstretched hand emerging gracefully from the emerald pool
-    tapered(marble, px - 1.2, 1.32, pz - 0.2, 1.55, 0.92, 1.45, 0.8, 12); // emerging shoulders & robe
-    const qHead = new T.SphereGeometry(0.68, 12, 10);
-    stamp(qHead, marble, px - 1.2, 2.52, pz - 0.2);
-    qHead.dispose();
-    tapered(marble, px - 1.2, 3.25, pz - 0.2, 0.45, 0.26, 0.55, 1, 8); // Buddhist topknot & veil
-    // Emerging blessing hand rising from the water beside her
-    tapered(marble, px + 2.2, 1.45, pz + 0.6, 0.44, 0.28, 1.55, 0.7, 8, 0, 0, -0.18);
-
-    // Porous coral-rock & coconut-shell sculpted Tam Quan gate on front-left
-    const gx = -5.6, gz = 8.4;
-    A.vaultedBay(T, kit, gx, gz, 4.8, 4.4, 1.45, 2.2, 2.2, coral, coconutWood, coralDark);
-    A.curvedRoof(T, kit, gx, 4.45, gz, 5.8, 3.2, 0.96, tile, coral, gold, 0.28, { dragons: true, goldColor: gold });
-    A.plaque(T, kit, 'CHÙA THANH LƯƠNG', gx, 3.92, gz + 1.18, 4.0, 0.64, { bg: '#4f301e', fg: '#f8df7c' });
-
-    // Main Chánh Điện crafted with pale coral-stone walls, dark coconut-shell timber columns & double curved roofs
-    const hz = -4.6;
-    box(coralDark, 0, 0.58, hz, 17.6, 1.16, 10.6);
-    A.steps(kit, 0, hz + 5.8, 5.8, 1.4, 4, 0.28, 0.38, 0xa89f8b);
-    box(coral, 0, 3.0, hz - 0.3, 15.0, 3.7, 8.2);
-    for (let i = -3; i <= 3; i++) {
-      stamp(round, coconutWood, i * 2.3, 3.0, hz + 4.15, 0.20, 3.7, 0.20);
-    }
-    A.curvedRoof(T, kit, 0, 4.88, hz, 18.0, 10.8, 1.65, tile, coral, gold, 0.32);
-    box(coconutWood, 0, 7.05, hz, 11.2, 1.65, 6.2);
-    A.curvedRoof(T, kit, 0, 7.9, hz, 13.2, 8.2, 1.9, tile, coral, gold, 0.30, { dragons: true, goldColor: gold });
-
-    A.trees(T, kit, [
-      { x: -11.8, z: -6.8, h: 9.2, kind: 'palm' },
-      { x: 11.8, z: -6.8, h: 9.6, kind: 'palm' },
-      { x: -11.4, z: 7.2, h: 8.6, kind: 'palm' },
-      { x: 12.2, z: 7.4, h: 8.8, kind: 'palm' }
-    ]);
-  }
-
   // 8. Viện Hải dương học Nha Trang (1922) — Classic yellow French coastal villa overlooking Nha Trang Bay
   function vienHaiDuongHoc(T, kit) {
     const { box, stamp, round, outline } = kit;
@@ -676,17 +628,6 @@
       source:'https://daklak.gov.vn/dia-danh-di-tich-thang-canh/-/asset_publisher/bDngMUmMrWIw/content/biet-ien-bao-ai',
       map:'https://www.openstreetmap.org/way/242705749',
       build: bietDienBaoDaiBmt
-    },
-    {
-      id: 'chua-thanh-luong', name: 'Chùa Thanh Lương (Tuy An)', city: 'Tuy An', province: 'Đắk Lắk', region: 'Trung Bộ',
-      lon: 109.295771, lat: 13.181695, start: [109.295870, 13.181490], yaw: 0.442,
-      width: 28, depth: 26,
-      solids: [[0, -4.6, 8.8, 5.4], [4.6, 6.2, 5.7, 3.9], ...A.archPiers(-5.6, 8.4, 4.8, 1.45, 2.2)],
-      description: 'Ngôi chùa độc đáo xây dựng từ đá san hô biển và gáo dừa tại xã An Chấn, Tuy An, nổi tiếng với Hồ Vô Cực xanh ngọc và tượng Quan Thế Âm Bồ Tát ẩn hiện trên mặt nước.',
-      photo: 'https://vietnamtourism.gov.vn/',
-      source: 'https://vietnamtourism.gov.vn/',
-      map: 'https://www.openstreetmap.org/?mlat=13.181695&mlon=109.295771#map=18/13.181695/109.295771',
-      build: chuaThanhLuong
     },
     {
       id: 'vien-hai-duong-hoc-nha-trang', name: 'Viện Hải dương học Nha Trang', city: 'Nha Trang', province: 'Khánh Hòa', region: 'Trung Bộ',

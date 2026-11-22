@@ -51,6 +51,10 @@
       {name:'Bờ vịnh nhìn về Bãi Chùa',offset:[370,-570],height:100,viewAngle:-.41,viewRadius:912,viewElevation:.105,viewFov:62,
       description:'Từ phía tây vịnh nhìn về đông bắc, dọc theo bờ có Quốc lộ 29 đến khu di tích Bãi Chùa.'}]};
   const precincts={
+    'osm-node-6052212185':{name:'Chùa Thanh Lương',locality:'Mỹ Quang Nam',formerProvince:'Phú Yên',start:[109.2956876,13.1809668],
+      mappedEntrance:true,visitOnArrival:true,arrivalNote:'Xe dừng ở sân phía nam. Từ sân theo lối bộ đến chính điện, điện Quan Âm và hai hồ.'},
+    'osm-node-12856400201':{name:'Đền thờ Lương Văn Chánh',locality:'Long Phụng, Phú Hòa 2',formerProvince:'Phú Yên',start:[109.2373975,13.0911589],
+      mappedEntrance:true,visitOnArrival:true,arrivalNote:'Xe dừng trên đường làng trước cổng ngoài. Từ tam quan đi bộ qua sân và cây bồ đề đến chính điện.'},
     'osm-way-160203374':{name:'Bãi Môn',locality:'Mũi Điện',formerProvince:'Phú Yên',start:baiMonParking,
       mappedEntrance:true,visitOnArrival:true,source:baiMonSource,
       arrivalNote:'Xe rẽ từ Quốc lộ 29 vào đường dịch vụ, dừng ở khu vé và sân đỗ trước cầu bộ. Từ đây đi bộ xuống bãi cát hoặc theo lối lên hải đăng.'},
@@ -286,6 +290,27 @@
     [1504768248,'Đền Trung – Hùng Vương Tổ miếu','Phú Thọ','Hùng Sơn',105.3240986,21.3690193,105.322450,21.369750,189,'https://denhung.vn/tin-tuc/den-trung'],
   ];
   const existing = new Set(atlas.entries.map(site => site.id));
+  // The national import merged the hall outline into the pagoda pin. The
+  // measured hall and the ponds now have individual views within the grounds.
+  delete atlas.aliases['osm-way-903827683'];
+  const thanhLuongParking=precincts['osm-node-6052212185'].start;
+  for(const [way,name,kind,lon,lat,view] of [
+    [903827683,'Chính điện san hô ở chùa Thanh Lương','Chùa',109.2957709,13.1816945,1],
+    [903834500,'Điện Quan Âm Linh Ứng','Chùa',109.2954311,13.1818768,2],
+    [903834501,'Hồ Long Thủy và thủy tạ','Hồ',109.2954481,13.1814855,3],
+    [903834502,'Hồ Long Ẩn và tượng Quan Âm Nam Hải','Hồ',109.2951457,13.1818254,0]
+  ]){
+    const id='osm-way-'+way;if(existing.has(id))continue;
+    atlas.entries.push({id,name,kind,lon,lat,region:'Trung Bộ',province:'Đắk Lắk',formerProvince:'Phú Yên',city:'Tuy An',locality:'Chùa Thanh Lương',
+      start:thanhLuongParking,approachMeters:Math.round(Math.hypot((lon-thanhLuongParking[0])*108400,(lat-thanhLuongParking[1])*110900)),
+      viewOf:['chua-thanh-luong',view],mappedEntrance:true,visitOnArrival:true,map:'https://www.openstreetmap.org/way/'+way,
+      source:'https://daklakvrtour.com/chua-thanh-luong.html'});
+  }
+  if(!existing.has('osm-way-1229067977'))atlas.entries.push({
+    id:'osm-way-1229067977',name:'Gành Đá Đĩa',kind:'Ghềnh đá',region:'Trung Bộ',province:'Đắk Lắk',formerProvince:'Phú Yên',city:'Tuy An',locality:'Phú Hạnh',
+    lon:109.29363,lat:13.35419,start:[109.2932594,13.3572872],approachMeters:346,mappedEntrance:true,visitOnArrival:true,
+    map:'https://www.openstreetmap.org/way/1229067977',source:'https://dsvh.gov.vn/ganh-da-dia-tinh-phu-yen-3307',
+    arrivalNote:'Xe dừng ở lối vào bãi đỗ phía bắc khu tham quan. Theo đường bộ qua cổng rồi xuống bậc để tới bãi đá.'});
   if(!existing.has('phu-yen-loi-xuong-bai-huong'))atlas.entries.push({
     id:'phu-yen-loi-xuong-bai-huong',name:'Lối xuống bè ở Bãi Hương',kind:'Bến thuyền',region:'Trung Bộ',
     province:'Đắk Lắk',formerProvince:'Phú Yên',city:'Vũng Rô',locality:'Bãi Hương',lon:109.4291764,lat:12.8811792,

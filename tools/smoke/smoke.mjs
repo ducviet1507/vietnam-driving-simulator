@@ -274,6 +274,9 @@ try {
       return packs.filter(Boolean);
     });
     assert.deepEqual(invalidPacks,[],'Regional model registrations must match their Atlas entries');
+    const hallView=await page.evaluate(()=>catalogStop('osm-way-903827683')?.viewOf);
+    assert.deepEqual(hallView,['chua-thanh-luong',1],'The mapped hall must retain its own camera even when the pagoda uses the same map link');
+    assert.equal(await page.evaluate(()=>visitsByStop.get('chua-thanh-luong')?.id),'chua-thanh-luong-hai-ho');
     console.log('PASS nationwide Atlas search and regional model loading');
     const sameCosts=await page.evaluate(async()=>{
       const path='/route-network/costs-15.gz';

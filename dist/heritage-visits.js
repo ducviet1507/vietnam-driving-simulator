@@ -2,6 +2,9 @@
 // Anchor a regional visit on an existing road arrival. Each stop keeps its own
 // coordinates and the camera can move out to an island while the car stays parked.
 const heritageVisits=[
+  ['chua-thanh-luong-hai-ho','Chùa Thanh Lương – chính điện, điện Quan Âm và hai hồ',[
+    'osm-way-903827683','osm-way-903834501','osm-way-903834500','osm-way-903834502',
+  ]],
   ['bai-huong-ra-hon-nua','Từ Bãi Hương ra Hòn Nưa – bãi cát, ghềnh đá và hải đăng',[
     'phu-yen-loi-xuong-bai-huong','osm-way-50540459','osm-way-481006392','osm-way-481006394','osm-way-1272966044',
   ]],
