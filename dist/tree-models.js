@@ -9,7 +9,11 @@ function createTreeModels(T){
   if(!treeGeometryTemplates.has(T))treeGeometryTemplates.set(T,new Map());
   const templates=treeGeometryTemplates.get(T);
   let distantMaterial;
-  const atlas=roadsideTreeAtlas??=new T.TextureLoader().load('streetscape/tree-canopies.webp');
+  if(!roadsideTreeAtlas){
+    const compact=globalThis.matchMedia?.('(pointer: coarse)').matches && document.body.dataset.graphics!=='high';
+    roadsideTreeAtlas=new T.TextureLoader().load(compact?'streetscape/tree-canopies-mobile.webp':'streetscape/tree-canopies.webp');
+  }
+  const atlas=roadsideTreeAtlas;
   atlas.colorSpace=T.SRGBColorSpace;
   atlas.userData.sightShared=true;
   atlas.anisotropy=4;

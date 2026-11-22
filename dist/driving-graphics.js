@@ -13,7 +13,9 @@ function createDrivingGraphics(renderer, camera, sun) {
   // Mobile core counts include efficiency cores and do not predict GPU throughput.
   const initial = touch || cores <= 4 || memory <= 4 ? 0 : cores >= 8 && memory >= 8 ? 2 : 1;
   const autoCeiling = touch ? 1 : profiles.length - 1;
+  const touchDensity = [.9, 1.25, 1.5];
   let level = initial, preference, previous = null, duration = 0, frames = 0, slow = 0, fast = 0, recoverAfter;
+  let density = 0, smooth = 0, onTime = 0, sharpenAfter = 2;
   let width = 0, height = 0, ratio = 0;
   let verySlow = 0, reduced = false;
   const shadows = renderer.shadowMap.enabled;
@@ -21,7 +23,7 @@ function createDrivingGraphics(renderer, camera, sun) {
 
   function resetSamples() {
     previous = null;
-    duration = frames = slow = fast = verySlow = 0;
+    duration = frames = slow = fast = verySlow = smooth = onTime = 0;
   }
   function choose() {
     const selected = document.body.dataset.graphics || 'auto';
@@ -30,12 +32,16 @@ function createDrivingGraphics(renderer, camera, sun) {
     const fixed = profiles.findIndex(profile => profile.id === selected);
     level = fixed < 0 ? initial : fixed;
     reduced = false;
+    density = 0;
+    sharpenAfter = 2;
     recoverAfter = touch ? 30 : 12;
     resetSamples();
   }
   function lowerQuality() {
     if (level > 0) level--;
+    else if (touch && preference === 'auto' && density > 0) density--;
     else reduced = true;
+    sharpenAfter = 12;
     recoverAfter = 45;
     resetSamples();
   }
@@ -56,13 +62,29 @@ function createDrivingGraphics(renderer, camera, sun) {
     // Bound the influence of a single tile load or shader compilation.
     duration += Math.min(delta, 100);
     frames++;
+    if (delta <= 25) onTime++;
     if (duration < 1000) return;
     const average = duration / frames;
-    slow = average > (level === 0 ? 34 : 23) ? slow + 1 : 0;
+    const mobileAuto = touch && preference === 'auto';
+    const slowLimit = level > 0 ? 23 : density > 0 ? 32 : 34;
+    slow = average > slowLimit ? slow + 1 : 0;
+    // Streaming may miss an individual frame even when most draws have headroom.
+    const steady = onTime >= frames * .7 && average < (density === 0 ? 28 : 24);
+    smooth = steady ? smooth + 1 : 0;
     fast = average < 18.5 ? fast + 1 : 0;
-    duration = frames = 0;
+    duration = frames = onTime = 0;
     if (slow >= 2 && !reduced) {
       lowerQuality();
+    } else if (mobileAuto && smooth >= (reduced ? 2 : sharpenAfter) && (reduced || density < touchDensity.length - 1)) {
+      // Spend spare frame time on road markings first. Shadows, reflections
+      // and the streamed district retain their own, slower recovery threshold.
+      if (reduced) {
+        reduced = false;
+      } else {
+        density++;
+        sharpenAfter = 4;
+      }
+      smooth = 0;
     } else if (fast >= recoverAfter && (reduced || preference === 'auto' && level < autoCeiling)) {
       if (reduced) reduced = false;
       else level++;
@@ -72,7 +94,10 @@ function createDrivingGraphics(renderer, camera, sun) {
   function resize() {
     const profile = profiles[level], w = canvas.clientWidth, h = canvas.clientHeight;
     if (!w || !h) return;
-    const scale = Math.min(window.devicePixelRatio || 1, profile.dpr, Math.sqrt(profile.pixels / (w * h))) * (reduced ? .64 : 1);
+    const mobileAuto = touch && preference === 'auto';
+    const dpr = mobileAuto ? touchDensity[density] : profile.dpr;
+    const pixels = mobileAuto ? Math.min(1200000, profiles[0].pixels * (dpr / touchDensity[0]) ** 2) : profile.pixels;
+    const scale = Math.min(window.devicePixelRatio || 1, dpr, Math.sqrt(pixels / (w * h))) * (reduced ? .64 : 1);
     const shadowMap = shadows && level > 0;
     if (renderer.shadowMap.enabled !== shadowMap) {
       renderer.shadowMap.enabled = shadowMap;

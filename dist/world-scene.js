@@ -86,10 +86,7 @@
     const asphaltOrigin=new T.Vector2();
     material.glass.emissive.setHex(0xda9e60);material.glass.emissiveIntensity=0;
     const weather=createDrivingWeather(T,scene,sun,material.asphalt);
-    const stoneNormal=skyLoader.load('streetscape/surfaces/cut-rock-normal.webp');
-    stoneNormal.wrapS=stoneNormal.wrapT=T.RepeatWrapping;
-    material.cut=new T.MeshStandardMaterial({map:texture('surfaces/cut-rock-color.webp',true),normalMap:stoneNormal,
-      normalScale:new T.Vector2(.62,.62),roughness:.96,side:T.DoubleSide,color:0xbcb5a6});
+    material.cut=new T.MeshStandardMaterial({normalScale:new T.Vector2(.62,.62),roughness:.96,side:T.DoubleSide,color:0xbcb5a6});
     material.fern=new T.MeshLambertMaterial({map:texture('surfaces/bank-fern.webp'),alphaTest:.38,side:T.DoubleSide,color:0xd6dfd1});
     const foliageEye=new T.Vector3();
     material.fern.onBeforeCompile=shader=>{
@@ -907,6 +904,11 @@
       if(cutVerts.length){
         const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(cutVerts,3));
         g.setAttribute('uv',new T.Float32BufferAttribute(cutUv,2));g.setIndex(cutIndices);g.computeVertexNormals();
+        if(!material.cut.map){
+          material.cut.map=texture('surfaces/cut-rock-color.webp',true);
+          material.cut.normalMap=skyLoader.load('streetscape/surfaces/cut-rock-normal.webp');
+          material.cut.normalMap.wrapS=material.cut.normalMap.wrapT=T.RepeatWrapping;
+        }
         const bank=new T.Mesh(g,material.cut);bank.name='Exposed rock cuttings';bank.castShadow=true;bank.receiveShadow=true;roadGroup.add(bank);
       }
       // A continuous folded W-beam follows the low shoulder above a drop.
@@ -1123,7 +1125,7 @@
         const structure=bridges.bridgeInfo(s.source)?bridges:tunnels;
         return structure.height(s.source,s.station+u);
       }
-      if(bridges)buildBridgeMeshes(T,{...bridges,graph,cx,cz,radius:cutoff,group:roadGroup,material,ground:terrain.ground,registerObstacle,railRoads,roadHeight});
+      if(bridges)yield* buildBridgeMeshSteps(T,{...bridges,graph,cx,cz,radius:cutoff,group:roadGroup,material,ground:terrain.ground,registerObstacle,railRoads,roadHeight});
       if(tunnels?.edges.length)buildTunnelMeshes(T,{...tunnels,graph,cx,cz,radius:cutoff,group:roadGroup,material,ground:terrain.ground,registerObstacle});
       const groundAt=drivingSurface(bridges,tunnels,pavementLift,roadway,shoreBed,cx,cz);
       const showPeople=yield* streetLife.prepare(graph,cx,cz,segments,(x,z,r)=>!blocked(x-cx,z-cz,r)&&!contact(x,z,r));

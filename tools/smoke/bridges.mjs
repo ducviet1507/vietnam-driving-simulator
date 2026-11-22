@@ -78,10 +78,13 @@ function renderRails(cx,cz,otherY){
       len,w:meshWorld.worldRoadHalfWidth(source),source,station:source.dist[i]};
   }));
   const group=new T.Group(),hits=[];
-  meshWorld.buildBridgeMeshes(T,{edges:[ramp],graph:junction,cx,cz,radius:240,group,
+  const steps=meshWorld.buildBridgeMeshSteps(T,{edges:[ramp],graph:junction,cx,cz,radius:240,group,
     material:{asphalt:new T.MeshLambertMaterial()},ground:()=>0,height:()=>7,
     bridgeInfo:()=>({ranges:[[0,ramp.length]],bridge:true}),railRoads:()=>surfaces,
     roadHeight:s=>s.source===main?otherY:7,registerObstacle:o=>hits.push(o)});
+  let slices=0;
+  for(const _ of steps)slices++;
+  assert.ok(slices>1,'yield during construction of the mapped bridge');
   group.updateMatrixWorld(true);
   return {group,hits:hits.filter(o=>o.id.startsWith('bridge:'))};
 }

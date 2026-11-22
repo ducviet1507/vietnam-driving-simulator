@@ -13,10 +13,11 @@
   }
   // Positions stay in graph metres until they are written to a render buffer.
   // A new district origin therefore does not move an expansion joint or a pier.
-  window.buildBridgeMeshes=function(T,options){
+  function* buildBridgeMeshSteps(T,options){
     const {edges,graph,cx,cz,radius,group,material,height,ground,bridgeInfo,registerObstacle,signatureHeight}=options;
     if(!graph)return;
     const kit=assets(T,material),decks=new Map(),faces=[],colors=[],poses=[],tints=[];
+    let work=0;
     let activeDeck;
     const tint=new T.Color(),matrix=new T.Matrix4();
     const inRange=(x,z,margin=0)=>Math.hypot(x-cx,z-cz)<=radius+margin;
@@ -120,6 +121,7 @@
       for(const other of graph.nearby(row.x,row.z,12)){
         if(other===edge)continue;
         const gap=width(other)+1.75;
+        if(row.x<other.minX-gap||row.x>other.maxX+gap||row.z<other.minZ-gap||row.z>other.maxZ+gap)continue;
         for(let i=1;i<other.points.length;i++){
           const a=other.points[i-1],b=other.points[i];
           if(row.x<Math.min(a.x,b.x)-gap||row.x>Math.max(a.x,b.x)+gap||
@@ -345,6 +347,7 @@
           stations.sort((a,b)=>a-b);
           let prev=row(from,i);
           for(const s of stations.slice(1)){
+            if((++work&7)===0)yield;
             if(s-prev.s<.0001)continue;
             const next=row(s,i);
             ribbon(prev,next,-w,w,.004,0,w);
@@ -402,6 +405,7 @@
         if(type==='floating'||type==='low_water_crossing')continue;
         const gap=suspended.get(edge);
         for(let k=1;k<bays;k++){
+          if((++work&7)===0)yield;
           if(gap&&start+bay*k>gap[0]&&start+bay*k<gap[1])continue;
           for(const delta of [0,-5,5,-9,9]){
             if(Math.abs(delta)>=bay*.37)continue;
@@ -417,6 +421,7 @@
     const footWays=[],ends=new Map();
     const pointKey=p=>Math.round(p.x*100)+','+Math.round(p.z*100);
     for(const way of options.footbridges||[]){
+      if((++work&15)===0)yield;
       const points=[],dist=[];
       let length=0,visible=false;
       for(const p of way.points){
@@ -437,6 +442,7 @@
       for(const p of points)top=Math.max(top,ground(p.x,p.z)+clearance);
       for(let j=1;j<points.length;j++){
         const a=points[j-1],b=points[j],dx=b.x-a.x,dz=b.z-a.z;
+        if((++work&7)===0)yield;
         for(const road of graph.nearby((a.x+b.x)/2,(a.z+b.z)/2,Math.hypot(dx,dz)/2+2)){
           const profile=bridgeInfo(road);
           if(!profile||profile.layer>=(foot.layer||1))continue;
@@ -481,6 +487,7 @@
       return ground(p.x,p.z)+6.1+Math.max(0,(foot.layer||1)-1)*6.8;
     }
     for(const foot of footWays){
+      yield;
       const {points,length,half,kind}=foot,first=points[0],last=points.at(-1);
       const bottom=ground(first.x,first.z)+.06;
       const top=foot.top??landingHeight(foot,last);
@@ -491,6 +498,7 @@
       if(stairs)for(let i=1;i<rises;i++)stations.add(i*length/rises);
       let a=row(0);
       for(const s of [...stations].sort((u,v)=>u-v)){
+        if((++work&15)===0)yield;
         if(s-a.s<.0001)continue;
         const b=row(s);
         if(inRange((a.x+b.x)/2,(a.z+b.z)/2,(s-a.s)/2+half)){
@@ -537,10 +545,12 @@
       const m=new T.Mesh(g,mat);m.name=name;m.castShadow=m.receiveShadow=true;group.add(m);
     }
     for(const {finish,positions,uv,carriageway} of decks.values()){
+      yield;
       const attributes=[['uv',uv,2]];
       if(finish==='asphalt')attributes.push(['carriageway',carriageway,2]);
       mesh(positions,material[finish],'Mapped bridge decks',attributes);
     }
+    if(faces.length)yield;
     mesh(faces,kit.faces,'Bridge fascia and markings',[['color',colors,3]]);
     if(tints.length){
       const members=new T.InstancedMesh(kit.box,kit.beams,tints.length);
@@ -549,5 +559,9 @@
       tints.forEach((color,i)=>members.setColorAt(i,tint.setHex(color)));
       group.add(members);
     }
+  }
+  window.buildBridgeMeshSteps=buildBridgeMeshSteps;
+  window.buildBridgeMeshes=function(T,options){
+    for(const step of buildBridgeMeshSteps(T,options)){ /* Finish synchronous builds. */ }
   };
 })();

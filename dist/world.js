@@ -129,13 +129,17 @@ function loadJourneyRenderer(){
 async function prepareWorld(graph,token){
  const progress=text=>{if(token===loadToken&&!$('grid').hidden)$('loadStatus').textContent=text;};
  progress('Đang dựng cảnh quanh '+$('journeyTitle').textContent+'…');
- await loadJourneyRenderer();
- if(token!==loadToken)return false;
- gfx??=createWorldScene($('world'),breakfastCall);
- gfx.preloadVehicle(car.model);gfx.resetFx();
- loadStructuresNear(graph,car.x,car.z);
- await Promise.all([gfx.terrainReady,Promise.resolve(departureWaterReady).then(()=>streamWater(graph)),gfx.loadDistrict(graph,car.x,car.z),
-   VietnamTourism.loadRegion(...graph.geo(car.x,car.z))]);
+ await Promise.all([
+   loadJourneyRenderer().then(()=>{
+     if(token!==loadToken)return;
+     gfx??=createWorldScene($('world'),breakfastCall);
+     gfx.preloadVehicle(car.model);gfx.resetFx();
+     loadStructuresNear(graph,car.x,car.z);
+     return Promise.all([gfx.terrainReady,gfx.loadDistrict(graph,car.x,car.z)]);
+   }),
+   Promise.resolve(departureWaterReady).then(()=>{if(token===loadToken)return streamWater(graph);}),
+   VietnamTourism.loadRegion(...graph.geo(car.x,car.z))
+ ]);
  if(token!==loadToken)return false;
  progress('Đang nối mặt đường và đặt xe vào làn…');
  if(!await refreshView(gfx.loadRoads)||token!==loadToken)return false;
