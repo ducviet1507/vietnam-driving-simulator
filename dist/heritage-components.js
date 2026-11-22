@@ -56,6 +56,12 @@
       description:'Từ phía tây vịnh nhìn về đông bắc, dọc theo bờ có Quốc lộ 29 đến khu di tích Bãi Chùa.'}]};
   const laVangGate=[107.1947094,16.7101806],laVangMap='https://maps.giolelavang.com/';
   const precincts={
+    'osm-node-6346469056':{name:'Bia thành Đồng Hới và đoạn tường bên cầu Nam Thành',city:'Đồng Hới',locality:'Cầu Nam Thành',
+      formerProvince:'Quảng Bình',start:[106.6234532,17.465947],mappedEntrance:true,visitOnArrival:true,
+      source:'https://vnexpress.net/dau-tich-thoi-vua-minh-mang-con-lai-o-thanh-dong-hoi-3295094.html'},
+    'dong-hoi-mui-thanh-dong-bac':{name:'Mũi thành đông bắc Đồng Hới và lối đi ven hào',city:'Đồng Hới',locality:'Thành Đồng Hới',
+      formerProvince:'Quảng Bình',start:[106.6238226,17.4710593],mappedEntrance:true,visitOnArrival:true,map:'https://www.openstreetmap.org/way/940795265',
+      source:'https://commons.wikimedia.org/?curid=148222144'},
     'osm-node-10756203755':{name:'Bảo tàng Quảng Trị – cơ sở Đồng Hới (Bảo tàng Quảng Bình)',city:'Đồng Hới',locality:'Thành Đồng Hới',
       formerProvince:'Quảng Bình',lon:106.623951,lat:17.468279,start:[106.6232646,17.4681344],mappedEntrance:true,visitOnArrival:true,
       source:'https://dulich.quangtri.gov.vn/vi/baotangtinhquangtri'},
@@ -360,6 +366,12 @@
   ];
   const existing = new Set(atlas.entries.map(site => site.id));
   const monumentStops=[
+    ['osm-node-6346469056','Bia thành Đồng Hới và đoạn tường bên cầu Nam Thành',106.6233244,17.4663521,'osm-node-6346469056',null,null],
+    ['dong-hoi-tuong-gach-cau-nam','Tường gạch cũ bên cầu Nam Thành',106.623244,17.466321,'osm-node-6346469056','bia-thanh-dong-hoi',1],
+    ['dong-hoi-mui-thanh-dong-bac','Mũi thành đông bắc Đồng Hới và lối đi ven hào',106.623923,17.470658,'dong-hoi-mui-thanh-dong-bac',null,null],
+    ['dong-hoi-loi-gach-mui-thanh','Lối gạch ven hào ở mũi thành đông bắc',106.6235936,17.4704832,'dong-hoi-mui-thanh-dong-bac','mui-thanh-dong-bac-dong-hoi',1],
+    ['dong-hoi-san-trong-cua-dong','Sân trong Cửa Đông thành Đồng Hới',106.624246,17.46771,'dong-hoi-cua-dong','cua-dong-thanh-dong-hoi',2],
+    ['dong-hoi-bac-gac-cua-dong','Bậc gạch và ô hoa trên gác Cửa Đông',106.624333,17.467813,'dong-hoi-cua-dong','cua-dong-thanh-dong-hoi',3],
     ['dong-hoi-cua-dong','Cửa Đông thành Đồng Hới',106.624457,17.467728,'dong-hoi-cua-dong',null,null],
     ['osm-way-319395915','Cầu đá qua hào Cửa Đông thành Đồng Hới',106.6246531,17.4677601,'osm-way-319395915',null,null],
     ['dong-hoi-tu-cau-vao-thanh','Từ cầu đá nhìn vào gác Cửa Đông',106.624825,17.46778,'osm-way-319395915','cau-da-cua-dong-dong-hoi',1],

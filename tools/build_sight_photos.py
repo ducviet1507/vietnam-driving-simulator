@@ -37,6 +37,9 @@ GRAPHIC = re.compile(r"(?:^|[ _-])(logo|locator|brochure|floor plan|plan of|coat
 
 # Audited Commons file pages for sites without a specific upstream photograph.
 REVIEWED = {
+    "dong-hoi-mui-thanh-dong-bac": "File:Một góc thành Đồng Hới.jpg",
+    "dong-hoi-san-trong-cua-dong": "File:Một đoạn Thành cổ Đồng Hới, Quảng Bình.jpeg",
+    "dong-hoi-bac-gac-cua-dong": "File:Dong Hoi Citadel Gate.JPG",
     "osm-node-10756203755": "File:Bảo tàng Tổng hợp Quảng Bình.jpeg",
     "dong-hoi-cua-dong": "File:Bảo tàng Tổng hợp Quảng Bình.jpeg",
     "osm-node-5323866724": "File:Cau Nhat Le.JPG",

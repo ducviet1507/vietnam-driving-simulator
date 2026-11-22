@@ -72,8 +72,9 @@ function buildBridgeProfiles(graph,details={}){
     for(const edge of chain){
       const info=record(edge),extra=details[edge.id]||{};
       Object.assign(info,extra,{bridge:true,layer:extra.layer??1,ranges:[[0,edge.length]]});
+      const terrainLift=Number.isFinite(extra.terrainLift)?extra.terrainLift:clearance;
       info.top=info.structure==='low_water_crossing'||info.structure==='floating'?.55:
-        Math.max(.8,navigation,clearance+(tier-1)*6.8);
+        Math.max(.8,navigation,terrainLift+(tier-1)*6.8);
       for(const node of [edge.start,edge.end]){
         if(!pinned(node))levels.set(node,Math.max(levels.get(node)||0,info.top));
       }

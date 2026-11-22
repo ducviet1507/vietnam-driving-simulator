@@ -54,7 +54,7 @@ function createSightGrounds(T,small,source){
   const occupiedCells=new Map();
   let mask,fixtures=[],streetFurniture=[],originX=0,originZ=0;
   let memorialAt=()=>false;
-  let fenceModels=[],wallModels=[];
+  let fenceModels=[],wallModels=[],cityWallModels=[];
   async function loadLayer(layer,graph,x,z){
     const {base,states,cache}=layer;
     const [lon,lat]=graph.geo(x,z),reach=span*.5+180;
@@ -153,6 +153,7 @@ function createSightGrounds(T,small,source){
     memorialAt=memorialGroundsNear(graph,cx,cz);
     fenceModels=(landmarks?.active||[]).filter(site=>site.data.replacesFence);
     wallModels=(landmarks?.active||[]).filter(site=>site.data.replacesWall);
+    cityWallModels=(landmarks?.active||[]).filter(site=>site.data.replacesCityWall);
     occupiedCells.clear();streetFurniture=[];
     for(const [kind,id,lon,lat,height,diameter,tags] of datasets[1].states.get(graph)?.rows||[]){
       if((++work & 127)===0)yield;
@@ -436,7 +437,7 @@ function createSightGrounds(T,small,source){
         continue;
       }
       const fence=kind==='fence'||kind==='railing';
-      const replacements=fence?fenceModels:kind==='wall'?wallModels:null;
+      const replacements=fence?fenceModels:kind==='wall'?wallModels:kind==='city_wall'?cityWallModels:null;
       const closedFence=['wall','brick','dry_stone','stone','concrete','concrete_block','sheet'].includes(skin);
       let along=0;
       for(let i=1;i<ring.length;i++){
@@ -453,7 +454,7 @@ function createSightGrounds(T,small,source){
           const t=j/n,u=(j+1)/n,x=ax+dx*t,z=az+dz*t,xx=ax+dx*u,zz=az+dz*u,mx=(x+xx)/2,mz=(z+zz)/2;
           if(replacements?.some(site=>{
             const dx=mx+originX-site.x,dz=mz+originZ-site.z;
-            const replaces=fence?site.data.replacesFence:site.data.replacesWall;
+            const replaces=fence?site.data.replacesFence:kind==='city_wall'?site.data.replacesCityWall:site.data.replacesWall;
             return replaces(dx*site.c-dz*site.s,dx*site.s+dz*site.c);
           }))continue;
           if(Math.hypot(mx,mz)>reach||(kind==='avenue'?blocked:mappedBlocked)(mx,mz,.16,kind==='pier'||kind==='retaining_wall'))continue;

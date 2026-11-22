@@ -2,6 +2,9 @@
 // Anchor a regional visit on an existing road arrival. Each stop keeps its own
 // coordinates and the camera can move out to an island while the car stays parked.
 const heritageVisits=[
+  ['dau-tich-tuong-thanh-dong-hoi','Tường thành Đồng Hới – từ bia cầu Nam Thành đến mũi đông bắc',[
+    'osm-node-6346469056','dong-hoi-tuong-gach-cau-nam','dong-hoi-san-trong-cua-dong','dong-hoi-bac-gac-cua-dong','dong-hoi-mui-thanh-dong-bac','dong-hoi-loi-gach-mui-thanh',
+  ]],
   ['thanh-dong-hoi-tu-hao-den-bao-tang','Thành Đồng Hới – qua hào Cửa Đông đến sân bảo tàng',[
     'osm-way-319395915','dong-hoi-tu-cau-vao-thanh','dong-hoi-cua-dong','dong-hoi-bao-tang-tu-hao','osm-node-10756203755','dong-hoi-mai-bao-tang',
   ]],

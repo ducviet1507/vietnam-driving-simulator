@@ -261,6 +261,11 @@ def build(source, roads, traffic, output):
         if kind not in classes or not permitted(way):
             continue
         attributes = mapped_details(way.tags)
+        # The paired Nam Thành carriageways cross a recessed moat. The
+        # photographs beside the citadel marker show their approach meeting
+        # the pavement at grade. This is a terrain-relative rendering offset.
+        if way.id in (969759026, 969759027):
+            attributes["terrainLift"] = .8
         if not attributes:
             continue
         refs = [(n.ref, round(n.lon * 100000), round(n.lat * 100000)) for n in way.nodes if n.location.valid()]

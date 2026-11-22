@@ -3,6 +3,7 @@
 // Clues belong to the tour camera. The little scenes in the reveals are original
 // keepsakes inspired by the place, including the imagined voices and movements.
 window.sightSecretStories = {
+  'dau-tich-tuong-thanh-dong-hoi':['arch','Góc gấp của hào','Từ phía Quách Xuân Kỳ nhìn về thành, dòng nước rẽ ở đâu?','Đến mũi đông bắc, hào đổi hướng ôm theo hai cạnh của thành. Lối gạch đỏ trên bờ cũng gấp theo góc đó.'],
   'thanh-dong-hoi-tu-hao-den-bao-tang':['arch','Một vòm qua hào','Từ bờ hào có thể đếm được bao nhiêu vòm dưới cầu Cửa Đông?','Một vòm cuốn có diềm gạch đỏ nằm giữa thân cầu đá xám. Qua đầu kia của cầu mới đến vòm thứ hai, nằm dưới gác canh của cửa thành.'],
   'dong-hoi-ven-song-nhat-le':['sail','Phù điêu bên mái chèo','Ở phía đường Quách Xuân Kỳ có thể thấy gì dưới chân tượng Mẹ Suốt?','Các gương mặt được chạm nổi trên mũi thuyền. Phía hướng ra sông có những nếp đá hình sóng.'],
   'quang-binh-quan-hai-mat-cong':['arch','Hai mặt của cổng','Bên nào của Quảng Bình Quan mở ra khu vườn nhỏ?','Mặt có vòm gạch và khu vườn quay về đường Lê Lợi. Phía đối diện, từ đường Quang Trung có thể thấy các bậc lên gác.'],

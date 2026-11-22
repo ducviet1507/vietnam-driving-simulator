@@ -140,4 +140,19 @@ const eastDistrict=world.createBridgeDistrict(dongHoi,[eastRoad],0,0,()=>0);
 for(const fraction of [.01,.5,.99])assert.ok(eastDistrict.authoredAt(eastRoad,eastRoad.length*fraction));
 const outside=dongHoi.point(...eastBridge.start);
 assert.ok(dongHoi.nearest(outside.x,outside.z,[eastRoad]).error>2**2);
+// Both carriageways of Nam Thanh meet the pavement beside the historic tablet.
+// The adjacent arterial bridge still uses the standard deck profile.
+const details=JSON.parse(readFileSync(new URL('../../dist/vn-bridges/details.json',import.meta.url),'utf8'));
+const nearbyIds=[3487877,3487878,34637];
+dongHoi.edges=new Map();dongHoi.nodes=new Map();
+for(const id of nearbyIds){
+  const road=dongHoi.decodeEdge(sourceRows.find(row=>row[0]===id));
+  road.traffic={bridge:true};dongHoi.edges.set(id,road);
+  for(const node of [road.start,road.end]){
+    if(!dongHoi.nodes.has(node))dongHoi.nodes.set(node,[]);
+    dongHoi.nodes.get(node).push(road);
+  }
+}
+const decks=world.buildBridgeProfiles(dongHoi,details.edges);
+for(const id of nearbyIds)assert.equal(decks.profiles.get(id).top,id===34637?6.8:.8);
 console.log('Bridge decks, approaches, stacked crossings, Nga Ba Hue slip-road clearance and road tracking passed.');

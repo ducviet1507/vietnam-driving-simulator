@@ -24,6 +24,10 @@
       'Cầu đá đưa lối vào vòm gạch đỏ. Trên vòm là gác canh màu trắng và hai tầng mái ngói của cửa thành đã tôn tạo.'),
     camera(gateYaw,'Vòm cầu trên hào phía đông',[0,1.9,17],[24,3.1,39],54,gateReport,'dong-hoi-vom-cau-thanh',
       'Từ mép hào phía ngoài, nhìn xiên qua thành cầu đá xám để thấy vòm gạch bắc qua mặt nước.'),
+    camera(gateYaw,'Cửa Đông nhìn từ sân trong thành',[1.6,5.4,-1.5],[2.4,1.8,-22.8],49,'https://commons.wikimedia.org/?curid=93540701','dong-hoi-san-trong-cua-dong',
+      'Từ trong sân nhìn qua vòm ra cầu đá. Hai bên lối qua cổng là trụ gạch và tường cong che bậc lên gác.'),
+    camera(gateYaw,'Bậc gạch lên gác và ô hoa tròn',[3.4,6.1,-1.5],[11.8,2.2,-11.4],56,'https://commons.wikimedia.org/?curid=23559025','dong-hoi-bac-gac-cua-dong',
+      'Từ phía bắc sân trong nhìn dọc tường gạch cong lên gác. Những ô hoa tròn nằm hai bên cửa vòm của tầng dưới.'),
   ];
   function mesh(T,k,color,verts){
     const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(verts,3));g.computeVertexNormals();
@@ -121,24 +125,51 @@
       }
     }
     k.box(0xab8269,0,5.99,0,8.58,.30,4.97);
-    // The restored white lookout has an open front arch, two round flank
-    // ornaments and a second, smaller pavilion below its upper tiled roof.
-    function opening(y,w,h,r,depth){
-      const sh=new T.Shape(),spring=h-.5-r;
-      sh.moveTo(-w/2,0);sh.lineTo(-r,0);sh.lineTo(-r,spring);sh.absarc(0,spring,r,pi,0,true);
-      sh.lineTo(r,0);sh.lineTo(w/2,0);sh.lineTo(w/2,h);sh.lineTo(-w/2,h);sh.closePath();
-      for(const sign of [-1,1])k.profile(sh,white,0,y,sign*depth/2-.16,.32);
-      for(const sign of [-1,1])k.box(white,sign*(w/2-.16),y+h/2,0,.32,h,depth);
+    // Photographs from the inner yard show an arch on each face of the
+    // lower lookout and flower-pattern ventilators in the upper storey.
+    const rim=new T.TorusGeometry(1,.10,6,24),disc=new T.CircleGeometry(1,24);
+    function storey(y,w,d,h,r,flowers){
+      for(let side=0;side<4;side++){
+        const angle=side*pi/2,c=Math.cos(angle),s=Math.sin(angle);
+        const width=side%2?d:w,depth=side%2?w:d;
+        const sh=new T.Shape(),spring=h-.4-r;
+        sh.moveTo(-width/2,0);
+        if(r){sh.lineTo(-r,0);sh.lineTo(-r,spring);sh.absarc(0,spring,r,pi,0,true);sh.lineTo(r,0);}
+        sh.lineTo(width/2,0);sh.lineTo(width/2,h);sh.lineTo(-width/2,h);sh.closePath();
+        const wall=new T.ExtrudeGeometry(sh,{depth:.24,bevelEnabled:false});
+        wall.rotateY(angle);k.stamp(wall,white,s*depth/2,y,c*depth/2);wall.dispose();
+        for(const f of flowers){
+          const offset=f*width,rad=r?.36:.30;
+          const x=c*offset+s*(depth/2+.255),z=-s*offset+c*(depth/2+.255),cy=y+h*.54;
+          k.stamp(disc,0x777465,x,cy,z,rad,rad,rad,angle);
+          k.stamp(rim,edge,x+s*.022,cy,z+c*.022,rad,rad,rad,angle);
+          for(let petal=0;petal<6;petal++){
+            const theta=petal*pi/3,dx=Math.sin(theta)*rad*.47,dy=Math.cos(theta)*rad*.47;
+            k.stamp(rim,white,x+c*dx+s*.036,cy+dy,z-s*dx+c*.036,rad*.31,rad*.32,rad*.29,angle);
+          }
+        }
+      }
     }
-    opening(6.17,5.44,2.52,.62,3.40);
-    for(const z of [-1.90,1.90])for(const x of [-1.8,1.8]){
-      const rim=new T.TorusGeometry(.38,.07,6,20);k.stamp(rim,edge,x,7.47,z);rim.dispose();
+    storey(6.17,5.32,4.12,2.52,.68,[-.31,.31]);
+    k.box(edge,0,8.69,0,5.93,.18,4.76);
+    A.curvedRoof(T,k,0,8.79,0,6.88,5.48,1.0,tile,0x90785e,0xb19d7e,.24);
+    storey(9.67,3.14,2.65,1.84,0,[0]);
+    k.box(edge,0,11.52,0,3.73,.16,3.21);
+    A.curvedRoof(T,k,0,11.60,0,4.48,3.79,.83,tile,0x90785e,0xb19d7e,.23);
+    rim.dispose();disc.dispose();
+    for(const sign of [-1,1]){
+      k.box(brick,sign*3.12,1.70,-3.18,1.19,3.40,1.43);
+      ring(T,k,0x9a8268,sign*3.12,-3.18,3.40,3.84,1.47,1.69,.42,.55);
+      for(let i=0;i<25;i++){
+        const y=.24+i*.233,x=sign*(12.86-i*.36);
+        k.box(i%3?0x9b7057:0xa27960,x,y/2,-2.05,.37,y,1.41);
+      }
+      const p=new T.Shape();p.moveTo(sign*4.2,-.4);p.lineTo(sign*13.21,-.4);p.lineTo(sign*13.21,.58);
+      p.quadraticCurveTo(sign*11.4,4.17,sign*7.2,5.69);p.quadraticCurveTo(sign*5.55,6.30,sign*4.2,6.28);p.closePath();
+      k.profile(p,brick,0,0,-3.16,.45);
+      const line=new T.CatmullRomCurve3([[13.21,.58],[11.78,2.72],[9.76,4.38],[7.2,5.69],[5.5,6.14],[4.20,6.28]].map(([x,y])=>new T.Vector3(sign*x,y,-2.95)));
+      const cap=new T.TubeGeometry(line,22,.10,7);k.stamp(cap,0xa99b84,0,0,0);cap.dispose();
     }
-    k.box(edge,0,8.69,0,5.72,.18,3.66);
-    A.curvedRoof(T,k,0,8.79,0,6.82,4.86,1.0,tile,0x90785e,0xb19d7e,.24);
-    opening(9.67,3.14,1.84,.39,2.39);
-    k.box(edge,0,11.52,0,3.42,.16,2.67);
-    A.curvedRoof(T,k,0,11.60,0,4.16,3.32,.83,tile,0x90785e,0xb19d7e,.23);
     for(const side of [-1,1])k.box(0xb2a799,side*.90,5.46,2.36,1.10,.45,.09);
     const first=k.group.children.length;
     A.trees(T,k,[{x:26,z:-15,h:7.3,width:6.8},{x:33,z:-12,h:8.3,width:7.1},
