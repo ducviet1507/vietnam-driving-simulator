@@ -246,8 +246,9 @@ async function serveGameAsset(request, env, url) {
   const packedScript = /^\/[^/]+\.js$/.test(pathname) ||
     /^\/(?:journey-data|stage-terrain)\/[^/]+\.m?js$/.test(pathname);
   const packedDocument = isPage || /^\/page-content\/[^/]+\.bin$/.test(pathname);
-  const packedJson = pathname === "/vn-roads/overview.json" || pathname === "/vn-structures/source-index.json";
-  if (["GET","HEAD"].includes(request.method) && (packedModel || packedScript || packedDocument || packedJson)) {
+  const packedJson = pathname.endsWith(".json");
+  const packedCss = pathname.endsWith(".css");
+  if (["GET","HEAD"].includes(request.method) && (packedModel || packedScript || packedDocument || packedJson || packedCss)) {
     url.pathname += ".gz";
     const input = new Headers(request.headers);
     // Byte ranges on the public URL refer to the decoded asset.
@@ -261,6 +262,7 @@ async function serveGameAsset(request, env, url) {
       headers.delete("Content-Disposition");
       headers.set("Content-Type",packedModel ? "model/gltf-binary" :
         packedScript ? "text/javascript; charset=utf-8" :
+        packedCss ? "text/css; charset=utf-8" :
         packedJson ? "application/json; charset=utf-8" : "application/octet-stream");
       headers.set("Accept-Ranges","bytes");
       const body = request.method === "HEAD" ? null : await RoadTileCodec.content(response);

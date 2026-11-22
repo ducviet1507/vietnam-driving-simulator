@@ -37,6 +37,9 @@ GRAPHIC = re.compile(r"(?:^|[ _-])(logo|locator|brochure|floor plan|plan of|coat
 
 # Audited Commons file pages for sites without a specific upstream photograph.
 REVIEWED = {
+    "osm-way-506959800": "File:Ho T'Nung (2).jpg",
+    "osm-node-1730268393": "File:Buôn Ma Thuột - buildings at Exile House former prison Apr 2024 05.jpg",
+    "osm-node-10314905409": "File:The Lac giao tabernacle.jpg",
     "osm-way-242705749": "File:Biệt Điện Bảo Đại.jpg",
     "osm-way-52823719": "File:Biet thu Bao Dai 1.JPG",
     "osm-relation-17189466": "File:Rungtram 1.jpg",

@@ -45,6 +45,17 @@ assert.ok(lakVisit.includes(lakeResidence)&&!lakVisit.includes(cityResidence));
 assert.ok(NatureFieldCaptures[cityResidence].some(scene=>scene.url.endsWith('#node13')));
 assert.ok(!(NatureFieldCaptures[lakeResidence]||[]).some(scene=>scene.url.includes('ban-do-so-du-lich-daklak')));
 const jun=VietnamTourism.entries.find(site=>site.id==='dak-lak-ben-thuyen-buon-jun');
+// The lake polygon, statue and offshore pin share the car park. The pine
+// avenue through the tea fields has its own roadside arrival north of the lake.
+const pleikuGate=[107.9993443,14.0342026];
+for(const id of ['osm-way-506959800','osm-node-13105153109','osm-node-13105118510','osm-node-3600339699']){
+  assert.deepEqual([...VietnamTourism.entries.find(site=>site.id===id).start],pleikuGate,id);
+}
+const teaAvenue=VietnamLandmarks.entries.find(site=>site.catalogId==='osm-way-741701880');
+assert.deepEqual([...teaAvenue.start],[108.0121527,14.0635859]);
+const prison=VietnamLandmarks.entries.find(site=>site.catalogId==='osm-node-1730268393');
+assert.deepEqual([...prison.start],[108.0473086,12.6757888],'Use the Phạm Hồng Thái visitor entrance');
+assert.ok(NatureFieldCaptures[prison.catalogId].some(scene=>scene.url.endsWith('/tour/446/index.html')));
 const eastShore=VietnamTourism.entries.find(site=>site.id==='osm-node-1765142229');
 assert.ok(lakVisit.includes(jun.id)&&lakVisit.includes(eastShore.id));
 assert.ok(jun.lon+.012<eastShore.lookout.lon,'The village landing is west of the resort peninsula');

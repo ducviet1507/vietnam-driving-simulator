@@ -3,6 +3,8 @@
 // Clues belong to the tour camera. The little scenes in the reveals are original
 // keepsakes inspired by the place, including the imagined voices and movements.
 window.sightSecretStories = {
+  'buon-ma-thuot-biet-dien-nha-day-dinh-lac-giao':['arch','Sân đình giữa phố','Qua cổng đình Lạc Giao ở đường Điện Biên Phủ, bạn thấy gì dưới tán cây trước chính điện?','Bình phong và đôi hạc đứng trong sân gạch. Từ sân nhìn vào có thể thấy hai cột rồng đỡ mái hiên chính điện.'],
+  'bien-ho-pleiku-mui-dau-rua':['lotus','Đài sen trên mũi đất','Ở đầu mũi Đầu Rùa, bộ phận nào nằm giữa thân tượng trắng và bệ tám cạnh?','Đó là đài sen cao 3 m. Từ lối đi quanh sân, có thể nhìn qua lan can xuống mặt hồ ở cả hai phía mũi đất.'],
   'ho-lak-buon-jun-biet-dien':['sail','Từ mũi buôn Jun','Con đường nào dẫn đến bến thuyền ở đầu mũi buôn Jun?','Đường Y Jút đi dọc mũi đất rồi gặp đường lát ven bờ. Từ đầu bến có thể nhìn qua lòng hồ tới những dải đồi xa.'],
   'pho-cu-go-cong':['arch','Ba nếp nhà của đình','Từ phố Phan Chu Trinh, ba nếp nhà của Đình Trung nối nhau theo thứ tự nào?','Phía chợ là võ ca. Qua võ quy ở giữa mới đến chánh điện. Cách đó một quãng đi bộ, Nhà Đốc Phủ Hải có tiền sảnh quay ra đường Hai Bà Trưng.'],
   'sa-dec-nha-co-lang-hoa':['leaf','Chậu hoa trên mặt nước','Trong nhà vườn Tân Quy Đông, người trồng kê chậu hoa lên đâu?','Những hàng chậu nằm trên giàn bắc phía trên mặt nước. Lối nhỏ giữa các giàn giúp người trồng tiếp cận từng luống để chăm hoa.'],

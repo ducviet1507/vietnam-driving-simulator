@@ -38,6 +38,35 @@
   atlas.aliases['osm-way-1228794103']='osm-relation-15805643';
   atlas.aliases['osm-node-1805807506']='osm-way-1244769154';
   const precincts={
+    // The museum moved the visitor entrance to 27 Phạm Hồng Thái in 2022.
+    // The older Atlas pin remains at the west wall, next to Tán Thuật.
+    'osm-node-1730268393':{name:'Nhà đày Buôn Ma Thuột',kind:'Di tích',locality:'Buôn Ma Thuột',
+      start:[108.0473086,12.6757888],mappedEntrance:true,visitOnArrival:true,
+      source:'https://www.daklakmuseum.vn/tin-tuc-su-kien/bai-viet/thong-bao-thay-doi-cong-vao-tham-quan-di-tich-lich-su-quoc-gia-dac-biet-nha-day-buon-ma-thuot',
+      arrivalNote:'Xe dừng ở đường Phạm Hồng Thái, đầu lối vào số 27. Từ đây đi khoảng 52 m tới cổng phía nam khu di tích.'},
+    'osm-node-10314905409':{name:'Đình Lạc Giao',kind:'Đình',locality:'Buôn Ma Thuột',start:[108.0421400,12.6821865],mappedEntrance:true,visitOnArrival:true,
+      source:'https://www.daklakmuseum.vn/tin-tuc-su-kien/bai-viet/di-tich-lich-su-dinh-lac-giao-noi-bao-luu-nhung-gia-tri-truyen-thong?lng=vi',
+      arrivalNote:'Địa chỉ đình là 67 Phan Bội Châu. Xe dừng trên đường Điện Biên Phủ, ở phía cổng chính mở vào sân đình.'},
+    // The polygon and the second pin both represent Lake T'Nưng. Public cars
+    // stop outside the gate. The tip, trail fork and statue are distinct features.
+    'osm-way-506959800':{name:'Biển Hồ (hồ Tơ Nưng)',locality:'Biển Hồ',start:[107.9993443,14.0342026],mappedEntrance:true,visitOnArrival:true,
+      lookout:{lon:107.99979,lat:14.040096,kind:'Điểm ngắm cảnh'},
+      source:'https://bienho.gialai.gov.vn/thong-bao-van-ban-moi/gioi-thieu-diem-van-hoa-du-lich-tren-dia-ban-xa-bien-ho.html',
+      views:[{name:'Từ đầu mũi nhìn ra lòng hồ',offset:[17,-109],height:14,viewAngle:-.15,viewRadius:103,viewElevation:.037,
+        description:'Từ mũi đất nhô ra giữa hồ, nhìn về dải bờ phía bắc.'},
+        {name:'Hai phía mặt nước quanh mũi Đầu Rùa',offset:[0,28],height:5,viewAngle:-2.33,viewRadius:144,viewElevation:.39,
+          description:'Mặt nước ôm lấy hai bên mũi đất. Sân tượng và đoạn đường dạo nằm ở đầu bán đảo.'}],
+      arrivalNote:'Xe dừng cạnh bãi trước cổng. Theo đường thông và bậc đá đến mũi Đầu Rùa để ngắm hai phía mặt hồ.'},
+    'osm-node-13105153109':{name:'Biển Hồ Pleiku',locality:'Biển Hồ',start:[107.9993443,14.0342026],mappedEntrance:true,visitOnArrival:true,
+      lookout:{lon:107.99979,lat:14.040096,kind:'Điểm ngắm cảnh'},viewOf:['mui-ngam-bien-ho-pleiku',2],
+      arrivalNote:'Xe dừng cạnh bãi trước cổng. Mặt hồ nhìn thấy từ lan can của mũi Đầu Rùa.'},
+    'osm-node-3600339699':{name:'Lối ra mũi Đầu Rùa ở Biển Hồ',locality:'Biển Hồ',start:[107.9993443,14.0342026],mappedEntrance:true,visitOnArrival:true,
+      source:'https://bienho.gialai.gov.vn/thong-bao-van-ban-moi/gioi-thieu-diem-van-hoa-du-lich-tren-dia-ban-xa-bien-ho.html',
+      arrivalNote:'Xe dừng ở bãi trước cổng. Theo lối đi tới đoạn rẽ ở đầu mũi đất, cách sân tượng khoảng 70 m.',
+      views:[{name:'Từ lối rẽ nhìn lên sân tượng',offset:[26,-56],height:12,viewAngle:-.426,viewRadius:61,viewElevation:.10,
+        description:'Đường đi dọc sống đất giữa hai phía mặt nước. Sân tượng nằm ở đầu mũi về phía đông bắc.'},
+        {name:'Đường đi trên sống đất',offset:[10,-20],height:3.5,viewAngle:1.82,viewRadius:96,viewElevation:.43,
+          description:'Từ trên cao có thể lần theo lối đi ra đầu mũi Đầu Rùa.'}]},
     // This old viewpoint is inland. Serve the eastern peninsula from the
     // mapped service-road junction with Âu Cơ (n677443064), at Lắk Resort.
     'osm-node-1765142229':{name:'Bờ đông nam hồ Lắk',locality:'Liên Sơn',kind:'Điểm ngắm cảnh',
@@ -188,6 +217,22 @@
     [1504768248,'Đền Trung – Hùng Vương Tổ miếu','Phú Thọ','Hùng Sơn',105.3240986,21.3690193,105.322450,21.369750,189,'https://denhung.vn/tin-tuc/den-trung'],
   ];
   const existing = new Set(atlas.entries.map(site => site.id));
+  // w741701880 is the named tea parcel. Its centroid marks the crop on the
+  // map; the visit starts at the pull-off on the pine avenue w741701067.
+  if(!existing.has('osm-way-741701880'))atlas.entries.push({
+    id:'osm-way-741701880',name:'Biển Hồ Chè – hàng thông trăm tuổi',region:'Trung Bộ',province:'Gia Lai',locality:'Biển Hồ',
+    kind:'Điểm ngắm cảnh',lon:108.0129715,lat:14.0660232,start:[108.0121527,14.0635859],approachMeters:285,mappedEntrance:true,visitOnArrival:true,
+    map:'https://www.openstreetmap.org/way/741701880',
+    source:'https://bienho.gialai.gov.vn/thong-bao-van-ban-moi/gioi-thieu-diem-van-hoa-du-lich-tren-dia-ban-xa-bien-ho.html',
+    arrivalNote:'Xe dừng cạnh lề đường thông. Từ đây nhìn qua hàng cây có thể thấy các luống chè ở phía đông nam đường.'
+  });
+  if(!existing.has('osm-node-13105118510'))atlas.entries.push({
+    id:'osm-node-13105118510',name:'Tượng Quán Thế Âm ở mũi Đầu Rùa',region:'Trung Bộ',province:'Gia Lai',city:'Pleiku',locality:'Biển Hồ',
+    kind:'Tượng đài',lon:107.9998797,lat:14.0401163,start:[107.9993443,14.0342026],approachMeters:658,mappedEntrance:true,visitOnArrival:true,
+    map:'https://www.openstreetmap.org/node/13105118510',
+    source:'https://bienho.gialai.gov.vn/thong-bao-van-ban-moi/gioi-thieu-diem-van-hoa-du-lich-tren-dia-ban-xa-bien-ho.html',
+    arrivalNote:'Xe dừng cạnh bãi ở cổng Biển Hồ. Từ đó đi bộ theo đường thông và bậc đá khoảng 680 m tới sân tượng.'
+  });
   // The residence and provincial museum stand in the same grounds. w242705749
   // is the residence itself, south of the museum building w239932350.
   if(!existing.has('osm-way-242705749'))atlas.entries.push({

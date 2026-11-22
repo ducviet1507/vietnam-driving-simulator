@@ -31,6 +31,18 @@ window.NatureFieldCaptures=(()=>{
     return {name,source,credit:'Cổng thông tin điện tử Hồ Chí Minh',scope:scope+' Ảnh mở trong tab riêng.'};
   }
   return {
+    'osm-node-10314905409':[
+      dakLak(41,'Cổng đình Lạc Giao','Nhìn từ mặt phố vào cổng và bức tường bao dưới tán cây.'),
+      dakLak(39,'Sân trước chính điện','Từ sân lát gạch có thể nhìn bao quát chính điện, dãy nhà bên và cây cổ thụ.'),
+      dakLak(35,'Hiên trước chính điện','Góc từ hàng cột nhìn ra sân và quay vào các cánh cửa gỗ.'),
+      dakLak(36,'Gian thờ chính','Nhìn quanh bàn thờ, đồ thờ, các hàng cột và bộ binh khí nghi lễ.')
+    ],
+    'osm-node-1730268393':[
+      dakLak(146,'Toàn cảnh Nhà đày Buôn Ma Thuột','Ảnh trên cao cho thấy tường bao và các dãy nhà mái ngói trong khu di tích.'),
+      dakLak(147,'Bên trong dãy lao','Ảnh ghi lại không gian trưng bày với các tượng tái hiện sinh hoạt của tù nhân bên sạp nằm.'),
+      ...phuYen('Từ cổng vào các dãy lao','nha-day-buon-ma-thuot',446,
+        'Bắt đầu ở cổng vàng. Theo các mũi tên trong ảnh để đến sân giữa, các dãy lao, nhà tưởng niệm, phòng trưng bày và khu xà lim.')
+    ],
     'biet-dien-bao-dai-bmt':[
       dakLak(5,'Sân và cầu thang biệt điện','Từ sân phía nam nhìn lên hiên vàng giữa hai đầu hồi.'),
       dakLak(6,'Hành lang trên hiên','Từ đầu cầu thang nhìn dọc hiên và qua cửa vào phòng trưng bày.'),

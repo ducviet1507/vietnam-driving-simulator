@@ -41,9 +41,6 @@ async function storeGzip(file) {
   await writeFile(file+".gz",gzipSync(await readFile(file),{level:9}));
   await rm(file);
 }
-for (const name of ["vn-roads/overview.json","vn-structures/source-index.json"]) {
-  await storeGzip(path.join(client,name));
-}
 for (const directory of ["streetscape","traffic"]) {
   const folder = path.join(client,directory);
   for (const name of await readdir(folder)) {
@@ -84,6 +81,11 @@ if(featured.length!==Object.keys(guided).length || featured.some(r=>!Number.isIn
   throw new Error("Invalid or duplicate featured drive.");
 const body = await readFile(path.join(root,"worker/leaderboard.mjs"),"utf8");
 const roadCodec = await readFile(path.join(client,"road-tile-codec.js"),"utf8");
+// The Worker restores these assets at their original URLs. Pack after preparing
+// the courses and pages, which read the public JSON and CSS during the build.
+for (const name of await readdir(client,{recursive:true})) {
+  if (/\.(json|css)$/.test(name)) await storeGzip(path.join(client,name));
+}
 for (const name of await readdir(client)) {
   if (name.endsWith(".js")) await storeGzip(path.join(client,name));
 }
