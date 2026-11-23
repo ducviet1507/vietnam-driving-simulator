@@ -41,6 +41,8 @@ Regional terrain colour is adapted from NASA Blue Marble Next Generation, access
 https://science.nasa.gov/earth/earth-observatory/blue-marble-next-generation/
 
 The six Vietnamese shopfront elevations are AI-generated architectural illustrations of fictional shops.
+The timber shop counters on Hội An street fronts follow the Hội An heritage centre's account of narrow and wide trading houses. The street photograph beside Chùa Cầu is credited under osm-way-39268284 in sight-photos/index.json.
+https://hoianheritage.net/vi/di-san-van-hoa/Nha-pho/nha-pho-261.html
 
 Rock Face by Greg Zaal (photography) and Dario Barresi (processing), Poly Haven, CC0. The road cut uses locally encoded 1K diffuse and OpenGL normal maps. The original scan covers 2.4 m across.
 https://polyhaven.com/a/rock_face

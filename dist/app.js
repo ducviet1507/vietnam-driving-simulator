@@ -277,7 +277,7 @@ function frame(now){
   roadMarker();
   el('turn').hidden=(!rightSignal && !leftSignal) || mode==='done';label(el('turn'),leftSignal?'⬅':'➜');
   label(el('speed'),String(Math.round(speed)).padStart(2,'0'));
-  driveAudio.update({speed,throttle:keys.has('arrowup')||keys.has('w'),braking:keys.has('arrowdown')||keys.has('s')||keys.has(' '),signal:rightSignal||leftSignal,mode});
+  driveAudio.update({ambience:mode==='driving'?window.streetAmbience:null,speed,throttle:keys.has('arrowup')||keys.has('w'),braking:keys.has('arrowdown')||keys.has('s')||keys.has(' '),signal:rightSignal||leftSignal,mode});
   label(el('fullStart'),el('start').textContent);
   drawMap();requestAnimationFrame(frame);
 }

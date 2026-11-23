@@ -127,6 +127,20 @@
     const rushGain = ctx.createGain();
     rushGain.gain.value = 0;
     road.connect(rush).connect(rushGain).connect(output);
+    // Reuse the tyre noise buffer. Two quiet, independently placed layers let
+    // the listener hear the river on one side and the street on the other.
+    function noiseLayer() {
+      const filter = ctx.createBiquadFilter(), gain = ctx.createGain();
+      const pan = ctx.createStereoPanner?.();
+      filter.type = 'bandpass';
+      filter.Q.value = .65;
+      gain.gain.value = 0;
+      road.connect(filter).connect(gain);
+      if (pan) gain.connect(pan).connect(output);
+      else gain.connect(output);
+      return {filter, gain, pan};
+    }
+    const surroundings = noiseLayer(), shore = noiseLayer();
     const scrub = ctx.createOscillator();
     scrub.type = 'triangle';
     const scrubGain = ctx.createGain();
@@ -135,7 +149,38 @@
     scrub.start();
     road.start();
 
-    return { ctx, output, engine, exhaustWave, electric:false, engineGain, intake, roadGain, tire, rush, rushGain, scrub, scrubGain };
+    return { ctx, output, engine, exhaustWave, electric:false, engineGain, intake, roadGain, tire, rush, rushGain, scrub, scrubGain, surroundings, shore };
+  }
+
+  let nextAmbient = 0, ambientActive = false;
+  function hushAmbient() {
+    if (!ambientActive || !sound) return;
+    for (const layer of [sound.surroundings, sound.shore])
+      layer.gain.gain.setTargetAtTime(0, sound.ctx.currentTime, .04);
+    nextAmbient = 0;
+    ambientActive = false;
+  }
+  document.addEventListener('visibilitychange', () => { if (document.hidden) hushAmbient(); });
+  window.addEventListener('pagehide', hushAmbient);
+
+  function updateAmbient(sample, now) {
+    if (!sample || document.hidden) { hushAmbient(); return; }
+    if (now < nextAmbient) return;
+    const place = sample();
+    if (!place) { hushAmbient(); return; }
+    ambientActive = true;
+    nextAmbient = now + .3;
+    const {surroundings, shore} = sound;
+    const {kind, presence = 1, pan = 0, water = 0, waterPan = 0, rain = 0, cabin = false} = place;
+    const volume = cabin ? .48 : 1;
+    const breeze = .65 + .22 * Math.sin(now * .73) + .13 * Math.sin(now * 1.27);
+    const hz = kind === 'street' ? 240 : kind === 'works' ? 460 : 1700;
+    surroundings.filter.frequency.setTargetAtTime(hz + (2900 - hz) * rain, now, .25);
+    surroundings.gain.gain.setTargetAtTime(volume * (.20 * presence * breeze + .33 * rain), now, .25);
+    surroundings.pan?.pan.setTargetAtTime(pan * (1 - rain), now, .2);
+    shore.filter.frequency.setTargetAtTime(840 + 280 * breeze, now, .3);
+    shore.gain.gain.setTargetAtTime(volume * water * (.25 + .2 * breeze), now, .25);
+    shore.pan?.pan.setTargetAtTime(waterPan, now, .2);
   }
 
   function tone(frequency, endFrequency, length, volume, offset = 0, shape = 'sine') {
@@ -169,7 +214,7 @@
   }
   function toggle() {
     enabled=!enabled;
-    if(!enabled)stopVoice();
+    if(!enabled){stopVoice();hushAmbient();}
     try{localStorage.setItem(preference,enabled?'0':'1');}catch{}
     if(enabled)unlock();else if(sound)sound.output.gain.setTargetAtTime(0,sound.ctx.currentTime,.025);
     music?.sync();
@@ -179,7 +224,7 @@
     if(enabled&&sound?.ctx.state!=='running')unlock();
   },{capture:true});
 
-  function update({ speed, throttle, braking, signal, mode, boost=false, slip=0, offroad=false, electric=false }) {
+  function update({ speed, throttle, braking, signal, mode, boost=false, slip=0, offroad=false, electric=false, ambience }) {
     music?.setDriving(mode === 'driving');
     if(mode!=='driving'&&voiceLine)stopVoice();
     const driving = mode === 'driving';
@@ -190,6 +235,7 @@
     if (!enabled || sound?.ctx.state !== 'running') return;
     const { ctx, engine, engineGain, intake, roadGain, tire, rush, rushGain, scrub, scrubGain } = sound;
     const now = ctx.currentTime;
+    updateAmbient(ambience, now);
     const onBoost = Boolean(driving && boost);
     const speedFraction = velocity / 190;
     const skid = driving && !offroad ? Math.max(0, Math.min(1, slip)) * Math.min(1, velocity / 24) : 0;

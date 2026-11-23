@@ -482,7 +482,6 @@
     root.name = 'Central Vietnam street life';
     scene.add(root);
 
-    const frontCache = new Map();
     const signCache = new Map();
     const glowMats = [];
 
@@ -518,27 +517,60 @@
     const bulbMat = new T.MeshStandardMaterial({ color: 0xfff3d4, roughness: 0.4, emissive: 0xffc870, emissiveIntensity: 0.25 });
     glowMats.push({ mat: bulbMat, base: 0.15, night: 3.1 });
 
-    function ensureFrontMaterials(zone) {
-      if (frontCache.has(zone.id)) return frontCache.get(zone.id);
-      const keys = [];
-      zone.shops.forEach((shop, i) => {
-        const key = 'cfront_' + zone.id + '_' + i;
-        if (!materialMap[key]) materialMap[key] = paintShopfrontTexture(T, zone, shop, renderer);
-        keys.push(key);
-      });
-      frontCache.set(zone.id, keys);
-      return keys;
+    const cachedFronts = new Set();
+    function frontMaterial(zone, type) {
+      const i = type % zone.shops.length, key = 'cfront_' + zone.id + '_' + i;
+      if (!materialMap[key]) {
+        materialMap[key] = paintShopfrontTexture(T, zone, zone.shops[i], renderer);
+        cachedFronts.add(key);
+      }
+      return key;
+    }
+    function trimFronts(inView) {
+      for (const key of cachedFronts) {
+        if (cachedFronts.size <= 12) break;
+        if (inView.has(key)) continue;
+        materialMap[key].map.dispose();
+        materialMap[key].dispose();
+        delete materialMap[key];
+        cachedFronts.delete(key);
+      }
     }
 
-    function addPart(parent, g, m, x, y, z, sx = 1, sy = 1, sz = 1, rx = 0, ry = 0, rz = 0) {
-      const mesh = new T.Mesh(g, m);
-      mesh.position.set(x, y, z);
-      mesh.scale.set(sx, sy, sz);
-      if (rx || ry || rz) mesh.rotation.set(rx, ry, rz);
-      mesh.castShadow = true;
-      mesh.receiveShadow = true;
-      parent.add(mesh);
-      return mesh;
+    const partPose = new T.Object3D(), propBatches = new Map();
+    function addPart(parent, geometry, material, x, y, z, sx = 1, sy = 1, sz = 1, rx = 0, ry = 0, rz = 0) {
+      partPose.position.set(x, y, z);
+      partPose.scale.set(sx, sy, sz);
+      partPose.rotation.set(rx, ry, rz);
+      partPose.updateMatrix();
+      (parent.userData.parts ??= []).push({geometry,material,pose:partPose.matrix.clone()});
+    }
+    function mountProp(group) {
+      group.updateMatrix();
+      const cell = Math.floor(group.position.x / 80) + ',' + Math.floor(group.position.z / 80);
+      for (const {geometry,material,pose} of group.userData.parts || []) {
+        pose.premultiply(group.matrix);
+        if (material.transparent) {
+          // Keep glass cases independently sorted back to front.
+          const pane = new T.Mesh(geometry,material);
+          pane.matrix.copy(pose);pane.matrixAutoUpdate=false;
+          pane.castShadow=pane.receiveShadow=true;
+          root.add(pane);
+          continue;
+        }
+        const key = cell + ':' + geometry.id + ':' + material.id;
+        if (!propBatches.has(key)) propBatches.set(key,{geometry,material,poses:[]});
+        propBatches.get(key).poses.push(pose);
+      }
+    }
+    function flushProps() {
+      for (const {geometry,material,poses} of propBatches.values()) {
+        const mesh = new T.InstancedMesh(geometry,material,poses.length);
+        poses.forEach((pose,i)=>mesh.setMatrixAt(i,pose));
+        mesh.castShadow=mesh.receiveShadow=true;
+        root.add(mesh);
+      }
+      propBatches.clear();
     }
 
     // Build a Vietnamese sidewalk specialty food/coffee stall (quán vỉa hè) with low tables & plastic stools
@@ -683,7 +715,7 @@
 
     // Mount authentic regional Vietnamese shopfront signboards, under-awning silk lanterns,
     // and potted bougainvillea directly onto surveyed OSM shophouse facades from tour-district.js!
-    function decorateDistrictFronts(fronts, clearFn) {
+    function decorateDistrictFronts(fronts, clearFn, compact) {
       if (!fronts || !fronts.length) return;
       const nearest = fronts
         .filter(f => f.zone && f.half >= 1.35 && Math.hypot(f.x, f.z) <= 155)
@@ -691,7 +723,7 @@
       const mounted = [];
       let count = 0;
       for (const f of nearest) {
-        if (count >= 26) break;
+        if (count >= (compact ? 12 : 26)) break;
         if (mounted.some(p => Math.hypot(p.x - f.x, p.z - f.z) < 5.5)) continue;
         const zone = f.zone;
         const shop = zone.shops[f.seed % zone.shops.length];
@@ -703,7 +735,7 @@
         // Backlit signboard mounted cleanly flush above the awning (or on the 2nd-floor balcony fascia when present!)
         const hasBalcony = f.h >= 6.4 && f.seed % 4 !== 0;
         const sy = hasBalcony ? 3.68 : Math.min(f.h - h * 0.55, f.top + 0.54);
-        const sz = hasBalcony ? 0.94 : 0.14;
+        const sz = hasBalcony ? f.balcony + 0.04 : 0.14;
         if (sy > f.top + 0.18) {
           addPart(g, geo.box, mat.wood, 0, sy, sz, w + 0.14, h + 0.10, 0.10);
           addPart(g, geo.plane, signMat, 0, sy, sz + 0.055, w, h, 1);
@@ -713,8 +745,9 @@
           const lx = Math.min(f.half * 0.62, 1.45);
           for (const side of [-1, 1]) {
             const lm = lanternMats[(f.seed + (side > 0 ? 2 : 0)) % lanternMats.length];
-            addPart(g, geo.cyl, mat.cord, side * lx, f.top - 0.08, 0.52, 0.012, 0.24, 0.012);
-            addPart(g, geo.sphere, lm, side * lx, f.top - 0.34, 0.52, 0.21, 0.27, 0.21);
+            const underEave = f.canopy * .62;
+            addPart(g, geo.cyl, mat.cord, side * lx, f.top - 0.08, underEave, 0.012, 0.24, 0.012);
+            addPart(g, geo.sphere, lm, side * lx, f.top - 0.34, underEave, 0.21, 0.27, 0.21);
           }
         }
         // Potted bougainvillea beside the doorway if sidewalk space is clear
@@ -729,17 +762,18 @@
         }
         g.position.set(f.x, f.y, f.z);
         g.rotation.y = yaw;
-        root.add(g);
+        mountProp(g);
         mounted.push({ x: f.x, z: f.z });
         count++;
       }
     }
 
     function clearProps() {
-      while (root.children.length) root.remove(root.children[0]);
+      for (const child of root.children) if (child.isInstancedMesh) child.dispose();
+      root.clear();
     }
 
-    function place(graph, cx, cz, segments, clearFn, groundFn, districtFronts = null, osmPlaces = null) {
+    function place(graph, cx, cz, segments, clearFn, groundFn, districtFronts = null, osmPlaces = null, compact = false) {
       clearProps();
       if (!graph) return;
       const [lon, lat] = graph.geo(cx, cz);
@@ -747,7 +781,7 @@
       if (!zone) return;
 
       // 1. Mount authentic regional Vietnamese shopfront signboards & lanterns onto real OSM shophouses
-      decorateDistrictFronts(districtFronts, clearFn);
+      decorateDistrictFronts(districtFronts, clearFn, compact);
 
       // Boost priority of street segments close to real OSM cafes & markets
       const hotSpots = (osmPlaces || [])
@@ -771,10 +805,11 @@
       let overheadCount = 0;
       let garlandCount = 0;
       let signCount = 0;
-      const maxStalls = 14;
-      const maxOverhead = (zone.id === 'hoi-an' || zone.id === 'hue') ? 10 : 0;
-      const maxGarlands = zone.lanterns ? 10 : 0;
-      const maxSigns = 8;
+      const maxStalls = compact ? 6 : 14;
+      const strings = compact ? 4 : 10;
+      const maxOverhead = (zone.id === 'hoi-an' || zone.id === 'hue') ? strings : 0;
+      const maxGarlands = zone.lanterns ? strings : 0;
+      const maxSigns = compact ? 4 : 8;
 
       // 2. String overhead silk lantern canopies right across narrow Hội An & Huế Old Town streets!
       if (maxOverhead > 0) {
@@ -796,7 +831,7 @@
             spanArch.position.set(cxRoad, wy, czRoad);
             // Local +X runs across the road along (s.nx, s.nz)
             spanArch.rotation.y = Math.atan2(-s.nz, s.nx);
-            root.add(spanArch);
+            mountProp(spanArch);
             placed.push({ x: cxRoad, z: czRoad });
             overheadCount++;
           }
@@ -826,7 +861,7 @@
               const garland = buildLanternGarland(5.4, hash);
               garland.position.set(x, wy, z);
               garland.rotation.y = Math.atan2(-s.fz, s.fx);
-              root.add(garland);
+              mountProp(garland);
               placed.push({ x, z });
               garlandCount++;
             } else if (signCount < maxSigns && pick === 1) {
@@ -834,7 +869,7 @@
               const board = buildRoadsideSign(zone, shop, hash);
               board.position.set(x, wy, z);
               board.rotation.y = Math.atan2(s.fx, s.fz);
-              root.add(board);
+              mountProp(board);
               placed.push({ x, z });
               signCount++;
             } else if (stallCount < maxStalls) {
@@ -843,7 +878,7 @@
               const stall = buildStall(zone, label, hash);
               stall.position.set(x, wy, z);
               stall.rotation.y = faceRoadYaw;
-              root.add(stall);
+              mountProp(stall);
               placed.push({ x, z });
               stallCount++;
             }
@@ -852,6 +887,7 @@
           if (stallCount >= maxStalls && garlandCount >= maxGarlands && signCount >= maxSigns) break;
         }
       }
+      flushProps();
     }
 
     function update(lampLevel) {
@@ -861,18 +897,7 @@
       }
     }
 
-    function themeAt(graph, wx, wz) {
-      if (!graph) return null;
-      const [lon, lat] = graph.geo(wx, wz);
-      const zone = zoneAt(lon, lat);
-      if (!zone) return null;
-      return {
-        zone,
-        frontKeys: ensureFrontMaterials(zone)
-      };
-    }
-
-    return { themeAt, place, update, zoneAt };
+    return { frontMaterial, trimFronts, place, update, zoneAt };
   }
 
   window.CentralStreetscapes = { create, zoneAt };
