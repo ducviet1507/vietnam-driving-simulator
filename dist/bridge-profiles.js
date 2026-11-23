@@ -169,10 +169,12 @@ const modeledBridgeLengths={'cau-rong':636,'cau-truong-tien':402,'cau-nhat-le':6
   'cau-song-han':260,'cau-tran-thi-ly':320,'cau-thuan-phuoc':360,'cau-treo-kon-klor':215,
   'cau-cua-hoi':360,'cau-ben-thuy':230,'cau-yen-xuan':230,'cau-ham-rong':164};
 
-function createBridgeDistrict(graph,edges,cx,cz,ground){
+function createBridgeDistrict(graph,edges,cx,cz,ground,profileHeight){
   const info=edge=>graph.bridges.profiles.get(edge.id);
   const raised=edges.filter(info),origins=new Map();
   function height(edge,s){
+    const h=profileHeight?.(edge,s);
+    if(h!=null)return h+graph.bridges.lift(edge,s);
     const p=graph.sample({edge,s,dir:1}),profile=info(edge);
     if(!profile?.bridge)return ground(p.x,p.z)+graph.bridges.lift(edge,s);
     if(!origins.has(edge.id)){

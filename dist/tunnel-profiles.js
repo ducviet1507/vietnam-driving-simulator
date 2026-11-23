@@ -37,7 +37,7 @@ function buildTunnelProfiles(graph,data){
   return {profiles,info:e=>profiles.get(e.id),portal,lift:(edge,s)=>0-lift(edge,s),inside};
 }
 
-function createTunnelDistrict(graph,edges,ground){
+function createTunnelDistrict(graph,edges,ground,profileHeight){
   const profiles=graph.tunnels,heights=new Map(),sections=new Map();
   // Use elevations at the real entrances. The internal OSM nodes of a
   // mountain bore are below the DEM surface, even when a tile ends there.
@@ -56,6 +56,8 @@ function createTunnelDistrict(graph,edges,ground){
     heights.set(node,h);return h;
   }
   function height(edge,s){
+    const h=profileHeight?.(edge,s);
+    if(h!=null)return h+profiles.lift(edge,s);
     const info=profiles.info(edge);
     if(info?.bore&&!info.passage){
       const a=base(edge.start,edge.points[0]),b=base(edge.end,edge.points.at(-1));

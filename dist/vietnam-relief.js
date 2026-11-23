@@ -291,7 +291,8 @@ function createVietnamRelief(T,scene,compact,landscapes,tunnelCut,landWidth,cave
   let terrain=sampleTerrain(null,null,null,null);
   function prepare(g,view){
     const pass=g?byGraph.get(g):null,urbanGround=urban.current(g);
-    if(terrain.graph===g&&terrain.pass===pass&&terrain.landscapes===view&&terrain.urbanGround===urbanGround)return terrain;
+    const raw=terrain.ungraded??terrain;
+    if(raw.graph===g&&raw.pass===pass&&raw.landscapes===view&&raw.urbanGround===urbanGround)return raw;
     return sampleTerrain(g,pass,view,urbanGround);
   }
   function activate(next,x,z){

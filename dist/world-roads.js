@@ -14,6 +14,7 @@ async function fetchMapTile(url){
 // connect edges so an overpass does not accidentally become a turn.
 class VietnamRoads {
  constructor(index,lon,lat){
+   this.sourceSha256=index.sourceSha256;
    this.readRows=RoadTileCodec.roadRows(index);
    this.available=new Set([...index.tiles,...(index.sightAccess?.addedParents||[])]);
    this.splits=index.splits||{};this.subtiles=new Set([...(index.subtiles||[]),...(index.sightAccess?.addedSubtiles||[])]);
