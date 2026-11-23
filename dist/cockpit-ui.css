@@ -334,6 +334,9 @@
   .arcade.journey .opening {bottom: calc(var(--bottom) + 88px)}
   .journey .opening h1 {font-size: 44px}
 }
+@media (max-width: 360px) and (max-height: 600px) and (orientation: portrait) {
+  .journey #journeyCaption {display:none}
+}
 @media (min-height: 581px) and (min-width: 701px) {
   .arcade:not(.journey)[data-phase=grid] #world, .arcade:not(.journey) .grid {top: 65px}
   .arcade:not(.journey)[data-phase=grid] #world {height: calc(100% - 65px)}
