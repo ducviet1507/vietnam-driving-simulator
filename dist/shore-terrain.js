@@ -21,7 +21,16 @@ function* updateTerrainNormals(T,geometry){
   geometry.setAttribute('normal',attribute);attribute.needsUpdate=true;
 }
 
-// The fixed four-metre lattice serves both the visible bed and the tyre immersion query.
+// Even when the water mask is antialiased, adjacent IDs must remain distinct
+// after the browser stores and reads back its premultiplied RGBA pixels.
+function shorePoolColour(id){
+  return 'rgb('+((id&7)*36)+','+(((id>>3)&7)*36)+','+((id>>6)*85)+')';
+}
+function shorePoolIndex(r,g,b){
+  return Math.round(r/36)|(Math.round(g/36)<<3)|(Math.round(b/85)<<6);
+}
+
+// The mask's metre grid serves both the visible bed and the tyre immersion query.
 // Its outer land vertices keep the same height and diagonal as the large terrain mesh.
 function* buildMappedShoreSteps(T, options){
   const {mask,field,size,scale,maskX,maskZ,cx,cz,gx,gz,landWidth,land,landIndex,ground,pools,group,waterMaterial}=options;
@@ -29,10 +38,25 @@ function* buildMappedShoreSteps(T, options){
   const metres=1/scale,coarse=landWidth/segments,steps=coarse/metres;
   const active=new Uint8Array(segments*segments),count=size*size,dry=new Float32Array(count),ids=new Uint8Array(count);
   const left=gx-cx-landWidth/2,top=gz-cz-landWidth/2;
+  function poolId(i,k,j){
+    let offset=i*4,alpha=mask[offset+3];
+    if(!alpha||pools.length<2)return 0;
+    // Canvas stores premultiplied colours. A faint edge cannot reliably
+    // distinguish pool IDs. Read its most strongly covered neighbour first.
+    if(alpha<32){
+      for(let v=Math.max(0,j-1);v<=Math.min(size-1,j+1);v++)for(let u=Math.max(0,k-1);u<=Math.min(size-1,k+1);u++){
+        const next=4*(v*size+u);
+        if(mask[next+3]>alpha){offset=next;alpha=mask[next+3];}
+      }
+    }
+    if(alpha<32)return 0;
+    const id=shorePoolIndex(mask[offset],mask[offset+1],mask[offset+2]);
+    return id<pools.length?id:0;
+  }
   for(let j=0,i=0;j<size;j++)for(let k=0;k<size;k++,i++){
     if((i & 8191)===0)yield;
     const a=mask[4*i+3]/255;
-    dry[i]=a>0?(1-a)*metres:32;ids[i]=mask[4*i];
+    dry[i]=a>0?(1-a)*metres:32;ids[i]=poolId(i,k,j);
     if(a<=0)continue;
     const x=maskX+(k+.5)*metres-left,z=maskZ+(j+.5)*metres-top;
     // Include the dry bank outside the silhouette.

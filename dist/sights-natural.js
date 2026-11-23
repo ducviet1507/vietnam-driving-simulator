@@ -157,8 +157,12 @@ window.VietnamSightCoasts.push({lon:105.7792825,lat:20.6090699,holes:[],ring:[
   [105.7797560,20.6091700],[105.7795473,20.6093864]
 ]});
 
-// Chùa Âng. A roughly four-metre moat surrounds the monastic enclosure.
-// Keep the inner court dry, including the hall south of the pond.
-window.VietnamSightCoasts.push({lon:106.30346,lat:9.91596,bankSpacing:2,
-  ring:[[106.3028737,9.9162647],[106.3038379,9.9164184],[106.3040062,9.9156225],[106.3030532,9.9154469]],
-  holes:[[[106.3029175,9.9162351],[106.3038093,9.9163773],[106.3039628,9.9156512],[106.3030813,9.9154887]]]});
+// Shorelines visible in the 2023 overhead photograph, registered to the roof
+// corners and west bridge. Interpolate the short stretches under tree crowns.
+window.VietnamSightCoasts.push({lon:106.30346,lat:9.91596,bankSpacing:2,name:'Hào nước chùa Âng',sharedStage:true,
+  ring:[[106.3028974,9.9161563],[106.3037088,9.9162995],[106.3040009,9.9163373],[106.3040672,9.9159780],
+    [106.3040915,9.9156373],[106.3040408,9.9155904],[106.3036915,9.9155057],[106.3030779,9.9154314],
+    [106.3030705,9.9154570],[106.3030033,9.9154522],[106.3029520,9.9157591]],
+  holes:[[[106.3030042,9.9161376],[106.3036650,9.9162497],[106.3037550,9.9162546],[106.3038882,9.9162525],
+    [106.3039358,9.9160387],[106.3039608,9.9159641],[106.3039829,9.9157779],[106.3039615,9.9156898],
+    [106.3036018,9.9155690],[106.3030935,9.9155155],[106.3030469,9.9158234]]]});

@@ -370,8 +370,7 @@
 
       const cellSize=32,cutoff=graphics.profile.districtRadius,detailRadius=graphics.profile.scenery;
       // A small occupancy mask lets each generated building test its footprint in constant time.
-      // The narrow surveyed moat at Chùa Âng needs two samples across its
-      // four-metre channel for both the water mesh and the immersion query.
+      // Keep two samples across the narrowest stretches of the Chùa Âng moat.
       const fineBank=water?.some(f=>f.bankSpacing===2&&f.points.some(p=>Math.max(Math.abs(p.x-cx),Math.abs(p.z-cz))<cutoff+16));
       const maskScale=fineBank?.5:.25,maskSize=Math.ceil((2*cutoff*maskScale+8)/16)*16;
       // Raster cells are aligned in world metres across render-origin shifts.
@@ -390,7 +389,7 @@
         // shared stage from its shore samples, keeping the water below the banks.
         const samples=new Map(),poolIds=new Map(),pools=[null];
         for(const feature of water){
-          if(feature.kind!=='lake'||! /^(hồ|đầm|ao|bàu)\s/i.test(feature.name||''))continue;
+          if(feature.kind!=='lake'||(!feature.sharedStage&&! /^(hồ|đầm|ao|bàu)\s/i.test(feature.name||'')))continue;
           if(!samples.has(feature.name))samples.set(feature.name,[]);
           const values=samples.get(feature.name),stride=Math.max(1,Math.ceil(feature.points.length/18));
           for(let i=0;i<feature.points.length;i+=stride){const p=feature.points[i];values.push(terrain.ground(p.x,p.z));}
@@ -416,7 +415,7 @@
               ring=clean;
             }
             if(ring.length<3)continue;
-            painter.fillStyle='rgb('+(poolIds.get(feature.name)||0)+',0,0)';
+            painter.fillStyle=shorePoolColour(poolIds.get(feature.name)||0);
             painter.beginPath();painter.moveTo(ring[0].x,ring[0].y);
             for(let i=1;i<ring.length;i++)painter.lineTo(ring[i].x,ring[i].y);
             painter.closePath();

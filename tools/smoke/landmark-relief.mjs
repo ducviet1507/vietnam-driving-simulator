@@ -16,6 +16,15 @@ const context=vm.createContext({window:{},Image:ElevationImage,performance,
     drawImage(){},getImageData:()=>({data:new Uint8Array(16)})})})}});
 for(const file of ['shore-terrain','vietnam-relief','cave-openings','world-land-cover'])
   vm.runInContext(readFileSync(new URL('../../dist/'+file+'.js',import.meta.url),'utf8'),context);
+// The temple moat and Ao Bà Om have distinct water levels. Simulate the
+// canvas colour rounding that used to make their pool IDs collide at a bank.
+for(let id=0;id<255;id++){
+  const channels=context.shorePoolColour(id).match(/\d+/g).map(Number);
+  for(const alpha of [32,45,63,120,197,255]){
+    const readback=channels.map(c=>Math.round(Math.round(c*alpha/255)*255/alpha));
+    assert.equal(context.shorePoolIndex(...readback),id);
+  }
+}
 const graph={geo:(x,z)=>[107+x/106000,16-z/111000]};
 let samples=0;
 const environment={revision:0,sample(g,x,z){

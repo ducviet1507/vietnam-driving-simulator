@@ -12,16 +12,21 @@
       viewElevation:Math.atan2(ey-h,d),viewRadius:Math.hypot(d,ey-h),viewFov:fov,photo:url,photoCatalogId,description};
   }
   const views=[
-    view('Chánh điện nhìn từ sân phía đông',[0,6.4,1],[.6,2.9,35.4],47,photo(25293197),catalogId,
+    view('Chánh điện nhìn từ sân phía đông',[0,6.5,1],[-.9,2.9,28.0],53,photo(25293197),catalogId,
       'Qua hàng rào ngoài và hai bậc nền là chánh điện quay về hướng đông. Trên mặt hồi, mảng chạm màu vàng nổi trên nền xanh lục.'),
-    view('Lối qua hào ở phía tây',[13.3,.52,-67.4],[21.8,2.5,-79.3],53,source,'chua-ang-hao-nuoc',
-      'Lối qua hào nối sân ngoài với khu nhà tăng phía tây. Hào nước bao quanh cả khuôn viên. Khoảng cách giữa hai bờ ước theo bề rộng khoảng bốn mét mà hồ sơ di tích ghi nhận.'),
+    view('Lối qua hào ở phía tây',[13.4,.52,-66.9],[23,2.8,-80.3],53,source,'chua-ang-hao-nuoc',
+      'Một cầu đi bộ hẹp nối hai bờ hào phía tây. Theo lòng hào về góc bắc có thể thấy khoảng cách giữa hai bờ thu hẹp dần. Đường bờ và vị trí cầu được đối chiếu với ảnh chụp từ trên cao.'),
     view('Ba cấp mái nhìn dọc hành lang',[0,6.1,1],[-20,3.3,30.8],51,photo(25228819),'chua-ang-hanh-lang',
       'Nhìn chéo qua nền đá xanh và hàng rào về ba cấp mái ngói. Mái dưới xòe rộng che hành lang, hai cấp trên thu hẹp dần về nóc.'),
     view('Phù điêu trên đầu hồi',[0,12.13,10.8],[1.65,9.8,22.8],39,photo(25293197),catalogId,
       'Góc nhìn cao ngang mái để xem tấm gỗ chạm hình tam giác ở đầu hồi. Họa tiết vàng trên nền xanh được lấy từ ảnh chánh điện chùa Âng.'),
     view('Chánh điện trong vòng hào',[14,1.7,-14],[80,96,97],59,source,'chua-ang-toan-canh',
       'Nhìn xuống các sân, dãy nhà và hào nước. Chánh điện có mặt bằng 12 × 24 m trên hai nền cao. Phía bắc, qua rừng cây là Ao Bà Om.'),
+    view('Cổng chùa dưới hai hàng sao',[19.2,3.75,79.2],[18.6,2.22,90.7],45,photo(25293196),'chua-ang-cong-dong',
+      'Trên cổng phía đông có ba mảng chạm nhô cao và những hình người chim đỡ diềm. Bảng tên cùng các nét chạm được phục dựng theo ảnh năm 2013. Sau cổng là lối đi giữa hai hàng cây.'),
+    view('Tháp năm ngọn bên hào phía đông',[3.2,3.55,31.6],[-.65,2.10,55.4],40,
+      'https://vov.gov.vn/ngoi-chua-khmer-gan-1000-nam-tuoi-o-tra-vinh-dtnew-534688','chua-ang-thap-nam-ngon',
+      'Nhìn qua mặt nước tới ngôi tháp lưu giữ di cốt các vị sư cả từng trụ trì chùa. Bốn ngọn thấp bao quanh ngọn giữa, chánh điện mái ngói nằm ngay phía sau.'),
   ];
   function turned(T,k,color,x,y,z,profile){
     const g=new T.LatheGeometry(profile.map(([r,h])=>new T.Vector2(r,h)),16);
@@ -211,9 +216,13 @@
     // the open paved approach east of the temple clear.
     for(let i=0;i<285;i++){
       const x=-69+181*rand(i+2),z=-111+187*rand(i+989);
-      if(x>-29&&x<66&&z>-72&&z<40||x>6&&x<23&&z<-57&&z>-93||z>32&&Math.abs(x-5)<6)continue;
+      if(x>-35&&x<65&&z>-76&&z<55||x>6&&x<23&&z<-57&&z>-93||z>36&&Math.abs(x-19.2)<7)continue;
+      if(z>45&&z<67&&x> -14&&x<13)continue;
       if(x>74&&z>0)continue; // The grove at Ao Bà Om takes over to the north.
       records.push([x,z,16+14*rand(i+323),10+8*rand(i+770),rand(i+155)*6.28,false]);
+    }
+    for(const side of [-1,1])for(const [i,z] of [55.6,63.3,70.1,76.8].entries()){
+      records.push([19.2+side*(5.0+rand(i+side)*1.3),z,18+rand(i+49)*5,7+rand(i+9)*2.4,rand(i+side)*6.28,false]);
     }
     for(const [x,z,h] of [[-12.8,8.8,5.2],[-14,14.2,4.4],[12.85,13.2,4.8],[13.7,-3.5,5.1],
       [-16.4,-5.7,6.6],[16.4,4.1,5.4],[-22.2,21.7,6.5],[21.1,18,5.7]]){
@@ -258,11 +267,11 @@
       }
     });
     // A short pedestrian crossing and its two masonry parapets span the west moat.
-    k.box(0xaaa28b,13.5,.14,-68.65,3.45,.41,9.9);
+    k.box(0xaaa28b,13.5,.14,-66.85,2.50,.41,14.0);
     for(const side of [-1,1]){
-      const x=13.5+side*1.62;k.box(0xd1b687,x,.56,-68.65,.20,.85,9.90);
-      k.box(ochre,x,1.04,-68.65,.29,.13,9.96);
-      const z=-68.65+side*4.15;k.box(stone,13.5,-.48,z,3.50,1.55,.77);
+      const x=13.5+side*1.17;k.box(0xd1b687,x,.56,-66.85,.16,.85,14.0);
+      k.box(ochre,x,1.04,-66.85,.21,.13,14.05);
+      const z=-66.85+side*6.35;k.box(stone,13.5,-.48,z,2.59,1.55,.77);
     }
     for(const [x,z,s] of [[-9.1,12.7,.92],[-8.7,7.3,1],[9.6,12.9,.83]]){
       k.box(ochre,x,1.72,z,1.36,.53,1.36);
@@ -270,11 +279,188 @@
         [.33,1.18],[.31,1.43],[.22,1.59],[.24,1.70],[.16,1.83],[.11,2.19*s],[.13,2.32*s],[0,2.89*s]]);
     }
   }
+  function gateCarvings(T,k){
+    const pts=[],uv=[];
+    function panel(x,y,z,w,h,l,t,r,b,mirror=false){
+      const corners=[[-.5,-.5],[.5,-.5],[.5,.5],[-.5,.5]];
+      for(const i of [0,1,2,0,2,3]){
+        const [u,v]=corners[i];pts.push(x+w*u,y+h*v,z);
+        uv.push(((u<0)!==mirror?l:r)/740,1-(v<0?b:t)/370);
+      }
+    }
+    for(const side of [-1,1]){
+      const z=side*.45;
+      panel(0,6.54,z,9.82,2.71,2,1,738,203,side<0);
+      panel(0,4.87,z,3.96,.78,2,208,348,280,side<0);
+      for(const s of [-1,1]){
+        panel(s*2.26,4.18,side*.53,1.06,2.05,359,205,441,365,s>0);
+        panel(s*4.32,4.20,side*.53,.86,2.01,454,205,522,365,s>0);
+      }
+    }
+    const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(pts,3));
+    g.setAttribute('uv',new T.Float32BufferAttribute(uv,2));g.computeVertexNormals();
+    const map=new T.TextureLoader().load('sight-imagery/chua-ang-cong-dong.webp');map.colorSpace=T.SRGBColorSpace;map.anisotropy=4;
+    const mesh=new T.Mesh(g,new T.MeshStandardMaterial({map,alphaTest:.48,side:T.DoubleSide,roughness:.88}));
+    mesh.name='Ba mảng chạm và bảng tên ở cổng chùa';mesh.castShadow=mesh.receiveShadow=true;k.group.add(mesh);
+  }
+  function eastGate(T,k){
+    const paint=0xdfc486;
+    for(const s of [-1,1]){
+      k.box(paint,s*2.27,2.31,0,.65,5.04,.83);
+      k.box(paint,s*4.25,2.37,0,.59,5.15,.84);
+      const span=2.1,spring=3.57,r=.73;
+      const wall=[[-span/2,5.23],[-span/2,-.18],[-r,-.18],[-r,spring]];
+      for(let j=0;j<=18;j++){const theta=pi*j/18;wall.push([-r*Math.cos(theta),spring+r*Math.sin(theta)]);}
+      wall.push([r,-.18],[span/2,-.18],[span/2,5.23]);
+      k.outline(wall,paint,s*3.31,0,-.39,.78);
+      k.box(0xb29c66,s*3.31,1.69,-.02,1.42,.07,.10);
+      k.box(0xa89872,s*3.31,.54,-.02,1.37,.85,.10);
+      for(let j=-3;j<=3;j++)k.box(0xb9aa84,s*3.31+j*.188,2.00,0,.032,2.46,.068);
+      for(const y of [.16,3.18])k.box(0xb7a06b,s*3.31,y,0,1.46,.073,.11);
+      k.outline([[0,0],[.43,0],[.43,.42],[.15,.31]],paint,s*1.57,4.20,-.38,.76,s<0?pi:0);
+      k.box(paint,s*9.82,.60,-.22,10.55,1.38,.51);
+      k.box(light,s*9.82,2.29,-.22,10.62,.17,.64);
+      for(let j=0;j<10;j++){
+        const x=s*(5.01+j*1.05);
+        for(const side of [-1,1]){
+          const swash=new T.CatmullRomCurve3([[0,1.34],[side*.32,1.42],[side*.36,1.63],[side*.21,1.78],[0,1.83],[side*.29,2.02],[side*.43,2.19]]
+            .map(([u,y])=>new T.Vector3(x+u,y,-.22)));
+          const g=new T.TubeGeometry(swash,14,.059,6,false);k.stamp(g,paint,0,0,0);g.dispose();
+        }
+      }
+      for(let j=0;j<6;j++){
+        const x=s*(4.96+j*1.87);k.box(paint,x,1.22,.05,.25,2.62,.62);
+        k.box(light,x,2.54,.05,.38,.15,.73);
+      }
+    }
+    k.box(paint,0,4.90,0,9.12,.78,.83);
+    k.box(ochre,0,5.29,0,9.84,.16,.99);gateCarvings(T,k);
+  }
+  function balusters(T,k,x,z,length,angle,h){
+    k.place(x,z,angle,()=>{
+      k.box(ochre,0,.18,0,length,.38,.32);k.box(gold,0,h,0,length,.13,.29);
+      const count=Math.ceil(length/.52),step=length/count;
+      for(let j=0;j<count;j++){
+        turned(T,k,light,-length/2+(j+.5)*step,.32,0,[[.071,0],[.11,.07],[.074,.15],[.055,.21],[.093,.32],[.079,.40],[.068,h-.34]]);
+      }
+    });
+  }
+  function relicTower(T,k){
+    const yellow=0xeac674,edge=0xd9b15e;
+    const oval=new T.SphereGeometry(1,10,8);
+    function tier(x,z,y,w,d,h,tint){
+      k.box(tint,x,y+h/2,z,w,h,d);return y+h;
+    }
+    function pinnacle(x,y,z,s){
+      const tiers=[[1.12,.21],[1.02,.13],[.95,.48],[1.01,.13],[.93,.11]];
+      const start=y;
+      for(const [w,h] of tiers)y=tier(x,z,y,w*s,w*s,h*s,yellow);
+      for(const front of [-1,1]){
+        const pz=z+front*.478*s;k.box(edge,x,start+.58*s,pz,.68*s,.39*s,.031);
+        for(let j=0;j<8;j++){const a=j*pi/4;
+          k.stamp(oval,light,x+.108*s*Math.sin(a),start+(.58+.108*Math.cos(a))*s,pz+front*.032,.044*s,.084*s,.016,0,0,-a);}
+      }
+      turned(T,k,gold,x,y,z,[[.48,0],[.54,.10],[.48,.17],[.50,.25],[.43,.32],[.45,.39],[.36,.49],[.37,.55],[.29,.73],
+        [.32,.80],[.26,.87],[.23,1.12],[.20,1.19],[.15,1.33],[.17,1.40],[.10,1.59],[.070,1.89],[.082,1.98],[0,2.19]].map(([r,h])=>[r*s,h*s]));
+      for(const [rad,h] of [[.51,.11],[.47,.26],[.41,.40],[.35,.56],[.28,.81]])turned(T,k,ochre,x,y+h*s,z,[[rad*s,0],[rad*s,.045*s]]);
+    }
+    k.place(3.16,31.81,0,()=>{
+      tier(0,0,-.29,8.10,7.5,.55,edge);tier(0,0,.26,7.80,7.27,.35,yellow);
+      tier(0,0,.61,6.96,6.55,.27,edge);tier(0,0,.88,5.29,4.55,2.58,yellow);
+      tier(0,0,3.46,5.61,4.83,.16,edge);tier(0,0,3.62,5.84,4.99,.19,yellow);
+      for(const s of [-1,1]){
+        // Two seated guardians flank the reliquary in the frontal photograph.
+        k.place(s*3.03,2.03,s*.30,()=>{
+          k.stamp(oval,ochre,0,1.22,-.08,.22,.34,.34);k.stamp(oval,gold,0,1.51,.13,.19,.36,.19,0,.12);
+          k.stamp(oval,gold,0,1.85,.20,.20,.23,.20);k.stamp(oval,light,0,1.82,.369,.145,.093,.13);
+          for(const side of [-1,1]){
+            k.tapered(ochre,side*.13,2.03,.13,.080,.016,.16,1,8);
+            k.stamp(oval,gold,side*.11,1.17,.20,.067,.28,.08);
+            k.stamp(oval,gold,side*.12,.953,.24,.082,.06,.13);
+          }
+        });
+        for(const x of [-.73,.73]){
+          k.box(edge,x,2.42,s*2.292,.72,.65,.07);
+          for(let j=0;j<8;j++){
+            const a=j*pi/4;k.box(wood,x+.142*Math.sin(a),2.42+.142*Math.cos(a),s*2.338,.060,.15,.02,0,0,-a);
+          }
+        }
+        for(const x of [-1.87,1.87])pinnacle(x,3.81,s*1.66,1.10);
+      }
+      pinnacle(0,3.81,0,1.63);
+    });
+    k.place(11.82,32.72,0,()=>{
+      tier(0,0,-.28,3.09,3.06,.55,edge);tier(0,0,.27,2.75,2.72,.29,yellow);
+      tier(0,0,.56,2.29,2.26,2.14,yellow);
+      k.box(edge,0,1.63,1.17,1.24,1.56,.09);
+      k.box(0xb9a06e,0,1.64,1.226,1.03,1.34,.035);
+      pinnacle(0,2.7,0,1.32);
+    });
+    oval.dispose();
+  }
+  function easternBank(T,k){
+    // The sloping masonry meets the water at the photographed bank toes.
+    // Leave the opening of the stair and the approach to the east crossing clear.
+    function slope(points,inward){
+      const pos=[],tri=(a,b,c)=>pos.push(...a,...b,...c,...c,...b,...a);
+      for(let i=1;i<points.length;i++){
+        const [x,z]=points[i-1],[u,v]=points[i];
+        const a=[x,.26,z],b=[u,.26,v],c=[u,-1.21,v+inward*1.12],d=[x,-1.21,z+inward*1.12];
+        tri(a,b,c);tri(a,c,d);
+        k.box(0xc9b792,(x+u)/2,.26,(z+v)/2,Math.hypot(u-x,v-z),.18,.31,-Math.atan2(v-z,u-x));
+      }
+      const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(pos,3));g.computeVertexNormals();
+      k.stamp(g,stone,0,0,0);g.dispose();
+    }
+    slope([[-13.4,35.5],[-9,37.0],[-2,38.3],[6.3,38.8]],1);
+    slope([[7.95,38.9],[13.25,38.56],[17.05,38.23]],1);
+    slope([[-13.4,50.6],[-8.3,51.42],[.7,52.65],[9.6,53.03],[16.95,52.90]],-1);
+    for(let j=0;j<7;j++)k.box(0x9f9580,7.12,.22-.179*j,38.82+j*.29,1.66,.23,.32);
+  }
+  function easternApproach(T,k){
+    relicTower(T,k);easternBank(T,k);
+    // The east crossing reaches the straight walk between the two rows of sao.
+    // Both ramps are anchored on the banks; the bridge stays above the water.
+    const walk=k.vertexCount();
+    for(let i=0;i<19;i++)k.box(0xb0a58f,19.24,.062,36.3+i*2.65,4.05,.31,2.67);
+    for(const s of [-1,1]){
+      const x=19.24+s*2.03;
+      k.box(0xa0755b,x,.22,46.0,.25,.49,15.4);
+      k.box(0xa38f76,x,1.18,46.0,.13,.11,15.4);
+      for(let j=0;j<=12;j++){
+        k.box(j%3===0?ochre:wood,x,.71,38.42+j*1.26,j%3===0?.21:.074,1.13,.11);
+      }
+    }
+    const gate=k.vertexCount(),firstChild=k.group.children.length;
+    k.place(19.24,79.18,0,()=>eastGate(T,k));
+    const end=k.vertexCount(),carvings=k.group.children.slice(firstChild);
+    // The decorated railing follows the east edge of the relic court.
+    balusters(T,k,1.1,37.42,26.8,-.035,1.00);
+    for(const x of [-10.2,-2.9,6.4,14.05]){
+      k.box(ochre,x,.18,37.0,.59,.36,.59);
+      turned(T,k,edgeGold,x,.33,37.0,[[.20,0],[.21,.14],[.15,.29],[.14,1.80],[.19,1.95],[.26,2.03],[.29,2.35],[.20,2.53],[.07,2.71],[0,2.89]]);
+    }
+    let geom,rest;
+    return ground=>{
+      geom??=k.group.children.find(m=>m.geometry?.hasAttribute('finishKind'))?.geometry;if(!geom)return;
+      const a=geom.attributes.position;rest??=Float32Array.from({length:end-walk},(_,i)=>a.getY(i+walk));
+      const near=ground(19.24,37.0),far=ground(19.24,55.0),entry=ground(19.24,79.18);
+      for(let i=walk;i<end;i++){
+        const z=a.getZ(i),blend=Math.max(0,Math.min(1,(z-37)/18));
+        const rise=i>=gate?entry:(z>55?ground(19.24,z):near+(far-near)*blend);
+        a.setY(i,rest[i-walk]+rise);
+      }
+      for(const m of carvings)m.position.y=entry;
+      views[5].height=(3.75+entry)/.46;a.needsUpdate=true;geom.computeBoundingBox();geom.computeBoundingSphere();
+    };
+  }
+  const pi=Math.PI,edgeGold=0xc4a057;
   (window.VietnamSights??=[]).push({...original,id,catalogId,lon,lat,yaw,start,name:'Chùa Âng – chánh điện và hào nước',city:'Nguyệt Hóa',locality:'Trà Vinh',
     province:'Vĩnh Long',formerProvince:'Trà Vinh',region:'Nam Bộ',kind:'Chùa',source,photo:photo(25293197),visitOnArrival:true,mappedEntrance:true,
-    width:24,depth:36,views,gardenRadius:4,boundary:[[-26,-70],[65,-70],[62,39],[-27,39]],solids:[[0,0,12,18]],
-    reserve:(x,z,r)=>x>-27-r&&x<65+r&&z>-74-r&&z<39+r,
+    width:24,depth:36,views,gardenRadius:4,boundary:[[-29,-73],[55,-71],[52,51],[29,54],[29,81],[9,81],[9,55],[-29,48]],solids:[[0,0,12,18]],
+    reserve:(x,z,r)=>x>-30-r&&x<55+r&&z>-74-r&&z<54+r||Math.abs(x-19.24)<9+r&&z>=50-r&&z<81+r,
     description:'Chùa Âng (Wat Angkor Raig Borei) ở phường Nguyệt Hóa là di tích kiến trúc nghệ thuật quốc gia. Chánh điện quay về phía đông, mang hình thức kiến trúc từ năm 1842. Hai bậc nền và hàng rào theo số đo trong hồ sơ di tích. Đường hào, cao độ sân, mái và vị trí các nhà phụ là phần phục dựng.',
     arrivalNote:'Xe dừng trên đường phía đông khu chùa. Các góc ngắm đi bộ dẫn qua hào và lên sân chánh điện.',
-    build(T,k){hall(T,k);terraceGate(T,k);precinct(T,k);k.group.userData.fitGround=garden(T,k);}});
+    build(T,k){hall(T,k);terraceGate(T,k);precinct(T,k);const approach=easternApproach(T,k),trees=garden(T,k);
+      k.group.userData.fitGround=ground=>{approach(ground);trees(ground);};}});
 })();

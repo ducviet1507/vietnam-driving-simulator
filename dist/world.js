@@ -73,7 +73,8 @@ function drawDistrict(graph,lakes,x,z,edges,build=gfx.setRoads){
  for(const coast of window.VietnamSightCoasts||[]){
    if(Math.abs(lon-coast.lon)>.02||Math.abs(lat-coast.lat)>.02)continue;
    const project=ring=>ring.map(([x,y])=>graph.point(x,y));
-   waterways.push({kind:'lake',points:project(coast.ring),holes:coast.holes.map(project),bankSpacing:coast.bankSpacing});
+   waterways.push({kind:'lake',points:project(coast.ring),holes:coast.holes.map(project),bankSpacing:coast.bankSpacing,
+     name:coast.name,sharedStage:coast.sharedStage});
  }
  pendingDistrict=null;districtView={graph,x,z,edges,waterways};
  loadStructuresNear(graph,x,z);return build(edges,x,z,waterways,graph);
