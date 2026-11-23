@@ -45,6 +45,12 @@ for (const name of ["city-sedan","classic-sedan","compact-mpv","touring-mpv","st
 // Terrain generation consumes this national raster offline. Its public URL
 // serves the original PNG from the pinned source revision.
 await rm(path.join(client,"streetscape","surfaces","vietnam-elevation.png"));
+// Keep road formation tiles in the local asset store. Full sightseeing
+// photographs use the same revision-pinned media route as landmark scans.
+const sightPhotos=path.join(client,"sight-photos");
+for(const file of await readdir(sightPhotos)){
+  if(file.endsWith(".webp"))await rm(path.join(sightPhotos,file));
+}
 await Promise.all([packRoadAssets(client),prepareSightSurfaces(client)]);
 // Population and land-cover rasters are already gzip streams. Repack the
 // release copies at level 9 while preserving the exact sampled pixels.

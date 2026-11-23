@@ -194,7 +194,8 @@ async function serveGameAsset(request, env, url) {
     const scan = /^\/landmark-scans\/(?:my-son|my-son-g4|den-ngoc-son)\.glb$/.test(pathname);
     const garageModel = /^\/streetscape\/(?:city-sedan|classic-sedan|compact-mpv|touring-mpv|street-motorcycle)\.glb$/.test(pathname);
     const elevationSource = pathname === "/streetscape/surfaces/vietnam-elevation.png";
-    const pinnedAsset = scan || garageModel || elevationSource;
+    const sightPhoto = /^\/sight-photos\/[a-z0-9-]+\.webp$/.test(pathname);
+    const pinnedAsset = scan || garageModel || elevationSource || sightPhoto;
     if (pinnedAsset || pathname === "/trailer/qua-mot-khuc-cua.mp4") {
       const upstreamHeaders = new Headers({"Accept-Encoding":"identity"});
       for (const name of ["Range","If-Range","If-None-Match","If-Modified-Since"]) {
@@ -218,7 +219,7 @@ async function serveGameAsset(request, env, url) {
       for (const name of ["Accept-Ranges","Content-Range","Content-Length","ETag","Last-Modified","Cache-Control"]) {
         if (media.headers.has(name)) headers.set(name,media.headers.get(name));
       }
-      if (media.ok) headers.set("Content-Type",elevationSource?"image/png":pinnedAsset?"model/gltf-binary":"video/mp4");
+      if (media.ok) headers.set("Content-Type",sightPhoto?"image/webp":elevationSource?"image/png":pinnedAsset?"model/gltf-binary":"video/mp4");
       return new Response(media.body,{status:media.status,headers});
     }
   }
