@@ -16,7 +16,7 @@ ViVu3D là game lái xe 3D trên trình duyệt. Bạn có thể khám phá Vi�
 | [Cúp Bánh Mì](https://vivu3d.com/cup) | Vượt đối thủ ở chặng Ven sông, Đèo trà hoặc một trong sáu cung đèo. Mỗi chặng có bảng thành tích riêng. |
 | [Sân tập và thi thử](https://vivu3d.com/hall) | Ôn lý thuyết hạng B, tập sa hình rồi thử lái đường trường và đường phố. |
 
-Trên màn hình xuất phát, nhập tên đường hoặc địa danh vào ô **Bạn muốn xuất phát ở đâu?** rồi chọn kết quả trên bản đồ. Để làm quen tay lái, bật **Tập lái bằng sedan**. Xe lên ga nhẹ, giới hạn 40 km/h và tắt nitro. Trong **Tùy chọn → Mật độ giao thông**, chọn **Đường thoáng** để tập thao tác hoặc **Phố đông** để luyện quan sát xe máy và ô tô ở giao lộ.
+Trên màn hình xuất phát, nhập tên đường hoặc địa danh vào ô **Bạn muốn xuất phát ở đâu?** rồi chọn kết quả trên bản đồ. Bấm **Lái tự do** để dùng xe đang chọn hoặc **Tập lái · Tối đa 40 km/h** để tập bằng sedan với ga nhẹ và không dùng nitro. Bấm **Tạm dừng → Chuyển sang lái tự do** để đổi chế độ ngay tại chỗ. Trong **Tùy chọn → Mật độ giao thông**, chọn **Đường thoáng** để tập thao tác hoặc **Phố đông** để luyện quan sát xe máy và ô tô ở giao lộ.
 
 ## Bưu thiếp Xuyên Việt
 
@@ -61,9 +61,9 @@ Mỗi **Tuyến nổi bật** có bảng xếp hạng riêng. Thời gian tính 
 <details>
 <summary>Đổi xe, chỉnh đồ họa và ngắm địa danh</summary>
 
-- Trên màn hình xuất phát **Xuyên Việt**, mở **Chọn xe** cạnh nút **Cầm lái**. Hai mẫu sedan đô thị và cổ điển có 5 chỗ. Với xe 7 chỗ, bạn có thể chọn MPV đô thị, MPV đường dài, SUV hoặc MPV gia đình. Trình duyệt nhớ xe cho lần sau. Bạn cũng có thể đổi xe trong **Tùy chọn → Xe của bạn**. GT điện và Muscle Car V8 có mặt ở cả Xuyên Việt và Đua Cúp.
+- Trên màn hình xuất phát **Xuyên Việt**, mở **Chọn xe** phía trên nút **Lái tự do**. Hai mẫu sedan đô thị và cổ điển có 5 chỗ. Với xe 7 chỗ, bạn có thể chọn MPV đô thị, MPV đường dài, SUV hoặc MPV gia đình. Trình duyệt nhớ xe cho lần sau. Bạn cũng có thể đổi xe trong **Tùy chọn → Xe của bạn**. GT điện và Muscle Car V8 có mặt ở cả Xuyên Việt và Đua Cúp.
 - Trong **Bố trí buồng lái → Chất lượng đồ họa**, giữ mức **Tự động** để game điều chỉnh theo tốc độ khung hình hoặc chọn **Thấp**, **Vừa**, **Cao**. Trình duyệt nhớ lựa chọn cho các lần lái sau.
-- Trong **Tùy chọn → Danh lam 3D**, tìm một địa danh rồi bấm **Đặt điểm xuất phát** và **Cầm lái**. Khi đến gần, mở **Ngắm địa danh 3D** để xoay góc nhìn. Những nơi có ảnh đối chiếu sẽ hiện nút **Xem ảnh thực địa**.
+- Trong **Tùy chọn → Danh lam 3D**, tìm một địa danh rồi bấm **Đặt điểm xuất phát** và **Lái tự do**. Khi đến gần, mở **Ngắm địa danh 3D** để xoay góc nhìn. Những nơi có ảnh đối chiếu sẽ hiện nút **Xem ảnh thực địa**.
 
 </details>
 

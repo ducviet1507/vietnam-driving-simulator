@@ -34,7 +34,7 @@
 #loadStatus:empty {display:none}
 #journeySetup {width:min(415px,94vw); background:var(--paper); color:var(--ink); color-scheme:light}
 #journeySetup .guide p {color:var(--ink)}
-.journey[data-awaiting-motion] .telemetry {visibility:hidden; opacity:0}
+.journey[data-awaiting-motion]:not([data-learner]) .telemetry {visibility:hidden; opacity:0}
 .journey .telemetry {transition:opacity .28s}
 @media(max-width:650px) {
   .journey[data-phase=grid] header {padding:6px 16px; gap:8px; justify-content:space-between}

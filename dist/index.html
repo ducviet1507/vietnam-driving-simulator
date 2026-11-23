@@ -62,10 +62,10 @@
           </optgroup>
         </select>
       </label>
-      <label class="learnerChoice"><input id="learnerDrive" type="checkbox"> Tập lái bằng sedan <small>40 km/h</small></label>
     </div>
     <div class="openingActions">
       <button id="launch" aria-describedby="runNotice" disabled>Đang tải đường…</button>
+      <button id="launchLearner" aria-describedby="runNotice" disabled>Tập lái · Tối đa 40 km/h</button>
       <button id="startGuided" aria-haspopup="dialog" disabled>Lộ trình</button>
       <button id="openSetup" aria-haspopup="dialog">Tùy chọn</button>
     </div>
@@ -91,7 +91,7 @@
 </dialog>
 <section id="hud" class="hud" hidden><div class="routeInfo"><div class="routeReadout"><small>ĐANG LÁI TRÊN</small><small id="duelInfo" hidden></small><strong id="street">Đường Việt Nam</strong><span id="turnInfo"></span><span id="roadFacts" hidden></span><span id="landmark" hidden></span><span id="guidedInfo" hidden></span><a data-weather href="https://open-meteo.com/" target="_blank" rel="noopener" aria-label="Thời tiết từ Open-Meteo">Thời tiết tại điểm lái</a><span id="trip">0,0 km</span></div><div class="routeActions"><button id="tourView" hidden>Ngắm địa danh 3D</button><button type="button" id="scenicRadio" hidden>Dò đài FM</button></div></div>
 <button type="button" class="navigationDock" id="openDrivingMap" aria-haspopup="dialog" aria-controls="drivingMap" aria-keyshortcuts="M" aria-label="Mở bản đồ khu vực"><canvas id="map" width="188" height="150" aria-hidden="true"></canvas><span class="mapHint"><kbd>M</kbd> Bản đồ</span></button>
-<div class="telemetry"><strong id="speed">0</strong> km/h<div><label>Thân xe <meter id="hp" min="0" max="100" value="100"></meter></label><label data-boost-control>Nitro <meter id="nitro" min="0" max="100" value="100"></meter></label></div></div>
+<div class="telemetry"><small id="learnerLimit" hidden>Tập lái · Tối đa 40 km/h</small><strong id="speed">0</strong> km/h<div><label>Thân xe <meter id="hp" min="0" max="100" value="100"></meter></label><label data-boost-control>Nitro <meter id="nitro" min="0" max="100" value="100"></meter></label></div></div>
 </section>
 <output id="callout" aria-live="polite"></output><div class="touch" id="touch" hidden><div><button data-key="a" aria-label="Lái trái">◀</button><button data-key="d" aria-label="Lái phải">▶</button></div><div><button data-key="w shift" data-slide-pedal>Ga + Nitro</button><button data-key="s" aria-label="Phanh và lùi" title="Giữ để phanh, tiếp tục giữ để lùi">Phanh<br>Lùi</button><button data-key="w" data-slide-pedal>Ga</button></div></div>
 <div id="secretField" hidden><button type="button" id="secretGlint" aria-label="Khám phá ánh lóe">✧</button><div id="secretApparition" aria-hidden="true"></div></div>
@@ -143,7 +143,7 @@
 </dialog>
 <dialog id="guidedArrival" aria-labelledby="arrivalTitle"><h2 id="arrivalTitle">Đã đến hồ Tam Chúc</h2><p id="arrivalResult"></p><button class="hot" id="arrivalBoard">Xem hạng và gửi thành tích</button><button id="arrivalTour">Ngắm Tam Chúc</button><button id="arrivalDrive">Lái tiếp</button><button id="arrivalRetry">Lái lại tuyến này</button></dialog>
 <dialog id="pit"><small>GARA CHÚ TƯ</small><h2 id="remark"></h2><p id="prompt"></p><img id="pitImage" hidden alt=""><div id="choices"></div><p id="reply" role="status"></p><button id="repair" class="hot" hidden>Nhận xe và lái tiếp</button></dialog>
-<dialog id="rest"><small>XUYÊN VIỆT</small><h2>Dừng chân</h2><p id="positionLabel"></p><button id="resume" class="hot">Lái tiếp</button><button type="button" data-postcard aria-haspopup="dialog">Viết bưu thiếp từ đây</button><button id="scoreBoard">Xem hạng và gửi thành tích</button><button class="layoutButton" data-cockpit-settings aria-haspopup="dialog">Bố trí buồng lái</button><button id="raceMode">Đua xuyên Việt</button><button id="reverse">Đặt xe về đường</button><button id="pausedPlanner">Chọn lộ trình</button><button id="relocate">Đổi điểm xuất phát</button><a href="#duong-deo" id="pausedPasses">Chọn đường đèo</a><a href="cup.html">Đua Cúp Bánh Mì</a></dialog>
+<dialog id="rest"><small>XUYÊN VIỆT</small><h2>Dừng chân</h2><p id="positionLabel"></p><button id="resume" class="hot">Lái tiếp</button><button type="button" id="leaveLearner" hidden>Chuyển sang lái tự do</button><button type="button" data-postcard aria-haspopup="dialog">Viết bưu thiếp từ đây</button><button id="scoreBoard">Xem hạng và gửi thành tích</button><button class="layoutButton" data-cockpit-settings aria-haspopup="dialog">Bố trí buồng lái</button><button id="raceMode">Đua xuyên Việt</button><button id="reverse">Đặt xe về đường</button><button id="pausedPlanner">Chọn lộ trình</button><button id="relocate">Đổi điểm xuất phát</button><a href="#duong-deo" id="pausedPasses">Chọn đường đèo</a><a href="cup.html">Đua Cúp Bánh Mì</a></dialog>
 <dialog id="postcard" aria-labelledby="postcardTitle">
   <div class="postcardHead"><h2 id="postcardTitle">Bưu thiếp Xuyên Việt</h2><button type="button" id="closePostcard" autofocus>Đóng</button></div>
   <img id="postcardPrint" alt="" hidden>

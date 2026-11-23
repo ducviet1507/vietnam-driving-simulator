@@ -25,28 +25,20 @@ function selectVehicle(model,learner=false){
  car.model=model;car.spec=learner?learnerSedan:worldGarage[model];gfx?.preloadVehicle(model);
  openingGarage.value=setupGarage.value=model;
  $('garagePreview').src='streetscape/previews/'+model+'.webp';
- $('learnerDrive').checked=learner;
+ $('learnerLimit').hidden=$('leaveLearner').hidden=!learner;
  document.body.toggleAttribute('data-learner',learner);
 }
-let learnerSaved=false;
 try{
  const saved=localStorage.getItem('taylai.world.garage')||localStorage.getItem('taylai.garage');
  if(Object.hasOwn(worldGarage,saved))garageVehicle=saved;
- learnerSaved=localStorage.getItem('taylai.world.learner')==='1';
  const traffic=localStorage.getItem('taylai.world.traffic');
  if(['quiet','busy'].includes(traffic))$('trafficLevel').value=traffic;
 }catch{}
-selectVehicle(learnerSaved?'family-sedan':garageVehicle,learnerSaved);
+selectVehicle(garageVehicle);
 openingGarage.disabled=false;
-$('learnerDrive').onchange=()=>{
- const learner=$('learnerDrive').checked;
- selectVehicle(learner?'family-sedan':garageVehicle,learner);
- try{localStorage.setItem('taylai.world.learner',learner?'1':'0');}catch{}
-};
 openingGarage.onchange=setupGarage.onchange=event=>{
  garageVehicle=event.currentTarget.value;selectVehicle(garageVehicle);
  try{
-   localStorage.removeItem('taylai.world.learner');
    if(car.spec.worldOnly)localStorage.setItem('taylai.world.garage',car.model);
    else{localStorage.setItem('taylai.garage',car.model);localStorage.removeItem('taylai.world.garage');}
  }catch{}
@@ -183,6 +175,8 @@ async function startAt(place,restore=null,guided=null){
  guide=null;scenicTrace=null;guideStarted=0;customSaveKey=null;
  $('startGuided').disabled=true;$('guidedInfo').hidden=true;
  loadRequest={place,restore,guided};activeTrip=false;
+ selectVehicle(garageVehicle);
+ $('launchLearner').hidden=Boolean(guided?.id);
  const firstDrive=place===openingPlace&&!restore;
  car.opening=firstDrive;car.openingPose=firstDrive?1:0;car.dawn=firstDrive?1:0;openingCameraTime=0;
  document.body.removeAttribute('data-awaiting-motion');
@@ -213,7 +207,7 @@ async function startAt(place,restore=null,guided=null){
  gfx?.cancelRoads();
  const token=++loadToken;mode='loading';keySet.clear();$('grid').hidden=false;$('hud').hidden=true;$('touch').hidden=true;
  $('pause').hidden=true;$('camera').hidden=true;document.body.dataset.phase='grid';
- $('launch').disabled=true;$('challenge').disabled=true;$('launch').textContent='Đang tải đường…';$('loadStatus').textContent='';
+ $('launch').disabled=$('launchLearner').disabled=$('challenge').disabled=true;$('launch').textContent='Đang tải đường…';$('loadStatus').textContent='';
  $('placeTitle').textContent=place[0];
  try{
    const origin=Array.isArray(restore?.origin)&&restore.origin.length===2&&restore.origin.every(Number.isFinite)?restore.origin:place.slice(1);
@@ -281,7 +275,8 @@ async function startAt(place,restore=null,guided=null){
      });
    }else if(!await prepareWorld(graph,token))return;
    drawDepartureMap();mode='grid';
-   $('challenge').disabled=guided;$('startGuided').disabled=false;$('launch').disabled=false;$('launch').textContent=restore?'Lái tiếp':'Cầm lái';
+   $('challenge').disabled=guided;$('startGuided').disabled=false;
+   $('launch').disabled=$('launchLearner').disabled=false;$('launch').textContent=guided?'Cầm lái':'Lái tự do';
    if(site?.visitOnArrival&&!restore&&!guided)await openTour(site);
  }catch(e){if(token===loadToken){$('startGuided').disabled=false;$('loadStatus').textContent=e.message;$('launch').textContent='Thử tải lại';$('launch').disabled=false;mode='error';pendingPlace=place;}}
 }
@@ -566,7 +561,7 @@ function updateHud(){
    info.push(label+' · '+Math.max(0,Math.round(control.distance))+' m');
  }
  $('roadFacts').hidden=!info.length;$('roadFacts').textContent=info.join(' · ');
- $('street').textContent=(car.accessLane?'Đường nội bộ':nameOf(player.edge))+(Math.abs(grade)>=2?' · '+(grade>0?'↑ ':'↓ ')+Math.abs(grade)+'%':'');$('speed').textContent=Math.round(Math.abs(car.speed)*3.6);$('trip').textContent=fmt(distance)+(car.spec===learnerSedan?' · Tập lái 40 km/h':' · '+passes+' lượt vượt');$('hp').value=hp;$('nitro').value=nitro;
+ $('street').textContent=(car.accessLane?'Đường nội bộ':nameOf(player.edge))+(Math.abs(grade)>=2?' · '+(grade>0?'↑ ':'↓ ')+Math.abs(grade)+'%':'');$('speed').textContent=Math.round(Math.abs(car.speed)*3.6);$('trip').textContent=fmt(distance)+(car.spec===learnerSedan?'':' · '+passes+' lượt vượt');$('hp').value=hp;$('nitro').value=nitro;
  const fork=onNetwork?branchAhead():null,plan=duel&&fork?duel.nextAt(fork.node):null;
  $('duelInfo').hidden=!duel;
  if(duel)$('duelInfo').textContent='CHẶNG '+duel.round+' · '+(duel.player>=duel.opponent?'1/2':'2/2')+' · CÒN '+Math.ceil(duel.gate-duel.player)+' M';
@@ -812,20 +807,20 @@ $('showBoard').onclick=()=>worldBoard.open();
 $('openSetup').onclick=()=>$('journeySetup').showModal();
 $('closeSetup').onclick=()=>$('journeySetup').close();
 $('scoreBoard').onclick=()=>guide?.route.id?boardFor(guide.route).open(guide.timeMs):worldBoard.open(distance-tripStart);
-async function begin(){
+async function begin(learner=false){
  if(mode==='error'){if(loadRequest&&indexData)startAt(loadRequest.place,loadRequest.restore,loadRequest.guided);else location.reload();return;}
  if(!player||mode!=='grid')return;
  if($('journeySetup').open)$('journeySetup').close();
+ selectVehicle(learner?'family-sedan':garageVehicle,learner);
  if(!gfx){
    const token=loadToken;mode='loading';
-   $('launch').disabled=$('challenge').disabled=true;$('launch').textContent='Đang tải cảnh 3D…';
+   $('launch').disabled=$('launchLearner').disabled=$('challenge').disabled=true;$('launch').textContent='Đang tải cảnh 3D…';
    try{
      if(!await prepareWorld(roads,token))return;
    }catch(e){
      if(token===loadToken){mode='error';$('loadStatus').textContent=e.message;$('launch').textContent='Thử tải lại';$('launch').disabled=false;}
      return;
    }
-   $('launch').disabled=false;$('challenge').disabled=Boolean(guide);
  }
  $('openingStill').hidden=true;
  activeTrip=true;tripStart=distance;
@@ -855,7 +850,9 @@ async function begin(){
 function pause(){
  if(mode!=='drive')return;mode='paused';keySet.clear();save();$('raceMode').textContent=duel?'Lái tự do':'Đua xuyên Việt';$('positionLabel').textContent=nameOf(player.edge)+' · '+fmt(distance);$('rest').showModal();
 }
-$('launch').onclick=begin;$('pause').onclick=pause;
+$('launch').onclick=()=>begin();
+$('launchLearner').onclick=()=>begin(true);
+$('pause').onclick=pause;
 const sightPhotos=createSightPhotos();
 const fieldViews=createSightFieldViews(async id=>{
  const stop=allStops.get(id);if(!stop||mode!=='tour')return;
@@ -1070,6 +1067,12 @@ $('raceMode').onclick=()=>{
  $('resume').click();updateHud();
 };
 $('resume').onclick=()=>{$('rest').close();mode='drive';keySet.clear();};
+$('leaveLearner').onclick=()=>{
+ selectVehicle(garageVehicle);
+ document.body.removeAttribute('data-awaiting-motion');
+ if(!guide){tripStart=distance;worldBoard.start(tripVehicleChoice(car.model));}
+ $('resume').click();updateHud();inform('Đã chuyển sang lái tự do.');
+};
 $('reverse').onclick=()=>{$('resume').click();recover();};
 $('camera').onclick=()=>{
  inside=!inside;

@@ -185,7 +185,7 @@ try {
   await check(false, async page=>{
     const go = p=>page.goto(new URL(p,base).href,{waitUntil:'domcontentloaded'});
     await go('/?intro=turtle');
-    await page.getByRole('button',{name:'Cầm lái',exact:true}).waitFor();
+    await page.getByRole('button',{name:'Lái tự do',exact:true}).waitFor();
     await checkPhoneRotation(page,false);
     assert.equal(await page.evaluate(()=>typeof THREE),'undefined','Departure grid loaded the renderer early');
     assert.equal(await page.evaluate(async()=>{
@@ -196,8 +196,9 @@ try {
     const openingGarage=page.getByLabel('Chọn xe',{exact:true});
     await openingGarage.selectOption('compact-mpv');
     assert.equal(await page.locator('#garage').inputValue(),'compact-mpv');
-    await page.locator('#learnerDrive').check();
-    assert.equal(await openingGarage.inputValue(),'family-sedan');
+    await page.getByRole('button',{name:'Tập lái · Tối đa 40 km/h',exact:true}).click();
+    await page.locator('body[data-phase="drive"]').waitFor();
+    await page.locator('#learnerLimit').waitFor();
     const training=await page.evaluate(()=>{
       const input={power:car.spec.power,top:car.spec.top,gas:true,grade:-.25};
       const body={spec:car.spec,reverseDelay:0};
@@ -206,8 +207,20 @@ try {
       return {model:car.model,speed:speed*3.6};
     });
     assert.deepEqual(training,{model:'family-sedan',speed:40});
-    await page.locator('#learnerDrive').uncheck();
-    assert.equal(await page.locator('#garage').inputValue(),'compact-mpv');
+    const nitroPedal=page.locator('#touch [data-key~="shift"]');
+    assert.equal(await nitroPedal.isVisible(),false);
+    await page.locator('#pause').click();
+    const position=await page.evaluate(()=>[car.x,car.z,distance]);
+    await page.getByRole('button',{name:'Chuyển sang lái tự do'}).click();
+    await page.locator('#learnerLimit').waitFor({state:'hidden'});
+    assert.equal(await nitroPedal.isVisible(),true);
+    assert.deepEqual(await page.evaluate(()=>[car.x,car.z,distance]),position);
+    assert.equal(await page.evaluate(()=>car.model),'compact-mpv');
+    await page.evaluate(()=>localStorage.setItem('taylai.world.learner','1'));
+    await go('/?intro=turtle');
+    assert.equal(await page.evaluate(()=>car.model),'compact-mpv');
+    assert.equal(await page.locator('body[data-learner]').count(),0);
+    console.log('PASS learner speed limit, pause switch and saved garage choice');
     await page.locator('#openSetup').click();
     await page.locator('#garage').selectOption('touring-mpv');
     await page.locator('#closeSetup').click();
@@ -215,7 +228,7 @@ try {
     await page.reload({waitUntil:'domcontentloaded'});
     await page.waitForFunction(()=>document.querySelector('#openingGarage').value==='touring-mpv');
     assert.equal(await page.locator('#garagePreview').getAttribute('src'),'streetscape/previews/touring-mpv.webp');
-    await page.getByRole('button',{name:'Cầm lái',exact:true}).click();
+    await page.getByRole('button',{name:'Lái tự do',exact:true}).click();
     await page.locator('body[data-phase="drive"]').waitFor();
     assert.equal(await page.evaluate(()=>car.model),'touring-mpv');
     assert.match(await page.locator('#callout').textContent(),/Giữ W/);
@@ -400,7 +413,7 @@ try {
   await check(true, async page=>{
     for (const route of ['/cup','/yard','/road-exam','/streets','/?intro=turtle']) {
       await page.goto(new URL(route,base).href,{waitUntil:'domcontentloaded'});
-      if (route.startsWith('/?')) await page.getByRole('button',{name:'Cầm lái',exact:true}).click();
+      if (route.startsWith('/?')) await page.getByRole('button',{name:'Lái tự do',exact:true}).click();
       const theory = page.locator('#graphicsUnavailable[open]').getByRole('link',{name:'Ôn lý thuyết'});
       await theory.waitFor();
       await theory.click();
