@@ -537,15 +537,40 @@
       }
     }
 
-    function addPart(parent, g, m, x, y, z, sx = 1, sy = 1, sz = 1, rx = 0, ry = 0, rz = 0) {
-      const mesh = new T.Mesh(g, m);
-      mesh.position.set(x, y, z);
-      mesh.scale.set(sx, sy, sz);
-      if (rx || ry || rz) mesh.rotation.set(rx, ry, rz);
-      mesh.castShadow = true;
-      mesh.receiveShadow = true;
-      parent.add(mesh);
-      return mesh;
+    const partPose = new T.Object3D(), propBatches = new Map();
+    function addPart(parent, geometry, material, x, y, z, sx = 1, sy = 1, sz = 1, rx = 0, ry = 0, rz = 0) {
+      partPose.position.set(x, y, z);
+      partPose.scale.set(sx, sy, sz);
+      partPose.rotation.set(rx, ry, rz);
+      partPose.updateMatrix();
+      (parent.userData.parts ??= []).push({geometry,material,pose:partPose.matrix.clone()});
+    }
+    function mountProp(group) {
+      group.updateMatrix();
+      const cell = Math.floor(group.position.x / 80) + ',' + Math.floor(group.position.z / 80);
+      for (const {geometry,material,pose} of group.userData.parts || []) {
+        pose.premultiply(group.matrix);
+        if (material.transparent) {
+          // Keep glass cases independently sorted back to front.
+          const pane = new T.Mesh(geometry,material);
+          pane.matrix.copy(pose);pane.matrixAutoUpdate=false;
+          pane.castShadow=pane.receiveShadow=true;
+          root.add(pane);
+          continue;
+        }
+        const key = cell + ':' + geometry.id + ':' + material.id;
+        if (!propBatches.has(key)) propBatches.set(key,{geometry,material,poses:[]});
+        propBatches.get(key).poses.push(pose);
+      }
+    }
+    function flushProps() {
+      for (const {geometry,material,poses} of propBatches.values()) {
+        const mesh = new T.InstancedMesh(geometry,material,poses.length);
+        poses.forEach((pose,i)=>mesh.setMatrixAt(i,pose));
+        mesh.castShadow=mesh.receiveShadow=true;
+        root.add(mesh);
+      }
+      propBatches.clear();
     }
 
     // Build a Vietnamese sidewalk specialty food/coffee stall (quán vỉa hè) with low tables & plastic stools
@@ -737,14 +762,15 @@
         }
         g.position.set(f.x, f.y, f.z);
         g.rotation.y = yaw;
-        root.add(g);
+        mountProp(g);
         mounted.push({ x: f.x, z: f.z });
         count++;
       }
     }
 
     function clearProps() {
-      while (root.children.length) root.remove(root.children[0]);
+      for (const child of root.children) if (child.isInstancedMesh) child.dispose();
+      root.clear();
     }
 
     function place(graph, cx, cz, segments, clearFn, groundFn, districtFronts = null, osmPlaces = null) {
@@ -804,7 +830,7 @@
             spanArch.position.set(cxRoad, wy, czRoad);
             // Local +X runs across the road along (s.nx, s.nz)
             spanArch.rotation.y = Math.atan2(-s.nz, s.nx);
-            root.add(spanArch);
+            mountProp(spanArch);
             placed.push({ x: cxRoad, z: czRoad });
             overheadCount++;
           }
@@ -834,7 +860,7 @@
               const garland = buildLanternGarland(5.4, hash);
               garland.position.set(x, wy, z);
               garland.rotation.y = Math.atan2(-s.fz, s.fx);
-              root.add(garland);
+              mountProp(garland);
               placed.push({ x, z });
               garlandCount++;
             } else if (signCount < maxSigns && pick === 1) {
@@ -842,7 +868,7 @@
               const board = buildRoadsideSign(zone, shop, hash);
               board.position.set(x, wy, z);
               board.rotation.y = Math.atan2(s.fx, s.fz);
-              root.add(board);
+              mountProp(board);
               placed.push({ x, z });
               signCount++;
             } else if (stallCount < maxStalls) {
@@ -851,7 +877,7 @@
               const stall = buildStall(zone, label, hash);
               stall.position.set(x, wy, z);
               stall.rotation.y = faceRoadYaw;
-              root.add(stall);
+              mountProp(stall);
               placed.push({ x, z });
               stallCount++;
             }
@@ -860,6 +886,7 @@
           if (stallCount >= maxStalls && garlandCount >= maxGarlands && signCount >= maxSigns) break;
         }
       }
+      flushProps();
     }
 
     function update(lampLevel) {
