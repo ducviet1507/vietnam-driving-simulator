@@ -715,7 +715,7 @@
 
     // Mount authentic regional Vietnamese shopfront signboards, under-awning silk lanterns,
     // and potted bougainvillea directly onto surveyed OSM shophouse facades from tour-district.js!
-    function decorateDistrictFronts(fronts, clearFn) {
+    function decorateDistrictFronts(fronts, clearFn, compact) {
       if (!fronts || !fronts.length) return;
       const nearest = fronts
         .filter(f => f.zone && f.half >= 1.35 && Math.hypot(f.x, f.z) <= 155)
@@ -723,7 +723,7 @@
       const mounted = [];
       let count = 0;
       for (const f of nearest) {
-        if (count >= 26) break;
+        if (count >= (compact ? 12 : 26)) break;
         if (mounted.some(p => Math.hypot(p.x - f.x, p.z - f.z) < 5.5)) continue;
         const zone = f.zone;
         const shop = zone.shops[f.seed % zone.shops.length];
@@ -773,7 +773,7 @@
       root.clear();
     }
 
-    function place(graph, cx, cz, segments, clearFn, groundFn, districtFronts = null, osmPlaces = null) {
+    function place(graph, cx, cz, segments, clearFn, groundFn, districtFronts = null, osmPlaces = null, compact = false) {
       clearProps();
       if (!graph) return;
       const [lon, lat] = graph.geo(cx, cz);
@@ -781,7 +781,7 @@
       if (!zone) return;
 
       // 1. Mount authentic regional Vietnamese shopfront signboards & lanterns onto real OSM shophouses
-      decorateDistrictFronts(districtFronts, clearFn);
+      decorateDistrictFronts(districtFronts, clearFn, compact);
 
       // Boost priority of street segments close to real OSM cafes & markets
       const hotSpots = (osmPlaces || [])
@@ -805,10 +805,11 @@
       let overheadCount = 0;
       let garlandCount = 0;
       let signCount = 0;
-      const maxStalls = 14;
-      const maxOverhead = (zone.id === 'hoi-an' || zone.id === 'hue') ? 10 : 0;
-      const maxGarlands = zone.lanterns ? 10 : 0;
-      const maxSigns = 8;
+      const maxStalls = compact ? 6 : 14;
+      const strings = compact ? 4 : 10;
+      const maxOverhead = (zone.id === 'hoi-an' || zone.id === 'hue') ? strings : 0;
+      const maxGarlands = zone.lanterns ? strings : 0;
+      const maxSigns = compact ? 4 : 8;
 
       // 2. String overhead silk lantern canopies right across narrow Hội An & Huế Old Town streets!
       if (maxOverhead > 0) {
