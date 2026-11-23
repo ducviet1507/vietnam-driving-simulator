@@ -1,6 +1,8 @@
 'use strict';
 
 Object.assign(window.sightSecretStories, {
+  'chua-hang-hai-son-kien-luong':['lotus','Cành liễu nhỏ','Từ sân nhìn lên, cành lá nhỏ nằm phía nào của tượng Quan Âm?',
+    'Cành dương liễu ở bàn tay phải giơ lên, phía trái người đứng nhìn. Bàn tay bên kia nâng bình nghiêng trước ngực.'],
   'hon-phu-tu-kien-luong':['ridge','Cột đá còn lại','Từ Bãi Dương, cột đá cao đứng ở đầu nào của dãy đá thấp?',
     'Cột hòn Tử đứng bên phải dãy đá thấp khi nhìn từ bờ. Qua một khoảng nước nữa mới tới vách hòn Bà có cây phủ trên đỉnh.'],
   'vung-chua-dao-yen':['shell','Qua hàng phi lao','Đứng giữa các thân phi lao ở Vũng Chùa, đường chân trời có bị ngắt ở đâu?','Một sườn đảo nhô lên giữa biển. Mép rừng xanh thoải dần xuống bãi sáng màu ở bờ tây Đảo Yến.'],

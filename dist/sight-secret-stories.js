@@ -3,6 +3,8 @@
 // Clues belong to the tour camera. The little scenes in the reveals are original
 // keepsakes inspired by the place, including the imagined voices and movements.
 window.sightSecretStories = {
+  'hai-son-tu-san-tuong-quan-am':['lotus','Một sân chùa trên cao','Từ chân cầu thang nhìn ngang dưới sân lát gạch, có thể thấy gì?',
+    'Các hàng cột đỡ sàn để hở khoảng trống bên dưới. Lên hết cầu thang, qua sân gạch mới nhìn thấy trọn những lớp cánh sen.'],
   'kien-luong-hon-phu-tu':['shell','Ba đảo ngoài khơi','Qua khỏi hòn Tử, giữa hòn Bà và hòn Ông còn thấy gì?',
     'Một luồng nước rộng tách hai đảo đá vôi. Hòn Bà ở gần bệ đá hòn Phụ Tử, còn hòn Ông nằm xa hơn về phía tây.'],
   'chua-hang-san-chua-va-rung-cay':['wing','Chim giữa sân chùa','Giữa các chậu kiểng trước nhà trưng bày, trên ngọn cột đỏ có hình gì?','Một con chim đậu trên đỉnh cột có thân xoắn. Ra phía rừng, những đốm trắng trong tán lá là đàn cò về đậu.'],

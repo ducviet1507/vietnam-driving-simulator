@@ -98,10 +98,32 @@ function createVietnamRelief(T,scene,compact,landscapes,tunnelCut,landWidth,cave
   const museum=graph?.point?.(106.30479,9.9161553);
   const hang=graph?.point?.(106.3450733,9.8871507);
   const hangGate=graph?.point?.(106.3440102,9.8880786);
+  const haiSon=graph?.point?.(104.6401674,10.1397666);
+  let haiSonStage;
   let pondStage,pondEdges;
   let hangStage,hangRoadStage,hangEdges;
   function localDatum(x,z,surface){
     if(!hoanKiem)return surface-base;
+    if(Math.abs(x-haiSon.x)<112&&Math.abs(z-haiSon.z)<112){
+      // Use the open ground northwest of the elevated Hải Sơn terrace. The
+      // DSM starts climbing its rear columns well before the actual hillside.
+      const u=x-haiSon.x,v=z-haiSon.z;
+      const across=-.7638*u+.64545*v,along=-.64545*u-.7638*v;
+      const terrace=Math.max(-18-across,across-25,-17-along,along-28);
+      // The adjoining hall occupies the same saddle below the western hill.
+      const hu=(across-47.6)*-.9685-(along+5.7)*.2489,hv=(across-47.6)*.2489+(along+5.7)*-.9685;
+      const edge=Math.min(terrace,Math.max(Math.abs(hu)-7,Math.abs(hv)-17));
+      if(edge<40){
+        if(haiSonStage===undefined){
+          const open=[[-5,46],[-10,58],[0,70]].map(([a,b])=>{
+            const px=haiSon.x-.7638*a-.64545*b,pz=haiSon.z+.64545*a-.7638*b;
+            return landscapes.elevation(px,pz)??elevation(...uvAt(px,pz,graph));
+          });
+          haiSonStage=open.sort((a,b)=>a-b)[1];
+        }
+        surface=haiSonStage+(surface-haiSonStage)*T.MathUtils.smoothstep(edge,16,40);
+      }
+    }
     if(Math.abs(x-hang.x)<210&&Math.abs(z-hang.z)<210){
       // The canopy and roofs are high DSM returns. The overhead view shows
       // one continuous courtyard, open steps and a grove on the same low plain.
