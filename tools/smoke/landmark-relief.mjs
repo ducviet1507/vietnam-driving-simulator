@@ -105,6 +105,14 @@ const pond=relief.prepare(pondGraph,{elevation:(x,z)=>Math.abs(x)<45&&Math.abs(z
 for(const [x,z] of [[0,0],[-80,22],[72,-30],[32,48]])close(pond.altitude(x,z),5);
 assert.ok(pond.altitude(-140,0)>5&&pond.altitude(-140,0)<8);
 close(pond.altitude(-285,0),26);
+// Crown and roof returns used to bury the ground floor of Kompông Chrây's
+// exhibit building. Keep the shared court level with its open-ground samples.
+const hangGraph={geo:(x,z)=>[106.3450733+x/109650,9.8871507-z/110900],
+  point:(lon,lat)=>({x:(lon-106.3450733)*109650,z:(9.8871507-lat)*110900})};
+const highPoints=[[0,0],[-60,5],[-6,-56]];
+const hang=relief.prepare(hangGraph,{elevation:(x,z)=>x>180||highPoints.some(([u,v])=>Math.hypot(x-u,z-v)<12)?19:4,elevationWeight:()=>1});
+for(const [x,z] of highPoints)assert.ok(Math.abs(hang.altitude(x,z)-4)<.22,'The prayer hall, gallery and north court share the local grade');
+close(hang.altitude(288,0),19);
 vm.runInContext(readFileSync(new URL('../../dist/drivetrain.js',import.meta.url),'utf8'),context);
 const body={reverseDelay:0},downhill={grade:-.16,top:35,power:8,reverse:true};
 let speed=1.2;

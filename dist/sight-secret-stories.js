@@ -3,6 +3,7 @@
 // Clues belong to the tour camera. The little scenes in the reveals are original
 // keepsakes inspired by the place, including the imagined voices and movements.
 window.sightSecretStories = {
+  'chua-hang-san-chua-va-rung-cay':['wing','Chim giữa sân chùa','Giữa các chậu kiểng trước nhà trưng bày, trên ngọn cột đỏ có hình gì?','Một con chim đậu trên đỉnh cột có thân xoắn. Ra phía rừng, những đốm trắng trong tán lá là đàn cò về đậu.'],
   'bao-tang-khmer-tra-vinh-tu-cong-den-dan-ngu-am':['arch','Ngồi giữa vòng cồng','Người chơi ngồi ở đâu khi gõ dàn cồng trong phòng trưng bày?','Hai đầu khung gỗ để hở một lối vào. Người chơi ngồi giữa lòng khung, dùng dùi gõ lên các núm cồng xếp quanh mình.'],
   'chua-ang-tu-hao-nuoc-den-chanh-dien':['arch','Qua hào vào sân chùa','Từ lối vượt hào tới chánh điện, phải đi lên mấy bậc nền chính?','Nền đá xanh bên ngoài cao 1,4 m. Qua sân lát gạch còn một nền thứ hai cao thêm 0,6 m, nâng gian thờ lên phía trên hai vòng rào.'],
   'ao-ba-om-qua-go-cat-va-bo-nuoc':['leaf','Đường rễ trên gò cát','Từ mặt ao đi vào dưới rừng cây có thể thấy phần nào của những cây cổ thụ nổi hẳn lên?','Các bộ rễ lớn nhô khỏi nền cát. Có đoạn rễ vươn ngang rồi lại cắm xuống đất, tạo thành khoảng trống ở chân cây.'],

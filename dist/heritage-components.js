@@ -440,6 +440,21 @@
     if(existing.has(id))Object.assign(atlas.entries.find(p=>p.id===id),info);
     else atlas.entries.push(info);
   }
+  const hang=atlas.entries.find(p=>p.id==='osm-way-1352279406');
+  if(hang){
+    const start=[106.3439176,9.8880711];
+    const approach=(lon,lat)=>Math.round(Math.hypot((lon-start[0])*109670,(lat-start[1])*110900));
+    Object.assign(hang,{name:'Chùa Hang (Kompông Chrây)',start,approachMeters:approach(hang.lon,hang.lat),city:'Châu Thành',
+      locality:'Chùa Kompông Chrây, Trà Vinh',formerProvince:'Trà Vinh',visitOnArrival:true,mappedEntrance:true});
+    for(const [id,name,lon,lat,index] of [
+      ['chua-hang-mai-ngoi','Mái ngói màu và tháp nóc chùa Hang',106.3450702,9.8871501,1],
+      ['chua-hang-nha-trung-bay','Cột chim và nhà trưng bày chùa Hang',106.3446010,9.8871423,2],
+      ['chua-hang-rung-cay','Rừng cây và sân chim chùa Hang',106.3452160,9.8870406,3],
+    ]){
+      if(!existing.has(id))atlas.entries.push({...hang,id,name,lon,lat,kind:'Điểm ngắm cảnh',approachMeters:approach(lon,lat),
+        source:'https://vinhlong.gov.vn/du-khach-old/diadanh_test',viewOf:['chua-hang-tra-vinh',index]});
+    }
+  }
   const ang=atlas.entries.find(p=>p.id==='osm-way-288574348');
   if(ang){
     Object.assign(ang,{city:'Nguyệt Hóa',formerProvince:'Trà Vinh',mappedEntrance:true,visitOnArrival:true});

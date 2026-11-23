@@ -1,6 +1,7 @@
 'use strict';
 
 Object.assign(window.sightSecretStories, {
+  'chua-hang-tra-vinh':['ridge','Nơi các đầu hồi gặp nhau','Hãy nhìn lên giữa mái chánh điện. Bên trên chỗ hai trục mái giao nhau có gì?','Một tháp nhọn vươn lên ở chính giữa. Từ góc ngắm mái ngói có thể lần theo các dải màu tới chân tháp.'],
   'bao-tang-khmer-tra-vinh':['arch','Một ô cửa dưới mái nhọn','Những ô kính nhỏ trên đầu hồi có hình gì?','Nhìn từ sân, các ô tam giác sáng và tối xếp thành từng hàng trong khung đầu hồi lớn. Bên dưới là mảng phù điêu trên mặt đứng nhà trưng bày.'],
   'chua-ang-tra-vinh':['arch','Mảng chạm trên mái','Nhìn vào giữa đầu hồi phía đông. Màu gì nằm sau những nét chạm vàng?','Phía sau những nét chạm vàng là nền xanh lục. Mảng gỗ hình tam giác nằm giữa hai bờ mái dốc.'],
   'mieu-ba-chua-xu-nui-sam': ['ridge', 'Ba vành ngói xanh', 'Từ sân miếu, hãy đếm những lần mái ngói xanh rút vào bên trên chánh điện.', 'Một vành mái che cả hàng cột; vành tiếp theo lọt vào trong, vành trên cùng hứng nắng. Ba mép ngói cùng in lên nền trời Châu Đốc.'],
