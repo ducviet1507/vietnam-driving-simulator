@@ -3,6 +3,8 @@
 // Clues belong to the tour camera. The little scenes in the reveals are original
 // keepsakes inspired by the place, including the imagined voices and movements.
 window.sightSecretStories = {
+  'kien-luong-hon-phu-tu':['shell','Ba đảo ngoài khơi','Qua khỏi hòn Tử, giữa hòn Bà và hòn Ông còn thấy gì?',
+    'Một luồng nước rộng tách hai đảo đá vôi. Hòn Bà ở gần bệ đá hòn Phụ Tử, còn hòn Ông nằm xa hơn về phía tây.'],
   'chua-hang-san-chua-va-rung-cay':['wing','Chim giữa sân chùa','Giữa các chậu kiểng trước nhà trưng bày, trên ngọn cột đỏ có hình gì?','Một con chim đậu trên đỉnh cột có thân xoắn. Ra phía rừng, những đốm trắng trong tán lá là đàn cò về đậu.'],
   'bao-tang-khmer-tra-vinh-tu-cong-den-dan-ngu-am':['arch','Ngồi giữa vòng cồng','Người chơi ngồi ở đâu khi gõ dàn cồng trong phòng trưng bày?','Hai đầu khung gỗ để hở một lối vào. Người chơi ngồi giữa lòng khung, dùng dùi gõ lên các núm cồng xếp quanh mình.'],
   'chua-ang-tu-hao-nuoc-den-chanh-dien':['arch','Qua hào vào sân chùa','Từ lối vượt hào tới chánh điện, phải đi lên mấy bậc nền chính?','Nền đá xanh bên ngoài cao 1,4 m. Qua sân lát gạch còn một nền thứ hai cao thêm 0,6 m, nâng gian thờ lên phía trên hai vòng rào.'],

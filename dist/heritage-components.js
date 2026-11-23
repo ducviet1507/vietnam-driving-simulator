@@ -372,6 +372,21 @@
     [1504768248,'Đền Trung – Hùng Vương Tổ miếu','Phú Thọ','Hùng Sơn',105.3240986,21.3690193,105.322450,21.369750,189,'https://denhung.vn/tin-tuc/den-trung'],
   ];
   const existing = new Set(atlas.entries.map(site => site.id));
+  const kienLuongLane=[104.6386004,10.1402003],kienLuongRocks='hon-phu-tu-kien-luong';
+  const kienLuongSource='https://kienluong.angiang.gov.vn/kien-luong-phat-huy-nhung-tiem-nang-du-lich-tu-cac-di-tich-lich-su-van-hoa';
+  for(const [id,name,lon,lat,kind,way,camera] of [
+    ['osm-way-1223400935','Hòn Phụ Tử',104.638706,10.135298,'Đảo',1223400935,null],
+    ['hon-phu-tu-cot-da','Cột đá hòn Tử',104.638706,10.135298,'Danh thắng',1223400935,1],
+    ['hon-phu-tu-be-da','Bệ đá và các khối gãy hòn Phụ Tử',104.639015,10.135584,'Danh thắng',1223400935,2],
+    ['osm-way-1223400936','Hòn Bà ngoài khơi Kiên Lương',104.637637,10.135761,'Đảo',1223400936,3],
+    ['osm-way-1223400937','Hòn Ông ngoài khơi Kiên Lương',104.635023,10.134842,'Đảo',1223400937,4],
+  ]){
+    if(existing.has(id))continue;
+    atlas.entries.push({id,name,lon,lat,kind,start:kienLuongLane,region:'Nam Bộ',province:'An Giang',formerProvince:'Kiên Giang',
+      city:'Kiên Lương',locality:'Bình An cũ',map:'https://www.openstreetmap.org/way/'+way,source:kienLuongSource,
+      approachMeters:Math.round(Math.hypot((lon-kienLuongLane[0])*109580,(lat-kienLuongLane[1])*110900)),
+      visitOnArrival:true,mappedEntrance:true,...(camera===null?{}:{viewOf:[kienLuongRocks,camera]})});
+  }
   const monumentStops=[
     ['osm-node-2495002567','Khu mộ Đại tướng Võ Nguyên Giáp và phu nhân Đặng Bích Hà',106.4949861,17.9247684,'osm-node-2495002567',null,null],
     ['vung-chua-bai-xe-khu-mo','Bãi xe và lối lên khu mộ Đại tướng Võ Nguyên Giáp',106.494083,17.923944,'osm-node-2495002567','khu-mo-vo-nguyen-giap',1,'https://www.openstreetmap.org/way/884243608'],

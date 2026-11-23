@@ -45,6 +45,21 @@ async function newPage(browser,id){
   page.setDefaultTimeout(120000);
   const url=new URL(base);url.searchParams.set('landmark',id);url.searchParams.set('view','tour');
   try{
+    // A failed landmark shader can leave a fully coloured sea or skyline.
+    // Inspect link results in the capture browser before saving the thumbnail.
+    await page.addInitScript(()=>{
+      const errors=window.previewShaderErrors=[];
+      for(const api of [window.WebGLRenderingContext,window.WebGL2RenderingContext]){
+        if(!api)continue;
+        const link=api.prototype.linkProgram;
+        api.prototype.linkProgram=function(program){
+          link.call(this,program);
+          if(this.getProgramParameter(program,this.LINK_STATUS))return;
+          const logs=this.getAttachedShaders(program).map(shader=>this.getShaderInfoLog(shader)).filter(Boolean);
+          errors.push(logs.join('\n')||this.getProgramInfoLog(program)||'WebGL program failed to link');
+        };
+      }
+    });
     await page.goto(url.href,{waitUntil:'domcontentloaded'});
     await page.waitForFunction(()=>typeof mode!=='undefined'&&(mode==='tour'||mode==='error'),null,{timeout:150000});
     const error=await page.evaluate(()=>mode==='error'?document.getElementById('loadStatus').textContent:'');
@@ -78,6 +93,7 @@ async function frame(page,id){
     if(car.sightView?.data.id!==id)throw Error('Tour changed during capture');
     Object.assign(car.sightView,{viewport:null,hour:10,zoom});
     gfx.render(car,npcs,0,false,performance.now());
+    if(window.previewShaderErrors.length)throw Error(window.previewShaderErrors.join('\n'));
     const source=document.getElementById('world'),canvas=document.createElement('canvas');
     canvas.width=288;canvas.height=196;
     const ctx=canvas.getContext('2d',{willReadFrequently:true});

@@ -37,6 +37,9 @@ GRAPHIC = re.compile(r"(?:^|[ _-])(logo|locator|brochure|floor plan|plan of|coat
 
 # Audited Commons file pages for sites without a specific upstream photograph.
 REVIEWED = {
+    "osm-way-1223400935": "File:Hòn Phụ Tử.jpg",
+    "hon-phu-tu-cot-da": "File:Hòn Phụ Tử ở Kiên Lương.jpg",
+    "osm-way-1223400936": "File:Hòn Phụ Tử.jpg",
     "osm-way-1352279406": "File:Chính điện chùa Hang (Trà Vinh).jpg",
     "chua-hang-cong-tay": "File:Cổng chùa Hang (Trà Vinh).jpg",
     "chua-hang-long-vom": "File:Cổng chùa Hang (Trà Vinh).jpg",
