@@ -49,7 +49,10 @@ window.VietnamLandmarks=(()=>{
     let seed=2043;
     function random(){seed=(Math.imul(seed,1664525)+1013904223)>>>0;return seed/4294967296;}
     const cube=new T.BoxGeometry(),round=new T.CylinderGeometry(1,1,1,20),colour=new T.Color();
-    const finishKinds=[],swatches=new Map(),footingVertices=[];
+    const addition=additions.get(id);
+    const groundBuilding=addition?addition.solids?.length!==0&&!id.startsWith('cau-'):
+      ['cathedral','sapa','coal','flag','ponagar','station','bat','rong'].includes(id);
+    const finishKinds=[],swatches=new Map(),footings=[],roundFeet=[];
     function palette(spec, defaults=false) {
       for(const [kind,tints] of Object.entries(spec))
         for(const tint of [].concat(tints)){
@@ -61,14 +64,26 @@ window.VietnamLandmarks=(()=>{
       const p=geo.attributes.position,n=geo.attributes.normal,base=positions.length/3;
       const kind=swatches.get(tint)??landmarkFinish.plain;
       // Only the underside of an actual ground-level slab can extend downhill.
-      const footing=geo===cube&&rx===0&&rz===0&&Math.min(w,d)>=1&&Math.max(w,d)<=160&&
-        y-h/2>=-.60&&y-h/2<=.22&&y+h/2>0;
+      const bearing=groundBuilding&&rx===0&&rz===0&&y-h/2>=-.60&&y-h/2<=.22&&y+h/2>0;
+      const footing=bearing&&geo===cube&&Math.max(w,d)<=160&&
+        (Math.min(w,d)>=1||(Math.min(w,d)>=.15&&h>=1));
+      const corners=footing?[[],[],[],[]]:null;
+      // CylinderGeometry is also used for octagonal terraces and lighthouse
+      // plinths. Only a horizontal, downward-facing base at ground level fits.
+      const cap=groundBuilding&&geo.type==='CylinderGeometry'&&!rx&&!rz&&
+        geo.parameters.radiusTop===geo.parameters.radiusBottom&&geo.parameters.thetaLength===Math.PI*2&&
+        geo.groups.find(g=>g.materialIndex===2);
+      const capIndex=cap&&geo.index.getX(cap.start);
+      const baseLevel=cap?y+p.getY(capIndex)*h:Infinity;
+      const roundBase=cap&&n.getY(capIndex)<-.99999&&baseLevel>=-.60&&baseLevel<=.22;
+      const roundBottom=roundBase?[]:null;
       normalMatrix.getNormalMatrix(pose.matrix);colour.setHex(tint);
       for(let i=0;i<p.count;i++){
         const {x:px,y:py,z:pz}=point.fromBufferAttribute(p,i).applyMatrix4(pose.matrix);
         const {x:nx,y:ny,z:nz}=normal.fromBufferAttribute(n,i).applyNormalMatrix(normalMatrix);
         positions.push(px,py,pz);normals.push(nx,ny,nz);colours.push(colour.r,colour.g,colour.b);
-        if(footing&&p.getY(i)<0)footingVertices.push(base+i);
+        if(corners&&p.getY(i)<0)corners[(p.getX(i)>0?1:0)+(p.getZ(i)>0?2:0)].push(base+i);
+        if(roundBottom&&Math.abs(py-baseLevel)<.00001)roundBottom.push(base+i);
         const top=Math.abs(ny)>Math.max(Math.abs(nx),Math.abs(nz));
         let u=top||Math.abs(nz)>=Math.abs(nx)?px:pz, v=top?pz:py;
         if(kind===landmarkFinish.tile||kind===landmarkFinish.glazedTile||kind===landmarkFinish.thatch){
@@ -84,6 +99,11 @@ window.VietnamLandmarks=(()=>{
           else{u=c;v=Math.abs(n.getY(i))>.6?a:b;}
         }
         uvs.push(u,v);finishKinds.push(kind);
+      }
+      if(corners)footings.push([corners[0],corners[1],corners[3],corners[2]]);
+      if(roundBottom){
+        const sides=Math.floor(geo.parameters.radialSegments),start=Math.floor(geo.parameters.heightSegments)*(sides+1);
+        roundFeet.push({vertices:roundBottom,rim:Array.from({length:sides},(_,i)=>base+start+i)});
       }
       const order=geo.index;
       for(let i=0;i<(order?.count??p.count);i++)indices.push(base+(order?order.getX(i):i));
@@ -492,7 +512,10 @@ window.VietnamLandmarks=(()=>{
         }
         if(g!==geo)g.dispose();geo.dispose();
       }
-      function stoneBlock(x,y,z,sx,sy,sz){stonework(new T.BoxGeometry(sx,sy,sz),x,y,z);}
+      function stoneBlock(x,y,z,sx,sy,sz){
+        stonework(new T.BoxGeometry(sx,sy,sz),x,y,z);
+        if(Math.abs(y-sy/2)<.001)box(limestone,x,-.11,z,sx,.24,sz);
+      }
       function stoneGable(x,y,z,width,rise,depth){
         const shape=new T.Shape();shape.moveTo(-width/2,0);shape.lineTo(0,rise);shape.lineTo(width/2,0);shape.closePath();
         stonework(new T.ExtrudeGeometry(shape,{depth,bevelEnabled:false}),x,y,z-depth/2);
@@ -623,10 +646,16 @@ window.VietnamLandmarks=(()=>{
         const n=geo.attributes.normal;
         const first=positions.length/3;
         for(let i=0;i<v.length/3;i++)indices.push(first+i);
-        for(let i=0;i<v.length/3;i++){positions.push(v[i*3],v[i*3+1],v[i*3+2]);normals.push(n.getX(i),n.getY(i),n.getZ(i));colours.push(colors[i*3],colors[i*3+1],colors[i*3+2]);uvs.push((Math.abs(n.getX(i))>.7?v[i*3+2]:v[i*3])*.22,(n.getY(i)>.8?v[i*3+2]:v[i*3+1])*.22);}
+        for(let i=0;i<v.length/3;i++){
+          positions.push(v[i*3],v[i*3+1],v[i*3+2]);normals.push(n.getX(i),n.getY(i),n.getZ(i));
+          colours.push(colors[i*3],colors[i*3+1],colors[i*3+2]);finishKinds.push(landmarkFinish.plain);
+          uvs.push((Math.abs(n.getX(i))>.7?v[i*3+2]:v[i*3])*.22,(n.getY(i)>.8?v[i*3+2]:v[i*3+1])*.22);
+        }
         geo.dispose();
       }
-      terrace(lower.map(([x,z])=>[x*1.04,z*1.04]),-.32,.72,0x696353,0x748044,false);
+      const baseRim=lower.map(([x,z])=>[x*1.04,z*1.04]);
+      terrace(baseRim,-.32,.72,0x696353,0x748044,false);
+      createTempleFoundations(T,{group,vertexCount:()=>positions.length/3,place}).skirtRing(baseRim,-.32,{height:0});
       terrace(lower,.4,5.15,0x877366,0x98796c,false);
       terrace(middle,5.55,5.8,0x685f57,0x866658,true);
       terrace(upper,11.35,6.12,0x817666,0x96786b,true);
@@ -1020,7 +1049,6 @@ window.VietnamLandmarks=(()=>{
       stamp(round,0x626e69,lx,deck+9.60,lz,.037,.55,.037);
       window.CentralArch.trees(T,{group},[{x:5.6,y:2.35,z:-4.1,h:7.8,width:10.1}]);
     }
-    const addition=additions.get(id);
     if(addition){
       const steps=addition.build(T,{group,place,stamp,groundStamp,box,deck,round,tapered,profile,outline,arch,sign,random,wavingFlag,palette,vertexCount:()=>positions.length/3});
       if(steps?.next)yield* steps;
@@ -1066,21 +1094,40 @@ window.VietnamLandmarks=(()=>{
     }
     const mesh=new T.Mesh(geometry,finish);mesh.castShadow=true;mesh.receiveShadow=true;group.add(mesh);
     if(shoreRanges.length)mesh.userData.shoreCover=shoreRanges;
-    if(footingVertices.length&&!group.userData.fitGround&&
-       (addition?addition.solids?.length!==0&&!id.startsWith('cau-'):['cathedral','sapa','coal','flag','ponagar','station','bat'].includes(id))){
-      const p=geometry.getAttribute('position'),feet=new Map();
-      for(const i of footingVertices){
-        const x=p.getX(i),z=p.getZ(i),rest=p.getY(i),key=x+','+z;
-        if(!feet.has(key))feet.set(key,{x,z,vertices:[]});
-        feet.get(key).vertices.push([i,rest]);
-      }
-      group.userData.fitGround=ground=>{
+    if((footings.length||roundFeet.length)&&!group.userData.fitGround){
+      const p=geometry.getAttribute('position'),slabs=footings.map(corners=>corners.map(vertices=>{
+        const i=vertices[0];
+        return {x:p.getX(i),z:p.getZ(i),rest:p.getY(i),vertices};
+      }));
+      const rounds=roundFeet.map(({vertices,rim})=>({vertices,rest:p.getY(vertices[0]),
+        ring:rim.map(i=>({x:p.getX(i),z:p.getZ(i)}))}));
+      group.userData.fitGround=(ground,edgeCuts,overlap)=>{
         let changed=false;
-        for(const {x,z,vertices} of feet.values()){
-          const bed=ground(x,z)-.22;
-          for(const [i,rest] of vertices){
-            const y=Math.min(rest,bed);
-            if(Math.abs(p.getY(i)-y)>.001){p.setY(i,y);changed=true;}
+        for(const {vertices,rest,ring} of rounds){
+          let bed=rest;
+          for(let j=0;j<ring.length;j++){
+            const a=ring[j],b=ring[(j+1)%ring.length];
+            for(const t of edgeCuts(a.x,a.z,b.x,b.z))
+              bed=Math.min(bed,ground(a.x+(b.x-a.x)*t,a.z+(b.z-a.z)*t)-overlap);
+          }
+          for(const i of vertices)if(Math.abs(p.getY(i)-bed)>.001){p.setY(i,bed);changed=true;}
+        }
+        for(const corners of slabs){
+          const lows=corners.map(({x,z,rest})=>Math.min(rest,ground(x,z)-overlap));
+          for(let j=0;j<4;j++){
+            const k=(j+1)%4,a=corners[j],b=corners[k];
+            // The rendered side is straight. Sink both ends far enough for
+            // its lower edge to stay buried across each intervening triangle.
+            const cuts=edgeCuts(a.x,a.z,b.x,b.z);
+            let excess=0;
+            for(let n=1;n<cuts.length-1;n++){
+              const t=cuts[n],bed=ground(a.x+(b.x-a.x)*t,a.z+(b.z-a.z)*t)-overlap;
+              excess=Math.max(excess,lows[j]+(lows[k]-lows[j])*t-bed);
+            }
+            lows[j]-=excess;lows[k]-=excess;
+          }
+          for(let j=0;j<4;j++)for(const i of corners[j].vertices){
+            if(Math.abs(p.getY(i)-lows[j])>.001){p.setY(i,lows[j]);changed=true;}
           }
         }
         if(changed){p.needsUpdate=true;geometry.computeBoundingBox();geometry.computeBoundingSphere();}
@@ -1154,7 +1201,10 @@ window.VietnamLandmarks=(()=>{
           mesh.userData.fitGround?.((u,v)=>{
             const px=u*mesh.scale.x,pz=v*mesh.scale.z;
             return (foundation(x+px*c+pz*s,z-px*s+pz*c)-base)/mesh.scale.y;
-          });
+          },(ax,az,bx,bz)=>{
+            ax*=mesh.scale.x;bx*=mesh.scale.x;az*=mesh.scale.z;bz*=mesh.scale.z;
+            return terrainEdgeBreaks(x+ax*c+az*s,z-ax*s+az*c,x+bx*c+bz*s,z-bx*s+bz*c);
+          },.22/mesh.scale.y);
         }});
       }
     prepareBuildingSites(graph,cx,cz);

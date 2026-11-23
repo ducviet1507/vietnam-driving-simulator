@@ -261,6 +261,7 @@
       const stone=new T.CylinderGeometry(r1,r0,y1-y0,8);
       stamp(stone,tint,0,(y1+y0)/2,0,1,1,1,Math.PI/8);stone.dispose();
     }
+    masonry(band,-.36,0,3.55,3.55);
     masonry(band,0,bodyBase,3.55,3.39);
     masonry(granite,bodyBase,bodyTop,baseRadius,topRadius);
     for(let i=0;i<6;i++){

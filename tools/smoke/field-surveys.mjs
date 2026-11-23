@@ -221,14 +221,18 @@ assert.ok(Number.isFinite(upper-lower)&&upper-lower>6,'The sampled reach should 
 const previous=flow.getY(0);
 cascade.userData.fitGround((x,z)=>slope(x,z)+2.5);
 assert.ok(Math.abs(flow.getY(0)-previous-2.5)<.002,'The river must move with the updated terrain');
-runInContext(readFileSync(file('tour-district.js'),'utf8'),context);
+for(const name of ['vietnam-relief.js','tour-district.js'])runInContext(readFileSync(file(name),'utf8'),context);
 const draw=context.createVanMieuArchitecture(T);
 const project={point:(lon,lat)=>({x:(lon-survey.origin[0])*103900,z:(survey.origin[1]-lat)*110900})};
 for(const f of shelters){
   const ring=f.rings[0].slice(0,-1).map(([lon,lat])=>{const {x,z}=project.point(lon,lat);return new T.Vector2(x,z);});
-  let count=0;
-  const built=draw(f,ring,project,(x,y,z)=>{assert.ok(Number.isFinite(x+y+z));count++;});
-  assert.ok(count>0,f.ref);
+  let count=0,bedded=0;
+  const ground=(x,z)=>-2-.04*Math.abs(x)-.015*Math.abs(z);
+  const built=draw(f,ring,project,(x,y,z)=>{
+    assert.ok(Number.isFinite(x+y+z));count++;
+    if(y<=ground(x,z)-.219)bedded++;
+  },ground);
+  assert.ok(count>0&&bedded>=12,f.ref+' brick platform reaches the slope');
   assert.equal(built.stelae.length,f.steleRows.length);
   for(const [i,s] of built.stelae.entries()){
     assert.equal(s.year,f.steleRows[i].year);assert.equal(s.height,f.steleRows[i].height);assert.equal(s.width,f.steleRows[i].width);

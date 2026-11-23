@@ -130,3 +130,44 @@ assert.equal(context.landscapeTourViews('Đỉnh núi',0,0,0,()=>100,()=>null),n
 assert.equal(context.landscapeTourViews('Hồ',0,0,0,()=>0,()=>null),null);
 const reservoir=context.landscapeTourViews('Hồ',0,20,0,()=>4,(x,z)=>z<0?{level:16}:null);
 assert.ok(reservoir[0].focusAltitude>16,'look above the water surface even when the terrain sample is the lake bed');
+
+// A ground-level masonry slab crosses a 32 m terrain crease between its
+// corners. Exercise rotation, unequal scales, a rebase and the upper deck.
+const masonry={id:'foundation-test-site',name:'Test slab',lon:104,lat:14,width:130,depth:40,
+  yaw:.31,scale:[1.2,.60,.81],solids:[[0,0,53,20]],build(T,kit){
+    kit.box(0xababab,0,0,0,106,.6,39,-.14);
+    kit.box(0xbababa,0,4,0,8,.3,8);
+    kit.stamp(kit.round,0x808080,25,1.5,-.5,.3,3,.3);
+  }};
+context.VietnamSights=[masonry];
+context.createSightFinishes=()=>({apply(){}});
+runInNewContext(readFileSync(new URL('../../dist/landmark-materials.js',import.meta.url),'utf8'),context);
+context.createLandmarkMaterial=()=>new T.MeshStandardMaterial();
+runInNewContext(readFileSync(new URL('../../dist/vietnam-landmarks.js',import.meta.url),'utf8'),context);
+const groundScene=new T.Scene(),groundModels=context.VietnamLandmarks.create(T,groundScene),map=project(masonry);
+const crease=x=>.44*(Math.abs(x-32)-32);
+for(const shift of [0,19,0]){
+  groundModels.setOrigin(map,shift,0,crease);
+  const mesh=groundScene.getObjectByName(masonry.id),p=mesh.children.at(-1).geometry.attributes.position;
+  mesh.updateMatrixWorld(true);
+  const corners=new Map();
+  for(let i=0;i<24;i++){
+    const q=new T.Vector3().fromBufferAttribute(p,i).applyMatrix4(mesh.matrixWorld);
+    if(p.getY(i)>0)continue;
+    corners.set(q.x+','+q.z,q);
+  }
+  assert.equal(corners.size,4);
+  const ring=[...corners.values()].sort((a,b)=>Math.atan2(a.z,a.x+shift)-Math.atan2(b.z,b.x+shift));
+  for(let j=0;j<4;j++)for(let n=0;n<=128;n++){
+    const sample=ring[j].clone().lerp(ring[(j+1)%4],n/128);
+    assert.ok(sample.y<=crease(sample.x+shift)-.17,'Landmark slab crosses above visible ground');
+  }
+  for(let i=24;i<48;i++)assert.ok(p.getY(i)>3.8,'Raised deck remains elevated');
+  let postBase=0;
+  for(let i=48;i<p.count;i++){
+    if(p.getY(i)>2.9)continue;
+    const q=new T.Vector3().fromBufferAttribute(p,i).applyMatrix4(mesh.matrixWorld);
+    assert.ok(q.y<=crease(q.x+shift)-.17,'Exposed stilt ends in the ground');postBase++;
+  }
+  assert.ok(postBase>10);
+}

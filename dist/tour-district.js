@@ -11,7 +11,7 @@ function createVanMieuArchitecture(T){
   for(const k of Object.keys(colors))colors[k]=new T.Color(colors[k]);
   const forms={box:new T.BoxGeometry(1,1,1),round:new T.CylinderGeometry(1,1,1,12),
     ellipsoid:new T.SphereGeometry(1,10,5),shell:new T.SphereGeometry(1,16,7)};
-  return function draw(survey,ring,graph,put){
+  return function draw(survey,ring,graph,put,groundOffset){
     const stele=Boolean(survey.steleRows),drum=survey.kind==='drum',bell=survey.kind==='bell';
     const gate=survey.ref==='w702185144'||survey.ref==='w702185176',hall=survey.ref==='w702185189';
     const mainGate=survey.ref==='w702185143',sideGate=survey.ref==='w702241280'||survey.ref==='w702241281';
@@ -89,7 +89,22 @@ function createVanMieuArchitecture(T){
     const eave=stele?Math.max(tallest+.76,piers?3.05:2.85):hall?4.5:gate?2.82:3.85;
     const rise=stele?(piers?1.95:1.43):Math.min(3,V*.75);
     const apron=Math.min(.32,V*.12);
-    box(0,floor/2-.18,0,(U-apron*.65)*2,floor+.36,(V-apron*.65)*2,colors.brick);
+    const slabU=U-apron*.65,slabV=V-apron*.65;
+    box(0,floor/2-.18,0,slabU*2,floor+.36,slabV*2,colors.brick);
+    // Keep the actual brick floor of the hall, gate or pavilion seated.
+    // Its roof overhang and the openings above this floor stay open.
+    const slab=[[-slabU,-slabV],[slabU,-slabV],[slabU,slabV],[-slabU,slabV]];
+    for(let j=0;j<slab.length;j++){
+      const [u,v]=slab[j],[s,t]=slab[(j+1)%slab.length],a=corner(u,v),b=corner(s,t);
+      const cuts=terrainEdgeBreaks(a.x,a.y,b.x,b.y);
+      let left=[u,Math.min(-.36,groundOffset(a.x,a.y)-.22),v];
+      for(let k=1;k<cuts.length;k++){
+        const f=cuts[k],right=[u+(s-u)*f,Math.min(-.36,groundOffset(a.x+(b.x-a.x)*f,a.y+(b.y-a.y)*f)-.22),v+(t-v)*f];
+        if(left[1]<-.36||right[1]<-.36)
+          face([left[0],-.36,left[2]],[right[0],-.36,right[2]],right,left,colors.brick);
+        left=right;
+      }
+    }
     function roofTier(halfU,halfV,edge,pitch,offsetU=0,offsetV=0){
       const gabled=gate||hall;
       const hip=gabled?0:Math.min(halfU*.45,halfV*.73);
@@ -753,7 +768,7 @@ function createTourDistrict(T,scene,plaster,structures,osmBuildings,nightLights)
         loadMonumentSurfaces();
         vanMieuArchitecture??=createVanMieuArchitecture(T);
         const built=vanMieuArchitecture(survey,outer,graph,(px,py,pz,u,v,tint,finish,normal)=>
-          vertex(batches[1],px,py,pz,u,v,tint,finish,-1,0,normal));
+          vertex(batches[1],px,py,pz,u,v,tint,finish,-1,0,normal),(px,pz)=>ground(px,pz)-baseY);
         b.h=built.height;b.solids=built.solids;b.stelae=built.stelae;continue;
       }
       const [bLon,bLat]=graph.geo(x,z),zone=window.CentralStreetscapes?.zoneAt(bLon,bLat);
