@@ -5,16 +5,32 @@ import vm from 'node:vm';
 
 const three=createRequire(import.meta.url)('../../dist/three.min.js');
 const scene=new three.Scene(),T={...three,TextureLoader:class{load(){return new three.Texture();}}};
+const files=new Map(),loads=new Map(),index={grid:2,cells:2,tiles:['211_41','211_42','213_21','214_32']};
+function urbanPixels(decimetres,weight){
+  const data=new Uint8Array(3*3*4),code=decimetres+32768;
+  for(let i=0;i<data.length;i+=4)data.set([code>>8,code&255,weight,255],i);
+  return data;
+}
+for(const key of index.tiles)files.set(key,urbanPixels(55,255));
 class ElevationImage {
   naturalWidth=2;
   naturalHeight=2;
-  set src(url){this.onload();}
+  set src(url){
+    if(url.startsWith('urban-terrain/')){
+      const key=url.split('/').pop().slice(0,-4);
+      loads.set(key,(loads.get(key)||0)+1);
+      this.naturalWidth=this.naturalHeight=3;this.data=files.get(key);
+      if(!this.data){this.onerror();return;}
+    }else this.data=new Uint8Array(16);
+    this.onload();
+  }
   removeAttribute(){}
 }
 const context=vm.createContext({window:{},Image:ElevationImage,performance,
+  fetch:async url=>{assert.equal(url,'urban-terrain/index.json');return {ok:true,json:async()=>index};},
   createPassSurface:()=>({select(){}}),document:{createElement:()=>({getContext:()=>({
-    drawImage(){},getImageData:()=>({data:new Uint8Array(16)})})})}});
-for(const file of ['shore-terrain','city-terrain','vietnam-relief','cave-openings','world-land-cover'])
+    drawImage(image){this.image=image;},getImageData(){return {data:this.image.data};}})})}});
+for(const file of ['shore-terrain','urban-terrain','vietnam-relief','cave-openings','world-land-cover'])
   vm.runInContext(readFileSync(new URL('../../dist/'+file+'.js',import.meta.url),'utf8'),context);
 // The temple moat and Ao Bà Om have distinct water levels. Simulate the
 // canvas colour rounding that used to make their pool IDs collide at a bank.
@@ -95,6 +111,8 @@ assert.ok(Math.abs(lakeside.grade(0,0,Math.PI/2))<.02);
 for(const [lon,lat] of [[105.84156,21.00510],[106.698484,10.771409]]){
   const mx=111320*Math.cos(lat*Math.PI/180);
   const g={geo:(x,z)=>[lon+x/mx,lat-z/110900],point:(u,v)=>({x:(u-lon)*mx,z:(lat-v)*110900})};
+  assert.equal(await relief.loadLocal(g,0,0),true);
+  assert.equal(await relief.loadLocal(g,0,0),false);
   const empty=relief.prepare(g,{elevation:()=>null});
   const roofs=relief.prepare(g,{elevation:(x,z)=>25+20*Math.cos(x/51)*Math.sin(z/82),elevationWeight:()=>1});
   for(let z=-500;z<=500;z+=41)for(let x=-500;x<=500;x+=37){
@@ -102,6 +120,22 @@ for(const [lon,lat] of [[105.84156,21.00510],[106.698484,10.771409]]){
     assert.ok(Math.hypot(roofs.grade(x,z,0),roofs.grade(x,z,Math.PI/2))<.015);
   }
 }
+// Failed tiles retry, and a partially urban node only contributes its weighted
+// elevation correction. Returning to a rural district clears the previous view.
+const projector={point:(lon,lat)=>({x:lon*100000,z:-lat*100000}),geo:(x,z)=>[x/100000,-z/100000]};
+const urban=context.createUrbanTerrain(),mixed=urbanPixels(-20,0);
+mixed.set([128,100,255,255],4*4); // 10 m at the centre, -2 m elsewhere with zero influence
+files.delete('214_32');
+assert.equal(await urban.load(projector,10725000,-1625000),false);
+files.set('214_32',mixed);
+assert.equal(await urban.load(projector,10725000,-1625000),true);
+const sample=urban.current(projector);
+close(sample(10725000,-1625000,80),10);
+close(sample(10712500,-1625000,80),45);
+close(sample(10700000,-1625000,80),80);
+assert.equal(await urban.load(projector,10800000,-1800000),true);
+assert.equal(urban.current(projector),null);
+close(sample(10725000,-1625000,80),10); // The active scene retains its snapshot during streaming.
 // Outside the urban plain the original sloping survey is still authoritative.
 close(lakeside.altitude(16000,0),1619);
 const plaza=hanoi.point(105.83560,21.03695);

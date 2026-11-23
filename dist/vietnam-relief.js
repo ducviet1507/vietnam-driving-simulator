@@ -17,7 +17,7 @@ function createVietnamRelief(T,scene,compact,landscapes,tunnelCut,landWidth,cave
   imagery.colorSpace=T.SRGBColorSpace;
   const nearCentre={value:new T.Vector2()},eye={value:new T.Vector2()},anchor={value:new T.Vector2()};
   const datum={value:0};
-  const passSurface=createPassSurface(T);
+  const passSurface=createPassSurface(T),urban=createUrbanTerrain();
   const mat=new T.MeshLambertMaterial({name:'Vietnam relief',map:imagery,side:T.DoubleSide,color:0xc9d5bc});
   mat.onBeforeCompile=shader=>{
     shader.uniforms.terrainEye=eye;shader.uniforms.terrainAnchor=anchor;shader.uniforms.nearCentre=nearCentre;shader.uniforms.terrainDatum=datum;
@@ -97,14 +97,10 @@ function createVietnamRelief(T,scene,compact,landscapes,tunnelCut,landWidth,cave
   };heights.src=urls+'elevation.png';
   // Meshes, tyres and landmark foundations share these triangles and vertical datum.
   const step=vietnamReliefStep,cacheSide=128,cacheMask=cacheSide-1;
-  function sampleTerrain(graph,activePass,landscapes){
+  function sampleTerrain(graph,activePass,landscapes,urbanGround){
   const nodes=new Float64Array(cacheSide*cacheSide),nodeX=new Int32Array(nodes.length),nodeZ=new Int32Array(nodes.length);
   nodes.fill(NaN);
   const base=graph&&pixels?elevation(...uvAt(0,0,graph)):0;
-  const cities=graph?.point?cityTerrainGrids.map(({west,north,scale,rows})=>{
-    const origin=graph.point(west,north),cell=graph.point(west+1/scale,north-1/scale);
-    return {origin,dx:cell.x-origin.x,dz:cell.z-origin.z,rows};
-  }):[];
   const hoanKiem=graph?.point?.(105.8521,21.02865);
   const plaza=graph?.point?.(105.83560,21.03695);
   const ao=graph?.point?.(106.30403,9.91766);
@@ -117,19 +113,8 @@ function createVietnamRelief(T,scene,compact,landscapes,tunnelCut,landWidth,cave
   let pondStage,pondEdges;
   let hangStage,hangRoadStage,hangEdges;
   function localDatum(x,z,surface){
+    if(urbanGround)surface=urbanGround(x,z,surface);
     if(!hoanKiem)return surface-base;
-    // Use bare-earth heights across each urban plain, including open squares
-    // and building foundations. Feather the outer kilometre into normal relief.
-    for(const {origin,dx,dz,rows} of cities){
-      const u=(x-origin.x)/dx,v=(z-origin.z)/dz;
-      const edge=Math.min(u,v,rows[0].length-1-u,rows.length-1-v);
-      if(edge<=0)continue;
-      const i=Math.floor(u),j=Math.floor(v),fx=u-i,fz=v-j;
-      const a=rows[j],b=rows[j+1];
-      const city=((a[i]*(1-fx)+a[i+1]*fx)*(1-fz)+(b[i]*(1-fx)+b[i+1]*fx)*fz)*.1;
-      surface+=(city-surface)*T.MathUtils.smoothstep(edge,0,4);
-      break;
-    }
     if(Math.abs(x-haiSon.x)<112&&Math.abs(z-haiSon.z)<112){
       // Use the open ground northwest of the elevated Hải Sơn terrace. The
       // DSM starts climbing its rear columns well before the actual hillside.
@@ -265,12 +250,12 @@ function createVietnamRelief(T,scene,compact,landscapes,tunnelCut,landWidth,cave
     const dx=2*Math.sin(yaw),dz=-2*Math.cos(yaw);
     return (ground(x+dx,z+dz)-ground(x-dx,z-dz))/4;
   }
-  return {graph,pass:activePass,landscapes,base,ground,grade,height,step,revision:Symbol(),
+  return {graph,pass:activePass,landscapes,urbanGround,base,ground,grade,height,step,revision:Symbol(),
     altitude:(x,z)=>graph&&pixels?base+ground(x,z):0};
   }
   const byGraph=new WeakMap(),requested=new WeakMap(),passCache=new Map();
   let activePass=null;
-  async function loadLocal(g,x,z){
+  async function loadPass(g,x,z){
     const current=byGraph.get(g);
     let closest=null,range=12000;
     for(const stage of [...(window.mountainStages||[]),...(window.landmarkTerrain||[])]){
@@ -299,11 +284,15 @@ function createVietnamRelief(T,scene,compact,landscapes,tunnelCut,landWidth,cave
       eastScale:Math.cos(stage.start[1]*Math.PI/180)/Math.cos(g.lat*Math.PI/180)});
     return true;
   }
-  let terrain=sampleTerrain(null,null,null);
+  async function loadLocal(g,x,z){
+    const changed=await Promise.all([loadPass(g,x,z),urban.load(g,x,z)]);
+    return changed.some(Boolean);
+  }
+  let terrain=sampleTerrain(null,null,null,null);
   function prepare(g,view){
-    const pass=g?byGraph.get(g):null;
-    if(terrain.graph===g&&terrain.pass===pass&&terrain.landscapes===view)return terrain;
-    return sampleTerrain(g,pass,view);
+    const pass=g?byGraph.get(g):null,urbanGround=urban.current(g);
+    if(terrain.graph===g&&terrain.pass===pass&&terrain.landscapes===view&&terrain.urbanGround===urbanGround)return terrain;
+    return sampleTerrain(g,pass,view,urbanGround);
   }
   function activate(next,x,z){
     datum.value=next.base;
