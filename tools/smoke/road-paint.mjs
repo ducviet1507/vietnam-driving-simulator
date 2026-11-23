@@ -16,6 +16,12 @@ assert.equal(layout.divider,1);
 assert.equal(world.roadLaneOffset({edge,dir:-1}),3);
 assert.equal(world.roadLaneOffset({edge,dir:1}),0);
 assert.equal(world.roadLaneOffset({edge,dir:1},true),3);
+const alley={kind:'residential',traffic:{width:2.2}};
+for(const dir of [-1,1]){
+  assert.ok(world.roadLaneOffset({edge:alley,dir})+.91<1.1);
+  assert.ok(world.roadLaneOffset({edge:alley,dir},true)>.4);
+  assert.equal(world.roadLaneOffset({edge:alley,dir},false,1.23),0);
+}
 const paint=(road,from,to,options)=>{
   const marks=[];
   world.roadPaint(road,world.roadLaneLayout(road,half),half,from,to,(...args)=>marks.push(args),options);

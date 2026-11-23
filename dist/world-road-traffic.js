@@ -29,12 +29,13 @@ function roadLaneLayout(edge,halfWidth){
   return {lanes,divider,forward,markEdges};
 }
 
-function roadLaneOffset(cursor,scooter=false){
+function roadLaneOffset(cursor,scooter=false,vehicleHalfWidth=scooter?.38:.91){
   const {edge,dir}=cursor,half=worldRoadHalfWidth(edge);
   const {lanes,forward,divider}=roadLaneLayout(edge,half);
-  if(lanes===1)return edge.oneway?0:half*.43;
   const count=dir>0||divider===null?forward:lanes-forward;
-  return half-2*half/lanes*(scooter ? .5 : Math.min(count,2)-.5);
+  const lane=lanes===1?(edge.oneway?0:half*.43):half-2*half/lanes*(scooter ? .5 : Math.min(count,2)-.5);
+  const limit=Math.max(0,half-vehicleHalfWidth-.12);
+  return Math.max(-limit,Math.min(limit,lane));
 }
 
 function signalStopLineOffset(control){return control.flags&2?2.5:1.4;}

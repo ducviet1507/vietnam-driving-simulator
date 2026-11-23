@@ -528,7 +528,8 @@
       function openGround(x,z){
         return grounds.memorialAt(x,z)||grounds.mapped(x,z)||Boolean(wetMask&&wet(x-cx,z-cz));
       }
-      yield* district.buildSteps(graph,cx,cz,landmarks,terrain.ground,edges,openGround,Math.min(620,cutoff),terrain.revision,grounds.memorialAt,shoreFootings);
+      const groundEdges=graph?bridgeGroundEdges(graph,edges):edges;
+      yield* district.buildSteps(graph,cx,cz,landmarks,terrain.ground,groundEdges,openGround,Math.min(620,cutoff),terrain.revision,grounds.memorialAt,shoreFootings);
       const contact=(...args)=>regionContact(obstacleCells,cx,cz,graph,tunnels,landmarks,district,...args);
       function nearbyCell(x,z){return Math.floor(x/cellSize)+','+Math.floor(z/cellSize);}
       function bounds(seg,pad,fn){
@@ -584,7 +585,6 @@
           quad(target,ax+s.nx*l,az+s.nz*l,ax+s.nx*r,az+s.nz*r,bx+s.nx*l,bz+s.nz*l,bx+s.nx*r,bz+s.nz*r);
         }
       }
-      const groundEdges=graph?bridgeGroundEdges(graph,edges):edges;
       for(const e of groundEdges){
         if((++work & 15)===0)yield;
         const width=window.worldRoadHalfWidth(e);
@@ -1148,8 +1148,8 @@
       for(const f of grounds.streetFurniture){
         if(!f.height||Math.hypot(f.x,f.z)>detailRadius)continue;
         const {x,z,height:h}=f;
-        if(district.contact(cx+x,cz+z,.08))continue;
         const width=f.diameter||(f.kind==='lamp'?.14:.12);
+        if(obstruction(x,z,width/2,true,true))continue;
         const owner=registerObstacle({id:'osm-node-'+f.id,kind:'pole',x,z,radius:width/2,height:h,parts:[]});
         instance('steel',unitPole,x,h/2,z,width,h,width,0,null,owner);
         if(f.kind==='lamp'){
@@ -1164,7 +1164,8 @@
         const tree=registerObstacle({id:'mapped-tree:'+Math.round(cx+x)+':'+Math.round(cz+z),
           kind:'tree',x,z,radius:Math.max(.12,h*.022),height:h,parts:[]});
         plantTree(kind,x,z,h,w,angle,null,tree);
-      },(x,z,r,allowWater=false)=>obstruction(x,z,r,allowWater,true));
+      },(x,z,r,allowWater=false)=>obstruction(x,z,r,allowWater,true),
+      (ax,az,bx,bz,r)=>guardrailFits(ax,az,bx,bz,railRoads(ax,az,bx,bz),r,null,s=>!s.elevated));
       yield* surface(bankData,material.earth,-.065,.60);
       yield* surface(passVerges,material.earth,0,.60,vergeHeight);
       if(cover.length){

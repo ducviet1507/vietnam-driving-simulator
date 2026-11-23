@@ -5,7 +5,8 @@ import {runInNewContext} from 'node:vm';
 
 const T=createRequire(import.meta.url)('../../dist/three.min.js');
 let pieces=[];
-const context={createSightFinishes:()=>({}),createVietnamOsmBuildings:()=>({rows:()=>pieces})};
+const context={createSightFinishes:()=>({}),createVietnamOsmBuildings:()=>({rows:()=>pieces}),
+  ClipperLib:createRequire(import.meta.url)('../../dist/clipper.min.js'),worldRoadHalfWidth:edge=>edge.width};
 context.window=context;
 for(const file of ['tourism-catalog','sight-details','visitor-atlas','vietnam-landmarks','surface-materials','vietnam-relief','tour-district']){
   runInNewContext(readFileSync(new URL('../../dist/'+file+'.js',import.meta.url),'utf8'),context);
@@ -122,6 +123,25 @@ for(const shore of [null,bank,null]){
   for(let i=0;i<p.count;i++)lowest=Math.min(lowest,p.getY(i));
   assert.ok(shore?lowest<=-1.219:lowest>4.6,'Bank-specific wall bedding must reset on dry ground');
   assert.equal(district.footprint({map:'https://www.openstreetmap.org/way/92'},66,0).baseY,5);
+}
+
+// A road through two mapped lots used to collide on both lanes. Both halves
+// of the lots must remain solid, while an overhead storey retains its floor.
+pieces=[row('w95','yes',0,0)];pieces[0][6]={min_height:4};pieces[0][2]=9;
+surveyed=[row('w93','yes',0,0)];inferred=[row('g94','yes',12,0)];
+const lane={width:1.1,points:[{x:-7,z:0},{x:24,z:0}]};
+district.build(graph,0,0,null,()=>0,[lane]);
+for(const [x,id] of [[0,'w93'],[12,'g94']]){
+  for(const z of [-.2,0,.2])assert.equal(district.contact(x,z,.9),undefined);
+  for(const z of [-2,2])assert.equal(district.contact(x,z,.15)?.id,id);
+}
+const raised=district.footprint({map:'https://www.openstreetmap.org/way/95'},0,0);
+assert.ok(raised.bottom===4&&raised.minZ<-2&&raised.maxZ>2);
+const streetWalls=meshes.children[0].geometry.attributes.position;
+for(let i=0;i<streetWalls.count;i+=3){
+  if(streetWalls.getY(i)>=4)continue;
+  const zs=[i,i+1,i+2].map(j=>streetWalls.getZ(j));
+  assert.ok(Math.max(...zs)<=-lane.width||Math.min(...zs)>=lane.width,'Wall triangle crosses the road');
 }
 
 const fort=context.VietnamTourism.byId.get('osm-way-921987266'); // Thành cổ Sơn Tây

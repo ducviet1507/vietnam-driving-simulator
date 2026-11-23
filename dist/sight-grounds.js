@@ -322,7 +322,7 @@ function createSightGrounds(T,small,source){
     const mat=new T.MeshLambertMaterial({color:style==='mesh'?0x727b72:0x4d5554,map,alphaTest:.23,side:T.DoubleSide});
     fenceMaterials.set(style,mat);return mat;
   }
-  function* build(group,ground,blocked,obstacle,water,plant,mappedBlocked=blocked){
+  function* build(group,ground,blocked,obstacle,water,plant,mappedBlocked=blocked,wallFits=()=>true){
     const pos=[],rgb=[],uv=[],finish=[],colour=new T.Color();
     const panels=new Map(),posts=new Set();
     function quad(a,b,c,d,tint,code=0){
@@ -479,6 +479,7 @@ function createSightGrounds(T,small,source){
             const hedge=kind==='hedge',fort=kind==='city_wall',retained=kind==='retaining_wall';
             const h=Math.min(15,size||(hedge?1.14:fort?3.8:retained?.92:fence?1.35:1.65));
             const half=Math.min(fence&&!closedFence?.13:4,detail?detail/2:hedge?.44:fort?1.15:fence&&!closedFence?.055:.15);
+            if(!wallFits(x,z,xx,zz,half+.045))continue;
             if(fence&&!closedFence){
               const wood=skin==='timber',paint=wood?0x80715a:0x64706c;
               for(const [px,pz,y] of [[x,z,a],[xx,zz,b]]){

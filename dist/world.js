@@ -54,7 +54,7 @@ function breakfastCall(){
  const line='Bánh mì nóng giòn đây! Ai bánh mì nào!';
  inform('“'+line+'”',4);driveAudio.broadcast(line,false);
 }
-function stance(){return roadLaneOffset(player);}
+function stance(){return roadLaneOffset(player,false,(car.spec.width||1.76)/2);}
 function save(){
  if(guide?.route.id||!activeTrip||!player||!roads||car.flood)return;
  const [lon,lat]=roads.geo(car.x,car.z);

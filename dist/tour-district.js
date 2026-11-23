@@ -302,6 +302,53 @@ function createVanMieuArchitecture(T){
   };
 }
 
+function buildingOutline(rings){
+  let minX=Infinity,minZ=Infinity,maxX=-Infinity,maxZ=-Infinity;
+  for(const p of rings[0]){
+    minX=Math.min(minX,p.x);minZ=Math.min(minZ,p.y);maxX=Math.max(maxX,p.x);maxZ=Math.max(maxZ,p.y);
+  }
+  return {rings,box:{minX,minZ,maxX,maxZ},flat:rings.flat()};
+}
+
+// Both the visible walls and the solid footprint use this polygon difference.
+// Work in integer millimetres, preserving courtyards and both sides of a split lot.
+function clearBuildingRoads(T,outline,segments){
+  if(!segments.size)return [outline];
+  const scale=1000,point=(x,z)=>({X:Math.round(x*scale),Y:Math.round(z*scale)});
+  const clips=[],{minX,minZ,maxX,maxZ}=outline.box;
+  for(const s of segments){
+    const w=s.w+.15;
+    if(Math.max(s.a.x,s.a.x+s.dx)+w<minX||Math.min(s.a.x,s.a.x+s.dx)-w>maxX||
+       Math.max(s.a.z,s.a.z+s.dz)+w<minZ||Math.min(s.a.z,s.a.z+s.dz)-w>maxZ)continue;
+    // Reject diagonal roads whose bounding box alone overlaps this lot.
+    const len=Math.sqrt(s.length2),nx=-s.dz/len,nz=s.dx/len;
+    const across=((minX+maxX)/2-s.a.x)*nx+((minZ+maxZ)/2-s.a.z)*nz;
+    if(Math.abs(across)>w+(Math.abs(nx)*(maxX-minX)+Math.abs(nz)*(maxZ-minZ))/2)continue;
+    if(!s.clip){
+      // Tangent semicircles clear the full road width at bends and junctions.
+      const path=[],steps=8,r=w/Math.cos(Math.PI/(steps*2)),heading=Math.atan2(s.dz,s.dx);
+      for(const end of [1,0])for(let i=0;i<steps;i++){
+        const angle=heading+(end?-.5:.5)*Math.PI+(i+.5)*Math.PI/steps;
+        path.push(point(s.a.x+end*s.dx+r*Math.cos(angle),s.a.z+end*s.dz+r*Math.sin(angle)));
+      }
+      s.clip=path;
+    }
+    clips.push(s.clip);
+  }
+  if(!clips.length)return [outline];
+  const C=ClipperLib,clipper=new C.Clipper(),result=new C.PolyTree();
+  const paths=outline.rings.map(r=>r.map(p=>point(p.x,p.y)));
+  clipper.AddPaths(paths,C.PolyType.ptSubject,true);
+  clipper.AddPaths(clips,C.PolyType.ptClip,true);
+  clipper.Execute(C.ClipType.ctDifference,result,C.PolyFillType.pftEvenOdd,C.PolyFillType.pftNonZero);
+  const polygons=C.JS.PolyTreeToExPolygons(result);
+  if(polygons.length===1){
+    const area=paths=>Math.abs(C.Clipper.Area(paths[0]))-paths.slice(1).reduce((sum,p)=>sum+Math.abs(C.Clipper.Area(p)),0);
+    if(area(paths)===area([polygons[0].outer,...polygons[0].holes]))return [outline];
+  }
+  return polygons.map(p=>buildingOutline([p.outer,...p.holes].map(r=>r.map(v=>new T.Vector2(v.X/scale,v.Y/scale)))));
+}
+
 function createTourDistrict(T,scene,plaster,structures,osmBuildings,nightLights){
   const parts=createVietnamOsmBuildings('sight-building-parts/',Infinity);
   const wall=plaster.clone();wall.vertexColors=true;wall.side=T.DoubleSide;
@@ -436,9 +483,7 @@ function createTourDistrict(T,scene,plaster,structures,osmBuildings,nightLights)
       const p=graph.point(lon,lat);return new T.Vector2(p.x,p.z);
     })):raw.map(r=>decode(r,graph)).filter(r=>r.length>=3);
     if(!rings.length)return null;
-    let minX=Infinity,minZ=Infinity,maxX=-Infinity,maxZ=-Infinity;
-    for(const p of rings[0]){minX=Math.min(minX,p.x);minZ=Math.min(minZ,p.y);maxX=Math.max(maxX,p.x);maxZ=Math.max(maxZ,p.y);}
-    const shape={rings,box:{minX,minZ,maxX,maxZ},flat:rings.flat()};
+    const shape=buildingOutline(rings);
     projected.set(key,shape);
     return shape;
   }
@@ -569,14 +614,15 @@ function createTourDistrict(T,scene,plaster,structures,osmBuildings,nightLights)
       }
     }
     const extra=structures.rows(graph,cx,cz);
-    // Satellite outlines can be displaced onto a carriageway. Only index the
+    // Building and road surveys can overlap. Only index the ground-level
     // road segments close enough to test a footprint in this view.
     const roadCells=new Map(),roadCell=48;
     let roadSegments=0;
     for(const edge of edges)for(let n=1;n<edge.points.length;n++){
       if((++roadSegments&63)===0)yield;
       const a=edge.points[n-1],b=edge.points[n],w=worldRoadHalfWidth(edge),dx=b.x-a.x,dz=b.z-a.z;
-      const segment={a,dx,dz,length2:dx*dx+dz*dz,w};
+      const length2=dx*dx+dz*dz;if(!length2)continue;
+      const segment={a,dx,dz,length2,w};
       const margin=w+18;
       const left=Math.max(cx-850,Math.min(a.x,b.x)-margin),right=Math.min(cx+850,Math.max(a.x,b.x)+margin);
       const top=Math.max(cz-850,Math.min(a.z,b.z)-margin),bottom=Math.min(cz+850,Math.max(a.z,b.z)+margin);
@@ -585,23 +631,14 @@ function createTourDistrict(T,scene,plaster,structures,osmBuildings,nightLights)
         roadCells.get(key).push(segment);
       }
     }
-    function obstructsRoad(rings,box,x,z){
-      const seen=new Set();
+    function roadsAt(box){
+      const found=new Set();
       for(let i=Math.floor(box.minX/roadCell);i<=Math.floor(box.maxX/roadCell);i++){
         for(let j=Math.floor(box.minZ/roadCell);j<=Math.floor(box.maxZ/roadCell);j++){
-          for(const s of roadCells.get(i+','+j)||[]){
-            if(seen.has(s)||!s.length2)continue;
-            seen.add(s);
-            const t=Math.max(0,Math.min(1,((x-s.a.x)*s.dx+(z-s.a.z)*s.dz)/s.length2));
-            const px=s.a.x+t*s.dx,pz=s.a.z+t*s.dz;
-            const len=Math.sqrt(s.length2);
-            for(const offset of [0,-s.w*.65,s.w*.65]){
-              if(insideBuilding(px-offset*s.dz/len,pz+offset*s.dx/len,rings))return true;
-            }
-          }
+          for(const s of roadCells.get(i+','+j)||[])found.add(s);
         }
       }
-      return false;
+      return found;
     }
     for(const b of batches){
       if(b.used < b.data.length/4)b.data=new Float32Array(b.used);
@@ -733,7 +770,7 @@ function createTourDistrict(T,scene,plaster,structures,osmBuildings,nightLights)
       // the native main gate. A future national building tile may include it.
       if(survey&&id==='w702185142'&&surveyedIds.has('w702185143'))continue;
       const outline=projectFootprint(raw,graph,projected,survey);if(!outline)continue;
-      const {rings,box,flat}=outline,outer=rings[0],{minX,minZ,maxX,maxZ}=box;
+      const {rings,box}=outline,outer=rings[0],{minX,minZ,maxX,maxZ}=box;
       const x=(minX+maxX)/2,z=(minZ+maxZ)/2;
       if(Math.hypot(x-cx,z-cz)>radius+Math.hypot(maxX-minX,maxZ-minZ)/2)continue;
       const original=surveyedIds.has(id);
@@ -741,21 +778,9 @@ function createTourDistrict(T,scene,plaster,structures,osmBuildings,nightLights)
       const visitorArea=overlapsGarden(landmarks,rings,box)||memorialAt(x,z);
       if(!original){
         if(visitorArea||outer.some(p=>openGround(p.x,p.y))||(openGround(x,z)&&insideBuilding(x,z,rings)))continue;
-        if(overlapsMapped(rings,box)||obstructsRoad(rings,box,x,z))continue;
+        if(overlapsMapped(rings,box))continue;
       }
       ids.add(id);
-      // Keep floors level, and seat the plinth against the terrain around the
-      // entire footprint, including courtyard edges and long downhill walls.
-      baseY=fitFootprint(outline);
-      if(part?.parent){
-        if(!familyLevels.has(part.parent)){
-          const members=families.get(part.parent).map(raw=>projectFootprint(raw,graph,projected)).filter(Boolean);
-          familyLevels.set(part.parent,members.length?Math.max(...members.map(fitFootprint)):baseY);
-        }
-        baseY=familyLevels.get(part.parent);
-      }
-      baseY+=survey?.platformHeight||0;
-      const profiles=outline.profiles;
       let seed=0;for(let i=0;i<id.length;i++)seed=(Math.imul(seed,31)+id.charCodeAt(i))>>>0;
       const warehouse=/warehouse|industrial|shed|garage|roof|barn/.test(kind);
       facadeSeed=(seed%997)/2493;
@@ -779,95 +804,119 @@ function createTourDistrict(T,scene,plaster,structures,osmBuildings,nightLights)
       const rise=parseFloat(detail?.['roof:height'])||detail?.['roof:levels']*3.3;
       const fallbackHeight=warehouse?5.4:3.7+(unclassified?0:seed%3*3);
       const h=Math.min(850,Math.max(bottom+.3,2,tagH||parseFloat(detail?.height)||(levels&&levels*3.3+(part&&rise||0))||structures.heightAt(graph,x,z)||fallbackHeight));
-      const b={id,h,bottom,baseY,parent:part?.parent,rings,...box,surveyed:original};
+      const nearRoads=roadsAt(box);
+      // Elevated rooms, open canopies and surveyed gate piers have their own clearance.
+      const custom=survey&&(survey.steleRows||vanMieuArchitectureRefs.has(id));
+      const plots=bottom>2.2||use==='roof'||custom?[outline]:clearBuildingRoads(T,outline,nearRoads);
+      if(!plots.length)continue;
       const block=Math.floor(x/70)+','+Math.floor(z/70);blocks.set(block,(blocks.get(block)||0)+1);
-      for(let i=Math.floor((minX-12)/cell);i<=Math.floor((maxX+12)/cell);i++)for(let j=Math.floor((minZ-12)/cell);j<=Math.floor((maxZ+12)/cell);j++){
-        const key=i+','+j;if(!cells.has(key))cells.set(key,[]);cells.get(key).push(b);
-      }
-      if(survey&&(survey.steleRows||vanMieuArchitectureRefs.has(id))){
-        loadMonumentSurfaces();
-        vanMieuArchitecture??=createVanMieuArchitecture(T);
-        const built=vanMieuArchitecture(survey,outer,graph,(px,py,pz,u,v,tint,finish,normal)=>
-          vertex(batches[1],px,py,pz,u,v,tint,finish,-1,0,normal),(px,pz)=>bedHeight(px,pz)-baseY,
-          shore?.intersects(minX,minZ,maxX,maxZ)?shore.step:undefined);
-        b.h=built.height;b.solids=built.solids;b.stelae=built.stelae;continue;
-      }
-      const [bLon,bLat]=graph.geo(x,z),zone=window.CentralStreetscapes?.zoneAt(bLon,bLat);
-      const zWalls=zone?zone.walls:null,zRoofs=zone?zone.roofs:null;
-      const roofColor=detail?.['roof:colour']?new T.Color(detail['roof:colour']):zRoofs?new T.Color(zRoofs[opening===1?0:seed%zRoofs.length]):roofs[opening===1?0:seed%roofs.length];
-      const base=detail?.['building:colour']?new T.Color(detail['building:colour']):detail?.['building:material']==='wood'?new T.Color(0x99765a):zWalls?new T.Color(zWalls[seed%zWalls.length]):palette[seed%palette.length];
-      if(!part&&!opening&&!unclassified&&Math.hypot(x-cx,z-cz)<185&&h>=3&&h<17&&maxX-minX<32&&maxZ-minZ<32&&
-        /^(yes|residential|house|terrace|apartments|retail|commercial|building)$/.test(kind))streetFront(outer,h,roofColor,seed,zone);
-      let eave=h;
-      const lowRiseRoof=!part&&!unclassified&&h<(zone?.forcePitched?10.5:7.2)&&(warehouse||zone?.forcePitched||seed%5<2)?'gabled':null;
-      const roofShape=shape||detail?.['roof:shape']||(opening===1?'hipped':opening===2?'gabled':lowRiseRoof);
-      const pitched=['hipped','gabled','pyramidal','hipped-and-gabled','side_hipped','round','skillion','onion','dome','saltbox','mansard'].includes(roofShape);
-      const visitorRoof=original&&(site||opening||part||shape)&&pitched&&buildVisitorRoof(T,rings,roofShape,h,
-        rise,roofColor,base,([px,py,pz],[u,v],tint,tiles)=>{
-          const finish=tiles&&(/metal/.test(detail?.['roof:material'])?2:opening===1||detail?.['roof:material']==='roof_tiles'?1:0);
-          vertex(batches[1],px,py,pz,u,v,tint,Number(finish));
-        },opening===1,detail,bottom);
-      if(visitorRoof){
-        eave=visitorRoof;
-      }else if(rings.length===1&&outer.length===4&&pitched){
-        const start=outer[0].distanceTo(outer[1])>=outer[1].distanceTo(outer[2])?0:1;
-        const [a,c,d,f]=Array.from({length:4},(_,i)=>outer[(start+i)%4]);
-        eave=h-Math.min(h*.25,3,a.distanceTo(f)*.25);
-        const l=a.clone().lerp(f,.5),r=c.clone().lerp(d,.5);
-        const inset=roofShape==='gabled'?0:roofShape==='pyramidal'?.5:.2;
-        const highL=l.clone().lerp(r,inset),highR=r.clone().lerp(l,inset);
-        for(const tri of [[a,c,highR],[a,highR,highL],[f,highL,highR],[f,highR,d],[f,a,highL],[c,d,highR]]){
-          for(const p of tri)vertex(batches[1],p.x,p===highL||p===highR?h:eave,p.y,0,0,roofColor);
+      for(const outline of plots){
+        const {rings,flat,box}=outline,outer=rings[0],{minX,minZ,maxX,maxZ}=box;
+        // Keep floors level, and seat the plinth against the terrain around the
+        // entire footprint, including courtyard edges and long downhill walls.
+        baseY=fitFootprint(outline);
+        if(part?.parent){
+          if(!familyLevels.has(part.parent)){
+            const members=families.get(part.parent).map(raw=>projectFootprint(raw,graph,projected)).filter(Boolean);
+            familyLevels.set(part.parent,members.length?Math.max(...members.map(fitFootprint)):baseY);
+          }
+          baseY=familyLevels.get(part.parent);
         }
-      }else{
-        outline.triangles??=T.ShapeUtils.triangulateShape(outer,rings.slice(1));
-        for(const tri of outline.triangles)for(const index of [tri[0],tri[2],tri[1]]){
-          const p=flat[index];vertex(batches[1],p.x,h,p.y,0,0,roofColor);
+        baseY+=survey?.platformHeight||0;
+        const profiles=outline.profiles;
+        const b={id,h,bottom,baseY,parent:part?.parent,rings,...box,surveyed:original};
+        for(let i=Math.floor((minX-12)/cell);i<=Math.floor((maxX+12)/cell);i++)for(let j=Math.floor((minZ-12)/cell);j<=Math.floor((maxZ+12)/cell);j++){
+          const key=i+','+j;if(!cells.has(key))cells.set(key,[]);cells.get(key).push(b);
         }
-      }
-      if(bottom>0){
-        outline.triangles??=T.ShapeUtils.triangulateShape(outer,rings.slice(1));
-        for(const tri of outline.triangles)for(const k of tri){
-          const p=flat[k];vertex(batches[1],p.x,bottom,p.y,0,0,concrete);
+        if(custom){
+          loadMonumentSurfaces();
+          vanMieuArchitecture??=createVanMieuArchitecture(T);
+          const built=vanMieuArchitecture(survey,outer,graph,(px,py,pz,u,v,tint,finish,normal)=>
+            vertex(batches[1],px,py,pz,u,v,tint,finish,-1,0,normal),(px,pz)=>bedHeight(px,pz)-baseY,
+            shore?.intersects(minX,minZ,maxX,maxZ)?shore.step:undefined);
+          b.h=built.height;b.solids=built.solids;b.stelae=built.stelae;continue;
         }
-      }
-      if(use==='roof'){
-        // A mapped roof covers open ground. Only its supports obstruct the car.
-        b.solids=[];
-        const fascia=bottom>0?Math.max(bottom,eave-.22):eave-.22;
-        for(const ring of rings)for(let j=0;j<ring.length;j++){
-          const a=ring[j],c=ring[(j+1)%ring.length];
-          quad(batches[0],a,c,fascia,eave,roofColor,0,0);
-          if(bottom>0)continue;
-          const spans=Math.max(1,Math.ceil(a.distanceTo(c)/12));
-          for(let k=0;k<spans;k++){
-            const p=a.clone().lerp(c,k/spans),r=.16;
-            const post=[[-r,-r],[r,-r],[r,r],[-r,r]].map(([u,v])=>new T.Vector2(p.x+u,p.y+v));
-            const foot=Math.min(...post.map(q=>bedHeight(q.x,q.y)))-baseY-.22;
-            for(let n=0;n<4;n++)quad(batches[0],post[n],post[(n+1)%4],foot,eave,concrete,0,0);
-            b.solids.push([post]);
+        const [bLon,bLat]=graph.geo(x,z),zone=window.CentralStreetscapes?.zoneAt(bLon,bLat);
+        const zWalls=zone?zone.walls:null,zRoofs=zone?zone.roofs:null;
+        const roofColor=detail?.['roof:colour']?new T.Color(detail['roof:colour']):zRoofs?new T.Color(zRoofs[opening===1?0:seed%zRoofs.length]):roofs[opening===1?0:seed%roofs.length];
+        const base=detail?.['building:colour']?new T.Color(detail['building:colour']):detail?.['building:material']==='wood'?new T.Color(0x99765a):zWalls?new T.Color(zWalls[seed%zWalls.length]):palette[seed%palette.length];
+        if(!part&&!opening&&!unclassified&&Math.hypot(x-cx,z-cz)<185&&h>=3&&h<17&&maxX-minX<32&&maxZ-minZ<32&&
+          /^(yes|residential|house|terrace|apartments|retail|commercial|building)$/.test(kind))streetFront(outer,h,roofColor,seed,zone);
+        let eave=h;
+        const lowRiseRoof=!part&&!unclassified&&h<(zone?.forcePitched?10.5:7.2)&&(warehouse||zone?.forcePitched||seed%5<2)?'gabled':null;
+        const roofShape=shape||detail?.['roof:shape']||(opening===1?'hipped':opening===2?'gabled':lowRiseRoof);
+        const pitched=['hipped','gabled','pyramidal','hipped-and-gabled','side_hipped','round','skillion','onion','dome','saltbox','mansard'].includes(roofShape);
+        const visitorRoof=original&&(site||opening||part||shape)&&pitched&&buildVisitorRoof(T,rings,roofShape,h,
+          rise,roofColor,base,([px,py,pz],[u,v],tint,tiles)=>{
+            const finish=tiles&&(/metal/.test(detail?.['roof:material'])?2:opening===1||detail?.['roof:material']==='roof_tiles'?1:0);
+            vertex(batches[1],px,py,pz,u,v,tint,Number(finish));
+          },opening===1,detail,bottom);
+        if(visitorRoof){
+          eave=visitorRoof;
+        }else if(rings.length===1&&outer.length===4&&pitched){
+          const start=outer[0].distanceTo(outer[1])>=outer[1].distanceTo(outer[2])?0:1;
+          const [a,c,d,f]=Array.from({length:4},(_,i)=>outer[(start+i)%4]);
+          eave=h-Math.min(h*.25,3,a.distanceTo(f)*.25);
+          const l=a.clone().lerp(f,.5),r=c.clone().lerp(d,.5);
+          const inset=roofShape==='gabled'?0:roofShape==='pyramidal'?.5:.2;
+          const highL=l.clone().lerp(r,inset),highR=r.clone().lerp(l,inset);
+          for(const tri of [[a,c,highR],[a,highR,highL],[f,highL,highR],[f,highR,d],[f,a,highL],[c,d,highR]]){
+            for(const p of tri)vertex(batches[1],p.x,p===highL||p===highR?h:eave,p.y,0,0,roofColor);
+          }
+        }else{
+          outline.triangles??=T.ShapeUtils.triangulateShape(outer,rings.slice(1));
+          for(const tri of outline.triangles)for(const index of [tri[0],tri[2],tri[1]]){
+            const p=flat[index];vertex(batches[1],p.x,h,p.y,0,0,roofColor);
           }
         }
-        continue;
-      }
-      for(let ri=0;ri<rings.length;ri++)for(let j=0;j<rings[ri].length;j++){
-        const ring=rings[ri],profile=profiles[ri];
-        const a=ring[j],c=ring[(j+1)%ring.length],length=a.distanceTo(c);
-        if(length<.2)continue;
-        const count=warehouse||unclassified?0:Math.floor(length/(opening?3.8:2.85)),floors=opening?Math.max(1,levels||1):Math.max(1,Math.round(h/3.3));
-        const samples=profile[j],next=profile[(j+1)%ring.length][0],wallBatch=batches[0];
-        if(bottom>0){quad(wallBatch,a,c,bottom,Math.max(bottom,eave),base,count,floors);continue;}
-        // On nearly level blocks the wall itself can reach beneath the grass.
-        if(samples.every(p=>baseY-p.h<.16)&&baseY-next.h<.16){
-          quad(wallBatch,a,c,-.39,eave,base,count,floors);continue;
+        if(bottom>0){
+          outline.triangles??=T.ShapeUtils.triangulateShape(outer,rings.slice(1));
+          for(const tri of outline.triangles)for(const k of tri){
+            const p=flat[k];vertex(batches[1],p.x,bottom,p.y,0,0,concrete);
+          }
         }
-        quad(wallBatch,a,c,0,eave,base,count,floors);
-        for(let k=0;k<samples.length;k++){
-          const l=samples[k],r=samples[k+1]||profile[(j+1)%ring.length][0];
-          // The grass mesh sits 17 cm below the nominal ground.
-          const lowL=l.h-baseY-.22,lowR=r.h-baseY-.22;
-          for(const [p,y] of [[l,lowL],[r,lowR],[l,0],[r,lowR],[r,0],[l,0]]){
-            vertex(wallBatch,p.x,y,p.z,Math.hypot(p.x-a.x,p.z-a.y)/5,y/4,concrete);
+        if(use==='roof'){
+          // A mapped roof covers open ground. Only its supports obstruct the car.
+          b.solids=[];
+          const fascia=bottom>0?Math.max(bottom,eave-.22):eave-.22;
+          for(const ring of rings)for(let j=0;j<ring.length;j++){
+            const a=ring[j],c=ring[(j+1)%ring.length];
+            quad(batches[0],a,c,fascia,eave,roofColor,0,0);
+            if(bottom>0)continue;
+            const spans=Math.max(1,Math.ceil(a.distanceTo(c)/12));
+            for(let k=0;k<spans;k++){
+              const p=a.clone().lerp(c,k/spans),r=.16;
+              const post=[[-r,-r],[r,-r],[r,r],[-r,r]].map(([u,v])=>new T.Vector2(p.x+u,p.y+v));
+              if(nearRoads.size&&[...nearRoads].some(s=>{
+                const t=Math.max(0,Math.min(1,((p.x-s.a.x)*s.dx+(p.y-s.a.z)*s.dz)/s.length2));
+                return Math.hypot(p.x-s.a.x-t*s.dx,p.y-s.a.z-t*s.dz)<s.w+r*Math.SQRT2+.15;
+              }))continue;
+              const foot=Math.min(...post.map(q=>bedHeight(q.x,q.y)))-baseY-.22;
+              for(let n=0;n<4;n++)quad(batches[0],post[n],post[(n+1)%4],foot,eave,concrete,0,0);
+              b.solids.push([post]);
+            }
+          }
+          continue;
+        }
+        for(let ri=0;ri<rings.length;ri++)for(let j=0;j<rings[ri].length;j++){
+          const ring=rings[ri],profile=profiles[ri];
+          const a=ring[j],c=ring[(j+1)%ring.length],length=a.distanceTo(c);
+          if(length<.2)continue;
+          const count=warehouse||unclassified?0:Math.floor(length/(opening?3.8:2.85)),floors=opening?Math.max(1,levels||1):Math.max(1,Math.round(h/3.3));
+          const samples=profile[j],next=profile[(j+1)%ring.length][0],wallBatch=batches[0];
+          if(bottom>0){quad(wallBatch,a,c,bottom,Math.max(bottom,eave),base,count,floors);continue;}
+          // On nearly level blocks the wall itself can reach beneath the grass.
+          if(samples.every(p=>baseY-p.h<.16)&&baseY-next.h<.16){
+            quad(wallBatch,a,c,-.39,eave,base,count,floors);continue;
+          }
+          quad(wallBatch,a,c,0,eave,base,count,floors);
+          for(let k=0;k<samples.length;k++){
+            const l=samples[k],r=samples[k+1]||profile[(j+1)%ring.length][0];
+            // The grass mesh sits 17 cm below the nominal ground.
+            const lowL=l.h-baseY-.22,lowR=r.h-baseY-.22;
+            for(const [p,y] of [[l,lowL],[r,lowR],[l,0],[r,lowR],[r,0],[l,0]]){
+              vertex(wallBatch,p.x,y,p.z,Math.hypot(p.x-a.x,p.z-a.y)/5,y/4,concrete);
+            }
           }
         }
       }
