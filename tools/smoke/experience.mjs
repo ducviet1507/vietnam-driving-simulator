@@ -60,12 +60,15 @@ export async function checkExperience(page,base) {
 
   await go('/theory-exam?hang=A');
   await page.locator('#begin').click();
+  await page.locator('#choices button').first().waitFor();
   const other=await page.context().newPage();
   try{
     await other.goto(page.url(),{waitUntil:'domcontentloaded'});
     await other.locator('#next').click();
+    await other.locator('#grid button[aria-current=step]').filter({hasText:/^2$/}).waitFor();
     await Promise.all([page,other].map(tab=>tab.locator('#choices button').first().click()));
     await page.locator('#mark').click();
+    await other.locator('#grid button').first().and(other.getByRole('button',{name:/đã đánh dấu/})).waitFor();
     await other.reload({waitUntil:'domcontentloaded'});
     assert.match(await other.locator('#progress').innerText(),/^2\/25/);
     assert.match(await other.locator('#grid button').first().getAttribute('aria-label'),/đã đánh dấu/);

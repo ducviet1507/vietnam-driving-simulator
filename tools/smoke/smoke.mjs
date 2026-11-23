@@ -405,9 +405,10 @@ try {
     await go('/theory-exam');
     await page.locator('#begin').click();
     await page.locator('#choices button').first().click();
-    assert.match(await page.locator('#progress').innerText(),/^1\/30/);
+    await page.locator('#progress').filter({hasText:/^1\/30/}).waitFor();
     await page.locator('#submit').click();
     await page.locator('#send').click();
+    await page.locator('#result').waitFor();
     assert.match(await page.locator('#result').innerText(),/\d+\/30/);
     const images = await page.evaluate(()=>window.driveBank.filter(q=>q.image).map(q=>q.imageAlt));
     assert.equal(images.length,318);
