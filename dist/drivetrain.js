@@ -78,7 +78,7 @@ window.DriveBody={
  },
  reset(c){
    delete c.dent;
-   c.vx=0;c.vz=0;c.speed=0;c.steer=0;c.spin=0;c.slip=0;c.pitch=0;c.roll=0;c.boost=false;c.brake=false;c.offroad=false;c.reverseDelay=0;
+   c.vx=0;c.vz=0;c.speed=0;c.steer=0;c.steerTravel=0;c.spin=0;c.slip=0;c.pitch=0;c.roll=0;c.boost=false;c.brake=false;c.offroad=false;c.reverseDelay=0;
  },
  settle(c,dt){
    const drag=Math.exp(-dt*8);
@@ -106,7 +106,20 @@ window.DriveBody={
    if(!(dt>0))return;
    const sx=Math.sin(c.yaw),cz=Math.cos(c.yaw),forward=c.vx*sx-c.vz*cz,side=c.vx*cz+c.vz*sx;
    const grip=c.offroad?4.2:c.model==='rally'?9:7.2;
-   c.steer+=(input.steer-c.steer)*(1-Math.exp(-dt*8));
+   // Ease the digital input, then shape the wheel response around centre.
+   // Parking stays linear. A held key still reaches full lock at every speed.
+   const travel=c.steerTravel??c.steer;
+   const speedKmh=Math.abs(forward)*3.6;
+   const curve=1+3*Math.max(0,Math.min(1,(speedKmh-20)/120));
+   // Reversing unwinds the previous turn faster, until the wheel crosses centre.
+   let decay=dt*8;
+   if(travel*input.steer<0){
+     const unwind=4*(curve-1);
+     const toCentre=Math.log1p(Math.abs(travel/input.steer))/(8+unwind);
+     decay+=unwind*Math.min(dt,toCentre);
+   }
+   c.steerTravel=travel+(input.steer-travel)*(1-Math.exp(-decay));
+   c.steer=Math.sign(c.steerTravel)*Math.abs(c.steerTravel)**curve;
    const next=this.forwardSpeed(c,input,dt,forward);
    const wheel=c.steer*(c.spec?.steerLock??.52)/(1+Math.abs(next)*.056);
    const yawRate=Math.max(-1.8,Math.min(1.8,next*Math.tan(wheel)/(c.spec?.wheelbase??2.68)));
