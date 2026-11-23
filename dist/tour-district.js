@@ -11,7 +11,7 @@ function createVanMieuArchitecture(T){
   for(const k of Object.keys(colors))colors[k]=new T.Color(colors[k]);
   const forms={box:new T.BoxGeometry(1,1,1),round:new T.CylinderGeometry(1,1,1,12),
     ellipsoid:new T.SphereGeometry(1,10,5),shell:new T.SphereGeometry(1,16,7)};
-  return function draw(survey,ring,graph,put,groundOffset){
+  return function draw(survey,ring,graph,put,groundOffset,step){
     const stele=Boolean(survey.steleRows),drum=survey.kind==='drum',bell=survey.kind==='bell';
     const gate=survey.ref==='w702185144'||survey.ref==='w702185176',hall=survey.ref==='w702185189';
     const mainGate=survey.ref==='w702185143',sideGate=survey.ref==='w702241280'||survey.ref==='w702241281';
@@ -96,7 +96,7 @@ function createVanMieuArchitecture(T){
     const slab=[[-slabU,-slabV],[slabU,-slabV],[slabU,slabV],[-slabU,slabV]];
     for(let j=0;j<slab.length;j++){
       const [u,v]=slab[j],[s,t]=slab[(j+1)%slab.length],a=corner(u,v),b=corner(s,t);
-      const cuts=terrainEdgeBreaks(a.x,a.y,b.x,b.y);
+      const cuts=terrainEdgeBreaks(a.x,a.y,b.x,b.y,step);
       let left=[u,Math.min(-.36,groundOffset(a.x,a.y)-.22),v];
       for(let k=1;k<cuts.length;k++){
         const f=cuts[k],right=[u+(s-u)*f,Math.min(-.36,groundOffset(a.x+(b.x-a.x)*f,a.y+(b.y-a.y)*f)-.22),v+(t-v)*f];
@@ -538,7 +538,7 @@ function createTourDistrict(T,scene,plaster,structures,osmBuildings,nightLights)
     for(const mesh of [...group.children]){group.remove(mesh);mesh.geometry.dispose();}
     cells.clear();blocks.clear();streetFronts.length=0;
   }
-  function* buildSteps(graph,cx,cz,landmarks,ground=()=>0,edges=[],openGround=()=>false,radius=620,terrainRevision,memorialAt=()=>false){
+  function* buildSteps(graph,cx,cz,landmarks,ground=()=>0,edges=[],openGround=()=>false,radius=620,terrainRevision,memorialAt=()=>false,shore=null){
     clear();if(!graph)return;
     const pieces=parts.rows(graph,cx,cz);
     const replaced=new Set(pieces.flatMap(row=>[row[6]?.parent,row[6]?.sourceId]).filter(Boolean));
@@ -684,19 +684,25 @@ function createTourDistrict(T,scene,plaster,structures,osmBuildings,nightLights)
     if(!footprints.has(graph))footprints.set(graph,new WeakMap());
     const projected=footprints.get(graph);
     const revision=terrainRevision??Symbol(),familyLevels=new Map();
+    function bedHeight(x,z){
+      const natural=ground(x,z);
+      return shore?shore.ground(x,z,natural):natural;
+    }
     function fitFootprint(outline){
-      if(outline.terrainRevision===revision)return outline.foundation;
       const {minX,maxX,minZ,maxZ}=outline.box;
+      const nearBank=shore?.intersects(minX,minZ,maxX,maxZ);
+      const version=nearBank?shore.revision:revision;
+      if(outline.terrainRevision===version)return outline.foundation;
       let level=ground((minX+maxX)/2,(minZ+maxZ)/2);
       outline.profiles=outline.rings.map(ring=>ring.map((a,j)=>{
         const b=ring[(j+1)%ring.length];
-        return terrainEdgeBreaks(a.x,a.y,b.x,b.y).slice(0,-1).map(t=>{
-          const x=a.x+(b.x-a.x)*t,z=a.y+(b.y-a.y)*t,h=ground(x,z);
-          level=Math.max(level,h);
-          return {x,z,h};
+        return terrainEdgeBreaks(a.x,a.y,b.x,b.y,nearBank?shore.step:undefined).slice(0,-1).map(t=>{
+          const x=a.x+(b.x-a.x)*t,z=a.y+(b.y-a.y)*t,natural=ground(x,z);
+          level=Math.max(level,natural);
+          return {x,z,h:nearBank?shore.ground(x,z,natural):natural};
         });
       }));
-      outline.terrainRevision=revision;outline.foundation=level;return level;
+      outline.terrainRevision=version;outline.foundation=level;return level;
     }
     const [lon,lat]=graph.geo(cx,cz);
     const pins=VietnamTourism.nearby(lon,lat,720/graph.mx,720/graph.my)
@@ -768,7 +774,8 @@ function createTourDistrict(T,scene,plaster,structures,osmBuildings,nightLights)
         loadMonumentSurfaces();
         vanMieuArchitecture??=createVanMieuArchitecture(T);
         const built=vanMieuArchitecture(survey,outer,graph,(px,py,pz,u,v,tint,finish,normal)=>
-          vertex(batches[1],px,py,pz,u,v,tint,finish,-1,0,normal),(px,pz)=>ground(px,pz)-baseY);
+          vertex(batches[1],px,py,pz,u,v,tint,finish,-1,0,normal),(px,pz)=>bedHeight(px,pz)-baseY,
+          shore?.intersects(minX,minZ,maxX,maxZ)?shore.step:undefined);
         b.h=built.height;b.solids=built.solids;b.stelae=built.stelae;continue;
       }
       const [bLon,bLat]=graph.geo(x,z),zone=window.CentralStreetscapes?.zoneAt(bLon,bLat);
@@ -822,7 +829,7 @@ function createTourDistrict(T,scene,plaster,structures,osmBuildings,nightLights)
           for(let k=0;k<spans;k++){
             const p=a.clone().lerp(c,k/spans),r=.16;
             const post=[[-r,-r],[r,-r],[r,r],[-r,r]].map(([u,v])=>new T.Vector2(p.x+u,p.y+v));
-            const foot=ground(p.x,p.y)-baseY-.22;
+            const foot=Math.min(...post.map(q=>bedHeight(q.x,q.y)))-baseY-.22;
             for(let n=0;n<4;n++)quad(batches[0],post[n],post[(n+1)%4],foot,eave,concrete,0,0);
             b.solids.push([post]);
           }

@@ -2,13 +2,15 @@
 // Run with the project's static server, e.g. node tools/smoke/landmark-foundations.mjs
 // --base=http://127.0.0.1:8000/ [--id=station] [--output=report.json].
 import assert from 'node:assert/strict';
-import {writeFileSync} from 'node:fs';
+import {readFileSync,writeFileSync} from 'node:fs';
 import {parseArgs} from 'node:util';
 import {chromium} from 'playwright-core';
 
 const {values}=parseArgs({options:{base:{type:'string',default:'http://127.0.0.1:8000/'},
   id:{type:'string',multiple:true},output:{type:'string'}}});
-const base=new URL(values.base),html=await (await fetch(base)).text();
+// Production groups adjacent scripts into bundles but retains their individual
+// public URLs. Use this revision's entry point for the catalogue load order.
+const base=new URL(values.base),html=readFileSync(new URL('../../dist/index.html',import.meta.url),'utf8');
 const scripts=Array.from(html.matchAll(/<script src="([^"]+)"><\/script>/g),m=>m[1]);
 const catalogue=scripts.slice(scripts.indexOf('sight-details.js'),scripts.indexOf('vietnam-landmarks.js')+1);
 assert.ok(catalogue.length>100);

@@ -180,7 +180,7 @@ function* buildMappedShoreSteps(T, options){
       }
     }
   }
-  function sample(x,z,includeBank=false){
+  function sample(x,z,includeBank=false,includeCovers=true){
     const tx=Math.floor((x-left)/coarse),tz=Math.floor((z-top)/coarse);
     if(tx<0||tx>=segments||tz<0||tz>=segments||!active[tz*segments+tx])return null;
     const stride=active[tz*segments+tx]===2?steps/2:1,u=(x-left)/(metres*stride),v=(z-top)/(metres*stride);
@@ -191,7 +191,7 @@ function* buildMappedShoreSteps(T, options){
     const height=k=>f+h<=1?a[k]+f*(b[k]-a[k])+h*(c[k]-a[k]):d[k]+(1-f)*(c[k]-d[k])+(1-h)*(b[k]-d[k]);
     if(!includeBank&&height('d')<=0)return null;
     const level=height('level');let bed=height('bed');
-    for(const t of covers.get(tz*segments+tx)||[]){
+    if(includeCovers)for(const t of covers.get(tz*segments+tx)||[]){
       const dx=x-t.x,dz=z-t.z,u=(dx*t.cz-dz*t.cx)/t.det,v=(t.bx*dz-t.bz*dx)/t.det;
       if(u>=-1e-7&&v>=-1e-7&&u+v<=1.0000001)bed=Math.max(bed,t.y+u*t.by+v*t.cy);
     }

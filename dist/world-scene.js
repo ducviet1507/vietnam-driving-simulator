@@ -308,7 +308,7 @@
       let work=0;
       const {land,district,grounds}=slot;
       const roadGroup=new T.Group(),treeBatches=[],streetBulbs=[],obstacleCells=new Map(),obstacles=[];
-      let shorePatch=null,fieldPixels=null,committed=false;
+      let shorePatch=null,shoreFootings=null,fieldPixels=null,committed=false;
       const registerObstacle=o=>{obstacles.push(o);return indexObstacle(obstacleCells,o);};
       try{
       const landscapes=landscapeSource.prepare(graph);
@@ -458,6 +458,15 @@
           fieldPixels=field;yield;
           shorePatch=yield* buildMappedShoreSteps(T,{mask:wetMask,field,size:maskSize,scale:maskScale,maskX,maskZ,cx,cz,gx,gz,landWidth,land,landIndex,
             ground:localGround,pools,group:roadGroup,waterMaterial:waterSurface.material});
+          // The bank mesh replaces the grass near water. Keep its bare
+          // surface independent of bridges, quays and the foundations themselves.
+          shoreFootings={revision:Symbol(),step:1/maskScale,
+            intersects:(x0,z0,x1,z1)=>shorePatch.intersects(x0-cx,z0-cz,x1-cx,z1-cz),
+            ground(x,z,natural){
+              const sample=shorePatch.sample(x-cx,z-cz,true,false);
+              return sample?Math.min(natural,sample.bed+.17):natural;
+            }};
+          landmarks?.setShoreFootings(shoreFootings);
           landmarks?.addShoreCover(shorePatch);
         }
       }
@@ -488,7 +497,7 @@
       function openGround(x,z){
         return grounds.memorialAt(x,z)||grounds.mapped(x,z)||Boolean(wetMask&&wet(x-cx,z-cz));
       }
-      yield* district.buildSteps(graph,cx,cz,landmarks,terrain.ground,edges,openGround,Math.min(620,cutoff),terrain.revision,grounds.memorialAt);
+      yield* district.buildSteps(graph,cx,cz,landmarks,terrain.ground,edges,openGround,Math.min(620,cutoff),terrain.revision,grounds.memorialAt,shoreFootings);
       const contact=(...args)=>regionContact(obstacleCells,cx,cz,graph,tunnels,landmarks,district,...args);
       function nearbyCell(x,z){return Math.floor(x/cellSize)+','+Math.floor(z/cellSize);}
       function bounds(seg,pad,fn){

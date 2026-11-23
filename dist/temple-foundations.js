@@ -58,7 +58,7 @@ function createTempleFoundations(T,{group,vertexCount,place}){
     }
   }
   let support,body,rest;
-  group.userData.fitGround=ground=>{
+  group.userData.fitGround=(ground,edgeCuts,overlap=.25,bedGround=ground)=>{
     // VietnamLandmarks seals its baked draw-call mesh after the builders run.
     if(!body){
       body=group.children[group.children.length-1].geometry;
@@ -98,7 +98,13 @@ function createTempleFoundations(T,{group,vertexCount,place}){
       const {ax,az,bx,bz,u,v}=wall,top=wall.anchor.height+wall.top;
       // Slight overlap at both ends closes the seam when ground triangles break
       // across a side. Buried portions are naturally occluded by the ground.
-      const lowA=Math.min(top-.04,ground(ax,az)-.25),lowB=Math.min(top-.04,ground(bx,bz)-.25);
+      const embed=Math.max(.25,overlap);
+      let lowA=Math.min(top-.04,bedGround(ax,az)-embed),lowB=Math.min(top-.04,bedGround(bx,bz)-embed);
+      let excess=0;
+      for(const t of edgeCuts?.(ax,az,bx,bz)||[]){
+        if(t>0&&t<1)excess=Math.max(excess,lowA+(lowB-lowA)*t-bedGround(ax+(bx-ax)*t,az+(bz-az)*t)+embed);
+      }
+      lowA-=excess;lowB-=excess;
       vertex(ax,top,az,u,top);vertex(bx,top,bz,v,top);vertex(ax,lowA,az,u,lowA);
       vertex(bx,top,bz,v,top);vertex(bx,lowB,bz,v,lowB);vertex(ax,lowA,az,u,lowA);
     }
@@ -113,8 +119,8 @@ function createTempleFoundations(T,{group,vertexCount,place}){
       }
       for(const [left,right,tread] of [[1,2,false],[2,3,true],[3,0,false]]){
         const [ax,az]=corners[left],[bx,bz]=corners[right],len=Math.hypot(bx-ax,bz-az);
-        const lowA=tread?lip:Math.min(height,ground(ax,az)-.15);
-        const lowB=tread?lip:Math.min(height,ground(bx,bz)-.15);
+        const lowA=tread?lip:Math.min(height,bedGround(ax,az)-overlap);
+        const lowB=tread?lip:Math.min(height,bedGround(bx,bz)-overlap);
         vertex(ax,height,az,0,height);vertex(bx,height,bz,len,height);vertex(ax,lowA,az,0,lowA);
         vertex(bx,height,bz,len,height);vertex(bx,lowB,bz,len,lowB);vertex(ax,lowA,az,0,lowA);
       }

@@ -111,6 +111,19 @@ const wallPoints=meshes.children[0].geometry.attributes.position;
 assert.ok(Array.from({length:wallPoints.count},(_,i)=>i).some(i=>
   Math.abs(wallPoints.getX(i)-64)<1e-4&&wallPoints.getY(i)<-.17),'Wall reaches the triangulated terrain crease');
 
+// A streamed bank can replace the grass while the regional DEM is unchanged.
+// The finer bed crease must seat the wall without dropping family floor levels.
+const terrainTag=Symbol(),bank={revision:Symbol(),step:2,intersects:()=>true,
+  ground:(x,z,y)=>y-Math.max(0,6-3*Math.abs(x-62))};
+for(const shore of [null,bank,null]){
+  district.build(graph,0,0,null,()=>5,[],()=>false,620,terrainTag,()=>false,shore);
+  const p=meshes.children[0].geometry.attributes.position;
+  let lowest=Infinity;
+  for(let i=0;i<p.count;i++)lowest=Math.min(lowest,p.getY(i));
+  assert.ok(shore?lowest<=-1.219:lowest>4.6,'Bank-specific wall bedding must reset on dry ground');
+  assert.equal(district.footprint({map:'https://www.openstreetmap.org/way/92'},66,0).baseY,5);
+}
+
 const fort=context.VietnamTourism.byId.get('osm-way-921987266'); // Thành cổ Sơn Tây
 landmarks.setOrigin(project(fort),0,0);
 const courtyard=plot(85,0);
@@ -146,8 +159,10 @@ context.createLandmarkMaterial=()=>new T.MeshStandardMaterial();
 runInNewContext(readFileSync(new URL('../../dist/vietnam-landmarks.js',import.meta.url),'utf8'),context);
 const groundScene=new T.Scene(),groundModels=context.VietnamLandmarks.create(T,groundScene),map=project(masonry);
 const crease=x=>.44*(Math.abs(x-32)-32);
-for(const shift of [0,19,0]){
-  groundModels.setOrigin(map,shift,0,crease);
+for(const [shift,shore] of [[0,null],[19,null],[0,bank],[0,null]]){
+  const entry=groundModels.prepare(map,shift,0,crease);
+  entry.setShoreFootings(shore);entry.activate();
+  const bed=x=>shore?shore.ground(x,0,crease(x)):crease(x);
   const mesh=groundScene.getObjectByName(masonry.id),p=mesh.children.at(-1).geometry.attributes.position;
   mesh.updateMatrixWorld(true);
   const corners=new Map();
@@ -160,14 +175,32 @@ for(const shift of [0,19,0]){
   const ring=[...corners.values()].sort((a,b)=>Math.atan2(a.z,a.x+shift)-Math.atan2(b.z,b.x+shift));
   for(let j=0;j<4;j++)for(let n=0;n<=128;n++){
     const sample=ring[j].clone().lerp(ring[(j+1)%4],n/128);
-    assert.ok(sample.y<=crease(sample.x+shift)-.17,'Landmark slab crosses above visible ground');
+    assert.ok(sample.y<=bed(sample.x+shift)-.17,'Landmark slab crosses above visible ground');
   }
   for(let i=24;i<48;i++)assert.ok(p.getY(i)>3.8,'Raised deck remains elevated');
   let postBase=0;
   for(let i=48;i<p.count;i++){
     if(p.getY(i)>2.9)continue;
     const q=new T.Vector3().fromBufferAttribute(p,i).applyMatrix4(mesh.matrixWorld);
-    assert.ok(q.y<=crease(q.x+shift)-.17,'Exposed stilt ends in the ground');postBase++;
+    assert.ok(q.y<=bed(q.x+shift)-.17,'Exposed stilt ends in the ground');postBase++;
   }
   assert.ok(postBase>10);
 }
+
+// A pier deck masks water for the car. Its own footings still need the bare
+// underwater mesh, including after the renderer registers the deck as cover.
+runInNewContext(readFileSync(new URL('../../dist/shore-terrain.js',import.meta.url),'utf8'),context);
+const size=32,mask=new Uint8Array(size*size*4),field=new Uint8Array(mask.length);
+for(let j=0;j<size;j++)for(let i=16;i<size;i++){
+  const k=(j*size+i)*4;mask[k+3]=255;field[k+2]=Math.min(255,(i-15)*20);
+}
+const groundMesh=new T.Mesh(new T.PlaneGeometry(64,64,2,2),new T.MeshBasicMaterial());
+const buildBank=context.buildMappedShoreSteps(T,{mask,field,size,scale:.5,maskX:-32,maskZ:-32,cx:0,cz:0,gx:0,gz:0,
+  landWidth:64,land:groundMesh,landIndex:groundMesh.geometry.index,ground:()=>0,pools:[],group:new T.Group(),waterMaterial:groundMesh.material});
+let step=buildBank.next();
+while(!step.done)step=buildBank.next();
+const patch=step.value,bed=patch.sample(4,0,true,false).bed;
+assert.ok(bed<-.5);
+const deck=new T.PlaneGeometry(8,8);deck.rotateX(-Math.PI/2);deck.translate(4,.75,0);patch.addCover(deck);
+assert.equal(patch.sample(4,0,true).bed,.75);
+assert.equal(patch.sample(4,0,true,false).bed,bed);

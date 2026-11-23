@@ -1101,19 +1101,19 @@ window.VietnamLandmarks=(()=>{
       }));
       const rounds=roundFeet.map(({vertices,rim})=>({vertices,rest:p.getY(vertices[0]),
         ring:rim.map(i=>({x:p.getX(i),z:p.getZ(i)}))}));
-      group.userData.fitGround=(ground,edgeCuts,overlap)=>{
+      group.userData.fitGround=(ground,edgeCuts,overlap,bedGround=ground)=>{
         let changed=false;
         for(const {vertices,rest,ring} of rounds){
           let bed=rest;
           for(let j=0;j<ring.length;j++){
             const a=ring[j],b=ring[(j+1)%ring.length];
             for(const t of edgeCuts(a.x,a.z,b.x,b.z))
-              bed=Math.min(bed,ground(a.x+(b.x-a.x)*t,a.z+(b.z-a.z)*t)-overlap);
+              bed=Math.min(bed,bedGround(a.x+(b.x-a.x)*t,a.z+(b.z-a.z)*t)-overlap);
           }
           for(const i of vertices)if(Math.abs(p.getY(i)-bed)>.001){p.setY(i,bed);changed=true;}
         }
         for(const corners of slabs){
-          const lows=corners.map(({x,z,rest})=>Math.min(rest,ground(x,z)-overlap));
+          const lows=corners.map(({x,z,rest})=>Math.min(rest,bedGround(x,z)-overlap));
           for(let j=0;j<4;j++){
             const k=(j+1)%4,a=corners[j],b=corners[k];
             // The rendered side is straight. Sink both ends far enough for
@@ -1121,7 +1121,7 @@ window.VietnamLandmarks=(()=>{
             const cuts=edgeCuts(a.x,a.z,b.x,b.z);
             let excess=0;
             for(let n=1;n<cuts.length-1;n++){
-              const t=cuts[n],bed=ground(a.x+(b.x-a.x)*t,a.z+(b.z-a.z)*t)-overlap;
+              const t=cuts[n],bed=bedGround(a.x+(b.x-a.x)*t,a.z+(b.z-a.z)*t)-overlap;
               excess=Math.max(excess,lows[j]+(lows[k]-lows[j])*t-bed);
             }
             lows[j]-=excess;lows[k]-=excess;
@@ -1140,6 +1140,7 @@ window.VietnamLandmarks=(()=>{
     let displayed;
     function* prepareSteps(graph,cx,cz,ground=()=>0,deckHeight=null){
     const active=[];
+    let shoreFootings=null;
     const buildingAreas=[],gardens=[],modeledBuildings=new Set();
     const naturalSites=new Set(['Thác nước','Hang động','Đỉnh núi','Hồ','Vịnh','Bãi biển','Khu bảo tồn','Vườn quốc gia']);
     const visitorSites=new Set(['Vườn cảnh','Công viên','Khảo cổ','Thành cổ','Lăng mộ','Đền chùa','Công trình tín ngưỡng','Di tích']);
@@ -1198,13 +1199,19 @@ window.VietnamLandmarks=(()=>{
           mesh.position.set(x-cx,base,z-cz);mesh.rotation.y=data.yaw;
           if(data.scale)mesh.scale.fromArray(data.scale);
           mesh.userData.placeLights?.();
-          mesh.userData.fitGround?.((u,v)=>{
+          if(!mesh.userData.fitGround)return;
+          const bank=foundation===ground?shoreFootings:null;
+          function localHeight(u,v,useBank){
             const px=u*mesh.scale.x,pz=v*mesh.scale.z;
-            return (foundation(x+px*c+pz*s,z-px*s+pz*c)-base)/mesh.scale.y;
-          },(ax,az,bx,bz)=>{
+            const east=x+px*c+pz*s,south=z-px*s+pz*c,natural=foundation(east,south);
+            return ((useBank?bank.ground(east,south,natural):natural)-base)/mesh.scale.y;
+          }
+          mesh.userData.fitGround((u,v)=>localHeight(u,v,false),(ax,az,bx,bz)=>{
             ax*=mesh.scale.x;bx*=mesh.scale.x;az*=mesh.scale.z;bz*=mesh.scale.z;
-            return terrainEdgeBreaks(x+ax*c+az*s,z-ax*s+az*c,x+bx*c+bz*s,z-bx*s+bz*c);
-          },.22/mesh.scale.y);
+            const x0=x+ax*c+az*s,z0=z-ax*s+az*c,x1=x+bx*c+bz*s,z1=z-bx*s+bz*c;
+            const finer=bank?.intersects(Math.min(x0,x1),Math.min(z0,z1),Math.max(x0,x1),Math.max(z0,z1));
+            return terrainEdgeBreaks(x0,z0,x1,z1,finer?bank.step:undefined);
+          },.22/mesh.scale.y,bank?(u,v)=>localHeight(u,v,true):undefined);
         }});
       }
     prepareBuildingSites(graph,cx,cz);
@@ -1276,7 +1283,8 @@ window.VietnamLandmarks=(()=>{
         }finally{if(previous){previous.place();mesh.updateMatrixWorld(true);}}
       }
     }
-    const view={active,activate,nearest,reserved,contact,addShoreCover,buildingAreas,gardens,modeledBuildings};
+    const view={active,activate,nearest,reserved,contact,addShoreCover,buildingAreas,gardens,modeledBuildings,
+      setShoreFootings(bank){shoreFootings=bank;}};
     return view;
     }
     function trim(){
