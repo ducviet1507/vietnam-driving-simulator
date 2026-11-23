@@ -1,6 +1,13 @@
 'use strict';
 window.VietnamLandmarks=(()=>{
   // OSM footprint centres and axes in WGS84. Positive local Z is the principal façade.
+  // Gate centres on OSM way 39514795, in metres in the market's local frame.
+  const marketSideGates=[
+    {label:'CỬA TÂY',side:-1,x:-49.6,z:10.4},
+    {label:'CỬA ĐÔNG',side:1,x:48.7,z:9.2}
+  ];
+  const marketSolids=[[0,0,44.5,61],[-1.2,-64.4,27,3.9],
+    ...marketSideGates.map(({x,z})=>[(x+Math.sign(x)*44)/2,z,(Math.abs(x)-44)/2,8])];
   const entries=[
     {id:'turtle',photo:'https://kienthuc.net.vn/he-lo-hinh-anh-can-canh-ben-trong-thap-rua-ho-guom-post997231.html',name:'Tháp Rùa',city:'Hà Nội',lon:105.852293,lat:21.027873,yaw:0,width:4.54,depth:6.28,
       start:[105.853615,21.02761],bearing:8,map:'https://www.openstreetmap.org/way/178995269',
@@ -10,7 +17,8 @@ window.VietnamLandmarks=(()=>{
       source:'https://danangfantasticity.com/en/culture-en/danang-cathedral'},
     {id:'market',photo:'https://www.vietnam.vn/en/cho-ben-thanh-thay-ao-moi-sau-6-ngay-trung-tam-tp-hcm-ruc-ro-don-tet',name:'Chợ Bến Thành',city:'TP. Hồ Chí Minh',lon:106.698017,lat:10.772568,yaw:.532,width:89,depth:122,
       start:[106.698484,10.771409],map:'https://www.openstreetmap.org/way/39514795',
-      reserve:(x,z,pad)=>Math.abs(x)<46+pad&&z> -65-pad&&z<65+pad||
+      solids:marketSolids,
+      reserve:(x,z,pad)=>marketSolids.some(([cx,cz,w,d])=>Math.abs(x-cx)<w+1.5+pad&&Math.abs(z-cz)<d+1.5+pad)||
         z>=60-pad&&z<113+pad&&Math.abs(x)<39+pad,
       source:'https://visithcmc.vn/vi/kham-pha-cho-ben-thanh-tphcm-tu-a-z-5-phut-doc/'},
     {id:'sapa',photo:'https://clublog.club-t.com/_ct/17777960',name:'Nhà thờ đá Sa Pa',city:'Sa Pa',lon:103.8423215,lat:22.335102,yaw:-2.31,width:12.6,depth:38.5,scale:[1.11,1,1.24],
@@ -373,6 +381,60 @@ window.VietnamLandmarks=(()=>{
       tapered(0x765746,0,24.92,cz,.24,.025,1.32,1,8);
       outline([[-.52,.92],[.51,.92],[.46,.18],[0,-.26],[-.46,.18]],0x7b7853,0,8.56,61.11,.14);
       sign('CHỢ BẾN THÀNH',0,11.07,61.22,9.23,1.42);
+
+      // The side portals have tall flat parapets, pairs of white pilasters
+      // and ceramic panels between perforated ventilation screens.
+      for(const {label,side,x,z} of marketSideGates)place(x,z,side*Math.PI/2,()=>{
+        const depth=Math.abs(x)-44;
+        box(0x3e403a,0,2.2,-depth+.35,8.2,4.4,.25);
+        box(wall,0,6.55,-depth/2,8.6,4.7,depth);
+        box(trim,0,8.96,-depth/2,8.85,.19,depth+.13);
+        for(const hand of [-1,1]){
+          box(trim,hand*4.08,4.5,-.25,.48,8.85,.54);
+          box(wall,hand*6.15,3.45,-depth/2,3.85,6.8,depth);
+          box(trim,hand*6.15,6.91,-depth/2,4,.19,depth+.1);
+          box(0x9a927e,hand*3.73,2.17,-depth/2,.32,4.25,depth);
+          for(const col of [1.43,2.65]){
+            box(glass,hand*col,4.97,.025,.93,1.34,.06);
+            for(let row=0;row<6;row++){
+              const y=4.44+row*.20,cx=hand*col;
+              box(trim,cx-.22,y,.08,.51,.10,.10,0,0,-.25);
+              box(trim,cx+.22,y,.08,.51,.10,.10,0,0,.25);
+            }
+          }
+        }
+        box(0x45685d,0,5.13,.03,1.52,1.64,.12);
+        const relief=side<0
+          ? [[-.64,.25],[-.20,.45],[.46,.36],[.66,.04],[.28,-.05],[.01,-.15],[-.43,-.61],[-.20,-.12]]
+          : [[-.67,.49],[-.32,.25],[0,.35],[.32,.25],[.67,.49],[.52,.12],[.28,-.02],[.13,-.46],[-.15,-.46],[-.30,-.03],[-.50,.13]];
+        outline(relief,0xd7b779,0,5.1,.11,.055);
+        sign(label,0,7.36,.08,5.8,.95,true,'#765c42');
+      });
+
+      // The Lê Thánh Tôn frontage has a low arcade, flower stalls and a
+      // curved nameboard above its central aisle, visible across the street.
+      place(-1.2,-68.3,Math.PI,()=>{
+        box(0x766553,0,3.88,-3.8,54,.23,7.65);
+        for(let bay=-4;bay<=4;bay++){
+          const x=bay*6;
+          box(0x454740,x,1.82,-7.36,5.55,3.64,.23);
+          arch(wall,x,.03,-.3,6,3.85);
+          if(Math.abs(bay)<2)continue;
+          box(0x705c48,x,.55,-1.75,3.5,.22,1.12);
+          for(let pot=0;pot<4;pot++){
+            const px=x+(pot-1.5)*.75,pz=-1.73+(pot%2)*.17;
+            tapered(0x986443,px,.83,pz,.21,.31,.40,1,7);
+            tapered(0x58714b,px,1.22,pz,.37,.17,.52,1,7);
+            stamp(round,[0xe3b64b,0xc47780,0xe1d6a4][(bay+4+pot)%3],px,1.46,pz,.25,.17,.21);
+          }
+        }
+        const crest=new T.Shape();
+        crest.moveTo(-2.7,0);crest.lineTo(-2.7,1.40);
+        crest.quadraticCurveTo(0,3.05,2.7,1.40);crest.lineTo(2.7,0);crest.closePath();
+        profile(crest,trim,0,3.02,.025,.15);
+        sign('CỬA BẮC',0,4.26,.195,4.6,.73,true,'#483e34');
+        sign('CHỢ BẾN THÀNH',0,3.55,.195,3.8,.49,true,'#483e34');
+      });
     }
     // The following pieces share the same baked mesh and metric coordinates as the original three sites.
     const stone=0xa3937c,ochre=0xd3a451,cream=0xf3deb0,tileRed=0x95513d,wood=0x633e2e;

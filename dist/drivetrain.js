@@ -99,7 +99,8 @@ window.DriveBody={
    const drag=(c.offroad?1.65:.48)+(c.offroad?.013:.0031)*forward*forward+(c.brake?(c.spec?.braking??17):0);
    const grade=input.grade||0,gravity=9.81*grade/Math.hypot(1,grade);
    const rolling=forward+(drive-gravity)*dt;
-   return rolling-Math.sign(rolling)*Math.min(Math.abs(rolling),drag*dt);
+   const next=rolling-Math.sign(rolling)*Math.min(Math.abs(rolling),drag*dt);
+   return c.spec?.speedGovernor?Math.min(next,input.top):next;
  },
  step(c,input,dt){
    if(!(dt>0))return;

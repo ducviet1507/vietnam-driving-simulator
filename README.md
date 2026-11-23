@@ -16,6 +16,8 @@ ViVu3D là game lái xe 3D trên trình duyệt. Bạn có thể khám phá Vi�
 | [Cúp Bánh Mì](https://vivu3d.com/cup) | Vượt đối thủ ở chặng Ven sông, Đèo trà hoặc một trong sáu cung đèo. Mỗi chặng có bảng thành tích riêng. |
 | [Sân tập và thi thử](https://vivu3d.com/hall) | Ôn lý thuyết hạng B, tập sa hình rồi thử lái đường trường và đường phố. |
 
+Trên màn hình xuất phát, nhập tên đường hoặc địa danh vào ô **Bạn muốn xuất phát ở đâu?** rồi chọn kết quả trên bản đồ. Để làm quen tay lái, bật **Tập lái bằng sedan**. Xe lên ga nhẹ, giới hạn 40 km/h và tắt nitro. Trong **Tùy chọn → Mật độ giao thông**, chọn **Đường thoáng** để tập thao tác hoặc **Phố đông** để luyện quan sát xe máy và ô tô ở giao lộ.
+
 ## Bưu thiếp Xuyên Việt
 
 Ghé Hồ Gươm rồi bấm **Tạm dừng → Viết bưu thiếp từ đây**. Game in cảnh đang nhìn cùng một lời nhắn từ ghế phụ. Bạn có thể đổi lời, tải ảnh hoặc sao chép link để bạn bè tới cùng điểm hẹn. Khi tìm được dấu ẩn trong góc ngắm địa danh, chọn **Gửi bưu thiếp có dấu** để in cả con dấu lên ảnh. [Khởi hành ở Hồ Gươm](https://vivu3d.com/?intro=turtle) · [Bài đăng và ảnh Xuyên Việt](social/bai-dang-xuyen-viet.txt).

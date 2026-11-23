@@ -19,7 +19,7 @@ function createWorldStreetLife(T,scene,small,environment,amenities,prepareActor)
     if(kind==='cafe')return (h>=6&&h<=21) ? .28 : .08;
     return .15;
   }
-  function activity(g,x,z,kind,h=localHour(),nearPlaces=g===graph?bins:null){
+  function activity(g,x,z,kind,trafficLevel='auto',h=localHour(),nearPlaces=g===graph?bins:null){
     const {population,cover}=environment.sample(g,x,z),dark=h<5||h>=22;
     const fast=kind?.startsWith('motorway');
     let attraction=0;
@@ -36,8 +36,15 @@ function createWorldStreetLife(T,scene,small,environment,amenities,prepareActor)
     const density=population==null?fallback:Math.min(1,Math.log1p(Math.max(0,population))/5);
     const walkers=fast?0:Math.min(1,density*.76+attraction)*(dark ? .32 : 1);
     const main=/^(motorway|trunk|primary)/.test(kind);
-    return {walkers,vehicles:Math.round((3+11*density+attraction*4+(main?3:0))*(dark ? .67 : 1)),
-      scooter:fast?0:Math.min(.72,.18+density*.37+attraction*.22)};
+    const urban=!fast&&(density>=.68||cover===50);
+    const peak=(h>=7&&h<9)||(h>=16&&h<19);
+    const base=(3+11*density+attraction*4+(main?3:0))*(dark ? .67 : 1);
+    const busy=trafficLevel==='busy'||(trafficLevel==='auto'&&urban&&!dark);
+    let vehicles=base;
+    if(trafficLevel==='quiet')vehicles=Math.min(7,base*.55);
+    if(busy)vehicles=trafficLevel==='busy'?25+density*5:base+(peak?11:6);
+    return {walkers,busy,vehicles:Math.min(small?22:30,Math.round(vehicles)),
+      scooter:fast?0:Math.min(.80,.18+density*.37+attraction*.22+(busy?.20:0))};
   }
   function* walkingPaths(g,originX,originZ,bins,segments,clear){
     let rows=0;
@@ -56,7 +63,7 @@ function createWorldStreetLife(T,scene,small,environment,amenities,prepareActor)
         const x=originX+s.ax+s.fx*station+side*s.nx*(s.w+1);
         const z=originZ+s.az+s.fz*station+side*s.nz*(s.w+1);
         const distance=Math.hypot(x-originX,z-originZ);if(distance>310)continue;
-        const score=activity(g,x,z,s.kind,hour,bins).walkers;
+          const score=activity(g,x,z,s.kind,'auto',hour,bins).walkers;
         const hash=(Math.imul(s.seed^k,2654435761)>>>0)/4294967296;
         if(hash>score*.88)continue;
         candidates.push({x,z,fx:s.fx,fz:s.fz,span,phase:hash*53,rank:distance/(.45+score),

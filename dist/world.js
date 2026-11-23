@@ -15,18 +15,40 @@ let activeTrip=false,loadRequest=null,openingCameraTime=0;
 const reduceMotion=matchMedia('(prefers-reduced-motion: reduce)');
 const vehicleLook=createVehicleLook($('lookAround'),$('world'),()=>mode==='drive');
 car.look=vehicleLook.view;
-function selectVehicle(model){
+let garageVehicle='supercar';
+const learnerSedan={...worldGarage['family-sedan'],power:2.5,top:40/3.6,speedGovernor:true};
+function selectVehicle(model,learner=false){
  if(!Object.hasOwn(worldGarage,model))return;
- car.model=model;car.spec=worldGarage[model];gfx?.preloadVehicle(model);
+ car.model=model;car.spec=learner?learnerSedan:worldGarage[model];gfx?.preloadVehicle(model);
+ $('garage').value=model;
+ $('learnerDrive').checked=learner;
+ document.body.toggleAttribute('data-learner',learner);
 }
-try{selectVehicle(localStorage.getItem('taylai.world.garage')||localStorage.getItem('taylai.garage'));}catch{}
-$('garage').value=car.model;
+let learnerSaved=false;
+try{
+ const saved=localStorage.getItem('taylai.world.garage')||localStorage.getItem('taylai.garage');
+ if(Object.hasOwn(worldGarage,saved))garageVehicle=saved;
+ learnerSaved=localStorage.getItem('taylai.world.learner')==='1';
+ const traffic=localStorage.getItem('taylai.world.traffic');
+ if(['quiet','busy'].includes(traffic))$('trafficLevel').value=traffic;
+}catch{}
+selectVehicle(learnerSaved?'family-sedan':garageVehicle,learnerSaved);
+$('learnerDrive').onchange=()=>{
+ const learner=$('learnerDrive').checked;
+ selectVehicle(learner?'family-sedan':garageVehicle,learner);
+ try{localStorage.setItem('taylai.world.learner',learner?'1':'0');}catch{}
+};
 $('garage').onchange=()=>{
- selectVehicle($('garage').value);
+ garageVehicle=$('garage').value;selectVehicle(garageVehicle);
  try{
+   localStorage.removeItem('taylai.world.learner');
    if(car.spec.worldOnly)localStorage.setItem('taylai.world.garage',car.model);
    else{localStorage.setItem('taylai.garage',car.model);localStorage.removeItem('taylai.world.garage');}
  }catch{}
+};
+$('trafficLevel').onchange=()=>{
+ try{localStorage.setItem('taylai.world.traffic',$('trafficLevel').value);}catch{}
+ if(mode==='grid'&&gfx&&player){npcs=[];seedTraffic();}
 };
 function inform(text,time=3){$('callout').textContent=text;toastTime=time;}
 function breakfastCall(){
@@ -293,28 +315,30 @@ function spawnAhead(ahead,index){
 }
 function addNpc(c,i){
  const centre=roads.sample(c);
- const mix=gfx.streetLife.activity(roads,centre.x,centre.z,c.edge.kind);
+ const mix=gfx.streetLife.activity(roads,centre.x,centre.z,c.edge.kind,$('trafficLevel').value);
  const kind=Math.random()<mix.scooter?'scooter':['taxi','van','sedan','rival'][i%4];
  const offset=roadLaneOffset(c,kind==='scooter');
  const p=roads.sample(c,offset);
- if(Math.hypot(car.x-p.x,car.z-p.z)<16||npcs.some(n=>Math.hypot(p.x-n.x,p.z-n.z)<13))return;
+ if(Math.hypot(car.x-p.x,car.z-p.z)<16||npcs.some(n=>Math.hypot(p.x-n.x,p.z-n.z)<(kind==='scooter'&&n.kind==='scooter'?6:10)))return;
  const pace=(kind==='scooter'?6:kind==='rival'?21:9)+Math.random()*4;
  npcs.push({...c,...p,deckLift:roads.roadLevel(c.edge,c.s),kind,id:nextNpc++,speed:Math.min(pace,(roadSpeedLimit(c)??160)/3.6),pace,stopped:0});
 }
 function seedTraffic(){
- const target=gfx.streetLife.activity(roads,car.x,car.z,player.edge.kind).vehicles;
- for(let i=0;i<Math.min(8,target);i++)spawnAhead(36+i*42,i);
+ const {vehicles,busy}=gfx.streetLife.activity(roads,car.x,car.z,player.edge.kind,$('trafficLevel').value);
+ for(let i=0;i<Math.min(busy?12:8,vehicles);i++)spawnAhead(36+i*(busy?16:42),i);
  fillTraffic();
 }
 function fillTraffic(){
  npcs=npcs.filter(n=>Math.hypot(n.x-car.x,n.z-car.z)<430&&n.stopped<6&&roads.edges.has(n.edge.id));
- const target=gfx.streetLife.activity(roads,car.x,car.z,player.edge.kind).vehicles;
+ const {vehicles:target,busy}=gfx.streetLife.activity(roads,car.x,car.z,player.edge.kind,$('trafficLevel').value);
  if(npcs.length>=target||!nearby.length)return;
- for(let i=0;i<12;i++){
+ if(busy)spawnAhead(85+Math.random()*95,nextNpc);
+ for(let i=0;i<12&&npcs.length<target;i++){
    const edge=nearby[Math.floor(Math.random()*nearby.length)],dir=!edge.oneway&&Math.random()<.5?-1:1;
-   const c={edge,dir,s:Math.random()*edge.length},p=roads.sample(c),d=Math.hypot(p.x-car.x,p.z-car.z);
+   const signal=busy&&edge.controls?.find(point=>signalApplies(point,edge,dir));
+   const station=signal?clamp(signal.s-dir*(8+Math.random()*35),0,edge.length):Math.random()*edge.length;
+   const c={edge,dir,s:station},p=roads.sample(c),d=Math.hypot(p.x-car.x,p.z-car.z);
    if(d>55&&d<330)addNpc(c,nextNpc);
-   if(npcs.length>=target)break;
  }
  if(npcs.length<Math.min(6,target))spawnAhead(85+Math.random()*125,nextNpc);
 }
@@ -357,7 +381,7 @@ function trafficStep(dt){
    const parallel=Math.abs(car.deckLift-n.deckLift)<=2.5&&Math.cos(car.yaw-n.yaw)>.88&&Math.abs(across)<9;
    if(parallel&&along< -4&&along> -18)n.armed=true;
    if(!parallel||Math.abs(along)>32)n.armed=false;
-   if(n.armed&&parallel&&along>4&&car.speed>n.speed&&cooldown<=0&&!n.passed){
+   if(car.spec!==learnerSedan&&n.armed&&parallel&&along>4&&car.speed>n.speed&&cooldown<=0&&!n.passed){
      n.passed=true;passes++;nitro=Math.min(100,nitro+(n.kind==='rival'?20:7));inform(n.kind==='rival'?'Vượt tay đua · +20 nitro':'Vượt sạch · +7 nitro',1.6);
    }
    hitVehicle(n);if(mode!=='drive')return;
@@ -448,7 +472,7 @@ function tick(dt){
  cooldown=Math.max(0,cooldown-dt);streamRetry=Math.max(0,streamRetry-dt);
  const gas=held('w','arrowup'),reverse=held('s','arrowdown');
  if(gas||reverse)car.parked=false;
- const brake=car.parked||held(' '),boost=!car.wading&&held('shift')&&nitro>1&&!reverse&&!brake;
+ const brake=car.parked||held(' '),boost=car.spec!==learnerSedan&&!car.wading&&held('shift')&&nitro>1&&!reverse&&!brake;
  nitro=clamp(nitro+(boost?-27:held('shift')?0:6)*dt,0,100);
  const x=car.x,z=car.z;
  DriveBody.step(car,{grade:gfx.grade(car.x,car.z,car.yaw,car.edge),gas,reverse,brake,boost,steer:Number(held('d','arrowright'))-Number(held('a','arrowleft')),power:car.spec.power,top:car.spec.top},dt);
@@ -533,7 +557,7 @@ function updateHud(){
    info.push(label+' · '+Math.max(0,Math.round(control.distance))+' m');
  }
  $('roadFacts').hidden=!info.length;$('roadFacts').textContent=info.join(' · ');
- $('street').textContent=(car.accessLane?'Đường nội bộ':nameOf(player.edge))+(Math.abs(grade)>=2?' · '+(grade>0?'↑ ':'↓ ')+Math.abs(grade)+'%':'');$('speed').textContent=Math.round(Math.abs(car.speed)*3.6);$('trip').textContent=fmt(distance)+' · '+passes+' lượt vượt';$('hp').value=hp;$('nitro').value=nitro;
+ $('street').textContent=(car.accessLane?'Đường nội bộ':nameOf(player.edge))+(Math.abs(grade)>=2?' · '+(grade>0?'↑ ':'↓ ')+Math.abs(grade)+'%':'');$('speed').textContent=Math.round(Math.abs(car.speed)*3.6);$('trip').textContent=fmt(distance)+(car.spec===learnerSedan?' · Tập lái 40 km/h':' · '+passes+' lượt vượt');$('hp').value=hp;$('nitro').value=nitro;
  const fork=onNetwork?branchAhead():null,plan=duel&&fork?duel.nextAt(fork.node):null;
  $('duelInfo').hidden=!duel;
  if(duel)$('duelInfo').textContent='CHẶNG '+duel.round+' · '+(duel.player>=duel.opponent?'1/2':'2/2')+' · CÒN '+Math.ceil(duel.gate-duel.player)+' M';
@@ -1422,11 +1446,12 @@ function setAtlasView(map){
 }
 $('atlasMap').onclick=()=>setAtlasView(true);
 $('atlasList').onclick=()=>setAtlasView(false);
-async function openAtlas(filter='all'){
+async function openAtlas(filter='all',query=''){
  setAtlasView(false);
  $('atlasTitle').textContent=atlasChoice?'Chọn '+atlasChoice.label:'Chọn điểm xuất phát';
  originatedInPause=!atlasChoice && $('rest').open;if(originatedInPause)$('rest').close();
- $('atlas').showModal();$('findPlace').value='';$('tourFilter').value=filter;
+ $('atlas').showModal();$('findPlace').value=query;$('tourFilter').value=filter;
+ if(query)$('findPlace').focus();
  let preferred;
  if(filter==='model'&&!source[3]?.custom)preferred=models.find(site=>site.id==='ganh-da-dia')||models[0];
  if(filter==='mountain'&&!source[3]?.km)preferred=mountainPlaces.find(site=>site.id==='deo-hai-van')||mountainPlaces[0];
@@ -1443,7 +1468,11 @@ async function loadAtlas(){
    if($('atlas').open){$('picked').textContent='Chưa tải đủ bản đồ. Hãy thử lại hoặc chọn một điểm đã hiện.';$('retrySearch').hidden=false;}
  }
 }
-$('openingAtlas').onclick=$('openMap').onclick=$('relocate').onclick=()=>openAtlas();
+$('departureSearch').onsubmit=e=>{
+ e.preventDefault();
+ if(!$('openingAtlas').disabled)openAtlas('all',$('departureQuery').value.trim());
+};
+$('openMap').onclick=$('relocate').onclick=()=>openAtlas();
 $('openSights').onclick=e=>{e.preventDefault();openAtlas('model');};
 $('openPasses').onclick=$('pausedPasses').onclick=e=>{e.preventDefault();openAtlas('mountain');};
 $('atlas').onclose=()=>{atlasChoice=null;finder.close();if(originatedInPause&&mode==='paused')$('rest').showModal();originatedInPause=false;};
@@ -1524,7 +1553,7 @@ async function fetchJSON(path){const r=await fetch(path);if(!r.ok)throw Error('C
      await startAt([saved.label||'Hành trình đang lái',saved.lon,saved.lat],saved,savedCustomRoute(saved));
    }
    const search=params.get('search')?.trim();
-   if(search){await openAtlas();$('findPlace').value=search;resetPlaces();}
+   if(search)await openAtlas('all',search);
    else if(collection)await openAtlas('model');
    else if(params.has('plan'))planner.open(params.get('plan')!=='featured');
  }catch(e){mode='error';$('loadStatus').textContent=e.message;$('launch').disabled=false;$('launch').textContent='Thử tải lại';}

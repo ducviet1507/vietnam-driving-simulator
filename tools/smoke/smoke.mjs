@@ -193,6 +193,17 @@ try {
       return fonts.length>0 && fonts.every(font=>font.status==='loaded');
     }),true,'Opening typography missing from the bundled stylesheet');
     assert.equal(await page.evaluate(()=>Boolean(VietnamTourism.complete || window.driveBank)),false);
+    await page.locator('#learnerDrive').check();
+    const training=await page.evaluate(()=>{
+      const input={power:car.spec.power,top:car.spec.top,gas:true,grade:-.25};
+      const body={spec:car.spec,reverseDelay:0};
+      let speed=0;
+      for(let i=0;i<900;i++)speed=DriveBody.forwardSpeed(body,input,1/60,speed);
+      return {model:car.model,speed:speed*3.6};
+    });
+    assert.deepEqual(training,{model:'family-sedan',speed:40});
+    await page.locator('#learnerDrive').uncheck();
+    assert.equal(await page.locator('#garage').inputValue(),'supercar');
     await page.getByRole('button',{name:'Cầm lái',exact:true}).click();
     await page.locator('body[data-phase="drive"]').waitFor();
     await checkPhoneRotation(page,true);
