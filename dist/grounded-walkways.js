@@ -66,9 +66,9 @@ function createGroundedWalkways(T,{cx,cz,step,height,ground,wet,needsDetail}){
       if(i===count&&capEnd&&dryQ)cap(q);
     }
   }
-  function porch(s,x,z,width){
+  function porch(s,x,z,width,depth){
     const p=(u,v)=>[x+s.fx*u+s.nx*v,z+s.fz*u+s.nz*v];
-    const a=p(-width/2,-1.35),b=p(-width/2,1.35),c=p(width/2,-1.35),d=p(width/2,1.35);
+    const a=p(-width/2,-depth/2),b=p(-width/2,depth/2),c=p(width/2,-depth/2),d=p(width/2,depth/2);
     band(frontages,.105,a,b,c,d);
     face(...a,...b,.105);face(...b,...d,.105);face(...d,...c,.105);face(...c,...a,.105);
   }

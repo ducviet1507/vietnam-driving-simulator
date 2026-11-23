@@ -86,12 +86,14 @@ function mountainHorizon(near,relief){
 }
 function buildRoadside(){
   const wirePoints=[],loader=new T.TextureLoader();
-  const facades=['cafe','bakery','grocer','pho'].map(name=>{
-    const image=loader.load('streetscape/surfaces/front-'+name+'.webp');image.colorSpace=T.SRGBColorSpace;image.anisotropy=4;
-    return {mat:new T.MeshStandardMaterial({map:image,roughness:.91}),matrices:[]};
-  });
+  const facades=['cafe','bakery','grocer','pho'].map(name=>({
+    name,mat:new T.MeshStandardMaterial({color:0xbdb39a,roughness:.91}),matrices:[],stations:[],retryAt:0
+  }));
+  // Fraction of each illustrated elevation below its lintel, in asset order.
+  const lintels=[.53,.78,.51,.68];
   function store(d,l,variant){
-    const p=at(d,l),wide=5.8+variant*.46,depth=5.9,h=3.75,side=Math.sign(l);
+    const p=at(d,l),wide=5.8+variant*.46,depth=5.9,side=Math.sign(l);
+    const h=(variant===0||variant===2)?5.6:3.75;
     // A level slab stepped into the hill supports the facade and its fittings.
     const {low,high}=footing(p,depth+.23,wide+.23);
     if(high-low>2.2||nearest(p.x,p.z).dist<9||besideWater(d)&&low<waterLevel+.4||onBranch(p.x,p.z,6))return;
@@ -105,12 +107,14 @@ function buildRoadside(){
     const f=localPoint(p,-side*(depth/2+.022),0);
     temp.position.set(f.x,y+h/2,f.z);temp.rotation.set(0,-p.h-side*Math.PI/2,0);temp.scale.set(wide,h,1);temp.updateMatrix();
     facades[variant].matrices.push(temp.matrix.clone());
-    const awning=-side*(depth*.5+.78),porch=localPoint(p,awning,0);
-    const porchFloor=Math.min(y-.1,footing({...porch,h:p.h},2.2,wide+.5).low-.12);
-    part(0,awning,'box',variant%2?0x796758:0x68807b,1.85,.12,wide+.32,2.58);
-    for(let dz=-wide/2;dz<wide/2;dz+=.22)part(dz,awning,'box',0x89918a,1.84,.05,.044,2.67);
-    for(const dz of [-1,1])part(dz*(wide*.48),awning-side*.79,'pole',0x596864,.082,2.68,.082,0);
-    part(0,awning,'box',0xada89a,2.2,y+.04-porchFloor,wide+.5,porchFloor-y);
+    facades[variant].stations.push(d);
+    const span=Math.min(wide*.26,Math.abs(l)-depth/2-roadHalfWidth-1.2);
+    const awning=-side*(depth+span)/2,porch=localPoint(p,awning,0),lintel=h*lintels[variant];
+    const porchFloor=Math.min(y-.1,footing({...porch,h:p.h},span+.3,wide+.5).low-.12);
+    part(0,awning,'box',variant%2?0x796758:0x68807b,span,.12,wide+.32,lintel);
+    for(let dz=-wide/2;dz<wide/2;dz+=.22)part(dz,awning,'box',0x89918a,span,.05,.044,lintel+.10);
+    for(const dz of [-1,1])part(dz*(wide*.48),awning-side*(span/2-.09),'pole',0x596864,.082,lintel,.082,0);
+    part(0,awning,'box',0xada89a,span+.3,y+.04-porchFloor,wide+.5,porchFloor-y);
     part(wide*.28,side*.35,'pole',0x98aaab,1.05,.95,1.05,h+.23);
     for(const offset of [-1.35,1.35]){
       part(-wide/2-.04,offset,'box',0x88897a,1.48,1.44,.12,1.18);
@@ -125,6 +129,7 @@ function buildRoadside(){
     for(let k=0;k<(i%3===0?3:2);k++)store(d+k*9.3,river?14+k*.7:(i%2?-1:1)*(16+k*.65),(i+k+(river?0:3))%4);
   }
   for(const group of facades){
+    if(!group.matrices.length)continue;
     const m=new T.InstancedMesh(new T.PlaneGeometry(1,1),group.mat,group.matrices.length);
     group.matrices.forEach((mat,i)=>m.setMatrixAt(i,mat));m.receiveShadow=true;scene.add(m);
   }
@@ -147,4 +152,17 @@ function buildRoadside(){
   }
   const line=new T.BufferGeometry();line.setAttribute('position',new T.Float32BufferAttribute(wirePoints,3));
   scene.add(new T.LineSegments(line,new T.LineBasicMaterial({color:0x464840,transparent:true,opacity:.68})));
+  const pending=facades.filter(group=>group.stations.length);
+  let nextCheck=0;
+  return function loadFronts(station,now){
+    if(!pending.length||now<nextCheck||document.hidden)return;
+    nextCheck=now+300;
+    const i=pending.findIndex(group=>now>=group.retryAt&&group.stations.some(d=>Math.abs(d-station)<420));
+    if(i<0)return;
+    const [group]=pending.splice(i,1);
+    loader.load('streetscape/surfaces/front-'+group.name+'.webp',image=>{
+      image.colorSpace=T.SRGBColorSpace;image.anisotropy=4;
+      group.mat.map=image;group.mat.color.setHex(0xffffff);group.mat.needsUpdate=true;
+    },undefined,()=>{group.retryAt=performance.now()+30000;pending.push(group);});
+  };
 }

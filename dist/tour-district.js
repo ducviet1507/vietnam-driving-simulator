@@ -381,6 +381,7 @@ function createTourDistrict(T,scene,plaster,structures,osmBuildings,nightLights)
   const roofs=[0x9f6757,0xa09a8e,0x798d92,0xaca69c].map(v=>new T.Color(v));
   const concrete=new T.Color(0x989186);
   const doorway=new T.Color(0x354647);
+  const timber=new T.Color(0x624632);
   let vanMieuArchitecture;
   // Each material has one draw. Reuse its CPU buffer as the view moves, and
   // hand WebGL only the populated vertices when the new district is complete.
@@ -649,7 +650,18 @@ function createTourDistrict(T,scene,plaster,structures,osmBuildings,nightLights)
         for(const [u,y,d] of [[left,lo,back],[right,lo,back],[right,hi,front],[left,lo,back],[right,hi,front],[left,hi,front]])
           vertex(batches[1],x+ux*u+nx*d,y,z+uz*u+nz*d,0,0,col);
       };
-      if(seed%3===0){
+      if(zone?.id==='hoi-an'){
+        // The heritage inventory describes a side entrance on narrow bays
+        // and removable timber counters either side of wider entrances.
+        panel(.12,top,.06,.06,doorway);
+        const counter=(left,right)=>{
+          panel(.14,1.04,.08,.08,timber,left,right);
+          panel(1.02,1.08,.08,.14,timber,left,right);
+          panel(.12,top,.085,.085,timber,left,left+.08);
+        };
+        if(half<2)counter(-half,half-.95);
+        else{counter(-half,-.66);counter(.66,half);}
+      }else if(seed%3===0){
         panel(.12,top,.06,.06,concrete);
         for(let y=.25;y<top;y+=.22)panel(y,y+.028,.075,.075,tint);
       }else{
@@ -657,13 +669,15 @@ function createTourDistrict(T,scene,plaster,structures,osmBuildings,nightLights)
         for(let u=-half+.4;u<half-.1;u+=1.3)panel(.12,top,.08,.08,concrete,u,u+.055);
         panel(top*.78,top*.78+.065,.08,.08,concrete);
       }
-      panel(top+.22,top,.07,.84,tint);
+      const canopy=Math.min(1.6,half*.52,bestGap-.65);
+      const balcony=Math.min(1.28,canopy+.1,bestGap-.5),rail=balcony-.04;
+      panel(top+.22,top,.07,canopy,tint);
       if(h>=6.4&&seed%4!==0){
-        panel(3.25,3.25,.06,.90,concrete);panel(3.13,3.25,.90,.90,concrete);
-        panel(3.28,3.60,.87,.87,concrete);panel(4.09,4.15,.87,.87,tint);
-        for(const u of [-half,0,half-.055])panel(3.55,4.12,.87,.87,tint,u,u+.055);
+        panel(3.25,3.25,.06,balcony,concrete);panel(3.13,3.25,balcony,balcony,concrete);
+        panel(3.28,3.60,rail,rail,concrete);panel(4.09,4.15,rail,rail,tint);
+        for(const u of [-half,0,half-.055])panel(3.55,4.12,rail,rail,tint,u,u+.055);
       }
-      if(zone)streetFronts.push({x:x-cx,y:baseY,z:z-cz,nx,nz,ux,uz,half,top,h,seed,zone});
+      if(zone)streetFronts.push({x:x-cx,y:baseY,z:z-cz,nx,nz,ux,uz,half,top,h,seed,zone,canopy,balcony});
     }
     const ids=new Set(),surveyedIds=new Set(surveyed.map(row=>row[0]));
     if(!footprints.has(graph))footprints.set(graph,new WeakMap());

@@ -111,11 +111,11 @@ function refreshView(build,x=car.x,z=car.z){
 function fetchWaterIndex(){
  return waterIndex??=fetchJSON('vn-water/index.json').catch(e=>{waterIndex=null;throw e;});
 }
-async function streamWater(graph){
+async function streamWater(graph,x=car.x,z=car.z){
  try{
    const index=await fetchWaterIndex();if(roads!==graph)return;
    if(!water||water.roads!==graph)water=new VietnamWater(index,graph);
-   return await water.load(car.x,car.z);
+   return await water.load(x,z);
  }catch{/* Road navigation stays available when this scenery layer is offline. */}
 }
 let framesStarted=false,departureWaterReady=null;
@@ -282,12 +282,12 @@ async function startAt(place,restore=null,guided=null){
    if(site?.visitOnArrival&&!restore&&!guided)await openTour(site);
  }catch(e){if(token===loadToken){$('startGuided').disabled=false;$('loadStatus').textContent=e.message;$('launch').textContent='Thử tải lại';$('launch').disabled=false;mode='error';pendingPlace=place;}}
 }
-async function stream(){
- if(busy||streamRetry>0||Math.hypot(car.x-loadX,car.z-loadZ)<300)return;
- const graph=roads,id=loadToken;busy=true;const x=car.x,z=car.z;
+async function stream(x,z){
+ if(busy||streamRetry>0||Math.hypot(x-loadX,z-loadZ)<300)return;
+ const graph=roads,id=loadToken;busy=true;
  try{
    await Promise.all([graph.load(x,z),VietnamTourism.loadRegion(...graph.geo(x,z))]);if(id!==loadToken)return;loadX=x;loadZ=z;
-   const changes=await Promise.all([streamWater(graph),gfx.loadDistrict(graph,x,z)]);
+   const changes=await Promise.all([streamWater(graph,x,z),gfx.loadDistrict(graph,x,z)]);
    if(changes.some(Boolean)&&id===loadToken&&districtView?.graph===graph&&mode!=='tour')pendingDistrict=districtView;
  }
  catch{if(id===loadToken){streamRetry=4;inform('Đang thử tải lại đường phía trước.',3);}}
@@ -682,6 +682,7 @@ function drawMini(landmark){
  gfx.refreshMap();
 }
 let nextWeatherCheck=0;
+function journeyAmbience(){return gfx.ambience(car,npcs,inside&&!car.sightView);}
 function frame(now){
  const dt=clamp((now-last)/1000,0,.1);last=now;
  if(gfx&&player){
@@ -736,7 +737,7 @@ function frame(now){
          pendingDistrict=null;gfx.queueRoads(edges,x,z,waterways,graph);
        }
      }
-     if(mode==='drive')stream();
+     if(mode==='drive')stream(aheadX,aheadZ);
      const ready=gfx.render(car,duel?[duel.actor,...npcs]:npcs,mode==='drive'||mode==='crash'||mode==='sinking'?dt:0,inside,now);
      if(mode==='tour')sightSecrets.update();
      if(mode==='tour'&&car.sightView?.data.id==='tam-chuc'){
@@ -750,7 +751,8 @@ function frame(now){
      if(ready&&!$('openingStill').hidden)$('openingStill').hidden=true;
    }
    if(mode==='drive'||mode==='sinking'){uiTick+=dt;if(uiTick>.13){uiTick=0;updateHud();}}
-   driveAudio.update({electric:car.spec.electric,speed:Math.abs(car.speed)*3.6,boost:car.driving&&car.boost,slip:car.slip,offroad:car.offroad,throttle:held('w','arrowup'),braking:car.brake,signal:false,mode:mode==='drive'?'driving':mode==='grid'?'idling':'ready'});
+   const listen=mode==='drive'||mode==='tour'&&!$('sightPhoto').open&&!$('fieldDialog').open&&!$('postcard').open;
+   driveAudio.update({ambience:listen?journeyAmbience:null,electric:car.spec.electric,speed:Math.abs(car.speed)*3.6,boost:car.driving&&car.boost,slip:car.slip,offroad:car.offroad,throttle:held('w','arrowup'),braking:car.brake,signal:false,mode:mode==='drive'?'driving':mode==='grid'?'idling':'ready'});
  }
  if(toastTime>0&&(toastTime-=dt)<=0)$('callout').textContent='';
  requestAnimationFrame(frame);

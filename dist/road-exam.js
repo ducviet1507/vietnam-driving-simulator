@@ -534,7 +534,7 @@ if(arcade){
    for(let n=0;n<14;n++)for(let row=0;row<2;row++)beside(d+row*.73,(n-6.5)*roadHalfWidth/7,'box',(n+row)%2?0x252630:0xf0efdc,roadHalfWidth/7,.025,.73,.018);
  }
 }else{board(route.finish-35,8,'ĐIỂM DỪNG XE','#365c70');board(115,7,'TỐI ĐA 50 km/h','#625b46');}
-buildRoadside();
+const loadCourseFronts=buildRoadside();
 if(!river)buildMountainVerges();
 for(const b of batches.values()){
  const m=new T.InstancedMesh(geom[b.kind],foliage[b.kind]||new T.MeshLambertMaterial({color:b.color}),b.matrices.length);
@@ -751,6 +751,16 @@ const mirrorAdapter={
    cam.quaternion.premultiply(yawQ);renderer.render(scene,cam);
  }
 };
+function courseAmbience(){
+ const {d,x,z}=state;
+ const nearCrossing=!route.stage&&Math.abs(d-(bridgeStart+bridgeEnd)/2)<(bridgeEnd-bridgeStart)/2+60;
+ const bank=river&&d<bridgeEnd+76;
+ const shoreD=nearCrossing?(bridgeStart+bridgeEnd)/2:d;
+ const shore=at(shoreD,bank?-26:0),dx=shore.x-x,dz=shore.z-z;
+ const distance=Math.hypot(dx,dz),right=camera.matrixWorld.elements;
+ return {kind:river?'street':'wind',presence:river?.65:.95,rain:courseWeather.rainfall,cabin:inside,
+   water:nearCrossing||bank?Math.max(0,1-distance/75):0,waterPan:(dx*right[0]+dz*right[2])/Math.max(1,distance)};
+}
 let lastHud=0,lastShadow=-1000;
 function render(now){
  const elapsed=now-lastFrame,dt=clamp(elapsed/1000,0,.1);lastFrame=now;
@@ -760,6 +770,7 @@ function render(now){
    for(let i=0;i<steps;i++)raceUpdate(step,now-(steps-i-1)*step*1000);
  }else update(dt);
  const s=state,ground=at(s.d);
+ loadCourseFronts(s.d,now);
  rig.position.set(s.x,ground.y+(arcade?s.lift:0),s.z);
  rig.rotation.set(Math.atan(roadGrade(s.d,s.h))+(arcade?s.jumpPitch:0),-s.h,0,'YXZ');yawQ.copy(rig.quaternion);
  if(!mountainField)hills.position.set(s.x,0,s.z);
@@ -785,7 +796,7 @@ function render(now){
    cabin.reflect(mirrorAdapter,scene,cabin.interior,0,0,graphics.profile.mirrorMs,now);
  if(!route.stage)courseWater.reflect(renderer,scene,camera,waterLevel,now,Math.abs(s.d-(bridgeStart+bridgeEnd)*.5)<220||(river&&s.d<bridgeEnd+150),graphics.profile,mirrorUpdated);
  renderer.render(scene,camera);
- driveAudio.update({electric:arcade&&cupBody.spec.electric,boost:arcade&&cupBody.driving&&cupBody.boost,slip:arcade?cupBody.slip:0,speed:Math.abs(s.v)*3.6,throttle:keys.has('arrowup')||keys.has('w'),braking:keys.has('arrowdown')||keys.has('s'),signal:!!s.signal,mode:s.mode==='drive'?'driving':arcade&&['grid','countdown'].includes(s.mode)?'idling':'ready'});
+ driveAudio.update({ambience:s.mode==='drive'?courseAmbience:null,electric:arcade&&cupBody.spec.electric,boost:arcade&&cupBody.driving&&cupBody.boost,slip:arcade?cupBody.slip:0,speed:Math.abs(s.v)*3.6,throttle:keys.has('arrowup')||keys.has('w'),braking:keys.has('arrowdown')||keys.has('s'),signal:!!s.signal,mode:s.mode==='drive'?'driving':arcade&&['grid','countdown'].includes(s.mode)?'idling':'ready'});
  if(now-lastHud>90){if(arcade)raceHud();else hud();mapDraw();lastHud=now;}requestAnimationFrame(render);
 }
 $('sound').textContent=sound?'Tắt âm':'Bật âm';

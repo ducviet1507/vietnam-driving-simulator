@@ -124,6 +124,8 @@
   function facade(i,floors) {
     return new T.MeshLambertMaterial({map:texture(512,768,(c,w,h)=>{
       c.fillStyle=paints[i];c.fillRect(0,0,w,h);
+      // Preserve a usable ground-floor opening below the projecting shade.
+      c.save();c.scale(1,520/618);
       const fh=540/floors;
       for(let f=0;f<floors;f++){
         let top=f*fh;
@@ -141,6 +143,8 @@
       }
       c.fillStyle=boards[i];c.fillRect(0,544,w,72);
       c.fillStyle='#fff6d9';c.font='bold 49px Arial';c.textAlign='center';c.fillText(shopNames[i],256,598,482);
+      c.fillStyle='#cdc4a6';c.font='bold 11px Arial';c.fillText(['CÀ PHÊ RANG XAY','BÁNH MÌ NÓNG','HOA TƯƠI MỖI NGÀY','SÁCH VÀ VĂN PHÒNG PHẨM','PHỞ BÒ GIA TRUYỀN','TRÀ VÀ CÀ PHÊ','HÀNG TIÊU DÙNG','IN ẢNH KỸ THUẬT SỐ'][i],256,612,475);
+      c.restore();c.translate(0,520);c.scale(1,(h-520)/(h-618));c.translate(0,-618);
       c.fillStyle='#344746';c.fillRect(12,625,488,143);
       // Layer a reflected street, shelving and merchandise behind the shop glass.
       for(let j=0;j<6;j++){
@@ -158,7 +162,10 @@
         c.fillStyle='rgba(209,225,225,.13)';c.beginPath();c.moveTo(x,633);c.lineTo(x+39,633);c.lineTo(x+12,757);c.lineTo(x,757);c.fill();
         c.fillStyle='#283637';c.fillRect(x+36,633,2,124);
       }
-      c.fillStyle='#cdc4a6';c.font='bold 11px Arial';c.fillText(['CÀ PHÊ RANG XAY','BÁNH MÌ NÓNG','HOA TƯƠI MỖI NGÀY','SÁCH VÀ VĂN PHÒNG PHẨM','PHỞ BÒ GIA TRUYỀN','TRÀ VÀ CÀ PHÊ','HÀNG TIÊU DÙNG','IN ẢNH KỸ THUẬT SỐ'][i],256,612,475);
+      const entrance=22+(i%3+1)*82;
+      c.fillStyle='#263a37';c.fillRect(entrance,632,73,136);
+      c.fillStyle='#687b70';c.fillRect(entrance+6,638,60,79);
+      c.fillStyle='#c6bea7';c.fillRect(entrance+56,716,3,15);
     })});
   }
   const facades=shopNames.map((_,i)=>facade(i,2+i%3));
@@ -229,10 +236,11 @@
       block(paints[i],x+side*3.2,height/2,z,6.6,height,8.87);
       part(panel,facades[i],x-side*.125,height/2,z,8.85,height,1,-side*Math.PI/2);
       block(0xf2e3c7,x+side*2.95,height,z,7,.28,9.1);
-      block(boards[i],x-side*.48,height*.28,z,.95,.15,8.8);
+      const hinge=height*(1-520/768);
+      block(boards[i],x-side*.48,hinge,z,.95,.15,8.8);
       if(lot%3===0){
-        block(shadeCloth[i],x-side*.86,2.77,z,1.65,.10,7.2,0,side*.15);
-        block(shadeCloth[i],x-side*1.67,2.51,z,.08,.33,7.2);
+        block(shadeCloth[i],x-side*.86,hinge-.08,z,1.65,.10,7.2,0,side*.1);
+        block(shadeCloth[i],x-side*1.67,hinge-.22,z,.08,.13,7.2);
       }
       if(lot%4===2){
         flowerPot(x-side*.85,.18,z+3.2);
@@ -493,11 +501,20 @@
     block(steel,8.55,1.85,-225,.12,3.7,.12);
     part(panel,clearSign,8.55,3.13,-224.92,3.6,.92,1);
   }
-  schoolRoute();roadworks();sceneryParent=scene;
+  sceneryParent=scene;
+  const unbuiltCourses=new Map([['school',schoolRoute],['works',roadworks]]);
   let selectedCourse='city';
   window.courseObstacles=()=>selectedCourse==='works'?worksObstacles:[];
   window.setDriveCourse=course=>{
     selectedCourse=course.id;
+    const build=unbuiltCourses.get(selectedCourse);
+    if(build){
+      const previousSeed=seed;
+      seed=selectedCourse==='school'?12473:20473;
+      build();sceneryParent=scene;seed=previousSeed;
+      flushStaticParts();
+      unbuiltCourses.delete(selectedCourse);
+    }
     for(const [id,group] of Object.entries(routeSets))group.visible=id===selectedCourse;
     signalGroup.position.z=90-course.crossing;
     speedGroup.position.z=25-course.sign;
@@ -616,16 +633,27 @@
   }
   loadPlayerSedan().catch(()=>{ /* Keep the lightweight car on older browsers or offline file URLs. */ });
   const traffic=window.createStreetTraffic(scene,shadowTex);
-  for(const {geo,mat,matrices,host} of staticParts.values()){
-    const mesh=new T.InstancedMesh(geo,mat,matrices.length);
-    matrices.forEach((m,i)=>mesh.setMatrixAt(i,m));
-    mesh.receiveShadow=true;
-    mesh.castShadow=mat!==roadMaterial && mat!==flagMaterial && matrices[0].elements[5]>.03;
-    host.add(mesh);
+  function flushStaticParts(){
+    for(const {geo,mat,matrices,host} of staticParts.values()){
+      const mesh=new T.InstancedMesh(geo,mat,matrices.length);
+      matrices.forEach((m,i)=>mesh.setMatrixAt(i,m));
+      mesh.receiveShadow=true;
+      mesh.castShadow=mat!==roadMaterial && mat!==flagMaterial && matrices[0].elements[5]>.03;
+      host.add(mesh);
+    }
+    staticParts.clear();
   }
-
+  flushStaticParts();
 
   let cockpit=true;
+  window.streetAmbience=()=>{
+    const works=selectedCourse==='works',school=selectedCourse==='school';
+    const dx=(works?7:school?16:0)-camera.position.x;
+    const dz=(works?-72:school?-25:-90)-camera.position.z;
+    const distance=Math.hypot(dx,dz),right=camera.matrixWorld.elements;
+    return {kind:works?'works':school?'wind':'street',presence:.28+.72*Math.max(0,1-distance/90),
+      pan:(dx*right[0]+dz*right[2])/Math.max(1,distance),cabin:cockpit};
+  };
   let previewOverridden=false;
   window.toggleDriveCamera=()=>{
     cockpit=!cockpit;

@@ -482,7 +482,6 @@
     root.name = 'Central Vietnam street life';
     scene.add(root);
 
-    const frontCache = new Map();
     const signCache = new Map();
     const glowMats = [];
 
@@ -518,16 +517,24 @@
     const bulbMat = new T.MeshStandardMaterial({ color: 0xfff3d4, roughness: 0.4, emissive: 0xffc870, emissiveIntensity: 0.25 });
     glowMats.push({ mat: bulbMat, base: 0.15, night: 3.1 });
 
-    function ensureFrontMaterials(zone) {
-      if (frontCache.has(zone.id)) return frontCache.get(zone.id);
-      const keys = [];
-      zone.shops.forEach((shop, i) => {
-        const key = 'cfront_' + zone.id + '_' + i;
-        if (!materialMap[key]) materialMap[key] = paintShopfrontTexture(T, zone, shop, renderer);
-        keys.push(key);
-      });
-      frontCache.set(zone.id, keys);
-      return keys;
+    const cachedFronts = new Set();
+    function frontMaterial(zone, type) {
+      const i = type % zone.shops.length, key = 'cfront_' + zone.id + '_' + i;
+      if (!materialMap[key]) {
+        materialMap[key] = paintShopfrontTexture(T, zone, zone.shops[i], renderer);
+        cachedFronts.add(key);
+      }
+      return key;
+    }
+    function trimFronts(inView) {
+      for (const key of cachedFronts) {
+        if (cachedFronts.size <= 12) break;
+        if (inView.has(key)) continue;
+        materialMap[key].map.dispose();
+        materialMap[key].dispose();
+        delete materialMap[key];
+        cachedFronts.delete(key);
+      }
     }
 
     function addPart(parent, g, m, x, y, z, sx = 1, sy = 1, sz = 1, rx = 0, ry = 0, rz = 0) {
@@ -703,7 +710,7 @@
         // Backlit signboard mounted cleanly flush above the awning (or on the 2nd-floor balcony fascia when present!)
         const hasBalcony = f.h >= 6.4 && f.seed % 4 !== 0;
         const sy = hasBalcony ? 3.68 : Math.min(f.h - h * 0.55, f.top + 0.54);
-        const sz = hasBalcony ? 0.94 : 0.14;
+        const sz = hasBalcony ? f.balcony + 0.04 : 0.14;
         if (sy > f.top + 0.18) {
           addPart(g, geo.box, mat.wood, 0, sy, sz, w + 0.14, h + 0.10, 0.10);
           addPart(g, geo.plane, signMat, 0, sy, sz + 0.055, w, h, 1);
@@ -713,8 +720,9 @@
           const lx = Math.min(f.half * 0.62, 1.45);
           for (const side of [-1, 1]) {
             const lm = lanternMats[(f.seed + (side > 0 ? 2 : 0)) % lanternMats.length];
-            addPart(g, geo.cyl, mat.cord, side * lx, f.top - 0.08, 0.52, 0.012, 0.24, 0.012);
-            addPart(g, geo.sphere, lm, side * lx, f.top - 0.34, 0.52, 0.21, 0.27, 0.21);
+            const underEave = f.canopy * .62;
+            addPart(g, geo.cyl, mat.cord, side * lx, f.top - 0.08, underEave, 0.012, 0.24, 0.012);
+            addPart(g, geo.sphere, lm, side * lx, f.top - 0.34, underEave, 0.21, 0.27, 0.21);
           }
         }
         // Potted bougainvillea beside the doorway if sidewalk space is clear
@@ -861,18 +869,7 @@
       }
     }
 
-    function themeAt(graph, wx, wz) {
-      if (!graph) return null;
-      const [lon, lat] = graph.geo(wx, wz);
-      const zone = zoneAt(lon, lat);
-      if (!zone) return null;
-      return {
-        zone,
-        frontKeys: ensureFrontMaterials(zone)
-      };
-    }
-
-    return { themeAt, place, update, zoneAt };
+    return { frontMaterial, trimFronts, place, update, zoneAt };
   }
 
   window.CentralStreetscapes = { create, zoneAt };

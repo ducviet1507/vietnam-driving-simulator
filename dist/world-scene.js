@@ -145,11 +145,15 @@
     // Measured from the foot of the six shopfront elevations. Place the
     // projecting canopy on the illustrated lintel or eave and its baked shade.
     const awningHeights=[.53,.78,.51,.68,.66,.51];
-    for(const [i,name] of shopTypes.entries()){
-      material['front'+i]=new T.MeshStandardMaterial({
+    function defaultFront(i){
+      const key='front'+i,name=shopTypes[i];
+      if(material[key])return key;
+      material[key]=new T.MeshStandardMaterial({
         name:'Shopfront '+name,map:texture('surfaces/front-'+name+'.webp'),roughness:.91,metalness:0
       });
-      material['front'+i].userData.awningHeightRatio=awningHeights[i];
+      material[key].userData.awningHeightRatio=awningHeights[i];
+      atmosphere.registerFinish(material[key]);
+      return key;
     }
     const centralStreetscapes=window.CentralStreetscapes?.create(T,scene,renderer,material);
     const meadow=surfaces.scanned('meadow',0xafbd9d,.56);
@@ -242,7 +246,7 @@
     const buildingSource=createTourDistrict(T,scene,material.wall,structures,osmBuildings,atmosphere.lamps);
     let district=buildingSource,grounds=groundSource,landmarks=landmarkSource;
     let spare=null,job=null;
-    let nearbyWaterLevel=()=>null;
+    let nearestWaterBlock=()=>null;
     let obstacleCells=new Map(),waterAt=()=>null;
     const obstacleKey=(x,z)=>Math.floor(x/15)+','+Math.floor(z/15);
     function indexObstacle(obstacleCells,o){
@@ -300,7 +304,7 @@
       if(shorePatch)shorePatch.dispose();
       discardRoads(roadGroup);land.removeFromParent();district.group.removeFromParent();district.clear();
       ({land,district,grounds,landmarks,roadGroup,shorePatch,groundAt,bridges,tunnels,obstacleCells,waterAt,
-        nearbyWaterLevel,sceneGraph,originX,originZ,treeBatches,streetBulbs}=next);
+        nearestWaterBlock,sceneGraph,originX,originZ,treeBatches,streetBulbs}=next);
       spare=previous;
       scene.add(land,roadGroup,district.group);groundSource.display(grounds);landmarks?.activate();
     }
@@ -308,6 +312,7 @@
       let work=0;
       const {land,district,grounds}=slot;
       const roadGroup=new T.Group(),treeBatches=[],streetBulbs=[],obstacleCells=new Map(),obstacles=[];
+      const regionalFronts=new Set();
       let shorePatch=null,fieldPixels=null,committed=false;
       const registerObstacle=o=>{obstacles.push(o);return indexObstacle(obstacleCells,o);};
       try{
@@ -471,7 +476,8 @@
           wetBlocks.set(key,{x:maskX+(col+.5)/maskScale,z:maskZ+(row+.5)/maskScale,d});
         }
       }
-      const nearbyWaterLevel=(x,z)=>{
+      const nearestWaterBlock=(x,z)=>{
+        if(!wetBlocks.size)return null;
         const col=Math.floor((x-maskX)*maskScale/blockSize),row=Math.floor((z-maskZ)*maskScale/blockSize);
         let nearest=null,distance=Infinity;
         for(let j=Math.max(0,row-2);j<=Math.min(blocks-1,row+2);j++)for(let i=Math.max(0,col-2);i<=Math.min(blocks-1,col+2);i++){
@@ -479,7 +485,7 @@
           const d=(x-p.x)**2+(z-p.z)**2;
           if(d<distance){nearest=p;distance=d;}
         }
-        return nearest?sampleShore(nearest.x,nearest.z)?.level??null:null;
+        return nearest;
       };
       function wet(x,z){
         const col=Math.floor((x-maskX)*maskScale),row=Math.floor((z-maskZ)*maskScale);
@@ -799,7 +805,7 @@
               if(ring.some(p=>openGround(p.x,p.y))||
                 district.overlapsSight(landmarks,[ring],{minX:bounds.min.x,maxX:bounds.max.x,minZ:bounds.min.y,maxZ:bounds.max.y}))continue;
             }
-            const c={key:s.seed+':'+index+':'+sign,priority,s,sign,hx,hz,footprint,house,width,depth,type,random};
+            const c={key:s.seed+':'+index+':'+sign,priority,s,sign,hx,hz,footprint,house,width,depth,type,random,setback:dist-s.w-depth/2};
             candidates.push(c);
             visitPlots(c,k=>{if(!rivals.has(k))rivals.set(k,[]);rivals.get(k).push(c);});
           }
@@ -821,8 +827,8 @@
         if(obscured)continue;
         const {house,s,sign,hx,hz,width,depth,type,random}=c;
             if(house){
-              const regional=centralStreetscapes?.themeAt(graph,hx+cx,hz+cz);
-              const rZone=regional?.zone,rShop=rZone?.shops[type%rZone.shops.length];
+              const rZone=graph&&centralStreetscapes?.zoneAt(...graph.geo(hx+cx,hz+cz));
+              const rShop=rZone?.shops[type%rZone.shops.length];
               const twoStory=rShop?rShop.upstairs:upstairs.has(shopTypes[type]);
               const h=(twoStory?6.7:3.65)+random()*.62;
               // Local +Z faces the road, with the façade just outside the wall.
@@ -845,7 +851,8 @@
               const roofPal=rZone?rZone.roofs:[0x989d98,0xaf846d,0x99aeb0];
               const gablePal=rZone?rZone.gables:[0xa26148,0x825947,0x7b8688];
               const awningPal=rZone?rZone.awnings:[0xa2a692,0xbc8062,0x809b93];
-              const frontKey=regional?regional.frontKeys[type%regional.frontKeys.length]:'front'+type;
+              const frontKey=rZone?centralStreetscapes.frontMaterial(rZone,type):defaultFront(type);
+              if(rZone)regionalFronts.add(frontKey);
               instance('wall',unitBox,hx,h*.5,hz,width,h,depth,rot,wallPal[type%wallPal.length]);
               instance(frontKey,unitPlane,hx+sx*(depth/2+.025),h/2,hz+sz*(depth/2+.025),width,h,1,rot);
               for(const side of [-1,1]){
@@ -858,11 +865,13 @@
               instance('roof',unitBox,hx,h+.07,hz,width+.46,.19,depth+.52,rot,roofPal[type%roofPal.length]);
               const pitched=(rZone?.forcePitched?h<8:h<5)&&c.priority<(rZone?.forcePitched?.95:.7);
               if(pitched)instance('gable',gable,hx,h+.14,hz,width+.5,width*(rZone?.forcePitched?.29:.24),depth+.59,rot,gablePal[type%gablePal.length]);
-              walks.porch(s,hx+sx*depth/2,hz+sz*depth/2,width+.35);
-              const porch=depth/2+.72,awningY=h*material[frontKey].userData.awningHeightRatio;
-              const postX=hx+sx*porch+s.fx*width*.45,postZ=hz+sz*porch+s.fz*width*.45;
+              const projection=Math.min(1.9,width*.27,c.setback-1.2);
+              const porch=(depth+projection)/2,awningY=h*material[frontKey].userData.awningHeightRatio;
+              walks.porch(s,hx+sx*porch,hz+sz*porch,width+.35,projection+.18);
+              const outer=depth/2+projection-.1;
+              const postX=hx+sx*outer+s.fx*width*.45,postZ=hz+sz*outer+s.fz*width*.45;
               const postTop=awningY-.065,postFoot=Math.min(postTop-.1,localGround(postX,postZ)-buildingBase-.21);
-              instance('awning',unitBox,hx+sx*porch,awningY,hz+sz*porch,width+.4,.13,1.8,rot,awningPal[type%awningPal.length]);
+              instance('awning',unitBox,hx+sx*porch,awningY,hz+sz*porch,width+.4,.13,projection,rot,awningPal[type%awningPal.length]);
               instance('concrete',unitPole,postX,(postFoot+postTop)/2,postZ,.09,postTop-postFoot,.09);
               if(type%3===0&&!pitched)instance('steel',unitPole,hx,h+.65,hz,1.2,1.0,1.2);
               buildingBase=null;
@@ -1178,8 +1187,9 @@
       yield;
       // Publish geometry and its complete contact index in the same frame.
       activate({land,district,grounds,landmarks,roadGroup,shorePatch,groundAt,bridges,tunnels,obstacleCells,waterAt,
-        nearbyWaterLevel,sceneGraph:graph,originX:cx,originZ:cz,treeBatches,streetBulbs});
+        nearestWaterBlock,sceneGraph:graph,originX:cx,originZ:cz,treeBatches,streetBulbs});
       committed=true;districtRadius=cutoff;nextLightCheck=0;asphaltOrigin.set(cx,cz);landOrigin.set(gx,gz);
+      centralStreetscapes?.trimFronts(regionalFronts);
       landscapeSource.setWaterDistrict(cx,cz,cutoff);
       if(graph)atmosphere.setLocation(...graph.geo(cx,cz));
       landscapeSource.activate(landscapes);relief.activate(terrain,cx,cz);tunnelCut.update(graph,tunnels,cx,cz);showCover();
@@ -1643,7 +1653,8 @@
           cabin.reflect(mirrorAdapter,scene,cabin.interior,0,0,graphics.profile.mirrorMs,now));
       roadsideImpact.update(dt);driveFx.update(car,dt,originX,originZ,inside,camera,atmosphere.wetness.value);
       landmarkSource?.weather(weather.rainfall);
-      const waterLevel=graphics.profile.waterWidth?nearbyWaterLevel(viewpoint.x-originX,viewpoint.z-originZ):null;
+      const wetBlock=graphics.profile.waterWidth&&nearestWaterBlock(viewpoint.x-originX,viewpoint.z-originZ);
+      const waterLevel=wetBlock?shorePatch?.sample(wetBlock.x,wetBlock.z)?.level??null:null;
       const wetRoad=atmosphere.wetness.value>.12&&!car.sightView&&!car.flood;
       const reflectionLevel=waterLevel??(wetRoad?car.y:null);
       waterSurface.reflect(renderer,scene,camera,reflectionLevel,now,reflectionLevel!==null,graphics.profile,mirrorUpdated);
@@ -1775,7 +1786,25 @@
       markerPoint.project(camera);
       return markerPoint.z>0 && markerPoint.z<1 && Math.abs(markerPoint.x)<.92 && Math.abs(markerPoint.y)<.9 ? markerPoint : null;
     }
-    return {get sceneryChanged(){return districtRadius!==graphics.profile.districtRadius;},get mappedFurniture(){return grounds.streetFurniture;},
+    function ambience(car,traffic,cabin){
+      if(!sceneGraph)return null;
+      if(!car.sightView&&car.edge&&sceneGraph.tunnels.info(car.edge)?.bore)return null;
+      const {x,z}=camera.position,right=camera.matrixWorld.elements;
+      const wet=nearestWaterBlock(x,z),dx=wet?wet.x-x:0,dz=wet?wet.z-z:0;
+      const waterDistance=Math.hypot(dx,dz);
+      const wx=x+originX,wz=z+originZ,{cover,population}=environment.sample(sceneGraph,wx,wz);
+      let closest=70,pan=0;
+      if(!car.sightView)for(const actor of traffic){
+        const ax=actor.x-wx,az=actor.z-wz,d=Math.hypot(ax,az);
+        if(d>=closest)continue;
+        closest=d;pan=(ax*right[0]+az*right[2])/Math.max(1,d);
+      }
+      const street=closest<40||cover===50||population>1100;
+      return {kind:street?'street':'wind',presence:street?.38+.62*(1-closest/70):cover===10?.9:.5,
+        pan:street?pan*(1-closest/70):0,rain:weather.rainfall,cabin,
+        water:wet?Math.max(0,1-waterDistance/72):0,waterPan:(dx*right[0]+dz*right[2])/Math.max(1,waterDistance)};
+    }
+    return {ambience,get sceneryChanged(){return districtRadius!==graphics.profile.districtRadius;},get mappedFurniture(){return grounds.streetFurniture;},
       capturePhoto,hitDashboardMap,refreshMap,prepareShaders,projectSummit,weather,streetLife,accessLane:(x,z)=>grounds.accessLane(x,z),loadStructures:structures.load,preloadVehicle:loadModel,waterAt:(x,z,edge)=>{if(edge&&sceneGraph.tunnels.info(edge)?.bore&&tunnels.at(x,z,edge)!=null)return null;const wet=waterAt(x,z),deck=wet&&bridges?.at(x,z,edge);return wet&&deck!=null&&deck>=wet.level?null:wet;},terrainReady:relief.ready,grade:driveGrade,ground:driveGround,setRoads,queueRoads,loadRoads,advanceRoads,cancelRoads,districtDistance:(x,z)=>Math.hypot(x-originX,z-originZ),render,resize:graphics.resize,contact,loadDistrict:async(g,x,z)=>(await Promise.all([buildingSource.load(g,x,z),osmBuildings.load(g,x,z),relief.loadLocal(g,x,z),landscapeSource.load(g,x,z),groundSource.load(g,x,z),environment.load(g,x,z),amenities.load(g,x,z)])).some(Boolean),splash:(x,z,nx,nz,strength,level)=>driveFx.impact(x,z,nx,nz,strength,'water',level,.3),sightFootprint:(...args)=>district.footprint(...args),footprintViews:(...args)=>district.footprintViews(...args,relief.ground),nearLandmark:(x,z,id)=>landmarks?.nearest(x,z,650,id),reactToContact:roadsideImpact.react,impact:(x,z,nx,nz,s,k,h=0,g,edge)=>driveFx.impact(x,z,nx,nz,s,k,driveGround(x,z,edge)+h,g),scrape:(x,y,z,vx,vz,edge)=>driveFx.scrape(x,driveGround(x,z,edge)+y,z,vx,vz),resetFx(){driveFx.reset();roadsideImpact.reset();sightings.reset();}};
   };
 })();
