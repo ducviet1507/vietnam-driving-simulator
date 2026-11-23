@@ -434,8 +434,9 @@ window.buildDriverCabin = function(T, rig, mapCanvas) {
         navigation(distance,course);
       }
     },
-    reflect(renderer,scene,player,distance,lateral,interval=90){
-      const now=performance.now();if(now-lastMirror<interval)return;lastMirror=now;
+    reflect(renderer,scene,player,distance,lateral,interval=90,now=performance.now()){
+      if(now-lastMirror<interval)return false;
+      lastMirror=now;
       const cam=renderWing?wingCamera:rearCamera;
       if(renderWing){
         cam.position.set(lateral-1.02,1.13,2-distance);cam.lookAt(lateral-5.6,.97,25-distance);
@@ -446,6 +447,7 @@ window.buildDriverCabin = function(T, rig, mapCanvas) {
       player.visible=false;renderer.setRenderTarget(renderWing?sideTarget:target);renderer.render(scene,cam);
       renderWing=!renderWing;
       renderer.setRenderTarget(previous);player.visible=visible;
+      return true;
     }
   };
 };

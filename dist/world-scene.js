@@ -142,10 +142,14 @@
     surfaces.transform(material.wall,2,2);
     const shopTypes=['cafe','bakery','grocer','pho','garage','pharmacy'];
     const upstairs=new Set(['cafe','grocer','pharmacy']);
+    // Measured from the foot of the six shopfront elevations. Place the
+    // projecting canopy on the illustrated lintel or eave and its baked shade.
+    const awningHeights=[.53,.78,.51,.68,.66,.51];
     for(const [i,name] of shopTypes.entries()){
       material['front'+i]=new T.MeshStandardMaterial({
         name:'Shopfront '+name,map:texture('surfaces/front-'+name+'.webp'),roughness:.91,metalness:0
       });
+      material['front'+i].userData.awningHeightRatio=awningHeights[i];
     }
     const centralStreetscapes=window.CentralStreetscapes?.create(T,scene,renderer,material);
     const meadow=surfaces.scanned('meadow',0xafbd9d,.56);
@@ -846,9 +850,10 @@
               const pitched=(rZone?.forcePitched?h<8:h<5)&&c.priority<(rZone?.forcePitched?.95:.7);
               if(pitched)instance('gable',gable,hx,h+.14,hz,width+.5,width*(rZone?.forcePitched?.29:.24),depth+.59,rot,gablePal[type%gablePal.length]);
               walks.porch(s,hx+sx*depth/2,hz+sz*depth/2,width+.35);
-              const porch=depth/2+.72;
-              instance('awning',unitBox,hx+sx*porch,2.65,hz+sz*porch,width+.4,.13,1.8,rot,awningPal[type%awningPal.length]);
-              instance('concrete',unitPole,hx+sx*porch+s.fx*width*.45,1.32,hz+sz*porch+s.fz*width*.45,.09,2.62,.09);
+              const porch=depth/2+.72,awningY=h*material[frontKey].userData.awningHeightRatio;
+              const postHeight=awningY-.065;
+              instance('awning',unitBox,hx+sx*porch,awningY,hz+sz*porch,width+.4,.13,1.8,rot,awningPal[type%awningPal.length]);
+              instance('concrete',unitPole,hx+sx*porch+s.fx*width*.45,postHeight/2,hz+sz*porch+s.fz*width*.45,.09,postHeight,.09);
               if(type%3===0&&!pitched)instance('steel',unitPole,hx,h+.65,hz,1.2,1.0,1.2);
               buildingBase=null;
             }else{
@@ -1589,13 +1594,14 @@
       updateTreeDetail(camera.position.x,camera.position.z,graphics.profile);
       if(prepareOnly)return warmScene();
       if(car.showroom&&player.modelReady)cabin?.prepare(renderer,scene,camera);
-      if(inside&&cabin)cabin.reflect(mirrorAdapter,scene,cabin.interior,0,0,graphics.profile.mirrorMs);
+      const mirrorUpdated=inside&&cabin&&!waterSurface.capturePending&&
+        cabin.reflect(mirrorAdapter,scene,cabin.interior,0,0,graphics.profile.mirrorMs,now);
       roadsideImpact.update(dt);driveFx.update(car,dt,originX,originZ,inside,camera,atmosphere.wetness.value);
       landmarkSource?.weather(weather.rainfall);
       const waterLevel=graphics.profile.waterWidth?nearbyWaterLevel(viewpoint.x-originX,viewpoint.z-originZ):null;
       const wetRoad=atmosphere.wetness.value>.12&&!car.sightView&&!car.flood;
       const reflectionLevel=waterLevel??(wetRoad?car.y:null);
-      waterSurface.reflect(renderer,scene,camera,reflectionLevel,now,reflectionLevel!==null,graphics.profile);
+      waterSurface.reflect(renderer,scene,camera,reflectionLevel,now,reflectionLevel!==null,graphics.profile,mirrorUpdated);
       renderer.render(scene,camera);
       return player.modelReady;
     }
@@ -1617,7 +1623,7 @@
         }
       }
       function compileBatch(batch){
-        if(graphics.profile.waterWidth)waterSurface.prepare(renderer,graphics.profile,()=>compile(batch));
+        waterSurface.prepare(renderer,graphics.profile,()=>compile(batch));
         compile(batch);
       }
       if(streamed){
@@ -1691,7 +1697,7 @@
         });
         renderer.setScissor(0,0,1,1);renderer.setScissorTest(true);
         renderer.shadowMap.needsUpdate=true;
-        if(graphics.profile.waterWidth)waterSurface.prepare(renderer,graphics.profile,()=>renderer.render(scene,camera),true);
+        waterSurface.prepare(renderer,graphics.profile,()=>renderer.render(scene,camera),true);
         renderer.render(scene,camera);
       }finally{
         for(const probe of canopyProbes){probe.removeFromParent();probe.dispose();}

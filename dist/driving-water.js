@@ -9,7 +9,7 @@ window.createDrivingWater = function(T, mapped) {
   const mirrorLevel={value:0};
   const reflected=new T.PerspectiveCamera(),direction=new T.Vector3(),up=new T.Vector3();
   const plane=new T.Plane(),clip=new T.Vector4(),corner=new T.Vector4();
-  let target=null,lastReflection=-Infinity;
+  let target=null,lastReflection=-Infinity,capturePending=false;
   const material = new T.MeshPhysicalMaterial({
     color: 0xffffff, roughness: .43, metalness: 0, ior: 1.333,
     envMapIntensity: .53, side: T.DoubleSide, transparent: true, depthWrite: true, forceSinglePass: true
@@ -135,13 +135,16 @@ window.createDrivingWater = function(T, mapped) {
     }else field.value.image.data=pixels;
     field.value.needsUpdate=true;
     bounds.value.set(x,z,scale/size);
-    origin.value.set(cx,cz);lastReflection=-Infinity;
+    origin.value.set(cx,cz);lastReflection=-Infinity;mirrorStrength.value=0;
   }
   function sizeTarget(profile){
+    // Low disables water captures, but the cabin mirrors still need linear
+    // offscreen shader variants. A single pixel suffices to warm those draws.
+    const width=profile.waterWidth||1,height=Math.max(1,width*9/16);
     if(!target){
-      target=new T.WebGLRenderTarget(profile.waterWidth,profile.waterWidth*9/16);
+      target=new T.WebGLRenderTarget(width,height);
       mirrorMap.value=target.texture;
-    }else if(target.width!==profile.waterWidth)target.setSize(profile.waterWidth,profile.waterWidth*9/16);
+    }else if(target.width!==width)target.setSize(width,height);
   }
   function prepare(renderer,profile,work,draw=false){
     sizeTarget(profile);
@@ -158,9 +161,13 @@ window.createDrivingWater = function(T, mapped) {
       renderer.setRenderTarget(previous);
     }
   }
-  function reflect(renderer,scene,camera,level,now,near,profile){
+  function reflect(renderer,scene,camera,level,now,near,profile,mirrorUpdated=false){
+    capturePending=false;
     if(!profile.waterWidth||!near||camera.position.y<=level){mirrorStrength.value=0;lastReflection=-Infinity;return;}
     if(now-lastReflection<profile.waterMs)return;
+    // Give an overdue water capture the next frame, even on a slow GPU
+    // where the cabin mirror would already be due again.
+    if(mirrorUpdated){capturePending=true;return;}
     lastReflection=now;
     sizeTarget(profile);
     camera.updateMatrixWorld();
@@ -186,7 +193,7 @@ window.createDrivingWater = function(T, mapped) {
     finally{renderer.setRenderTarget(previous);mirrorMap.value=target.texture;material.visible=true;renderer.shadowMap.needsUpdate=shadow;}
     mirrorStrength.value=1;
   }
-  return {material,setField,prepare,reflect,reflection:{mirrorMap,mirrorMatrix,mirrorStrength,mirrorLevel},setWake(x,z,yaw,strength,age){wake.value.set(x,z,yaw,strength);wakeAge.value=age;},update(seconds,rain=0){time.value=seconds;rainfall.value=rain;}};
+  return {material,setField,prepare,reflect,get capturePending(){return capturePending;},reflection:{mirrorMap,mirrorMatrix,mirrorStrength,mirrorLevel},setWake(x,z,yaw,strength,age){wake.value.set(x,z,yaw,strength);wakeAge.value=age;},update(seconds,rain=0){time.value=seconds;rainfall.value=rain;}};
 };
 
 // Two chamfer passes estimate the distance to the dry bank on the merged mask.

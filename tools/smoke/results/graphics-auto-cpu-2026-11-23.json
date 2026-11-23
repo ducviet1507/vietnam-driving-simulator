@@ -1,0 +1,664 @@
+{
+  "baseline": {
+    "runtimeSha256": "190b1035295e92c6c607294704db3b10915bc3759df7f857c2c63da8f1d1a26d",
+    "gpu": "ANGLE (NVIDIA, NVIDIA GeForce RTX 3060 (0x00002504) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+    "browser": "156.0.8078.4",
+    "created": "2026-11-23T06:15:51.250Z",
+    "case": {
+      "group": "touch-auto",
+      "route": "dense",
+      "routeId": "bach-khoa-ho-guom",
+      "speed": 60,
+      "run": 1,
+      "traffic": "busy",
+      "quality": "auto",
+      "hour": 21,
+      "view": "cockpit",
+      "viewport": {
+        "width": 844,
+        "height": 390
+      },
+      "startup": {
+        "shaderPreparationMs": 2023.2999999821186,
+        "departureReadyMs": 4443
+      },
+      "frames": 356,
+      "elapsedMs": 8000.200000000001,
+      "metres": 133.3366666666663,
+      "actualKmh": 59.99999999999984,
+      "stalls": [
+        {
+          "from": 15559.6,
+          "to": 16259.6,
+          "dt": 700,
+          "spans": [
+            {
+              "name": "render-mirror",
+              "start": 15560.699999988079,
+              "end": 16255.399999976158
+            },
+            {
+              "name": "render-screen",
+              "start": 16255.399999976158,
+              "end": 16261.699999988079
+            }
+          ],
+          "longtasks": [
+            {
+              "start": 15559.799999982119,
+              "end": 16261.799999982119
+            }
+          ],
+          "cpuSamples": [
+            [
+              "getProgramParameter ← oa three.min.js:7 ← D three.min.js:7 ← Ea.getUniforms three.min.js:7 ← (anonymous) three.min.js:7",
+              363
+            ],
+            [
+              "Qt three.min.js:7 ← (anonymous) three.min.js:7 ← renderBufferDirect three.min.js:7 ← $t three.min.js:7 ← Kt three.min.js:7",
+              2
+            ],
+            [
+              "roadLaneOffset world-road-traffic.js:32 ← trafficStep world.js:345 ← tick ← frame world.js:680 ← frame",
+              1
+            ],
+            [
+              "shaderSource ← la three.min.js:7 ← Ea three.min.js:7 ← acquireProgram three.min.js:7 ← Qt three.min.js:7",
+              1
+            ],
+            [
+              "seqWithValue three.min.js:7 ← te three.min.js:7 ← (anonymous) three.min.js:7 ← renderBufferDirect three.min.js:7 ← $t three.min.js:7",
+              1
+            ],
+            [
+              "getParameters three.min.js:7 ← Qt three.min.js:7 ← (anonymous) three.min.js:7 ← renderBufferDirect three.min.js:7 ← $t three.min.js:7",
+              1
+            ],
+            [
+              "va three.min.js:7 ← Ea three.min.js:7 ← acquireProgram three.min.js:7 ← Qt three.min.js:7 ← (anonymous) three.min.js:7",
+              1
+            ]
+          ]
+        },
+        {
+          "from": 20293,
+          "to": 20826.3,
+          "dt": 533.2999999999993,
+          "spans": [
+            {
+              "name": "render-mirror",
+              "start": 20294.09999999404,
+              "end": 20825.69999998808
+            },
+            {
+              "name": "render-screen",
+              "start": 20825.79999998212,
+              "end": 20831.29999998212
+            }
+          ],
+          "longtasks": [
+            {
+              "start": 20293.399999976158,
+              "end": 20831.399999976158
+            }
+          ],
+          "cpuSamples": [
+            [
+              "getProgramParameter ← oa three.min.js:7 ← D three.min.js:7 ← Ea.getUniforms three.min.js:7 ← (anonymous) three.min.js:7",
+              280
+            ],
+            [
+              "getParameters three.min.js:7 ← Qt three.min.js:7 ← (anonymous) three.min.js:7 ← renderBufferDirect three.min.js:7 ← $t three.min.js:7",
+              2
+            ],
+            [
+              "setFromRotationMatrix three.min.js:7 ← setFromQuaternion three.min.js:7 ← (anonymous) three.min.js:7 ← multiplyQuaternions three.min.js:7 ← multiply three.min.js:7",
+              1
+            ],
+            [
+              "fa three.min.js:7 ← Ea three.min.js:7 ← acquireProgram three.min.js:7 ← Qt three.min.js:7 ← (anonymous) three.min.js:7",
+              1
+            ],
+            [
+              "Ts three.min.js:7 ← setValue three.min.js:7 ← (anonymous) three.min.js:7 ← renderBufferDirect three.min.js:7 ← $t three.min.js:7",
+              1
+            ],
+            [
+              "w three.min.js:7 ← Is three.min.js:7 ← setValue three.min.js:7 ← (anonymous) three.min.js:7 ← renderBufferDirect three.min.js:7",
+              1
+            ],
+            [
+              "shaderSource ← la three.min.js:7 ← Ea three.min.js:7 ← acquireProgram three.min.js:7 ← Qt three.min.js:7",
+              1
+            ]
+          ]
+        },
+        {
+          "from": 20826.3,
+          "to": 21476.2,
+          "dt": 649.9000000000015,
+          "spans": [
+            {
+              "name": "render-screen",
+              "start": 20825.79999998212,
+              "end": 20831.29999998212
+            },
+            {
+              "name": "render-mirror",
+              "start": 20833.19999998808,
+              "end": 21483.899999976158
+            }
+          ],
+          "longtasks": [
+            {
+              "start": 20293.399999976158,
+              "end": 20831.399999976158
+            },
+            {
+              "start": 20831.79999998212,
+              "end": 21490.79999998212
+            }
+          ],
+          "cpuSamples": [
+            [
+              "getProgramParameter ← oa three.min.js:7 ← D three.min.js:7 ← Ea.getUniforms three.min.js:7 ← (anonymous) three.min.js:7",
+              338
+            ],
+            [
+              "getParameters three.min.js:7 ← Qt three.min.js:7 ← (anonymous) three.min.js:7 ← renderBufferDirect three.min.js:7 ← $t three.min.js:7",
+              1
+            ],
+            [
+              "fromBufferAttribute three.min.js:7 ← computeVertexNormals three.min.js:7 ← flag.onBeforeRender vietnam-landmarks.js:152 ← $t three.min.js:7 ← Kt three.min.js:7",
+              1
+            ],
+            [
+              "useProgram ← useProgram three.min.js:7 ← (anonymous) three.min.js:7 ← renderBufferDirect three.min.js:7 ← $t three.min.js:7",
+              1
+            ],
+            [
+              "trafficStep world.js:345 ← tick ← frame world.js:680 ← frame ← (root)",
+              1
+            ],
+            [
+              "uniformMatrix4fv ← bs three.min.js:7 ← setValue three.min.js:7 ← (anonymous) three.min.js:7 ← renderBufferDirect three.min.js:7",
+              1
+            ],
+            [
+              "refreshMaterialUniforms three.min.js:7 ← (anonymous) three.min.js:7 ← renderBufferDirect three.min.js:7 ← $t three.min.js:7 ← Kt three.min.js:7",
+              1
+            ]
+          ]
+        },
+        {
+          "from": 21959.6,
+          "to": 22059.6,
+          "dt": 100,
+          "spans": [
+            {
+              "name": "render-screen",
+              "start": 21960.79999998212,
+              "end": 22058.19999998808
+            }
+          ],
+          "longtasks": [
+            {
+              "start": 21959.899999976158,
+              "end": 22061.899999976158
+            }
+          ],
+          "cpuSamples": [
+            [
+              "getProgramParameter ← oa three.min.js:7 ← D three.min.js:7 ← Ea.getUniforms three.min.js:7 ← (anonymous) three.min.js:7",
+              45
+            ],
+            [
+              "(idle) ← (root)",
+              1
+            ],
+            [
+              "render world-street-life.js:126 ← render world-scene.js:1426 ← frame world.js:680 ← frame ← (root)",
+              1
+            ],
+            [
+              "update driving-fx.js:187 ← render world-scene.js:1426 ← frame world.js:680 ← frame ← (root)",
+              1
+            ],
+            [
+              "onUploadCallback three.min.js:7 ← (anonymous) three.min.js:7 ← update three.min.js:7 ← update three.min.js:7 ← update three.min.js:7",
+              1
+            ],
+            [
+              "bufferData ← (anonymous) three.min.js:7 ← update three.min.js:7 ← update three.min.js:7 ← update three.min.js:7",
+              1
+            ],
+            [
+              "J three.min.js:7 ← w three.min.js:7 ← Is three.min.js:7 ← upload three.min.js:7 ← (anonymous) three.min.js:7",
+              1
+            ]
+          ]
+        }
+      ],
+      "fps": 44.4988875278118,
+      "p50": 16.69999999999891,
+      "p95": 16.80000000000109,
+      "p99": 100,
+      "maxMs": 700,
+      "over50": 6,
+      "mirror": 36,
+      "water": 0,
+      "both": 0,
+      "npcRange": [
+        14,
+        22
+      ],
+      "edges": 245,
+      "rainfall": 0.9850134178269504,
+      "buffers": [
+        "759x351",
+        "1055x487"
+      ],
+      "districtOrigins": 2,
+      "streamedOrigins": 1,
+      "start": [
+        1.8942290938181832e-15,
+        -1.925
+      ],
+      "netMetres": 124.30281930395378
+    },
+    "freshStartups": [
+      {
+        "shaderPreparationMs": 2023.2999999821186,
+        "departureReadyMs": 4443
+      },
+      {
+        "shaderPreparationMs": 2123.100000023842,
+        "departureReadyMs": 4569.5999999940395
+      },
+      {
+        "shaderPreparationMs": 2025.9000000059605,
+        "departureReadyMs": 4460.200000017881
+      }
+    ]
+  },
+  "firstCandidate": {
+    "runtimeSha256": "731c8526b6e9e2626688de60673ee6058f14dae748723e6ccacd532641d62077",
+    "gpu": "ANGLE (NVIDIA, NVIDIA GeForce RTX 3060 (0x00002504) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+    "browser": "156.0.8078.4",
+    "created": "2026-11-23T06:12:58.836Z",
+    "case": {
+      "group": "touch-auto",
+      "route": "dense",
+      "routeId": "bach-khoa-ho-guom",
+      "speed": 60,
+      "run": 1,
+      "traffic": "busy",
+      "quality": "auto",
+      "hour": 21,
+      "view": "cockpit",
+      "viewport": {
+        "width": 844,
+        "height": 390
+      },
+      "frames": 353,
+      "elapsedMs": 8016.6,
+      "metres": 133.60999999999976,
+      "actualKmh": 59.999999999999886,
+      "stalls": [
+        {
+          "from": 15853.3,
+          "to": 16553.3,
+          "dt": 700,
+          "spans": [
+            {
+              "name": "render-mirror",
+              "start": 15854.299999982119,
+              "end": 16559
+            }
+          ],
+          "longtasks": [
+            {
+              "start": 15853.59999999404,
+              "end": 16565.59999999404
+            }
+          ],
+          "cpuSamples": [
+            [
+              "getProgramParameter ← oa three.min.js:7 ← D three.min.js:7 ← Ea.getUniforms three.min.js:7 ← (anonymous) three.min.js:7",
+              387
+            ],
+            [
+              "fa three.min.js:7 ← Ea three.min.js:7 ← acquireProgram three.min.js:7 ← Qt three.min.js:7 ← (anonymous) three.min.js:7",
+              2
+            ],
+            [
+              "Qt three.min.js:7 ← (anonymous) three.min.js:7 ← renderBufferDirect three.min.js:7 ← $t three.min.js:7 ← Kt three.min.js:7",
+              2
+            ],
+            [
+              "shaderSource ← la three.min.js:7 ← Ea three.min.js:7 ← acquireProgram three.min.js:7 ← Qt three.min.js:7",
+              2
+            ],
+            [
+              "updateMatrixWorld three.min.js:7 ← updateMatrixWorld three.min.js:7 ← updateMatrixWorld three.min.js:7 ← render three.min.js:7 ← renderer.render",
+              1
+            ],
+            [
+              "aa three.min.js:7 ← oa three.min.js:7 ← D three.min.js:7 ← Ea.getUniforms three.min.js:7 ← (anonymous) three.min.js:7",
+              1
+            ],
+            [
+              "Sa three.min.js:7 ← Ea three.min.js:7 ← acquireProgram three.min.js:7 ← Qt three.min.js:7 ← (anonymous) three.min.js:7",
+              1
+            ]
+          ]
+        },
+        {
+          "from": 20586.7,
+          "to": 21170,
+          "dt": 583.2999999999993,
+          "spans": [
+            {
+              "name": "render-mirror",
+              "start": 20587.399999976158,
+              "end": 21177.69999998808
+            }
+          ],
+          "longtasks": [
+            {
+              "start": 20586.899999976158,
+              "end": 21183.899999976158
+            }
+          ],
+          "cpuSamples": [
+            [
+              "getProgramParameter ← oa three.min.js:7 ← D three.min.js:7 ← Ea.getUniforms three.min.js:7 ← (anonymous) three.min.js:7",
+              308
+            ],
+            [
+              "getParameters three.min.js:7 ← Qt three.min.js:7 ← (anonymous) three.min.js:7 ← renderBufferDirect three.min.js:7 ← $t three.min.js:7",
+              1
+            ],
+            [
+              "Qt three.min.js:7 ← (anonymous) three.min.js:7 ← renderBufferDirect three.min.js:7 ← $t three.min.js:7 ← Kt three.min.js:7",
+              1
+            ],
+            [
+              "Ts three.min.js:7 ← setValue three.min.js:7 ← (anonymous) three.min.js:7 ← renderBufferDirect three.min.js:7 ← $t three.min.js:7",
+              1
+            ],
+            [
+              "acquireProgram three.min.js:7 ← Qt three.min.js:7 ← (anonymous) three.min.js:7 ← renderBufferDirect three.min.js:7 ← $t three.min.js:7",
+              1
+            ],
+            [
+              "shaderSource ← la three.min.js:7 ← Ea three.min.js:7 ← acquireProgram three.min.js:7 ← Qt three.min.js:7",
+              1
+            ]
+          ]
+        },
+        {
+          "from": 21170,
+          "to": 21836.7,
+          "dt": 666.7000000000007,
+          "spans": [
+            {
+              "name": "render-mirror",
+              "start": 20587.399999976158,
+              "end": 21177.69999998808
+            },
+            {
+              "name": "render-screen",
+              "start": 21177.69999998808,
+              "end": 21184.29999998212
+            },
+            {
+              "name": "render-mirror",
+              "start": 21186.5,
+              "end": 21830.09999999404
+            },
+            {
+              "name": "render-screen",
+              "start": 21830.09999999404,
+              "end": 21836.899999976158
+            }
+          ],
+          "longtasks": [
+            {
+              "start": 20586.899999976158,
+              "end": 21183.899999976158
+            },
+            {
+              "start": 21184.899999976158,
+              "end": 21839.899999976158
+            }
+          ],
+          "cpuSamples": [
+            [
+              "getProgramParameter ← oa three.min.js:7 ← D three.min.js:7 ← Ea.getUniforms three.min.js:7 ← (anonymous) three.min.js:7",
+              349
+            ],
+            [
+              "Qt three.min.js:7 ← (anonymous) three.min.js:7 ← renderBufferDirect three.min.js:7 ← $t three.min.js:7 ← Kt three.min.js:7",
+              2
+            ],
+            [
+              "update three.min.js:7 ← update three.min.js:7 ← Zt three.min.js:7 ← Zt three.min.js:7 ← Zt three.min.js:7",
+              1
+            ],
+            [
+              "bindVertexArray ← u three.min.js:7 ← setup three.min.js:7 ← renderBufferDirect three.min.js:7 ← $t three.min.js:7",
+              1
+            ],
+            [
+              "setValue three.min.js:7 ← (anonymous) three.min.js:7 ← renderBufferDirect three.min.js:7 ← $t three.min.js:7 ← Kt three.min.js:7",
+              1
+            ],
+            [
+              "$t three.min.js:7 ← Kt three.min.js:7 ← Jt three.min.js:7 ← render three.min.js:7 ← renderer.render",
+              1
+            ],
+            [
+              "Ji three.min.js:7 ← makeVehicle world-scene.js:1318 ← render world-scene.js:1431 ← frame world.js:680 ← frame",
+              1
+            ]
+          ]
+        },
+        {
+          "from": 22286.7,
+          "to": 22386.8,
+          "dt": 100.09999999999854,
+          "spans": [
+            {
+              "name": "render-screen",
+              "start": 22289.59999999404,
+              "end": 22393.69999998808
+            }
+          ],
+          "longtasks": [
+            {
+              "start": 22288.59999999404,
+              "end": 22398.59999999404
+            }
+          ],
+          "cpuSamples": [
+            [
+              "getProgramParameter ← oa three.min.js:7 ← D three.min.js:7 ← Ea.getUniforms three.min.js:7 ← (anonymous) three.min.js:7",
+              50
+            ],
+            [
+              "setHex three.min.js:7 ← (anonymous) world-road-traffic.js:136 ← (anonymous) world-road-traffic.js:134 ← update world-road-traffic.js:130 ← rebuild world-road-traffic.js:144",
+              1
+            ],
+            [
+              "render world-street-life.js:126 ← render world-scene.js:1431 ← frame world.js:680 ← frame ← (root)",
+              1
+            ],
+            [
+              "update driving-fx.js:187 ← render world-scene.js:1431 ← frame world.js:680 ← frame ← (root)",
+              1
+            ],
+            [
+              "bufferSubData ← (anonymous) three.min.js:7 ← update three.min.js:7 ← update three.min.js:7 ← update three.min.js:7",
+              1
+            ],
+            [
+              "bufferData ← (anonymous) three.min.js:7 ← update three.min.js:7 ← update three.min.js:7 ← update three.min.js:7",
+              1
+            ],
+            [
+              "setup three.min.js:7 ← renderBufferDirect three.min.js:7 ← $t three.min.js:7 ← Kt three.min.js:7 ← Jt three.min.js:7",
+              1
+            ]
+          ]
+        }
+      ],
+      "fps": 44.033630217299105,
+      "p50": 16.69999999999709,
+      "p95": 16.80000000000291,
+      "p99": 100.09999999999854,
+      "maxMs": 700,
+      "over50": 6,
+      "mirror": 36,
+      "water": 0,
+      "both": 0,
+      "npcRange": [
+        14,
+        22
+      ],
+      "edges": 245,
+      "rainfall": 0.9864368673260638,
+      "buffers": [
+        "759x351",
+        "1055x487"
+      ],
+      "districtOrigins": 2,
+      "streamedOrigins": 1,
+      "start": [
+        1.8942290938181832e-15,
+        -1.925
+      ],
+      "netMetres": 124.57587641986203
+    }
+  },
+  "final": {
+    "runtimeSha256": "916f0ba86953c399807a64830ad5b81b7adcedc91c35f37429ded71a4bcbad9a",
+    "gpu": "ANGLE (NVIDIA, NVIDIA GeForce RTX 3060 (0x00002504) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+    "browser": "156.0.8078.4",
+    "created": "2026-11-23T06:15:30.905Z",
+    "case": {
+      "group": "touch-auto",
+      "route": "dense",
+      "routeId": "bach-khoa-ho-guom",
+      "speed": 60,
+      "run": 1,
+      "traffic": "busy",
+      "quality": "auto",
+      "hour": 21,
+      "view": "cockpit",
+      "viewport": {
+        "width": 844,
+        "height": 390
+      },
+      "startup": {
+        "shaderPreparationMs": 2990.0999999940395,
+        "departureReadyMs": 5534.600000023842
+      },
+      "frames": 473,
+      "elapsedMs": 8000.199999999999,
+      "metres": 133.3366666666663,
+      "actualKmh": 59.99999999999985,
+      "stalls": [
+        {
+          "from": 16751.2,
+          "to": 16867.6,
+          "dt": 116.39999999999782,
+          "spans": [
+            {
+              "name": "render-screen",
+              "start": 16752.5,
+              "end": 16877.5
+            }
+          ],
+          "longtasks": [
+            {
+              "start": 16751.30000001192,
+              "end": 16884.30000001192
+            }
+          ],
+          "cpuSamples": [
+            [
+              "getProgramParameter ← oa three.min.js:7 ← D three.min.js:7 ← Ea.getUniforms three.min.js:7 ← (anonymous) three.min.js:7",
+              60
+            ],
+            [
+              "walker world-street-life.js:110 ← render world-street-life.js:126 ← render world-scene.js:1431 ← frame world.js:680 ← frame",
+              1
+            ],
+            [
+              "render world-street-life.js:126 ← render world-scene.js:1431 ← frame world.js:680 ← frame ← (root)",
+              1
+            ],
+            [
+              "driveGrade world-scene.js:222 ← pose world-scene.js:1415 ← render world-scene.js:1431 ← frame world.js:680 ← frame",
+              1
+            ],
+            [
+              "update driving-fx.js:187 ← render world-scene.js:1431 ← frame world.js:680 ← frame ← (root)",
+              1
+            ],
+            [
+              "bufferData ← (anonymous) three.min.js:7 ← update three.min.js:7 ← update three.min.js:7 ← update three.min.js:7",
+              1
+            ],
+            [
+              "p three.min.js:7 ← (anonymous) three.min.js:7 ← setup three.min.js:7 ← renderBufferDirect three.min.js:7 ← $t three.min.js:7",
+              1
+            ]
+          ]
+        }
+      ],
+      "fps": 59.12352191195221,
+      "p50": 16.69999999999891,
+      "p95": 16.80000000000109,
+      "p99": 16.900000000001455,
+      "maxMs": 116.39999999999782,
+      "over50": 1,
+      "mirror": 43,
+      "water": 0,
+      "both": 0,
+      "npcRange": [
+        14,
+        22
+      ],
+      "edges": 245,
+      "rainfall": 0.9855057027497235,
+      "buffers": [
+        "759x351",
+        "1055x487",
+        "1266x585"
+      ],
+      "districtOrigins": 2,
+      "streamedOrigins": 1,
+      "start": [
+        1.8942290938181832e-15,
+        -1.925
+      ],
+      "netMetres": 124.30281930395391
+    },
+    "freshStartups": [
+      {
+        "shaderPreparationMs": 2990.0999999940395,
+        "departureReadyMs": 5534.600000023842
+      },
+      {
+        "shaderPreparationMs": 2988.300000011921,
+        "departureReadyMs": 5486.699999988079
+      },
+      {
+        "shaderPreparationMs": 2993.699999988079,
+        "departureReadyMs": 5475.399999976158
+      }
+    ]
+  }
+}

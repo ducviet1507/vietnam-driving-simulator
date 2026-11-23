@@ -769,8 +769,9 @@ function render(now){
  if(passHeadlights)passHeadlights.intensity=passSky.lamps.value*2600;
  courseWater.update(now*.001,courseWeather.rainfall);
  if(s.mode==='ready'||s.mode==='grid')cabin.prepare(renderer,scene,camera);
- if(inside)cabin.reflect(mirrorAdapter,scene,cabin.interior,0,0,graphics.profile.mirrorMs);
- if(!route.stage)courseWater.reflect(renderer,scene,camera,waterLevel,now,Math.abs(s.d-(bridgeStart+bridgeEnd)*.5)<220||(river&&s.d<bridgeEnd+150),graphics.profile);
+ const mirrorUpdated=inside&&(route.stage||!courseWater.capturePending)&&
+   cabin.reflect(mirrorAdapter,scene,cabin.interior,0,0,graphics.profile.mirrorMs,now);
+ if(!route.stage)courseWater.reflect(renderer,scene,camera,waterLevel,now,Math.abs(s.d-(bridgeStart+bridgeEnd)*.5)<220||(river&&s.d<bridgeEnd+150),graphics.profile,mirrorUpdated);
  renderer.render(scene,camera);
  driveAudio.update({electric:arcade&&cupBody.spec.electric,boost:arcade&&cupBody.driving&&cupBody.boost,slip:arcade?cupBody.slip:0,speed:Math.abs(s.v)*3.6,throttle:keys.has('arrowup')||keys.has('w'),braking:keys.has('arrowdown')||keys.has('s'),signal:!!s.signal,mode:s.mode==='drive'?'driving':arcade&&['grid','countdown'].includes(s.mode)?'idling':'ready'});
  if(now-lastHud>90){if(arcade)raceHud();else hud();mapDraw();lastHud=now;}requestAnimationFrame(render);

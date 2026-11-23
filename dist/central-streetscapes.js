@@ -246,6 +246,25 @@
     return null;
   }
 
+  let plasterGrain;
+  function plasterPattern(g) {
+    if (!plasterGrain) {
+      plasterGrain = document.createElement('canvas');
+      plasterGrain.width = plasterGrain.height = 64;
+      const tile = plasterGrain.getContext('2d');
+      const pixels = tile.createImageData(64, 64);
+      let seed = 831;
+      for (let p = 0; p < pixels.data.length; p += 4) {
+        seed = (Math.imul(1664525, seed) + 1013904223) >>> 0;
+        const tone = seed & 256 ? 255 : 32;
+        pixels.data[p] = pixels.data[p + 1] = pixels.data[p + 2] = tone;
+        pixels.data[p + 3] = seed >>> 28;
+      }
+      tile.putImageData(pixels, 0, 0);
+    }
+    return g.createPattern(plasterGrain, 'repeat');
+  }
+
   function paintShopfrontTexture(T, zone, shop, renderer) {
     const c = document.createElement('canvas');
     c.width = 512;
@@ -253,6 +272,16 @@
     const g = c.getContext('2d');
     const st = zone.signStyle;
     const W = c.width, H = c.height;
+    // Paint diffuse contact shade once into the existing colour texture. The
+    // directional light still supplies sun shadows as the time of day changes.
+    function shadeBelow(x, y, width, reach, opacity) {
+      const shade = g.createLinearGradient(0, y, 0, y + reach);
+      shade.addColorStop(0, 'rgba(32,27,24,' + opacity + ')');
+      shade.addColorStop(.35, 'rgba(32,27,24,' + opacity * .45 + ')');
+      shade.addColorStop(1, 'rgba(32,27,24,0)');
+      g.fillStyle = shade;
+      g.fillRect(x, y, width, reach);
+    }
 
     // Base plaster wall with subtle vertical weathering
     const grad = g.createLinearGradient(0, 0, 0, H);
@@ -262,9 +291,8 @@
     g.fillStyle = grad;
     g.fillRect(0, 0, W, H);
 
-    // Subtle plaster grain lines
-    g.fillStyle = 'rgba(70,50,30,0.045)';
-    for (let y = 0; y < H; y += 16) g.fillRect(0, y, W, 3);
+    g.fillStyle = plasterPattern(g);
+    g.fillRect(0, 0, W, H);
 
     const gfTop = shop.upstairs ? 248 : 28;
     // Upstairs floor (windows + shutters + balcony) for 2-story shops
@@ -279,9 +307,14 @@
       for (const wx of [78, 306]) {
         g.fillStyle = '#3b2c20';
         g.fillRect(wx - 6, 56, 140, 148);
-        // Dark interior glass
-        g.fillStyle = '#243438';
+        // Higher panes reflect a little more sky than the dark room below.
+        const glass = g.createLinearGradient(0, 66, 0, 194);
+        glass.addColorStop(0, '#506469');
+        glass.addColorStop(.58, '#35474a');
+        glass.addColorStop(1, '#243438');
+        g.fillStyle = glass;
         g.fillRect(wx + 24, 66, 80, 128);
+        shadeBelow(wx + 24, 66, 80, 34, .36);
         // Glass mullions
         g.strokeStyle = '#6b5a46';
         g.lineWidth = 4;
@@ -305,6 +338,7 @@
       g.fillRect(42, 184, W - 84, 6);
       g.fillRect(42, 218, W - 84, 6);
       for (let bx = 50; bx <= W - 50; bx += 22) g.fillRect(bx, 184, 4, 38);
+      shadeBelow(0, 240, W, 20, .23);
     }
 
     // Shop signboard (biển hiệu tiếng Việt)
@@ -360,13 +394,24 @@
       }
       // Two hanging red/gold paper lanterns under lintel
       for (const lx of [185, W - 185]) {
-        g.fillStyle = '#d93d2b';
+        const silk = g.createLinearGradient(lx - 18, 0, lx + 18, 0);
+        silk.addColorStop(0, '#76291f');
+        silk.addColorStop(.4, '#e95b39');
+        silk.addColorStop(.58, '#d7472d');
+        silk.addColorStop(1, '#77281f');
+        g.fillStyle = silk;
         g.beginPath();
         g.ellipse(lx, doorY + 32, 18, 22, 0, 0, Math.PI * 2);
         g.fill();
+        g.strokeStyle = 'rgba(105,37,24,.4)';
+        g.lineWidth = 1;
+        g.beginPath();
+        g.ellipse(lx, doorY + 32, 9, 22, 0, 0, Math.PI * 2);
+        g.stroke();
         g.fillStyle = '#f2c14e';
         g.fillRect(lx - 8, doorY + 8, 16, 6);
         g.fillRect(lx - 6, doorY + 52, 12, 8);
+        g.fillRect(lx - 1, doorY + 59, 2, 9);
       }
     } else {
       // Modern Vietnamese tiled shopfront with open glass/metal roll-up entrance & glass food cabinet
@@ -380,7 +425,12 @@
       g.fillStyle = inner;
       g.fillRect(52, doorY + 12, W - 104, doorH - 12);
       // Glass food display cabinet (tủ kính bán bún/cháo/mì)
-      g.fillStyle = '#b9d2d8';
+      const cabinet = g.createLinearGradient(68, doorY + doorH * .36, 198, doorY + doorH * .62);
+      cabinet.addColorStop(0, '#879fa2');
+      cabinet.addColorStop(.42, '#bed7da');
+      cabinet.addColorStop(.56, '#a6c2c6');
+      cabinet.addColorStop(1, '#8da7ab');
+      g.fillStyle = cabinet;
       g.fillRect(68, doorY + doorH * 0.36, 130, doorH * 0.62);
       g.fillStyle = '#9aaeb4';
       g.fillRect(68, doorY + doorH * 0.68, 130, doorH * 0.30);
@@ -396,15 +446,21 @@
       g.fillRect(W - 34, doorY + doorH * 0.45, 34, H - (doorY + doorH * 0.45));
     }
 
+    // Only the recess below the fabric is sheltered. Keep the menu and the
+    // lettering on the exposed signboard legible, including in overcast light.
+    shadeBelow(16, valY + 18, W - 32, doorH * .62, .32);
+    shadeBelow(0, 0, W, shop.upstairs ? 15 : 17, .24);
     const tex = new T.CanvasTexture(c);
     tex.colorSpace = T.SRGBColorSpace;
     if (renderer) tex.anisotropy = Math.min(8, renderer.capabilities.getMaxAnisotropy());
-    return new T.MeshStandardMaterial({
+    const material = new T.MeshStandardMaterial({
       name: 'CentralShop ' + zone.id + ' ' + shop.title,
       map: tex,
       roughness: 0.88,
       metalness: 0.02
     });
+    material.userData.awningHeightRatio = 1 - valY / H;
+    return material;
   }
 
   function makeStallSignTexture(T, text, bg, fg) {
