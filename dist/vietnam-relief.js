@@ -2,6 +2,16 @@
 // The baked imagery and elevation share the bounds of Web Mercator z8 tiles
 // x=200..206, y=110..122. Heights are metres above sea level.
 const vietnamReliefStep=32;
+// Heights along a straight wall are linear between these terrain triangle edges.
+function terrainEdgeBreaks(ax,az,bx,bz,step=vietnamReliefStep){
+  const cuts=[0,1];
+  for(const [a,b] of [[ax,bx],[az,bz],[ax+az,bx+bz]]){
+    for(let v=(Math.floor(Math.min(a,b)/step)+1)*step;v<Math.max(a,b);v+=step)
+      cuts.push((v-a)/(b-a));
+  }
+  cuts.sort((a,b)=>a-b);
+  return cuts.filter((v,i)=>i===0||v>cuts[i-1]);
+}
 function createVietnamRelief(T,scene,compact,landscapes,tunnelCut,landWidth,caveOpenings){
   const urls='streetscape/surfaces/vietnam-',imagery=new T.TextureLoader().load(urls+'landcover.webp');
   imagery.colorSpace=T.SRGBColorSpace;
@@ -91,6 +101,10 @@ function createVietnamRelief(T,scene,compact,landscapes,tunnelCut,landWidth,cave
   const nodes=new Float64Array(cacheSide*cacheSide),nodeX=new Int32Array(nodes.length),nodeZ=new Int32Array(nodes.length);
   nodes.fill(NaN);
   const base=graph&&pixels?elevation(...uvAt(0,0,graph)):0;
+  const cities=graph?.point?cityTerrainGrids.map(({west,north,scale,rows})=>{
+    const origin=graph.point(west,north),cell=graph.point(west+1/scale,north-1/scale);
+    return {origin,dx:cell.x-origin.x,dz:cell.z-origin.z,rows};
+  }):[];
   const hoanKiem=graph?.point?.(105.8521,21.02865);
   const plaza=graph?.point?.(105.83560,21.03695);
   const ao=graph?.point?.(106.30403,9.91766);
@@ -104,6 +118,18 @@ function createVietnamRelief(T,scene,compact,landscapes,tunnelCut,landWidth,cave
   let hangStage,hangRoadStage,hangEdges;
   function localDatum(x,z,surface){
     if(!hoanKiem)return surface-base;
+    // Use bare-earth heights across each urban plain, including open squares
+    // and building foundations. Feather the outer kilometre into normal relief.
+    for(const {origin,dx,dz,rows} of cities){
+      const u=(x-origin.x)/dx,v=(z-origin.z)/dz;
+      const edge=Math.min(u,v,rows[0].length-1-u,rows.length-1-v);
+      if(edge<=0)continue;
+      const i=Math.floor(u),j=Math.floor(v),fx=u-i,fz=v-j;
+      const a=rows[j],b=rows[j+1];
+      const city=((a[i]*(1-fx)+a[i+1]*fx)*(1-fz)+(b[i]*(1-fx)+b[i+1]*fx)*fz)*.1;
+      surface+=(city-surface)*T.MathUtils.smoothstep(edge,0,4);
+      break;
+    }
     if(Math.abs(x-haiSon.x)<112&&Math.abs(z-haiSon.z)<112){
       // Use the open ground northwest of the elevated Hải Sơn terrace. The
       // DSM starts climbing its rear columns well before the actual hillside.

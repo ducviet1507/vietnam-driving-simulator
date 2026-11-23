@@ -13,9 +13,11 @@ function createTempleFoundations(T,{group,vertexCount,place}){
     return [[-1,-1],[1,-1],[1,1],[-1,1]].map(([u,v])=>[x+c*u*w/2+s*v*d/2,z-s*u*w/2+c*v*d/2]);
   }
   function skirt(x,z,w,d,top,anchor,yaw=0){
-    const corners=cornersAt(x,z,w,d,yaw);
-    for(let side=0;side<4;side++){
-      const [ax,az]=corners[side],[bx,bz]=corners[(side+1)%4],length=Math.hypot(bx-ax,bz-az);
+    skirtRing(cornersAt(x,z,w,d,yaw),top,anchor);
+  }
+  function skirtRing(corners,top,anchor){
+    for(let side=0;side<corners.length;side++){
+      const [ax,az]=corners[side],[bx,bz]=corners[(side+1)%corners.length],length=Math.hypot(bx-ax,bz-az);
       const count=Math.ceil(length/2);
       for(let i=0;i<count;i++)walls.push({
         ax:ax+(bx-ax)*i/count,az:az+(bz-az)*i/count,
@@ -127,5 +129,5 @@ function createTempleFoundations(T,{group,vertexCount,place}){
     }
     if(changed){positions.needsUpdate=true;uv.needsUpdate=true;g.computeVertexNormals();g.computeBoundingSphere();}
   };
-  return {fixture,skirt,walk,building,stairs};
+  return {fixture,skirt,skirtRing,walk,building,stairs};
 }

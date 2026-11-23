@@ -4,9 +4,10 @@ import {createRequire} from 'node:module';
 import {runInNewContext} from 'node:vm';
 
 const T=createRequire(import.meta.url)('../../dist/three.min.js');
-const context={createSightFinishes:()=>({}),createVietnamOsmBuildings:()=>({rows:()=>[]})};
+let pieces=[];
+const context={createSightFinishes:()=>({}),createVietnamOsmBuildings:()=>({rows:()=>pieces})};
 context.window=context;
-for(const file of ['tourism-catalog','sight-details','visitor-atlas','vietnam-landmarks','surface-materials','tour-district']){
+for(const file of ['tourism-catalog','sight-details','visitor-atlas','vietnam-landmarks','surface-materials','vietnam-relief','tour-district']){
   runInNewContext(readFileSync(new URL('../../dist/'+file+'.js',import.meta.url),'utf8'),context);
 }
 const scene=new T.Scene(),landmarks=context.VietnamLandmarks.create(T,scene);
@@ -93,6 +94,22 @@ district.build(graph,2000,0,landmarks,()=>0);
 assert.equal(meshes.children.length,0);
 district.build(graph,0,0,landmarks,()=>0,[],(x,z)=>x>201&&z>1);
 assert.deepEqual(snapshot(),original);
+
+// An upper storey and its downhill wing have the same OSM height datum.
+// The foot of an unbroken wall must reach a trough between its corners.
+const parent=row('w90','yes',64,0),base=row('w91','yes',63,0),upper=row('w92','yes',66,0);
+base[2]=4;base[6]={parent:'w90'};
+upper[2]=10;upper[6]={parent:'w90',min_height:4};
+surveyed=[parent];inferred=[];pieces=[base,upper];
+const trough=x=>Math.abs(x-64);
+district.build(graph,0,0,null,trough);
+const lower=district.footprint({map:'https://www.openstreetmap.org/way/91'},63,0);
+const storey=district.footprint({map:'https://www.openstreetmap.org/way/92'},66,0);
+assert.equal(lower.baseY,storey.baseY);
+assert.equal(lower.baseY+lower.h,storey.baseY+storey.bottom);
+const wallPoints=meshes.children[0].geometry.attributes.position;
+assert.ok(Array.from({length:wallPoints.count},(_,i)=>i).some(i=>
+  Math.abs(wallPoints.getX(i)-64)<1e-4&&wallPoints.getY(i)<-.17),'Wall reaches the triangulated terrain crease');
 
 const fort=context.VietnamTourism.byId.get('osm-way-921987266'); // Thành cổ Sơn Tây
 landmarks.setOrigin(project(fort),0,0);

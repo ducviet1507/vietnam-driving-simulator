@@ -297,6 +297,8 @@ window.VietnamLandmarks=(()=>{
     }
     if(id==='market'){
       const wall=0xeadbbb,trim=0xf3ead6,tile=0xb64639,glass=0x49534d;
+      const foundations=createTempleFoundations(T,{group,vertexCount:()=>positions.length/3,place});
+      const marketFloor={height:0};
       function shell(w,d,h,y,r,tint){
         const shape=new T.Shape(),x=w/2,z=d/2;
         shape.moveTo(-x+r,-z);shape.lineTo(x-r,-z);shape.quadraticCurveTo(x,-z,x,-z+r);
@@ -304,8 +306,12 @@ window.VietnamLandmarks=(()=>{
         shape.quadraticCurveTo(-x,z,-x,z-r);shape.lineTo(-x,-z+r);shape.quadraticCurveTo(-x,-z,-x+r,-z);
         const slab=new T.ExtrudeGeometry(shape,{depth:h,curveSegments:6,bevelEnabled:false});slab.rotateX(-Math.PI/2);
         stamp(slab,tint,0,y,0);slab.dispose();
+        return shape;
       }
-      shell(93.4,129,.18,-.04,4.9,0xb8aea0);
+      const apron=shell(93.4,129,.18,-.04,4.9,0xb8aea0);
+      const rim=apron.getPoints(6).map(p=>[p.x,-p.y]).reverse();
+      foundations.skirtRing(rim,0,marketFloor);
+      for(const [x,z,w,d] of marketSolids.slice(1))foundations.skirt(x,z,w*2,d*2,.04,marketFloor);
       for(let j=0;j<3;j++)box(0xc9bdad,0,.15,62.0+j*.72,86.4,.025,.043);
       shell(90,123,.32,0,3.5,0xa5a297);shell(88,121,5.65,.32,3.5,wall);
       shell(88.6,121.8,.28,5.82,3.55,trim);shell(88.2,121.5,.22,6.06,3.55,tile);
@@ -1060,8 +1066,8 @@ window.VietnamLandmarks=(()=>{
     }
     const mesh=new T.Mesh(geometry,finish);mesh.castShadow=true;mesh.receiveShadow=true;group.add(mesh);
     if(shoreRanges.length)mesh.userData.shoreCover=shoreRanges;
-    if(footingVertices.length&&addition&&!group.userData.fitGround&&!addition.scale&&
-       addition.solids?.length!==0&&!id.startsWith('cau-')){
+    if(footingVertices.length&&!group.userData.fitGround&&
+       (addition?addition.solids?.length!==0&&!id.startsWith('cau-'):['cathedral','sapa','coal','flag','ponagar','station','bat'].includes(id))){
       const p=geometry.getAttribute('position'),feet=new Map();
       for(const i of footingVertices){
         const x=p.getX(i),z=p.getZ(i),rest=p.getY(i),key=x+','+z;
@@ -1145,7 +1151,10 @@ window.VietnamLandmarks=(()=>{
           mesh.position.set(x-cx,base,z-cz);mesh.rotation.y=data.yaw;
           if(data.scale)mesh.scale.fromArray(data.scale);
           mesh.userData.placeLights?.();
-          mesh.userData.fitGround?.((u,v)=>foundation(x+u*c+v*s,z-u*s+v*c)-base);
+          mesh.userData.fitGround?.((u,v)=>{
+            const px=u*mesh.scale.x,pz=v*mesh.scale.z;
+            return (foundation(x+px*c+pz*s,z-px*s+pz*c)-base)/mesh.scale.y;
+          });
         }});
       }
     prepareBuildingSites(graph,cx,cz);

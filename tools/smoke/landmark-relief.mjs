@@ -14,7 +14,7 @@ class ElevationImage {
 const context=vm.createContext({window:{},Image:ElevationImage,performance,
   createPassSurface:()=>({select(){}}),document:{createElement:()=>({getContext:()=>({
     drawImage(){},getImageData:()=>({data:new Uint8Array(16)})})})}});
-for(const file of ['shore-terrain','vietnam-relief','cave-openings','world-land-cover'])
+for(const file of ['shore-terrain','city-terrain','vietnam-relief','cave-openings','world-land-cover'])
   vm.runInContext(readFileSync(new URL('../../dist/'+file+'.js',import.meta.url),'utf8'),context);
 // The temple moat and Ao Bà Om have distinct water levels. Simulate the
 // canvas colour rounding that used to make their pool IDs collide at a bank.
@@ -90,7 +90,20 @@ const lakeside=relief.prepare(hanoi,
 const lakeStreet=lakeside.altitude(0,0);
 assert.ok(lakeStreet>=8.4&&lakeStreet<=11.5);
 assert.ok(Math.abs(lakeside.grade(0,0,Math.PI/2))<.02);
-close(lakeside.altitude(1000,0),119);
+// The surrounding urban DTM covers Bách Khoa and Bến Thành even before the
+// surface survey loads. Roof returns must never become short road gradients.
+for(const [lon,lat] of [[105.84156,21.00510],[106.698484,10.771409]]){
+  const mx=111320*Math.cos(lat*Math.PI/180);
+  const g={geo:(x,z)=>[lon+x/mx,lat-z/110900],point:(u,v)=>({x:(u-lon)*mx,z:(lat-v)*110900})};
+  const empty=relief.prepare(g,{elevation:()=>null});
+  const roofs=relief.prepare(g,{elevation:(x,z)=>25+20*Math.cos(x/51)*Math.sin(z/82),elevationWeight:()=>1});
+  for(let z=-500;z<=500;z+=41)for(let x=-500;x<=500;x+=37){
+    close(empty.altitude(x,z),roofs.altitude(x,z));
+    assert.ok(Math.hypot(roofs.grade(x,z,0),roofs.grade(x,z,Math.PI/2))<.015);
+  }
+}
+// Outside the urban plain the original sloping survey is still authoritative.
+close(lakeside.altitude(16000,0),1619);
 const plaza=hanoi.point(105.83560,21.03695);
 const square=relief.prepare(hanoi,{elevation:(x,z)=>16+.04*(x-plaza.x),elevationWeight:()=>1});
 for(const [x,z] of [[0,0],[45,70],[-65,-85]]){

@@ -5,13 +5,7 @@ function createGroundedWalkways(T,{cx,cz,step,height,ground,wet,needsDetail}){
   const tops=[],coping=[],frontages=[],faces=[],cells=new Map();
   const cell=(x,z)=>Math.floor(x/16)+','+Math.floor(z/16);
   function face(ax,az,bx,bz,lift){
-    const dx=bx-ax,dz=bz-az,breaks=[0,1];
-    for(const [start,delta] of [[cx+ax,dx],[cz+az,dz],[cx+cz+ax+az,dx+dz]]){
-      if(Math.abs(delta)<.0001)continue;
-      const end=start+delta;
-      for(let v=(Math.floor(Math.min(start,end)/step)+1)*step;v<Math.max(start,end);v+=step)breaks.push((v-start)/delta);
-    }
-    breaks.sort((a,b)=>a-b);
+    const dx=bx-ax,dz=bz-az,breaks=terrainEdgeBreaks(cx+ax,cz+az,cx+bx,cz+bz,step);
     let x=ax,z=az,h=height(x,z)+lift,low=Math.min(h-.15,ground(x,z)-.20);
     for(let i=1;i<breaks.length;i++){
       if(breaks[i]-breaks[i-1]<.000001)continue;

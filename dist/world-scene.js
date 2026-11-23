@@ -825,13 +825,22 @@
               const rZone=regional?.zone,rShop=rZone?.shops[type%rZone.shops.length];
               const twoStory=rShop?rShop.upstairs:upstairs.has(shopTypes[type]);
               const h=(twoStory?6.7:3.65)+random()*.62;
-              registerObstacle({id:c.key,kind:'building',x:hx,z:hz,fx:s.fx,fz:s.fz,w:width/2,d:depth/2,height:h});
               // Local +Z faces the road, with the façade just outside the wall.
               const sx=-s.nx*sign,sz=-s.nz*sign,rot=Math.atan2(sx,sz);
-              buildingBase=localGround(hx,hz);
-              const foot=Math.abs(localGround(hx+width*.5,hz)-localGround(hx-width*.5,hz))+
-                Math.abs(localGround(hx,hz+depth*.5)-localGround(hx,hz-depth*.5));
-              if(foot>.14)instance('concrete',unitBox,hx,-foot*.43,hz,width+.06,foot*.9+.10,depth+.06,rot);
+              const corners=[[-1,-1],[1,-1],[1,1],[-1,1]].map(([u,v])=>
+                [cx+hx+s.fx*u*width/2+sx*v*depth/2,cz+hz+s.fz*u*width/2+sz*v*depth/2]);
+              let low=localGround(hx,hz),high=low;
+              for(let i=0;i<4;i++){
+                const [ax,az]=corners[i],[bx,bz]=corners[(i+1)%4];
+                for(const t of terrainEdgeBreaks(ax,az,bx,bz)){
+                  const bed=terrain.ground(ax+(bx-ax)*t,az+(bz-az)*t);
+                  low=Math.min(low,bed);high=Math.max(high,bed);
+                }
+              }
+              buildingBase=high;
+              const foot=high-low+.23;
+              instance('concrete',unitBox,hx,.02-foot/2,hz,width,foot,depth,rot);
+              registerObstacle({id:c.key,kind:'building',x:hx,z:hz,fx:s.fx,fz:s.fz,w:width/2,d:depth/2,baseY:low-.21,height:h+foot});
               const wallPal=rZone?rZone.walls:[0xe9d4b5,0xc7d6bb,0xf3dfb0];
               const roofPal=rZone?rZone.roofs:[0x989d98,0xaf846d,0x99aeb0];
               const gablePal=rZone?rZone.gables:[0xa26148,0x825947,0x7b8688];
@@ -851,9 +860,10 @@
               if(pitched)instance('gable',gable,hx,h+.14,hz,width+.5,width*(rZone?.forcePitched?.29:.24),depth+.59,rot,gablePal[type%gablePal.length]);
               walks.porch(s,hx+sx*depth/2,hz+sz*depth/2,width+.35);
               const porch=depth/2+.72,awningY=h*material[frontKey].userData.awningHeightRatio;
-              const postHeight=awningY-.065;
+              const postX=hx+sx*porch+s.fx*width*.45,postZ=hz+sz*porch+s.fz*width*.45;
+              const postTop=awningY-.065,postFoot=Math.min(postTop-.1,localGround(postX,postZ)-buildingBase-.21);
               instance('awning',unitBox,hx+sx*porch,awningY,hz+sz*porch,width+.4,.13,1.8,rot,awningPal[type%awningPal.length]);
-              instance('concrete',unitPole,hx+sx*porch+s.fx*width*.45,postHeight/2,hz+sz*porch+s.fz*width*.45,.09,postHeight,.09);
+              instance('concrete',unitPole,postX,(postFoot+postTop)/2,postZ,.09,postTop-postFoot,.09);
               if(type%3===0&&!pitched)instance('steel',unitPole,hx,h+.65,hz,1.2,1.0,1.2);
               buildingBase=null;
             }else{

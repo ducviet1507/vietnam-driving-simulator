@@ -64,7 +64,7 @@
     function fixture(x,z,create){
       const start=group.children.length;
       let mounted=[];
-      foundations.fixture(ground=>ground(x,z),()=>{
+      return foundations.fixture(ground=>ground(x,z),()=>{
         create();
         mounted=group.children.slice(start).map(mesh=>[mesh,mesh.position.y]);
       },height=>{for(const [mesh,y] of mounted)mesh.position.y=y+height;});
@@ -129,13 +129,16 @@
       }
       box(0xafa99a,x,.62+floors*pitch,z,w-.15,.17,d-.2);
     }
-    for(const [name,x,z,w,d,floors] of blocks)fixture(x,z,()=>{
-      block(x,z,w,d,floors);
-      if(['C9','C3','C4','C5','C10'].includes(name))
-        lettering(name,'#93392d',x+w/2-.65,3.1,z+d/2+.53,3.1,1.25);
-    });
+    for(const [name,x,z,w,d,floors] of blocks){
+      const anchor=fixture(x,z,()=>{
+        block(x,z,w,d,floors);
+        if(['C9','C3','C4','C5','C10'].includes(name))
+          lettering(name,'#93392d',x+w/2-.65,3.1,z+d/2+.53,3.1,1.25);
+      });
+      foundations.skirt(x,z,w+.49,d+.49,0,anchor);
+    }
 
-    fixture(-36,-148,()=>{
+    const hall=fixture(-36,-148,()=>{
       // Set the classrooms behind the open galleries. The two wings stop at
       // the central hall so daylight is visible through the ground-floor passage.
       for(const [x,w] of [[-80.5,67],[13.5,77]]){
@@ -201,6 +204,9 @@
       stamp(round,trim,-36,20,-149,.065,7.5,.065);wavingFlag(2.8,1.85,-36,23.73,-149);
     });
 
+    for(const [x,z,w,d] of [[-80.5,-149,67,14],[13.5,-149,77,14],[-28.75,-152,6.4,28.1],[-46.2,-152,1.6,24],[-36,-135,22,2.7]])
+      foundations.skirt(x,z,w,d,.27,hall);
+
     fixture(-170,-16,()=>{
       for(let i=0;i<4;i++){
         const y=.55+i*3.35,s=i%2?1:-1;
@@ -211,7 +217,7 @@
       }
     });
 
-    fixture(70,137,()=>{
+    const library=fixture(70,137,()=>{
       // A bowed white front with six ranks of dark ribbon windows. The open
       // upper loggia and the clock canopy stand in front of the glazing.
       facade(70,145,81,36,.5,9,3.55);
@@ -276,11 +282,16 @@
         g.beginPath();g.moveTo(-40,-34);g.lineTo(0,0);g.lineTo(55,-60);g.stroke();g.restore();
       });
       panel(clock,70,9.75,106.91,4.1,4.1,Math.PI,true);
+    });
+    foundations.skirt(70,145,81,36,.5,library);
+    foundations.skirt(70,135,54,36,.5,library);
+    const signBase=fixture(70,92,()=>{
       box(0x453e3b,70,.15,92,5.6,.3,.92);
       lettering('HUST','#c32233',70,.87,91.94,5.35,1.56,Math.PI);
     });
 
-    fixture(gateX,gateZ,()=>{
+    foundations.skirt(70,92,5.6,.92,.02,signBase);
+    const gate=fixture(gateX,gateZ,()=>{
       // The ribs fall all the way to the footings. The concrete shell is
       // wider along the direction of travel at the feet than at the crown.
       function archShell(flange){
@@ -322,9 +333,16 @@
         for(let i=0;i<9;i++)box(0x263e39,gateX-.11,2.32,gateZ+side*(8.4+i*.24),.09,1.3,.055);
         box(0x344b44,gateX-.1,2.97,gateZ+side*9.4,.1,.10,2.18);
       }
+    });
+    for(const side of [-1,1]){
+      foundations.skirt(gateX,gateZ+side*4.41,2.72,.87,.02,gate);
+      for(const offset of [5,10.6])foundations.skirt(gateX,gateZ+side*offset,.82,.44,.02,gate);
+    }
+    const guardhouse=fixture(-165,57,()=>{
       box(0xd2c4aa,-165,1.35,57,5.2,2.7,3);
       box(blue,-165,1.6,58.52,4.4,1.05,.08);box(stone,-165,2.89,57,6,.3,3.8);
     });
+    foundations.skirt(-165,57,5.2,3,.02,guardhouse);
 
     fixture(-34.4,-61.9,()=>{
       for(const [r,y,h,color] of [[8.6,.05,.34,trim],[7.85,.26,.37,stone],[7.5,.47,.09,0x71a6a6]])

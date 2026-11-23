@@ -4,7 +4,7 @@ import {runInNewContext} from 'node:vm';
 import {createRequire} from 'node:module';
 
 const context={ClipperLib:createRequire(import.meta.url)('../../dist/clipper.min.js')};
-for(const file of ['surface-materials','sidewalk-contours','grounded-walkways']){
+for(const file of ['surface-materials','sidewalk-contours','vietnam-relief','grounded-walkways']){
   runInNewContext(readFileSync(new URL('../../dist/'+file+'.js',import.meta.url),'utf8'),context);
 }
 function road(ax,az,bx,bz,w,walkWidth=1.85){

@@ -528,6 +528,15 @@ function createTourDistrict(T,scene,plaster,structures,osmBuildings,nightLights)
     const pieces=parts.rows(graph,cx,cz);
     const replaced=new Set(pieces.flatMap(row=>[row[6]?.parent,row[6]?.sourceId]).filter(Boolean));
     const shells=[...(graph===loadedGraph?loaded:[]),...osmBuildings.rows(graph,cx,cz)];
+    const families=new Map();
+    for(const row of pieces){
+      const parent=row[6]?.parent;
+      if(!parent)continue;
+      if(!families.has(parent))families.set(parent,[]);
+      families.get(parent).push(row[4]);
+    }
+    // Use the complete parent footprint even when a sibling is outside the view.
+    for(const row of shells)if(families.has(row[0]))families.set(row[0],[row[4]]);
     const surveyed=[...pieces,...shells.filter(row=>!replaced.has(row[0]))];
     const monument=window.VanMieuSurvey;
     if(monument?.byRef){
@@ -659,6 +668,21 @@ function createTourDistrict(T,scene,plaster,structures,osmBuildings,nightLights)
     const ids=new Set(),surveyedIds=new Set(surveyed.map(row=>row[0]));
     if(!footprints.has(graph))footprints.set(graph,new WeakMap());
     const projected=footprints.get(graph);
+    const revision=terrainRevision??Symbol(),familyLevels=new Map();
+    function fitFootprint(outline){
+      if(outline.terrainRevision===revision)return outline.foundation;
+      const {minX,maxX,minZ,maxZ}=outline.box;
+      let level=ground((minX+maxX)/2,(minZ+maxZ)/2);
+      outline.profiles=outline.rings.map(ring=>ring.map((a,j)=>{
+        const b=ring[(j+1)%ring.length];
+        return terrainEdgeBreaks(a.x,a.y,b.x,b.y).slice(0,-1).map(t=>{
+          const x=a.x+(b.x-a.x)*t,z=a.y+(b.y-a.y)*t,h=ground(x,z);
+          level=Math.max(level,h);
+          return {x,z,h};
+        });
+      }));
+      outline.terrainRevision=revision;outline.foundation=level;return level;
+    }
     const [lon,lat]=graph.geo(cx,cz);
     const pins=VietnamTourism.nearby(lon,lat,720/graph.mx,720/graph.my)
       .filter(p=>p.id.startsWith('osm-node-')&&p.kind==='Công trình tín ngưỡng')
@@ -687,19 +711,15 @@ function createTourDistrict(T,scene,plaster,structures,osmBuildings,nightLights)
       ids.add(id);
       // Keep floors level, and seat the plinth against the terrain around the
       // entire footprint, including courtyard edges and long downhill walls.
-      if(terrainRevision===undefined||outline.terrainRevision!==terrainRevision){
-        let foundation=ground(x,z);
-        outline.profiles=rings.map(ring=>ring.map((a,j)=>{
-          const c=ring[(j+1)%ring.length],steps=Math.max(1,Math.ceil(a.distanceTo(c)/12)),samples=[];
-          for(let k=0;k<steps;k++){
-            const t=k/steps,px=a.x+(c.x-a.x)*t,pz=a.y+(c.y-a.y)*t,h=ground(px,pz);
-            foundation=Math.max(foundation,h);samples.push({x:px,z:pz,h});
-          }
-          return samples;
-        }));
-        outline.foundation=foundation;outline.terrainRevision=terrainRevision;
+      baseY=fitFootprint(outline);
+      if(part?.parent){
+        if(!familyLevels.has(part.parent)){
+          const members=families.get(part.parent).map(raw=>projectFootprint(raw,graph,projected)).filter(Boolean);
+          familyLevels.set(part.parent,members.length?Math.max(...members.map(fitFootprint)):baseY);
+        }
+        baseY=familyLevels.get(part.parent);
       }
-      baseY=outline.foundation+(survey?.platformHeight||0);
+      baseY+=survey?.platformHeight||0;
       const profiles=outline.profiles;
       let seed=0;for(let i=0;i<id.length;i++)seed=(Math.imul(seed,31)+id.charCodeAt(i))>>>0;
       const warehouse=/warehouse|industrial|shed|garage|roof|barn/.test(kind);
