@@ -2,6 +2,12 @@ import {readdir, readFile, writeFile} from "node:fs/promises";
 import path from "node:path";
 
 const origin = "https://vivu3d.com";
+const googleTag = `<script async src="https://www.googletagmanager.com/gtm.js?id=GTM-KLPTH9M8"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+</script>`;
 
 // The source pages also run under a plain file server. Use clean URLs in the
 // hosted copy, including links created by the game's JavaScript.
@@ -16,14 +22,15 @@ export async function preparePageUrls(client) {
   for (const filename of files.filter(name => /\.(html|js)$/.test(name))) {
     const file = path.join(client, filename);
     const source = await readFile(file, "utf8");
+    let hosted = source.replace(localPage, (match, quote, name) =>
+      byFilename.has(name) ? quote + byFilename.get(name) : match);
     if (byFilename.has(filename)) {
       const canonical = origin + byFilename.get(filename);
       if (!source.includes('<link rel="canonical" href="' + canonical + '">')) {
         throw new Error("Missing canonical for " + filename);
       }
+      if (!hosted.includes(googleTag)) hosted = hosted.replace("<head>", "<head>\n" + googleTag);
     }
-    const hosted = source.replace(localPage, (match, quote, name) =>
-      byFilename.has(name) ? quote + byFilename.get(name) : match);
     if (hosted !== source) await writeFile(file, hosted);
   }
 
