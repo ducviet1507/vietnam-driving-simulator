@@ -174,20 +174,22 @@ def urban_surface(ground):
                          out=np.zeros_like(ground), where=weights > 0)
     high = ndimage.maximum_filter(np.where(valid, ground, -np.inf), size=5)
     low = ndimage.minimum_filter(np.where(valid, ground, np.inf), size=5)
-    rugged = smoothstep(high - low, 22, 95)
-    terrain = np.where(valid, smoothed + rugged * (np.where(valid, ground, 0) - smoothed), smoothed)
-    return terrain, weights > 0, rugged
+    # The coarse DTM can include the hillside in a street at its foot. Use
+    # the finer game terrain when relief across the ~1 km window reaches 68 m.
+    # Allow a one-cell margin for streets beside the hill, then feather it.
+    level = 1 - smoothstep(high - low, 16, 68)
+    level = ndimage.gaussian_filter(ndimage.minimum_filter(level, size=3), 1, radius=3)
+    return smoothed, weights > 0, level
 
 
 def bake_tile(tile, covers, grid, work, output):
     urban = cover_weight(tile, covers)
-    if not np.any(urban[CORE]):
+    if not np.any(np.rint(urban[CORE] * 255)):
         return "noUrban", 0
-    terrain, available, rugged = urban_surface(sample_ground(tile, grid, work))
-    # Preserve the shape of genuine ridges and keep the DSM/DTM transition soft.
-    influence = np.rint(urban * (1 - .75 * rugged) * 255).astype("uint8")
+    terrain, available, level = urban_surface(sample_ground(tile, grid, work))
+    influence = np.rint(urban * level * 255).astype("uint8")
     if not np.any(influence[CORE]):
-        return "noUrban", 0
+        return "localRelief", 0
     missing = np.count_nonzero((influence[CORE] > 0) & ~available[CORE])
     influence[~available] = 0
     if not np.any(influence[CORE]):
@@ -243,7 +245,7 @@ def build(work, output, workers):
     if jobs:
         with ProcessPoolExecutor(max_workers=workers) as pool:
             list(pool.map(fetch_block, jobs))
-    groups = {k: [] for k in ("tiles", "noUrban", "noElevation")}
+    groups = {k: [] for k in ("tiles", "noUrban", "localRelief", "noElevation")}
     partial = {}
     with ThreadPoolExecutor(max_workers=workers) as pool:
         results = pool.map(lambda tile: bake_tile(tile, covers, grid, work, output), tiles)
@@ -260,7 +262,8 @@ def build(work, output, workers):
     (output / "index.json").write_text(json.dumps(manifest, separators=(",", ":")) + "\n", encoding="ascii")
     print(f"Verified {len(tiles)} half-degree tiles and all shared edges: "
           f"{len(present)} with urban terrain, {len(groups['noUrban'])} without urban footprint, "
-          f"{len(groups['noElevation'])} missing urban elevation, {len(no_cover)} without WorldCover. "
+          f"{len(groups['localRelief'])} using local relief, {len(groups['noElevation'])} "
+          f"missing urban elevation, {len(no_cover)} without WorldCover. "
           f"{sum(partial.values())} urban nodes lack elevation.", flush=True)
 
 
