@@ -71,12 +71,14 @@ for(let i=0;i<12;i++){
  const path=kind==='city-taxi'?'streetscape/city-taxi.glb':'traffic/'+kind+'.glb';
  if(!civilianAssets.has(path))civilianAssets.set(path,TrafficModels.load.loadAsync(path));
  const cruise=oncoming?-13:9+i%4;
- const npc={bike:kind==='motor-scooter',d:95+i*174,lane:(oncoming?-3.65:(i%2?3.8:2.45))*roadHalfWidth/6,v:cruise,cruise,model:null};roadTraffic.push(npc);
  civilianAssets.get(path).then(({scene:base})=>{
+   const d=95+i*174+cruise*(state?.time||0);
+   if(state?.mode==='drive'&&Math.abs(d-state.d)<45)return;
    const mesh=base.clone(true),bounds=new T.Box3().setFromObject(mesh);
    const scale=(kind==='motor-scooter'?1.9:kind==='city-taxi'?4.7:3.95)/(bounds.max.z-bounds.min.z);
    mesh.scale.setScalar(scale);mesh.traverse(n=>{if(n.isMesh)n.castShadow=true;});
-   npc.model=mesh;scene.add(mesh);placeCivilian(npc);
+   const npc={bike:kind==='motor-scooter',d,lane:(oncoming?-3.65:(i%2?3.8:2.45))*roadHalfWidth/6,v:cruise,cruise,model:mesh};
+   scene.add(mesh);placeCivilian(npc);roadTraffic.push(npc);
  }).catch(()=>{});
 }
 function placeCivilian(n){

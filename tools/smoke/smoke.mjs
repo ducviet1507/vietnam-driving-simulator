@@ -5,6 +5,7 @@ import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {chromium} from 'playwright-core';
 import {checkLearnerQuiz} from './learner-quiz.mjs';
+import {checkExperience} from './experience.mjs';
 
 const client = fileURLToPath(new URL('../../dist/client/', import.meta.url));
 const types = {'.js':'text/javascript', '.mjs':'text/javascript', '.css':'text/css', '.json':'application/json',
@@ -413,6 +414,7 @@ try {
     assert.ok(images.every(description=>typeof description==='string'&&description.length>15));
     console.log('PASS theory exam answers, grades and includes 318 image descriptions');
   });
+  await check(false,page=>checkExperience(page,base));
   await check(true, async page=>{
     for (const route of ['/cup','/yard','/road-exam','/streets','/?intro=turtle']) {
       await page.goto(new URL(route,base).href,{waitUntil:'domcontentloaded'});

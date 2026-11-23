@@ -59,7 +59,7 @@ function save(){
  if(guide?.route.id||!activeTrip||!player||!roads||car.flood)return;
  const [lon,lat]=roads.geo(car.x,car.z);
  const navigation=guide && guide.timeMs===null && customSaveKey?{key:customSaveKey,progress:guide.progress,elapsed:Math.max(0,performance.now()-guideStarted)}:undefined;
- try{localStorage.setItem('taylai.world.trip',JSON.stringify({lon,lat,navigation,label:source[0],destination:source[3]?.id,distance,passes,dir:player.dir,edge:player.edge.id,yaw:car.yaw,origin:[roads.lon,roads.lat]}));}catch{}
+ try{localStorage.setItem('taylai.world.trip',JSON.stringify({lon,lat,navigation,label:source[0],destination:source[3]?.id,distance,passes,dir:player.dir,edge:player.edge.id,yaw:car.yaw,origin:[roads.lon,roads.lat]}));return true;}catch{return false;}
 }
 function parkOnRoad(){
  const p=roads.sample(player,stance());car.flood=null;car.wading=null;car.accessLane=false;car.offroad=false;car.edge=player.edge;car.deckLift=roads.roadLevel(player.edge,player.s);DriveBody.reset(car);Object.assign(car,p);car.parked=true;cooldown=1;
@@ -785,11 +785,14 @@ function startCustomClock(){
    customSaveKey=key;
  }catch{}
 }
-function prepareDrive(route){
+function setDepartureUrl(key,value){
  const address=new URL(location.href);
- for(const key of ['intro','search','collection','landmark','pass','plan','drive','view'])address.searchParams.delete(key);
- if(route.id)address.searchParams.set('drive',route.id);
- history.replaceState(null,'',address);
+ for(const param of ['intro','search','collection','landmark','pass','pin','plan','drive','view','goc'])address.searchParams.delete(param);
+ if(key)address.searchParams.set(key,value);
+ if(address.href!==location.href)history.replaceState(null,'',address);
+}
+function prepareDrive(route){
+ setDepartureUrl(route.id?'drive':null,route.id);
  for(const id of ['journeySetup','rest','guidedArrival'])if($(id).open)$(id).close();
  return startAt([route.startLabel,...route.start],null,route);
 }
@@ -830,14 +833,11 @@ async function begin(learner=false){
  }
  $('openingStill').hidden=true;
  activeTrip=true;tripStart=distance;
- const address=new URL(location.href);
- if(address.searchParams.has('intro')){
-   address.searchParams.delete('intro');
-   history.replaceState(null,'',address);
- }
  if(guide?.route.id){guideStarted=performance.now();boardFor(guide.route).start(tripVehicleChoice(car.model));}
- else if(guide){startCustomClock();save();}
- else worldBoard.start(tripVehicleChoice(car.model));
+ else{
+   if(guide)startCustomClock();else worldBoard.start(tripVehicleChoice(car.model));
+   if(save())setDepartureUrl();
+ }
  $('raceMode').hidden=Boolean(guide);
  $('scoreBoard').hidden=Boolean(guide&&!guide.route.id);
  $('scoreBoard').textContent=guide?'Bảng hạng · '+guide.route.title:'Xem hạng và gửi thành tích';
@@ -1334,9 +1334,14 @@ function searchLoading(){
  $('findPlace').removeAttribute('aria-activedescendant');$('findPlace').setAttribute('aria-expanded','false');
  $('resultCount').textContent='Đang tìm…';$('morePlaces').hidden=$('retrySearch').hidden=true;
 }
-function samePlace(a,b){return a[0]===b[0]&&a[1]===b[1]&&a[2]===b[2];}
+function samePlace(a,b){return !!b&&a[0]===b[0]&&a[1]===b[1]&&a[2]===b[2];}
 function choosePlace(place,focus=false){
- pendingPlace=place;const site=place[3];
+ pendingPlace=place;
+ if(!place){
+   activeResult=-1;$('travel').disabled=true;$('picked').textContent='';$('racePass').hidden=true;
+   $('findPlace').removeAttribute('aria-activedescendant');drawAtlas();return;
+ }
+ const site=place[3];
  if(focus)focusedPin=place;
  activeResult=matches.findIndex(p=>samePlace(p,place));$('travel').disabled=!indexData||!!site?.islands;
  $('travel').textContent=atlasChoice?'Dùng làm '+atlasChoice.label:site?.stops?'Mở tuyến tham quan':site?.visitOnArrival?'Ngắm '+site.name:
@@ -1364,7 +1369,8 @@ function placeList(keepScroll=false){
  if(filter==='all')matches.push(...featured);
  renderPlaces(matches.length,keepScroll);
  $('resultCount').textContent=matches.length.toLocaleString('vi-VN')+(filter==='heritage'?' tuyến tham quan':' điểm đến');
- choosePlace(pendingPlace);
+ const keep=pendingPlace&&(filter==='all'||focusedPin===pendingPlace||matches.some(p=>samePlace(p,pendingPlace)));
+ choosePlace(keep?pendingPlace:matches[0]);
 }
 function showSearchResults(places,status){
  if(!$('atlas').open)return;
@@ -1376,7 +1382,7 @@ function showSearchResults(places,status){
    'Không tìm thấy'+suffix+'. Thử tên đường, địa danh hoặc thêm tỉnh thành.';
  $('retrySearch').hidden=!status.error;
  if(places.length){choosePlace(places.find(p=>focusedPin&&samePlace(p,focusedPin))||places[0]);}
- else{activeResult=-1;$('travel').disabled=true;$('picked').textContent='';$('findPlace').removeAttribute('aria-activedescendant');drawAtlas();}
+ else choosePlace(null);
 }
 function renderPlaces(count,keepScroll=false){
  const list=$('places'),filter=$('tourFilter').value;
@@ -1462,7 +1468,7 @@ function drawAtlas(){
  g.font='600 11px Segoe UI';g.fillStyle='#f5ecd2';
  for(const p of [featured[0],featured[2],featured[1]]){const [x,y]=at(p[1],p[2]);if(x<0||x>w||y<0||y>h)continue;g.fillRect(x-1.5,y-1.5,3,3);g.fillText(p[0],clamp(x+5,2,w-g.measureText(p[0]).width-2),y-4);}
  for(const place of archipelagoPlaces)drawArchipelago(g,place,at,w,h);
- if(pendingPlace[3]?.islands)return;
+ if(!pendingPlace||pendingPlace[3]?.islands)return;
  const [x,y]=at(pendingPlace[3]?.lon??pendingPlace[1],pendingPlace[3]?.lat??pendingPlace[2]);g.strokeStyle='#fff';g.fillStyle='#ff713c';g.lineWidth=1.6;g.beginPath();g.arc(x,y,4.5,0,Math.PI*2);g.fill();g.stroke();
 }
 function setAtlasView(map){
@@ -1528,7 +1534,14 @@ $('country').onclick=e=>{
 };
 $('travel').onclick=()=>{
  if(atlasChoice){const {accept}=atlasChoice;atlasChoice=null;accept(pendingPlace);$('atlas').close();return;}
- originatedInPause=false;$('atlas').close();if($('journeySetup').open)$('journeySetup').close();if(indexData)startAt(pendingPlace);};
+ originatedInPause=false;$('atlas').close();if($('journeySetup').open)$('journeySetup').close();
+ if(indexData&&pendingPlace){
+   const site=pendingPlace[3];
+   if(site?.id)setDepartureUrl(site.km?'pass':'landmark',site.id);
+   else setDepartureUrl('pin',pendingPlace[2].toFixed(6)+','+pendingPlace[1].toFixed(6));
+   startAt(pendingPlace);
+ }
+};
 window.addEventListener('resize',()=>{if($('atlas').open)drawAtlas();});
 async function fetchJSON(path){const r=await fetch(path);if(!r.ok)throw Error('Chưa tải được dữ liệu đường.');return r.json();}
 (async()=>{

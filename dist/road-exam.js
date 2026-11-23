@@ -592,6 +592,14 @@ function reset(){
  $('route').disabled=exam;$('start').textContent='Nhận lệnh xuất phát';$('start').disabled=false;$('result').close();$('submit').hidden=true;hud();
 }
 const changes=[{at:230,up:true},{at:566,up:false},{at:route.junction+150,up:true},{at:route.finish-310,up:false}];
+function shiftCommand(s,task){
+ const speed=s.v*3.6;
+ const canUp=s.gear<gearCaps.length-1&&speed+5<=Math.min(50,gearCaps[s.gear+1]);
+ const canDown=s.gear>1&&speed>=5;
+ if(!canUp&&!canDown)return null;
+ const up=canUp&&(task.up||!canDown);
+ return {at:task.at,up,gear:s.gear+(up?1:-1),speed:up?Math.ceil(speed+5):Math.floor(speed-5),complete:false};
+}
 function feedback(line){message=line;feedbackUntil=state.time+5;}
 function announce(line){
  if(!sound)return;
@@ -677,13 +685,14 @@ function update(dt){
  if(s.mode!=='drive')return;
  const task=changes[s.nextCommand];
  if(task&&!s.command&&s.d>=task.at){
-    s.command={...task,baseGear:s.gear,baseSpeed:s.v*3.6,complete:false};
-    announce(task.up?'Tăng một số, tăng tốc độ.':'Giảm một số, giảm tốc độ.');
+    s.command=shiftCommand(s,task);
+    if(s.command)announce(s.command.up?'Tăng một số, tăng tốc độ.':'Giảm một số, giảm tốc độ.');
+    else s.nextCommand++;
  }
  const c=s.command;
  if(c){
    const direction=c.up?1:-1;
-   if(direction*(s.gear-c.baseGear)>=1&&direction*(s.v*3.6-c.baseSpeed)>=5&&!c.complete){c.complete=true;feedback('Đạt hiệu lệnh đổi số và tốc độ.');}
+   if(!c.complete&&direction*(s.gear-c.gear)>=0&&direction*(s.v*3.6-c.speed)>=0){c.complete=true;feedback('Đạt hiệu lệnh đổi số và tốc độ.');}
    if(s.d>=c.at+100){
      if(!c.complete)fault('shift'+s.nextCommand,'Thiếu thao tác '+(c.up?'tăng':'giảm')+' số hoặc tốc độ trong 100 m',5);
      s.command=null;s.nextCommand++;
@@ -704,9 +713,9 @@ function instruction(){
  if(s.d<15)return 'Báo trái, khởi hành từ số 1 và lên số 3 trong 15 m.';
  if(s.d>=route.finish-35)return 'Báo phải, dừng tại lề phải từ mốc '+route.finish+' m, về N rồi kéo phanh tay.';
  if(s.d>route.finish-115)return 'Chuẩn bị kết thúc · còn '+Math.ceil(route.finish-35-s.d)+' m đến lệnh báo phải.';
- if(s.command&&!s.command.complete){const c=s.command,sign=c.up?1:-1;return (c.up?'Tăng':'Giảm')+' đến số '+clamp(c.baseGear+sign,0,5)+', đạt '+Math.max(0,Math.round(c.baseSpeed+sign*5))+' km/h · còn '+Math.ceil(c.at+100-s.d)+' m.';}
+ if(s.command&&!s.command.complete){const c=s.command;return (c.up?'Tăng':'Giảm')+' đến số '+c.gear+', đạt '+c.speed+' km/h · còn '+Math.ceil(c.at+100-s.d)+' m.';}
  if(Math.abs(s.d-route.junction)<75)return (route.sign>0?'Báo phải, rẽ phải':'Báo trái, rẽ trái')+' theo tuyến tại '+route.turn.toLowerCase()+'.';
- const upcoming=changes[s.nextCommand];if(upcoming&&!s.command&&upcoming.at-s.d<65)return 'Chuẩn bị nhận lệnh '+(upcoming.up?'tăng':'giảm')+' số và tốc độ.';
+ const upcoming=changes[s.nextCommand];if(upcoming&&!s.command&&upcoming.at-s.d<65)return 'Chuẩn bị nhận lệnh đổi số và tốc độ.';
  return 'Đi đúng làn, theo đường trên bản đồ · giới hạn 50 km/h.';
 }
 function hud(){
@@ -782,6 +791,7 @@ function render(now){
 $('sound').textContent=sound?'Tắt âm':'Bật âm';
 if(!arcade){
 $('start').onclick=start;$('again').onclick=reset;$('submit').onclick=submit;
+$('result').addEventListener('close',()=>{if(state.mode==='done'&&!(exam&&parent!==window))reset();});
 $('camera').onclick=()=>{inside=!inside;$('camera').textContent=inside?'Góc tài xế':'Góc sau xe';};
 $('sound').onclick=()=>{sound=driveAudio.toggle();if(!sound)window.speechSynthesis?.cancel();$('sound').textContent=sound?'Tắt âm':'Bật âm';};
 const actions={b:'belt',h:'hand',q:'leftSignal',e:'rightSignal',z:'downGear',x:'upGear'};

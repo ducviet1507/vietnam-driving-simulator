@@ -4,8 +4,7 @@
   const params = new URLSearchParams(location.search);
   const exam = params.get('mode') === 'exam';
   const bank = new Map(window.driveBank.map(question => [question.id, question]));
-  let license, sessionName, state;
-  function save() { try { localStorage.setItem(sessionName, JSON.stringify(state)); } catch {} }
+  let license, sessionName, state, storageWritable=true;
   function valid(s) {
     return s && Array.isArray(s.ids) && s.ids.length === license.count && new Set(s.ids).size === license.count &&
       s.ids.every(id => license.ids.has(id)&&bank.has(id)) && s.ids.filter(id => license.critical.has(id)).length === 1 &&
@@ -13,10 +12,48 @@
       Array.isArray(s.flags) && s.flags.length === license.count && Number.isInteger(s.index) && s.index >= 0 && s.index < license.count &&
       Number.isFinite(s.deadline) && ['running','done'].includes(s.status);
   }
+  function readPaper() {
+    if(!storageWritable)return null;
+    try {const s=JSON.parse(localStorage.getItem(sessionName));if(valid(s))return s;}catch{}
+    return null;
+  }
+  function samePaper(a,b) {
+    if(!a||!b)return a===b;
+    return a.deadline===b.deadline&&a.ids.every((id,i)=>id===b.ids[i]);
+  }
+  function synchronize() {
+    const latest=readPaper();
+    if(!latest)return;
+    if(samePaper(latest,state)&&latest.status===state.status)latest.index=state.index;
+    if(JSON.stringify(latest)===JSON.stringify(state))return;
+    if($('confirm').open&&(!samePaper(latest,state)||latest.status==='done'))$('confirm').close();
+    state=latest;display();tick();
+  }
+  // Apply just this action to the newest copy. Each tab keeps the question it is viewing.
+  function editPaper(change) {
+    const key=sessionName,paper=state,status=state?.status,index=state?.index;
+    function apply() {
+      if(key!==sessionName)return;
+      const latest=readPaper()||state;
+      if(!samePaper(paper,latest)||latest?.status!==status){synchronize();return;}
+      state=latest;
+      if(state)state.index=index;
+      if(status==='running'&&Date.now()>=state.deadline)complete(true);
+      else change();
+      try {localStorage.setItem(key,JSON.stringify(state));storageWritable=true;}catch{storageWritable=false;}
+      display();tick();
+    }
+    if(navigator.locks)return navigator.locks.request(key,apply).catch(error=>{
+      if(error.name!=='SecurityError')throw error;
+      apply();
+    });
+    apply();
+  }
   function start() {
     const ids=driveLicenses.drawExam(license.code);
-    state = {ids,answers:Array(ids.length).fill(null),flags:Array(ids.length).fill(false),index:0,status:'running',deadline:Date.now()+license.minutes*60000};
-    save(); display(); tick();
+    return editPaper(()=>{
+      state = {ids,answers:Array(ids.length).fill(null),flags:Array(ids.length).fill(false),index:0,status:'running',deadline:Date.now()+license.minutes*60000};
+    });
   }
   function grade() {
     let score = 0, criticalOK = true;
@@ -27,26 +64,24 @@
     });
     return {score,criticalOK,passed:score >= license.pass && criticalOK};
   }
-  function finish(expired) {
-    if (!state || state.status !== 'running') return;
-    state.status='done'; state.expired=expired; state.index=0; save();
+  function complete(expired) {
+    state.status='done'; state.expired=expired; state.index=0;
     if ($('confirm').open) $('confirm').close();
     const result=grade();
     driveLicenses.rememberAnswers(license.code,state.ids.map((id,i)=>[id,state.answers[i]]));
     if (exam && parent !== window && location.origin !== 'null') {
       parent.postMessage({type:'drive-exam-result',part:'theory',passed:result.passed,score:result.score,maxScore:license.count}, location.origin);
     }
-    display();
   }
   function tick() {
     if (!state || state.status !== 'running') return;
     const seconds = Math.ceil((state.deadline-Date.now())/1000);
-    if(seconds<=0) { finish(true); return; }
+    if(seconds<=0) { editPaper(()=>complete(true)); return; }
     $('clock').textContent = Math.floor(seconds/60) + ':' + String(seconds%60).padStart(2,'0');
     $('clock').classList.toggle('urgent',seconds<=60);
   }
-  function go(index) {
-    state.index=index; save(); display();
+  async function go(index) {
+    await editPaper(()=>{state.index=index;});
     $('prompt').scrollIntoView({block:'nearest'});
   }
   function display() {
@@ -72,7 +107,10 @@
       button.disabled=done;button.setAttribute('aria-pressed', String(i===choice));
       if(reveal && (i===q.correct || i===choice))markQuizAnswer(button,i===q.correct);
       else if(i===choice)button.className='selected';
-      button.onclick=()=>{if(Date.now()>=state.deadline)return finish(true);state.answers[state.index]=i;save();display();$('choices').children[i].focus({preventScroll:true});};
+      button.onclick=async()=>{
+        await editPaper(()=>{state.answers[state.index]=i;});
+        $('choices').children[i]?.focus({preventScroll:true});
+      };
       return button;
     }));
     $('answerNote').textContent=reveal?(choice===null?'Đã bỏ trống. ':choice===q.correct?'Bạn đã chọn đúng. ':'Bạn đã chọn sai. ')+'Đáp án '+String.fromCharCode(65+q.correct)+'.':'';
@@ -94,8 +132,7 @@
   function selectLicense(code) {
     license=driveLicenses.get(code);
     sessionName='taylai.theory.'+license.code.toLowerCase()+'.2026.'+(exam?'exam':'practice')+'.'+(params.get('run')||'standalone');
-    state=null;
-    try {const stored=JSON.parse(localStorage.getItem(sessionName));if(valid(stored))state=stored;}catch{}
+    storageWritable=true;state=readPaper();
     $('examLicense').value=license.code;
     $('classPicker').hidden=exam;
     $('modeLabel').textContent=exam?'Thi liên hoàn · Hạng B':'Luyện đề hạng '+license.code;
@@ -109,15 +146,16 @@
   $('examLicense').onchange=e=>{driveLicenses.setStudyClass(e.target.value);selectLicense(e.target.value);};
   $('begin').onclick=$('newPaper').onclick=start;
   $('prev').onclick=()=>go(state.index-1);$('next').onclick=()=>go(state.index+1);
-  $('mark').onclick=()=>{state.flags[state.index]=!state.flags[state.index];save();display();};
+  $('mark').onclick=()=>editPaper(()=>{state.flags[state.index]=!state.flags[state.index];});
   $('submit').onclick=()=>{
     tick();if(state.status==='done')return;
     const blanks=state.answers.filter(a=>a===null).length;
     $('confirmText').textContent=blanks?'Còn '+blanks+' câu chưa trả lời. Bạn muốn nộp bài ngay?':'Bạn đã chọn đáp án cho cả '+license.count+' câu.';
     $('confirm').showModal();
   };
-  $('cancel').onclick=()=>$('confirm').close();$('send').onclick=()=>finish(Date.now()>=state.deadline);
+  $('cancel').onclick=()=>$('confirm').close();$('send').onclick=()=>editPaper(()=>complete(false));
   selectLicense(exam?'B':driveLicenses.studyClass());
   setInterval(tick,350);
-  document.addEventListener('visibilitychange',tick);
+  window.addEventListener('storage',e=>{if(e.key===sessionName)synchronize();});
+  document.addEventListener('visibilitychange',()=>{if(!document.hidden)synchronize();tick();});
 })();

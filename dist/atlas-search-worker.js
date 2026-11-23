@@ -27,8 +27,8 @@ function oneEdit(a,b){
   if(b.length>a.length)return a.slice(i)===b.slice(i+1);
   return a.slice(i+1)===b.slice(i+1)||(a[i]===b[i+1]&&a[i+1]===b[i]&&a.slice(i+2)===b.slice(i+2));
 }
-const contexts=new Map(),aliasesByText=new Map(),catalog=[],loaded=new Set();
-let extras=[],latest=null,loading=null,manifest=null,failure=false;
+const contexts=new Map(),aliasesByText=new Map(),catalog=[],loaded=new Set(),downloads=new Map();
+let extras=[],latest=null,loading=false,manifestRequest,addressRequest,manifest,failure=false;
 function makeEntry(row,ref=null){
   const [label,kind,x,y,locality,province,aliases]=row;
   const area=[locality,province].filter(Boolean).join(' · ');
@@ -123,37 +123,76 @@ function search(input){
     lon:e.lon,lat:e.lat,context:[e.locality,e.province].filter(Boolean).join(' · '),km,approx:rank===9}));
   postMessage({id:input.id,hits,total:found.length,near:p.near,anchor:anchorName,missingAnchor:!!p.anchor&&!anchorName,loading:needsCatalog&&!!loading,error:needsCatalog&&failure});
 }
-async function readShard(file){
+async function readCompressed(file){
   const response=await fetch('vn-search/'+file);
   if(!response.ok)throw Error('Search shard '+response.status);
   const bytes=new Uint8Array(await response.arrayBuffer());
-  const rows=bytes[0]===31&&bytes[1]===139?await new Response(new Blob([bytes]).stream().pipeThrough(new DecompressionStream('gzip'))).json():JSON.parse(new TextDecoder().decode(bytes));
-  for(const row of rows)catalog.push(makeEntry(row));
-  loaded.add(file);
+  return bytes[0]===31&&bytes[1]===139?new Response(new Blob([bytes]).stream().pipeThrough(new DecompressionStream('gzip'))).json():JSON.parse(new TextDecoder().decode(bytes));
 }
-async function loadCatalog(){
-  if(!manifest){
-    const r=await fetch('vn-search/index.json');if(!r.ok)throw Error('Search index '+r.status);manifest=await r.json();
+function getManifest(){
+  return manifestRequest??=fetch('vn-search/index.json').then(r=>{
+    if(!r.ok)throw Error('Search index '+r.status);
+    return r.json();
+  }).then(value=>manifest=value).catch(error=>{manifestRequest=null;throw error;});
+}
+async function candidateFiles(input){
+  const manifest=await getManifest(),{shards,addressIndex}=manifest;
+  if(input!==latest||loaded.size===shards.length)return [];
+  const query=plan(input.text);
+  if(!query.number||!addressIndex||shards.length>31)return shards;
+  // A numbered match must start with this house number, and all query words
+  // must occur in its name, aliases or area. Prefixes also cover partial typing.
+  let index;
+  try{
+    addressRequest??=readCompressed(addressIndex).catch(error=>{addressRequest=null;throw error;});
+    index=await addressRequest;
+  }catch{return shards;}
+  let mask=-1;
+  for(const word of query.tokens){
+    if(word.length>=2)mask&=index[word.slice(0,6)]??0;
   }
-  const remaining=manifest.shards.filter(k=>!loaded.has(k));
-  let next=0;
-  async function read(){while(next<remaining.length){const file=remaining[next++];try{await readShard(file);}catch{failure=true;}}}
-  await Promise.all(Array.from({length:Math.min(4,remaining.length)},read));
+  const files=shards.filter((file,i)=>(mask&(1<<i))&&!loaded.has(file));
+  // Short inputs such as “48 H” still span the country. Give a typist time
+  // to finish the street name before starting several waves of downloads.
+  if(files.length>4)await new Promise(resolve=>setTimeout(resolve,400));
+  return files;
 }
-function prepare(){
-  if(loading||(manifest&&loaded.size===manifest.shards.length))return;
-  failure=false;
-  loading=loadCatalog().catch(()=>{failure=true;}).finally(()=>{loading=null;if(latest)search(latest);});
+function loadShard(file){
+  if(!downloads.has(file)){
+    const request=readCompressed(file).then(rows=>{
+      const entries=rows.map(row=>makeEntry(row));
+      for(const entry of entries)catalog.push(entry);
+      loaded.add(file);
+    }).finally(()=>downloads.delete(file));
+    downloads.set(file,request);
+  }
+  return downloads.get(file);
+}
+async function prepare(input){
+  try{
+    const files=await candidateFiles(input);
+    let next=0;
+    async function read(){
+      while(input===latest&&next<files.length){
+        const file=files[next++];
+        if(loaded.has(file))continue;
+        try{await loadShard(file);}catch{if(input===latest)failure=true;}
+      }
+    }
+    await Promise.all(Array.from({length:Math.min(4,files.length)},read));
+  }catch{if(input===latest)failure=true;}
+  if(input===latest){loading=false;search(input);}
 }
 onmessage=({data})=>{
   if(data.type==='extras'){
     extras=data.entries.map(({row,id,custom,catalogName,mountain,heritage,featured,region})=>
       Object.assign(makeEntry(row,id),{custom,catalogName:catalogName?fold(catalogName):null,mountain,heritage,featured,region}));
     if(latest)search(latest);
-  }else if(data.type==='prepare'){prepare();}
+  }else if(data.type==='prepare'){getManifest().catch(()=>{});}
   else if(data.type==='query'){
-    latest=data;
-    if(!onlyCurated(data.filter)||plan(data.text).anchor)prepare();
+    latest=data;failure=false;
+    loading=loaded.size!==manifest?.shards.length&&(!onlyCurated(data.filter)||!!plan(data.text).anchor);
+    if(loading)prepare(data);
     search(data);
   }
 };

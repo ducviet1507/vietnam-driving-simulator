@@ -1,6 +1,6 @@
 """Build the Xuyên Việt offline gazetteer from Geofabrik's Vietnam OSM extracts.
 
-Install osmium and shapely, then run
+Install osmium and shapely, and have Node.js available, then run
   python tools/build_vn_search.py vietnam-261118.osm.pbf vietnam-250101.osm.pbf
 The earlier snapshot supplies historical administrative names only.
 """
@@ -13,6 +13,7 @@ import json
 import math
 from pathlib import Path
 import re
+import subprocess
 import unicodedata
 
 import osmium
@@ -333,6 +334,7 @@ def build(source, historical_source, output):
             "sources": [source_info(source), source_info(historical_source)],
             "attribution": "© OpenStreetMap contributors", "license": "ODbL 1.0"}
     (output/"index.json").write_bytes(compact(info))
+    subprocess.run(["node", ROOT/"tools/index-atlas-addresses.mjs", output], check=True)
     print(info["counts"], flush=True)
     print(len(rows), "search results in", sum((output/n).stat().st_size for n in shards), "bytes", flush=True)
 
