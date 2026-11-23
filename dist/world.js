@@ -933,6 +933,12 @@ async function frameStop(stop){
  // Load the district containing the model before applying its camera offset.
  const location=(stop.viewOf&&allStops.get(stop.viewOf[0]))||stop.lookout||stop;
  await VietnamTourism.loadRegion(location.lon,location.lat);
+ // A destination retains its computed entrance. Read the regional model's
+ // tour fields now, including for a direct link created before the import.
+ if(stop.custom){
+   const model=VietnamLandmarks.entries.find(site=>site.id===stop.id);
+   if(model)stop={...model,...stop};
+ }
  const {x,z}=roads.point(location.lon,location.lat);
  if(Math.hypot(x-(tourCenter?.x??viewX),z-(tourCenter?.z??viewZ))>285){
    tourGraph??=new VietnamRoads(indexData,roads.lon,roads.lat);
@@ -1549,10 +1555,17 @@ async function fetchJSON(path){const r=await fetch(path);if(!r.ok)throw Error('C
 (async()=>{
  $('openMap').disabled=true;
  try{
+   const params=new URLSearchParams(location.search),stage=mountainPlaces.find(p=>p.id===params.get('pass'));
+   const collection=params.get('collection')==='ha-nam',stopId=params.get('landmark');
+   const findStop=id=>models.find(p=>p.id===id||p.catalogId===id)||tamChucParts.find(p=>p.id===id)||regionalVisits.find(p=>p.id===id)||catalogStop(id);
+   const restoring=!JourneyDepartures.initial&&!JourneyDepartures.pin&&!collection&&!stage&&!params.has('drive');
+   const requestedId=stopId||(restoring&&JourneyDepartures.trip?.destination);
+   // The destination tile and the road indexes are independent on a cold link.
+   const destinationReady=requestedId&&!findStop(requestedId)?VietnamTourism.loadById(requestedId):null;
    const [roadIndex,trafficIndex,bridges,footbridges,tunnels]=await Promise.all([
      fetchJSON('vn-roads/index.json'),fetchJSON('vn-traffic/index.json').catch(()=>null),
      fetchJSON('vn-bridges/details.json').catch(()=>null),fetchJSON('vn-bridges/footbridges.json').catch(()=>null),
-     fetchJSON('vn-traffic/tunnels.json').catch(()=>null)]);
+     fetchJSON('vn-traffic/tunnels.json').catch(()=>null),destinationReady]);
    indexData=roadIndex;
    if(tunnels?.graphSourceSha256===roadIndex.sourceSha256)indexData.tunnelData=tunnels;
    if(trafficIndex?.graphSourceSha256===roadIndex.sourceSha256&&trafficIndex.osmTimestamp===roadIndex.osmTimestamp)indexData.trafficTiles=trafficIndex.tiles;
@@ -1560,12 +1573,6 @@ async function fetchJSON(path){const r=await fetch(path);if(!r.ok)throw Error('C
    if(footbridges?.graphSourceSha256===roadIndex.sourceSha256)indexData.footbridgeTiles=footbridges.tiles;
    $('coverage').textContent=indexData.roadKm.toLocaleString('vi-VN')+' km đường · Dữ liệu '+new Date(indexData.osmTimestamp).toLocaleDateString('vi-VN');
    $('openingAtlas').disabled=false;$('openMap').disabled=false;$('travel').disabled=false;
-   const params=new URLSearchParams(location.search),stage=mountainPlaces.find(p=>p.id===params.get('pass'));
-   const collection=params.get('collection')==='ha-nam';
-   const stopId=params.get('landmark');
-   const savedId=JourneyDepartures.trip?.destination;
-   const findStop=id=>models.find(p=>p.id===id||p.catalogId===id)||tamChucParts.find(p=>p.id===id)||regionalVisits.find(p=>p.id===id)||catalogStop(id);
-   if((stopId&&!findStop(stopId))||(!stopId&&savedId&&!findStop(savedId)))await VietnamTourism.loadAll();
    const landmark=stopId&&findStop(stopId)||(collection&&tamChuc);
    if(landmark||stage){
      const view=params.get('view'),direct=landmark&&['field','plan','tour'].includes(view);

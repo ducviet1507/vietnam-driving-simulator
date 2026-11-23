@@ -39,7 +39,9 @@ export async function packJourneyData(client) {
       const module = 'const window = Object.create(globalThis);\nwindow.VietnamSights = [];\n' + code + '\nexport default window.VietnamSights;\n';
       const file = await asset(name.slice(0,-3), module, 'mjs');
       const slot = groups.length;
-      groups.push({file,sites:sites.map(({solids,boundary,modeledBuildings,...entry})=>entry)});
+      // The regional module already contains the complete tour and its sources.
+      // The opening screen needs the model's position, entrance and search metadata.
+      groups.push({file,sites:sites.map(({solids,boundary,modeledBuildings,views,description,source,photo,...entry})=>entry)});
       // The small registration stubs are bundled in their original parser
       // positions. This preserves ordering and overrides between model packs.
       const stub = `'use strict';\n(window.VietnamSights??=[]).push(...VietnamTourism.modelGroups[${slot}].sites);\n`;
@@ -64,7 +66,7 @@ export async function packJourneyData(client) {
   }
   const world = await readFile(path.join(client, 'world.js'), 'utf8');
   for (const match of world.matchAll(/osm-(?:way|node|relation)-\d+/g)) seed.add(match[0]);
-  const entries = [], rest = [], tiles = new Map();
+  const entries = [], rest = [], tiles = new Map(), tileById = new Map();
   const initialDetails = {};
   const tileScale = 4;
   for (const [order,site] of atlas.entries.entries()) {
@@ -76,14 +78,24 @@ export async function packJourneyData(client) {
     }
     const row = [site, details[site.id] || null];
     const tile = Math.floor(site.lon*tileScale) + '_' + Math.floor(site.lat*tileScale);
+    tileById.set(site.id, tile);
     if (!tiles.has(tile)) tiles.set(tile, []);
     tiles.get(tile).push(row);
     rest.push(row);
   }
   const files = {};
   for (const [key, rows] of tiles) files[key] = await asset(key, JSON.stringify(rows), 'json');
+  // A shared link or saved trip only needs one regional tile. Partition the
+  // ID lookup by lexical range so even an old OSM ID costs one small index read.
+  const ids = [...tileById.keys()].sort(), idRanges = [];
+  for (let i=0; i<ids.length; i+=256) {
+    const keys = ids.slice(i,i+256);
+    const lookup = Object.fromEntries(keys.map(id=>[id,tileById.get(id)]));
+    const file = await asset('ids',JSON.stringify(lookup),'json');
+    idRanges.push([keys[keys.length-1],file]);
+  }
   const all = await asset('atlas', JSON.stringify(rest), 'json');
-  const manifest = {metadata:atlas.metadata, aliases:atlas.aliases, entries, files, all, tileScale,modelGroups:groups,
+  const manifest = {metadata:atlas.metadata, aliases:atlas.aliases, entries, files, all, idRanges, tileScale, modelGroups:groups,
     provinces:[...new Set(atlas.entries.map(s => s.province))]};
   const origin = '// © OpenStreetMap contributors. ODbL 1.0. See VietnamTourism.metadata.\n';
   await writeFile(path.join(client, 'tourism-catalog.js'), origin + 'window.VietnamTourism=' + JSON.stringify(manifest) + ';\n');

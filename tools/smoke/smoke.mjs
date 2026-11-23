@@ -200,6 +200,16 @@ try {
       return fonts.length>0 && fonts.every(font=>font.status==='loaded');
     }),true,'Opening typography missing from the bundled stylesheet');
     assert.equal(await page.evaluate(()=>Boolean(VietnamTourism.complete || window.driveBank)),false);
+    const lookup=await page.evaluate(async()=>{
+      const atlas=VietnamTourism,alias='osm-way-1107308686',key=atlas.aliases[alias];
+      const model=VietnamLandmarks.entries.find(s=>s.id==='lang-chu-tich-ho-chi-minh');
+      const cold=!model.views&&!atlas.byId.has(key);
+      await Promise.all([atlas.loadById(alias),atlas.loadById(key)]);
+      const downloads=performance.getEntriesByType('resource').filter(e=>e.name.includes('/journey-data/'));
+      return {cold,canonical:catalogStop(alias)?.id,complete:Boolean(atlas.complete),
+        lookups:downloads.filter(e=>e.name.includes('/ids-')).length};
+    });
+    assert.deepEqual(lookup,{cold:true,canonical:'osm-way-1158936961',complete:false,lookups:1});
     const openingGarage=page.getByLabel('Chọn xe',{exact:true});
     await openingGarage.selectOption('compact-mpv');
     assert.equal(await page.locator('#garage').inputValue(),'compact-mpv');

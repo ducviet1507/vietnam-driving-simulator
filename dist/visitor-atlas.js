@@ -41,12 +41,15 @@
     if(!requests.has(file))requests.set(file,load().catch(error=>{requests.delete(file);throw error;}));
     return requests.get(file);
   }
+  async function readAtlasFile(file){
+    const response=await fetch(file);
+    if(!response.ok)throw Error('Chưa tải được dữ liệu địa danh. Hãy thử lại.');
+    return RoadTileCodec.decode(await RoadTileCodec.content(response));
+  }
   function loadTile(file){
     return once(file,async()=>{
-      const response=await fetch(file);
-      if(!response.ok)throw Error('Chưa tải được dữ liệu địa danh. Hãy thử lại.');
       const added=[];
-      for(const [site,detail] of RoadTileCodec.decode(await RoadTileCodec.content(response))){
+      for(const [site,detail] of await readAtlasFile(file)){
         if(atlas.byId.has(site.id))continue;
         if(detail)window.VietnamSightDetails[site.id]=detail;
         index(site);atlas.entries.push(site);added.push(site);
@@ -59,6 +62,15 @@
       await loadTile(atlas.all);
       if(!atlas.complete){atlas.complete=true;atlas.onComplete?.();}
     }
+  };
+  atlas.loadById=async id=>{
+    const key=atlas.aliases?.[id]||id;
+    if(atlas.byId.has(key)||atlas.complete)return;
+    if(!atlas.idRanges)return atlas.loadAll();
+    const range=atlas.idRanges.find(([last])=>key<=last);
+    if(!range)return;
+    const file=range[1], lookup=await once(file,()=>readAtlasFile(file));
+    if(Object.hasOwn(lookup,key))await loadTile(atlas.files[lookup[key]]);
   };
   atlas.loadRegion=async(lon,lat)=>{
     const jobs=[];
