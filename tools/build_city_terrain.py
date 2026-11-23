@@ -1,8 +1,9 @@
 """Bake urban bare-earth terrain for every half-degree tile of Vietnam's road atlas.
 
-Requires numpy, Pillow, rasterio and scipy. The GEDTM30 COG is accessed through
-its 8-arcsecond overview, once per required geographic block. The neighbouring
-ESA WorldCover tiles in vn-environment supply built-up footprints.
+Requires numpy, Pillow, rasterio and scipy. The 8-arcsecond GEDTM30 overview
+provides the urban plains. Near hills, the 2-arcsecond overview distinguishes
+level built-up ground from the adjacent slope before resampling to the output
+lattice. Neighbouring ESA WorldCover tiles provide the built-up observations.
 """
 import argparse
 from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor
@@ -43,38 +44,51 @@ def road_tiles(roads):
     return sorted({tuple(int(i) // 2 for i in k.split("_")) for k in parents})
 
 
-def source_grid():
-    with rasterio.Env(**ENV), rasterio.open("/vsicurl/" + SOURCE, overview_level=2) as ds:
+def source_grid(factor):
+    overview = 0 if factor == 4 else 2
+    with rasterio.Env(**ENV), rasterio.open("/vsicurl/" + SOURCE, overview_level=overview) as ds:
         affine = ds.transform
-        if not np.allclose([affine.a, affine.e], [1 / SCALE, -1 / SCALE], rtol=1.e-5):
-            raise ValueError("Expected the 8 arcsecond GEDTM30 overview")
+        step = 1 / (SCALE * factor)
+        if not np.allclose([affine.a, affine.e], [step, -step], rtol=1.e-5):
+            raise ValueError(f"Unexpected GEDTM30 overview for scale {SCALE * factor}")
         rows, cols = ds.block_shapes[0]
         return affine.c, affine.f, affine.a, affine.e, rows, cols
 
 
-def source_axes(tile, grid):
+def lattice(tile, factor):
     x, y = tile
-    west, north, dx, dy, _, _ = grid
     # Absolute integer indices keep every shared coordinate bit-identical.
-    gx = x * CELLS + np.arange(-HALO, CELLS + HALO + 1)
-    gy = (y + 1) * CELLS - np.arange(-HALO, CELLS + HALO + 1)
-    return (gx / SCALE - west) / dx - .5, (gy / SCALE - north) / dy - .5
+    axis = np.arange(-HALO * factor, (CELLS + HALO) * factor + 1)
+    return x * CELLS * factor + axis, (y + 1) * CELLS * factor - axis
+
+
+def source_axes(tile, grid, factor):
+    west, north, dx, dy, _, _ = grid
+    gx, gy = lattice(tile, factor)
+    scale = SCALE * factor
+    return (gx / scale - west) / dx - .5, (gy / scale - north) / dy - .5
 
 
 def block_range(axis, size):
     return range(int(np.floor(axis[0])) // size, (int(np.floor(axis[-1])) + 1) // size + 1)
 
 
+def block_path(work, i, j, factor):
+    prefix = "fine" if factor == 4 else "gedtm"
+    return work / f"{prefix}-{i}-{j}.npy"
+
+
 def fetch_block(args):
-    (i, j), grid, work = args
-    path = work / f"gedtm-{i}-{j}.npy"
+    (i, j), grid, work, factor = args
+    path = block_path(work, i, j, factor)
     if path.is_file():
         return
     rows, cols = grid[-2:]
     window = Window(j * cols, i * rows, cols, rows)
     for attempt in range(3):
         try:
-            with rasterio.Env(**ENV), rasterio.open("/vsicurl/" + SOURCE, overview_level=2) as ds:
+            level = 0 if factor == 4 else 2
+            with rasterio.Env(**ENV), rasterio.open("/vsicurl/" + SOURCE, overview_level=level) as ds:
                 raster = ds.read(1, window=window)
                 raster[raster == ds.nodata] = np.nan
             partial = path.with_suffix(".part.npy")
@@ -93,20 +107,25 @@ def source_block(path):
     return np.load(path, mmap_mode="r")
 
 
-def sample_ground(tile, grid, work):
-    xs, ys = source_axes(tile, grid)
+def sample_ground(tile, grid, work, factor=1):
+    xs, ys = source_axes(tile, grid, factor)
     rows, cols = grid[-2:]
     top, left = int(np.floor(ys[0])), int(np.floor(xs[0]))
     bottom, right = int(np.floor(ys[-1])) + 2, int(np.floor(xs[-1])) + 2
     src = np.empty((bottom - top, right - left), dtype="float32")
     for i in block_range(ys, rows):
         for j in block_range(xs, cols):
-            raster = source_block(work / f"gedtm-{i}-{j}.npy")
+            raster = source_block(block_path(work, i, j, factor))
             r, c = i * rows, j * cols
             a, b = max(top, r), max(left, c)
             d, e = min(bottom, r + rows), min(right, c + cols)
             src[a-top:d-top, b-left:e-left] = raster[a-r:d-r, b-c:e-c]
 
+    if factor == 4:
+        # Preserve individual source observations when measuring fine-scale relief.
+        ix = np.floor(xs + .5).astype(int) - left
+        iy = np.floor(ys + .5).astype(int) - top
+        return src[np.ix_(iy, ix)].astype("float64")
     # Bilinear interpolation at each node, renormalised across coastal nodata.
     ix, iy = np.floor(xs).astype(int), np.floor(ys).astype(int)
     fx, fy = xs - ix, (ys - iy)[:, None]
@@ -122,15 +141,37 @@ def sample_ground(tile, grid, work):
     return np.divide(total, valid_weight, out=np.full_like(total, np.nan), where=valid_weight > 0)
 
 
-def prepare_cover(tile, environment):
+@lru_cache(maxsize=24)
+def read_cover(tile, n, offset):
     key = tile_key(tile)
     data = gzip.decompress((ROOT / "vn-environment" / (key + ".gz")).read_bytes())
+    return np.frombuffer(data, dtype="uint8", offset=offset).reshape(n, n)
+
+
+def prepare_cover(tile, environment):
     n = environment["coverSize"]
-    cover = np.frombuffer(data, dtype="uint8", offset=environment["populationSize"] ** 2).reshape(n, n)
+    cover = read_cover(tile, n, environment["populationSize"] ** 2)
     # Mean built fraction on the common 8 arcsecond cell grid.
     built = Image.fromarray((cover == 50).astype("float32"))
     density = np.asarray(built.resize((CELLS, CELLS), Image.Resampling.BOX))
     return density, bool(np.any(cover))
+
+
+def fine_cover(tile, covers, environment):
+    gx, gy = lattice(tile, 4)
+    side = CELLS * 4
+    n = environment["coverSize"]
+    classes = np.zeros((len(gy), len(gx)), dtype="uint8")
+    for x in np.unique(gx // side):
+        cols = np.flatnonzero(gx // side == x)
+        for y in np.unique(gy // side):
+            if (x, y) not in covers:
+                continue
+            rows = np.flatnonzero(gy // side == y)
+            cover = read_cover((x, y), n, environment["populationSize"] ** 2)
+            samples = np.ix_(n - 1 - (gy[rows] % side) * n // side, (gx[cols] % side) * n // side)
+            classes[np.ix_(rows, cols)] = cover[samples]
+    return classes
 
 
 def cover_weight(tile, covers):
@@ -174,26 +215,58 @@ def urban_surface(ground):
                          out=np.zeros_like(ground), where=weights > 0)
     high = ndimage.maximum_filter(np.where(valid, ground, -np.inf), size=5)
     low = ndimage.minimum_filter(np.where(valid, ground, np.inf), size=5)
-    # The coarse DTM can include the hillside in a street at its foot. Use
-    # the finer game terrain when relief across the ~1 km window reaches 68 m.
+    # The coarse DTM can include the hillside in a street at its foot. Defer
+    # to fine observations where relief across the ~1 km window reaches 68 m.
     # Allow a one-cell margin for streets beside the hill, then feather it.
     level = 1 - smoothstep(high - low, 16, 68)
     level = ndimage.gaussian_filter(ndimage.minimum_filter(level, size=3), 1, radius=3)
     return smoothed, weights > 0, level
 
 
-def bake_tile(tile, covers, grid, work, output):
+def foothill_surface(ground, classes):
+    # Measure relief over ~120 m first. Include a small contribution from
+    # adjoining open land, so streets and courtyards can share a ground level.
+    valid = np.isfinite(ground)
+    high = ndimage.maximum_filter(np.where(valid, ground, -np.inf), size=3)
+    low = ndimage.minimum_filter(np.where(valid, ground, np.inf), size=3)
+    level = 1 - smoothstep(high - low, 4.8, 12)
+    land = (classes != 0) & (classes != 80)
+    support = (.03 * land + .97 * (classes == 50)) * level * valid
+    g = np.where(valid, ground, 0)
+
+    def average(values):
+        # The fine samples cover ~60 m each. Accumulate on both sides of
+        # the street before sampling the common 8-arcsecond output vertices.
+        return ndimage.gaussian_filter(values, 3.2, truncate=3)[::4, ::4]
+
+    density = average(support)
+    denom = np.maximum(density, 1e-10)
+    height = average(g * support) / denom
+    spread = np.sqrt(np.maximum(0, average(g * g * support) / denom - height * height))
+    # Sparse observations or disagreement between neighbouring terraces favour
+    # the original game surface instead of extrapolating a street up a slope.
+    confidence = smoothstep(density, .027, .18) * (1 - smoothstep(spread, 6.5, 13))
+    return height, confidence
+
+
+def bake_tile(tile, covers, environment, grids, work, output):
     urban = cover_weight(tile, covers)
     if not np.any(np.rint(urban[CORE] * 255)):
         return "noUrban", 0
-    terrain, available, level = urban_surface(sample_ground(tile, grid, work))
+    terrain, available, level = urban_surface(sample_ground(tile, grids[1], work))
+    if np.any((level < 1) & (urban > 0)) or np.any(~available & (urban > 0)):
+        fine, confidence = foothill_surface(sample_ground(tile, grids[4], work, 4),
+                                            fine_cover(tile, covers, environment))
+        coarse = np.where(available, level, 0)
+        fine_weight = (1 - coarse) * confidence
+        level = coarse + fine_weight
+        terrain = (coarse * terrain + fine_weight * fine) / np.maximum(level, 1e-10)
+        available |= confidence > 0
+    missing = np.count_nonzero((np.rint(urban[CORE] * 255) > 0) & ~available[CORE])
     influence = np.rint(urban * level * 255).astype("uint8")
-    if not np.any(influence[CORE]):
-        return "localRelief", 0
-    missing = np.count_nonzero((influence[CORE] > 0) & ~available[CORE])
     influence[~available] = 0
     if not np.any(influence[CORE]):
-        return "noElevation", int(missing)
+        return ("noElevation" if missing else "localRelief"), int(missing)
     # Store ground through the edge of each active cell. The browser interpolates
     # the four vertex corrections, each weighted by that vertex's influence.
     support = ndimage.maximum_filter(influence, size=3) > 0
@@ -236,19 +309,22 @@ def build(work, output, workers):
         covers[tile], valid = prepare_cover(tile, environment)
         if not valid:
             no_cover.append(tile_key(tile))
-    grid = source_grid()
-    blocks = set()
-    for tile in tiles:
-        xs, ys = source_axes(tile, grid)
-        blocks.update((i, j) for i in block_range(ys, grid[-2]) for j in block_range(xs, grid[-1]))
-    jobs = [(b, grid, work) for b in sorted(blocks) if not (work / f"gedtm-{b[0]}-{b[1]}.npy").is_file()]
+    grids = {factor: source_grid(factor) for factor in (1, 4)}
+    jobs = []
+    for factor, grid in grids.items():
+        blocks = set()
+        for tile in tiles:
+            xs, ys = source_axes(tile, grid, factor)
+            blocks.update((i, j) for i in block_range(ys, grid[-2]) for j in block_range(xs, grid[-1]))
+        jobs.extend((b, grid, work, factor) for b in sorted(blocks)
+                    if not block_path(work, *b, factor).is_file())
     if jobs:
         with ProcessPoolExecutor(max_workers=workers) as pool:
             list(pool.map(fetch_block, jobs))
     groups = {k: [] for k in ("tiles", "noUrban", "localRelief", "noElevation")}
     partial = {}
     with ThreadPoolExecutor(max_workers=workers) as pool:
-        results = pool.map(lambda tile: bake_tile(tile, covers, grid, work, output), tiles)
+        results = pool.map(lambda tile: bake_tile(tile, covers, environment, grids, work, output), tiles)
         for tile, (group, missing) in zip(tiles, results):
             key = tile_key(tile)
             groups[group].append(key)

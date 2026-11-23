@@ -69,7 +69,7 @@ produced using Copernicus WorldDEM-30 © DLR e.V. 2010-2014 and © Airbus Defenc
 https://doi.org/10.5270/ESA-c5d3d65
 Supplemental elevation pages around authored destinations and their mapped road approaches sample the Copernicus GLO-30 DSM at 1/2560 degree, retaining integer metres with lossless PNG encoding. Ocean-only degree blocks absent from both GLO-30 and GLO-90 use sea level. Retrieved 2026-11-22.
 https://registry.opendata.aws/copernicus-dem/
-Urban ground across the Vietnam driving map uses GEDTM30 v1.2 by Yufeng Ho and Tom Hengl (OpenGeoHub), CC BY 4.0, distributed by OpenTopography. ViVu3D samples the terrain on an 8-arc-second grid, stores heights in decimetres and blends them using built-up land cover from ESA WorldCover 2021.
+Urban ground across the Vietnam driving map uses GEDTM30 v1.2 by Yufeng Ho and Tom Hengl (OpenGeoHub), CC BY 4.0, distributed by OpenTopography. ViVu3D uses 8-arc-second terrain over plains and 2-arc-second ground samples near built-up foothills. The resulting 8-arc-second grid stores heights in decimetres and is blended using ESA WorldCover 2021.
 https://doi.org/10.5281/zenodo.18887460
 https://portal.opentopography.org/datasetMetadata?otCollectionID=OT.082025.4326.1
 https://creativecommons.org/licenses/by/4.0/
