@@ -52,7 +52,7 @@
   const dialog = document.createElement('dialog');
   dialog.id = 'cockpitSettings';
   dialog.setAttribute('aria-labelledby', 'cockpitTitle');
-  dialog.innerHTML = '<form method="dialog"><h2 id="cockpitTitle">Bố trí buồng lái</h2><button class="settingsDone" value="close">Xong</button></form>';
+  dialog.innerHTML = '<form method="dialog"><h2 id="cockpitTitle">Cài đặt</h2><button class="settingsDone" value="close">Xong</button></form>';
   const form = dialog.firstElementChild;
   for (const group of groups) {
     const field = document.createElement('fieldset');
