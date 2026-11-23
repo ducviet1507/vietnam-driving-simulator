@@ -105,7 +105,15 @@
 .departureQuery {display:flex; width:100%; gap:5px}
 .departureQuery input {min-width:0; width:100%; min-height:40px; padding:6px 8px; font-size:16px; color:#19271e; background:#fffdf5; border:1px solid #a9baad; border-radius:6px}
 .departureQuery button {min-width:44px; padding:5px 9px; color:#16271b; background:var(--lime); border:0; border-radius:6px; font-weight:700; cursor:pointer}
-.journey .learnerChoice {display:inline-flex; align-items:center; gap:8px; margin:0 0 8px; padding:6px 11px; min-height:34px; color:#fffdf5; background:#162823eb; border:1px solid #acbaab77; border-radius:7px; font:600 14px/1.25 system-ui,sans-serif; pointer-events:auto; cursor:pointer}
+.openingVehicles {display:flex; align-items:center; flex-wrap:wrap; gap:5px 10px; margin:0 0 8px}
+.openingGarage, .journey .learnerChoice {display:inline-flex; align-items:center; gap:8px; padding:6px 11px; min-height:36px; color:#fffdf5; background:#162823eb; border:1px solid #acbaab77; border-radius:7px; font:600 14px/1.25 system-ui,sans-serif; pointer-events:auto; cursor:pointer}
+.openingGarage {--preview-width:74px; position:relative; max-width:100%; padding:0; color:var(--lime)}
+.openingGarage img {position:absolute; left:5px; width:var(--preview-width); height:auto; pointer-events:none}
+.openingGarage span {position:absolute; left:calc(var(--preview-width) + 12px); top:5px; font-size:13px; pointer-events:none}
+.openingGarage select {appearance:none; width:100%; min-width:0; min-height:48px; padding:20px 26px 3px calc(var(--preview-width) + 12px); background:transparent; color:#fffdf5; color-scheme:dark; border:0; font:inherit; cursor:pointer}
+.openingGarage option {background:#162823; color:#fffdf5}
+.openingGarage::after {content:""; position:absolute; right:12px; top:50%; width:6px; height:6px; border:solid currentColor; border-width:0 2px 2px 0; transform:translateY(-2px) rotate(45deg); pointer-events:none}
+.openingGarage:focus-within {outline:2px solid var(--lime); outline-offset:2px}
 .learnerChoice input {width:17px; height:17px; margin:0; accent-color:var(--lime)}
 .learnerChoice small {color:var(--lime); font-size:13px}
 .journey[data-learner] :is([data-boost-control],[data-key~="shift"],#challenge,#challengeNotice,#raceMode) {display:none}
@@ -114,7 +122,8 @@
   .journey #departureSearch .ticketInfo {padding:6px 9px; gap:3px}
   .journey #departureSearch label {font-size:14px}
   .arcade.journey #journeyCaption {margin:2px 0 5px}
-  .arcade.journey .learnerChoice {margin-bottom:4px; min-height:30px; padding-block:3px}
+  .openingVehicles {margin-bottom:4px}
+  .arcade.journey .learnerChoice {min-height:30px; padding-block:3px}
   .arcade.journey .opening .runNotice {margin-top:4px; font-size:13px}
 }
 .openingKeys {grid-column: 1 / -1; display: flex; align-items: center; gap: 23px; padding-top: 15px; border-top: 1px solid #dbe8d32f; color: #cdd6ca}
@@ -312,6 +321,13 @@
 }
 @media (any-pointer: coarse) and (orientation: landscape) and (max-height: 360px) {
   .journey .openingMode {display: none}
+  .journey #journeyCaption {display:none}
+  .openingVehicles {flex-wrap:nowrap; align-items:stretch; gap:5px}
+  .openingGarage {--preview-width:48px; min-width:0}
+  .openingGarage select {min-height:44px; padding-right:17px}
+  .openingGarage::after {right:6px}
+  .arcade.journey .learnerChoice {display:grid; grid-template-columns:17px 1fr; gap:0 5px; padding:3px 6px; font-size:13px}
+  .learnerChoice input {grid-row:span 2}
 }
 @media (max-width: 360px) and (orientation: portrait) {
   .journey[data-phase=grid] header nav {bottom: calc(var(--bottom) + 25px)}

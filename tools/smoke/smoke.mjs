@@ -193,7 +193,11 @@ try {
       return fonts.length>0 && fonts.every(font=>font.status==='loaded');
     }),true,'Opening typography missing from the bundled stylesheet');
     assert.equal(await page.evaluate(()=>Boolean(VietnamTourism.complete || window.driveBank)),false);
+    const openingGarage=page.getByLabel('Chọn xe',{exact:true});
+    await openingGarage.selectOption('compact-mpv');
+    assert.equal(await page.locator('#garage').inputValue(),'compact-mpv');
     await page.locator('#learnerDrive').check();
+    assert.equal(await openingGarage.inputValue(),'family-sedan');
     const training=await page.evaluate(()=>{
       const input={power:car.spec.power,top:car.spec.top,gas:true,grade:-.25};
       const body={spec:car.spec,reverseDelay:0};
@@ -203,9 +207,17 @@ try {
     });
     assert.deepEqual(training,{model:'family-sedan',speed:40});
     await page.locator('#learnerDrive').uncheck();
-    assert.equal(await page.locator('#garage').inputValue(),'supercar');
+    assert.equal(await page.locator('#garage').inputValue(),'compact-mpv');
+    await page.locator('#openSetup').click();
+    await page.locator('#garage').selectOption('touring-mpv');
+    await page.locator('#closeSetup').click();
+    assert.equal(await openingGarage.inputValue(),'touring-mpv');
+    await page.reload({waitUntil:'domcontentloaded'});
+    await page.waitForFunction(()=>document.querySelector('#openingGarage').value==='touring-mpv');
+    assert.equal(await page.locator('#garagePreview').getAttribute('src'),'streetscape/previews/touring-mpv.webp');
     await page.getByRole('button',{name:'Cầm lái',exact:true}).click();
     await page.locator('body[data-phase="drive"]').waitFor();
+    assert.equal(await page.evaluate(()=>car.model),'touring-mpv');
     assert.match(await page.locator('#callout').textContent(),/Giữ W/);
     await page.keyboard.down('ArrowUp');
     try {

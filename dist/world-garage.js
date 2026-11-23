@@ -9,6 +9,14 @@ const worldGarage={
     worldOnly:true,asset:'streetscape/sedan.json.gz',length:4.58,width:1.80,height:1.45,paint:0x7194a7,
     power:4.8,top:36,braking:11.5,wheelbase:2.67,steerLock:.57,mass:1410,seatLift:.14
   },
+  'city-sedan':{
+    worldOnly:true,asset:'streetscape/city-sedan.glb',length:4.43,width:1.73,height:1.48,paint:0xc55b49,
+    power:4.6,top:35,braking:11.9,wheelbase:2.55,steerLock:.60,mass:1130,seatLift:.12
+  },
+  'classic-sedan':{
+    worldOnly:true,asset:'streetscape/classic-sedan.glb',length:4.50,width:1.73,height:1.45,paint:0x719486,
+    power:4.4,top:35,braking:11.3,wheelbase:2.60,steerLock:.55,mass:1220,seatLift:.11
+  },
   suv:{
     worldOnly:true,asset:'streetscape/family-suv.glb',length:4.98,width:1.93,height:1.78,paint:0x416d62,
     power:4.3,top:34,braking:10.2,wheelbase:2.96,steerLock:.50,mass:2020,seatLift:.44
@@ -16,6 +24,14 @@ const worldGarage={
   'family-minivan':{
     worldOnly:true,asset:'streetscape/family-minivan.glb',length:5.10,width:1.99,height:1.74,paint:0xc5c8ca,
     power:4.4,top:35,braking:10.6,wheelbase:3.00,steerLock:.53,mass:1950,seatLift:.39
+  },
+  'compact-mpv':{
+    worldOnly:true,asset:'streetscape/compact-mpv.glb',length:4.65,width:1.77,height:1.72,paint:0xc3cbd2,
+    power:4.2,top:34,braking:10.9,wheelbase:2.72,steerLock:.56,mass:1300,seatLift:.32
+  },
+  'touring-mpv':{
+    worldOnly:true,asset:'streetscape/touring-mpv.glb',length:4.75,width:1.87,height:1.78,paint:0x94765e,
+    power:4.5,top:36,braking:10.6,wheelbase:2.82,steerLock:.52,mass:1640,seatLift:.37
   }
 };
 

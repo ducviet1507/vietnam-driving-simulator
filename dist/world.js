@@ -17,11 +17,14 @@ const reduceMotion=matchMedia('(prefers-reduced-motion: reduce)');
 const vehicleLook=createVehicleLook($('lookAround'),$('world'),()=>mode==='drive');
 car.look=vehicleLook.view;
 let garageVehicle='supercar';
+const openingGarage=$('openingGarage'),setupGarage=$('garage');
+setupGarage.replaceChildren(...Array.from(openingGarage.children,group=>group.cloneNode(true)));
 const learnerSedan={...worldGarage['family-sedan'],power:2.5,top:40/3.6,speedGovernor:true};
 function selectVehicle(model,learner=false){
  if(!Object.hasOwn(worldGarage,model))return;
  car.model=model;car.spec=learner?learnerSedan:worldGarage[model];gfx?.preloadVehicle(model);
- $('garage').value=model;
+ openingGarage.value=setupGarage.value=model;
+ $('garagePreview').src='streetscape/previews/'+model+'.webp';
  $('learnerDrive').checked=learner;
  document.body.toggleAttribute('data-learner',learner);
 }
@@ -34,13 +37,14 @@ try{
  if(['quiet','busy'].includes(traffic))$('trafficLevel').value=traffic;
 }catch{}
 selectVehicle(learnerSaved?'family-sedan':garageVehicle,learnerSaved);
+openingGarage.disabled=false;
 $('learnerDrive').onchange=()=>{
  const learner=$('learnerDrive').checked;
  selectVehicle(learner?'family-sedan':garageVehicle,learner);
  try{localStorage.setItem('taylai.world.learner',learner?'1':'0');}catch{}
 };
-$('garage').onchange=()=>{
- garageVehicle=$('garage').value;selectVehicle(garageVehicle);
+openingGarage.onchange=setupGarage.onchange=event=>{
+ garageVehicle=event.currentTarget.value;selectVehicle(garageVehicle);
  try{
    localStorage.removeItem('taylai.world.learner');
    if(car.spec.worldOnly)localStorage.setItem('taylai.world.garage',car.model);

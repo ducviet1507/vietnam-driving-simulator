@@ -30,3 +30,18 @@ muscle-car.glb: Muscle Car, v1 LOD0
 https://tevy.dev/models/muscle-car/v1/lod0.glb
 Geometry decoded, textures embedded as JPEG and glass adapted for mobile.
 Wheel and steering pivots and material names adapted for the game.
+
+city-sedan.glb and classic-sedan.glb: original ViVu3D unbranded sedan
+geometry and materials. Rebuild with tools/build_player_sedans.py.
+
+compact-mpv.glb: adapted from Family Minivan v1 LOD1 by tevy, CC0 1.0.
+https://tevy.dev/models/family-minivan/v1/lod1.glb
+Reshaped body and glazing, hinged rear door styling, 2+3+2 seating,
+split-level lights, bumper and grille by ViVu3D.
+
+touring-mpv.glb: adapted from the project's seven-seat version of Mid-Size
+SUV v1 LOD1 by tevy, CC0 1.0. https://tevy.dev/models/suv/v1/lod1.glb
+The new body has a longer cabin, a lower bonnet, revised roofline and side
+panels, and its own lights, grille and bumper trim.
+
+The garage preview images are renders of the corresponding playable models.

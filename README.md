@@ -61,7 +61,7 @@ Mỗi **Tuyến nổi bật** có bảng xếp hạng riêng. Thời gian tính 
 <details>
 <summary>Đổi xe, chỉnh đồ họa và ngắm địa danh</summary>
 
-- Trong **Xe của bạn**, GT điện và Muscle Car V8 có mặt ở cả Xuyên Việt và Đua Cúp. Để lái MPV gia đình 7 chỗ, mở **Xuyên Việt → Tùy chọn → Xe của bạn**.
+- Trên màn hình xuất phát **Xuyên Việt**, mở **Chọn xe** cạnh nút **Cầm lái**. Hai mẫu sedan đô thị và cổ điển có 5 chỗ. Với xe 7 chỗ, bạn có thể chọn MPV đô thị, MPV đường dài, SUV hoặc MPV gia đình. Trình duyệt nhớ xe cho lần sau. Bạn cũng có thể đổi xe trong **Tùy chọn → Xe của bạn**. GT điện và Muscle Car V8 có mặt ở cả Xuyên Việt và Đua Cúp.
 - Trong **Bố trí buồng lái → Chất lượng đồ họa**, giữ mức **Tự động** để game điều chỉnh theo tốc độ khung hình hoặc chọn **Thấp**, **Vừa**, **Cao**. Trình duyệt nhớ lựa chọn cho các lần lái sau.
 - Trong **Tùy chọn → Danh lam 3D**, tìm một địa danh rồi bấm **Đặt điểm xuất phát** và **Cầm lái**. Khi đến gần, mở **Ngắm địa danh 3D** để xoay góc nhìn. Những nơi có ảnh đối chiếu sẽ hiện nút **Xem ảnh thực địa**.
 
