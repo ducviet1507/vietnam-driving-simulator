@@ -38,8 +38,9 @@ for (const name of ["my-son","my-son-g4","den-ngoc-son"]) {
 }
 // The garage previews stay in the release. Full-size player models stream
 // on demand from the same GitHub revision through their normal public URLs.
-for (const name of ["city-sedan","classic-sedan","compact-mpv","touring-mpv"]) {
+for (const name of ["city-sedan","classic-sedan","compact-mpv","touring-mpv","street-motorcycle"]) {
   await rm(path.join(client,"streetscape",name+".glb"));
+  await rm(path.join(client,"streetscape",name+".glb.gz"),{force:true});
 }
 // Terrain generation consumes this national raster offline. Its public URL
 // serves the original PNG from the pinned source revision.

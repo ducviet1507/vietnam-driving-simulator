@@ -192,7 +192,7 @@ async function serveGameAsset(request, env, url) {
       return Response.redirect(url.href, 301);
     }
     const scan = /^\/landmark-scans\/(?:my-son|my-son-g4|den-ngoc-son)\.glb$/.test(pathname);
-    const garageModel = /^\/streetscape\/(?:city-sedan|classic-sedan|compact-mpv|touring-mpv)\.glb$/.test(pathname);
+    const garageModel = /^\/streetscape\/(?:city-sedan|classic-sedan|compact-mpv|touring-mpv|street-motorcycle)\.glb$/.test(pathname);
     const elevationSource = pathname === "/streetscape/surfaces/vietnam-elevation.png";
     const pinnedAsset = scan || garageModel || elevationSource;
     if (pinnedAsset || pathname === "/trailer/qua-mot-khuc-cua.mp4") {
