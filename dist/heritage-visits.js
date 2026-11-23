@@ -6,7 +6,7 @@ const heritageVisits=[
     'bao-tang-khmer-cong-vao','osm-node-4793310552','bao-tang-khmer-phu-dieu','bao-tang-khmer-dan-ngu-am',
   ]],
   ['chua-ang-tu-hao-nuoc-den-chanh-dien','Chùa Âng – từ hào nước đến chánh điện',[
-    'chua-ang-cong-dong','chua-ang-thap-nam-ngon','osm-way-288574348','chua-ang-hanh-lang','chua-ang-dau-hoi','chua-ang-hao-nuoc','chua-ang-toan-canh',
+    'chua-ang-cong-dong','chua-ang-thap-nam-ngon','osm-way-288574348','chua-ang-hanh-lang','chua-ang-dau-hoi','chua-ang-be-tho','chua-ang-bich-hoa','chua-ang-hao-nuoc','chua-ang-toan-canh',
   ]],
   ['ao-ba-om-qua-go-cat-va-bo-nuoc','Ao Bà Om – từ rừng cây cổ thụ ra bờ nước',[
     'osm-way-76041615','ao-ba-om-loi-cat','ao-ba-om-mat-nuoc','ao-ba-om-tu-tren-cao',

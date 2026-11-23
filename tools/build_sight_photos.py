@@ -41,6 +41,8 @@ REVIEWED = {
     "bao-tang-khmer-cong-vao": "File:Bảo tàng văn hóa dân tộc Khmer tỉnh Trà Vinh.jpg",
     "bao-tang-khmer-dan-ngu-am": "File:Khmer style gong.JPG",
     "osm-way-288574348": "File:Chính điện chùa Âng.jpg",
+    "chua-ang-be-tho": "File:Tượng Phật Thích Ca trong chùa Âng.jpg",
+    "chua-ang-bich-hoa": "File:Tranh tường trong chùa Âng.jpg",
     "chua-ang-cong-dong": "File:Cổng chùa Âng.jpg",
     "chua-ang-hanh-lang": "File:Chùa Âng.jpg",
     "osm-way-76041615": "File:Cổ thụ ở ao Bà Ôm.jpg",

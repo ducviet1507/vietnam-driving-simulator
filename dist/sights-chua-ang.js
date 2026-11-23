@@ -27,6 +27,10 @@
     view('Tháp năm ngọn bên hào phía đông',[3.2,3.55,31.6],[-.65,2.10,55.4],40,
       'https://vov.gov.vn/ngoi-chua-khmer-gan-1000-nam-tuoi-o-tra-vinh-dtnew-534688','chua-ang-thap-nam-ngon',
       'Nhìn qua mặt nước tới ngôi tháp lưu giữ di cốt các vị sư cả từng trụ trì chùa. Bốn ngọn thấp bao quanh ngọn giữa, chánh điện mái ngói nằm ngay phía sau.'),
+    view('Bệ thờ Phật Thích Ca trong chánh điện',[0,4.72,-5.66],[.14,3.58,.92],43,photo(25293194),'chua-ang-be-tho',
+      'Trên tòa sen là pho tượng Phật Thích Ca chính cao 2,1 m. Phía trước có các tượng nhỏ và hoa, phía trên là khung gỗ chạm thếp vàng. Bố trí được đối chiếu với ảnh chụp trong chánh điện.'),
+    view('Bích họa giữa các cột sơn son',[-4.41,5.67,3.03],[-.68,5.08,3.03],45,photo(25293198),'chua-ang-bich-hoa',
+      'Hai cảnh vẽ liền nhau có dòng chữ Khmer chạy theo khung tranh. Cột gỗ sơn đỏ và chạm hình rồng vàng đứng trước mảng tường. Đây là hai cảnh trích từ ảnh chụp trong chùa năm 2013.'),
   ];
   function turned(T,k,color,x,y,z,profile){
     const g=new T.LatheGeometry(profile.map(([r,h])=>new T.Vector2(r,h)),16);
@@ -94,7 +98,10 @@
       k.stamp(g,clay,0,0,0);g.dispose();
       for(const [x,z] of outer)curled(k,x,y,z,Math.sign(x));
     }
-    k.box(wood,0,7.87,0,16.45,.20,28.25);
+    for(const s of [-1,1]){
+      k.box(wood,s*6.34,7.87,0,3.77,.20,28.25);
+      k.box(wood,0,7.87,s*11.72,8.92,.20,4.80);
+    }
     for(const s of [-1,1]){
       k.box(gold,0,7.90,s*14.16,16.59,.18,.16);k.box(gold,s*8.26,7.90,0,.16,.18,28.40);
     }
@@ -156,7 +163,13 @@
       }
       for(let i=0;i<4;i++)k.box(brick,0,1.46+(i+1)*.076,s*(15.7-i*.33),2.9,(i+1)*.152,.34);
     }
-    k.box(ochre,0,4.98,-.35,9.15,5.83,18.9);
+    for(const s of [-1,1]){
+      k.box(ochre,s*4.51,4.98,-.35,.16,5.83,18.91);
+      k.box(ochre,0,7.12,s*9.37,9.05,1.55,.22);
+      k.outline([[-4.53,0],[4.53,0],[0,2.69]],wood,0,7.86,s*9.37-.095,.19);
+      k.box(ochre,0,4.21,s*9.37,2.21,4.37,.22);
+      for(const end of [-1,1])k.box(ochre,end*3.76,4.22,s*9.37,1.57,4.35,.22);
+    }
     for(const side of [-1,1]){
       for(let i=0;i<5;i++){
         const z=(i-2)*3.6;
@@ -164,7 +177,12 @@
         for(let j=0;j<3;j++)k.box(ochre,side*4.78,4.65,z+(j-1)*.36,.06,2.64,.045);
       }
       for(const x of [-2,2]){
-        k.box(gold,x,4.23,side*9.86,2.05,4.35,.18);k.box(wood,x,4.14,side*9.99,1.70,4.05,.09);
+        for(const edge of [-1,1]){
+          k.box(gold,x+edge*.92,4.24,side*9.47,.17,4.31,.22);
+          if(side>0)k.box(0x40534c,x+edge*.82,4.15,side*9.04,.10,4.02,.73,-edge*side*.21);
+        }
+        if(side<0)k.box(0x40534c,x,4.16,side*9.42,1.78,4.13,.09);
+        k.box(gold,x,6.39,side*9.46,2.03,.22,.24);
       }
       for(const x of [-5.875,-3.525,-1.175,1.175,3.525,5.875]){
         k.stamp(k.round,light,x,5.04,side*11.64,.30,6,.30);
@@ -181,8 +199,189 @@
       for(let j=0;j<6;j++)k.place(side*5.89,(j-2.5)*3.87,Math.PI/2,()=>arch(3.85,0));
       for(let j=0;j<5;j++)k.box(light,side*5.89,4.08,(j-2)*3.87,.42,4.06,.43);
     }
-    roof(T,k);panels(T,k);
+    roof(T,k);panels(T,k);sanctuary(T,k);
   }
+  // The painted panels and the altar share their source photographs with the
+  // Atlas. Their positions in the prayer hall follow the views into the room.
+  function sanctuary(T,k){
+    const base=2.075,redWood=0x754330,tile=0xb47756;
+    const paint={pos:[],uv:[],w:1120,h:546},altar={pos:[],uv:[],w:466,h:600};
+    function triangle(batch,coords,pixels){
+      for(let i=0;i<3;i++){
+        batch.pos.push(...coords[i]);batch.uv.push(pixels[i][0]/batch.w,1-pixels[i][1]/batch.h);
+      }
+    }
+    function quad(batch,coords,pixels){
+      for(const t of [[0,1,2],[0,2,3]])triangle(batch,t.map(i=>coords[i]),t.map(i=>pixels[i]));
+    }
+    function finish(batch,path,name){
+      const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(batch.pos,3));
+      g.setAttribute('uv',new T.Float32BufferAttribute(batch.uv,2));g.computeVertexNormals();
+      const map=new T.TextureLoader().load('sight-imagery/'+path);map.colorSpace=T.SRGBColorSpace;map.anisotropy=4;
+      const m=new T.MeshStandardMaterial({map,emissive:0x100d08,side:T.DoubleSide,roughness:.88});
+      const o=new T.Mesh(g,m);o.name=name;k.group.add(o);
+    }
+    // Clay pavers, twelve wooden pillars and the purlins under the exposed tiles.
+    k.box(tile,0,base+.03,-.35,8.95,.055,18.62);
+    for(let x=-4.2;x<=4.2;x+=.64)k.box(0x986f59,x,base+.061,-.35,.014,.007,18.5);
+    for(let z=-9.2;z<=8.9;z+=.64)k.box(0x986f59,0,base+.062,z,8.87,.007,.014);
+    for(const side of [-1,1]){
+      for(let i=0;i<6;i++){
+        const x=side*2.62,z=-7.72+i*3.07,r=.30;
+        k.stamp(k.round,redWood,x,5.12,z,r,6.10,r);
+        for(const [y,height,rr] of [[2.23,.27,.33],[2.49,.11,.316],[7.44,.13,.323],[7.89,.32,.35]]){
+          k.tapered(gold,x,y,z,rr,rr,height,1,20);
+        }
+        for(let n=0;n<24;n++){
+          const a=n*pi/12,b=(n+1)*pi/12;
+          const u=978+((n%8)/8)*137,v=978+((n%8+1)/8)*137;
+          const at=(a,y)=>[x+.304*Math.cos(a),y,z+.304*Math.sin(a)];
+          quad(paint,[at(a,2.56),at(b,2.56),at(b,7.40),at(a,7.40)],[[u,540],[v,540],[v,5],[u,5]]);
+        }
+      }
+      for(let j=0;j<6;j++){
+        const t=j/5;k.box(redWood,side*(4.48-4.20*t),7.92+2.50*t,-.32,.15,.17,18.43);
+      }
+      for(let j=0;j<9;j++){
+        const z=-8.90+j*2.13;
+        A.strut(T,k,wood,side*4.48,7.90,z,side*.12,10.49,z,.11);
+      }
+      const pitch=new T.BoxGeometry(5.29,.12,18.45);
+      k.stamp(pitch,tile,side*2.28,9.37,-.31,1,1,1,0,0,-side*.535);pitch.dispose();
+    }
+    k.box(redWood,0,10.53,-.32,.28,.21,18.68);
+    // Place the two photographed narrative scenes together only once. Their
+    // Khmer captions remain attached to the corresponding paintings.
+    for(const [z0,z1,left,right] of [[1.49,3.00,489,969],[3.05,4.56,3,482]]){
+      const y0=4.71,y1=6.63,x=-4.415;
+      k.box(gold,x-.028,(y0+y1)/2,(z0+z1)/2,.065,y1-y0+.10,z1-z0+.08);
+      quad(paint,[[x+.017,y0,z1],[x+.017,y0,z0],[x+.017,y1,z0],[x+.017,y1,z1]],
+        [[left,542],[right,542],[right,3],[left,3]]);
+    }
+    // Arcades visible below the wall paintings and the open inner leaves of
+    // the eastern doors let daylight reach the tiled floor.
+    for(const s of [-1,1]){
+      for(const z of [-7.2,-3.6,0,3.6,7.2]){
+        k.box(light,s*4.409,3.27,z,.064,1.91,1.14);
+        k.box(0xa5b3a3,s*4.362,3.26,z,.044,1.69,.94);
+        for(const dz of [-.38,-.13,.13,.38])k.box(wood,s*4.323,3.25,z+dz,.045,1.68,.045);
+      }
+    }
+    const altarZ=-5.70,m=.00905,px=u=>(u-392)*m,py=v=>base+.18+(588-v)*m;
+    const uv=(x,y)=>[x-160,y];
+    function photographedPanel(corners,pixels){quad(altar,corners,pixels.map(([x,y])=>uv(x,y)));}
+    function panel(x0,x1,y0,y1,z,pixels){
+      photographedPanel([[x0,y0,z],[x1,y0,z],[x1,y1,z],[x0,y1,z]],pixels);
+    }
+    // Cross-sections trace the seated figure, including the shoulders, hands
+    // and crossed legs. A closed back and curved sides give it real depth.
+    function figure(rows,centre,z){
+      const n=22;
+      for(let j=1;j<rows.length;j++){
+        const vertex=(row,i)=>{
+          const [y,l,r,depth]=row,a=pi*i/n,centreX=(l+r)/2;
+          const u=centreX+(r-l)*.5*Math.cos(a);
+          return {p:[px(u),py(y),z+depth*Math.sin(a)],uv:uv(u,y)};
+        };
+        for(let i=0;i<n;i++){
+          const ring=[vertex(rows[j],i),vertex(rows[j],i+1),vertex(rows[j-1],i+1),vertex(rows[j-1],i)];
+          quad(altar,ring.map(v=>v.p),ring.map(v=>v.uv));
+        }
+      }
+      const profile=rows.map(([y,l,r])=>[(r-l)*m*.47,py(y)]).reverse();
+      const shell=new T.LatheGeometry(profile.map(([r,y])=>new T.Vector2(r,y)),24,pi/2,pi);
+      k.stamp(shell,gold,px(centre),0,z,1,1,.58);shell.dispose();
+    }
+    const throneY=py(397);
+    for(const [y,w,d,h,c] of [[base+.21,4.25,2.68,.36,redWood],[base+.49,4.04,2.48,.25,gold],
+      [base+.73,3.7,2.10,.23,ochre],[base+1.07,3.02,1.58,.49,redWood],[throneY-.24,1.52,1.4,.48,ochre]]){
+      k.box(c,0,y,altarZ-.18,w,h,d);
+    }
+    for(let i=-3;i<=3;i++){
+      const x=i*.184;k.outline([[-.095,0],[-.071,.12],[0,.22],[.071,.12],[.095,0]],gold,x,throneY-.23,altarZ+.536,.055);
+    }
+    // The multi-coloured nimbus sits behind the head, clear of the sculpture.
+    const haloZ=altarZ-.34,haloY=py(264),haloR=.715;
+    const disc=new T.CircleGeometry(haloR*1.016,64);k.stamp(disc,gold,px(395),haloY,haloZ);disc.dispose();
+    const cols=[0xd67759,0xf1bd66,0xe4cb79,0x9ebd81,0x70a698,0x7389ae,0xb388a2,0xce6d76];
+    for(let sector=0;sector<32;sector++){
+      const a=pi*sector/16,g=new T.RingGeometry(.23,haloR,3,1,a,pi/16-.009);
+      k.stamp(g,cols[(sector>>1)%cols.length],px(395),haloY,haloZ+.009);g.dispose();
+    }
+    for(const r of [.44,.57,.69]){
+      const ring=new T.RingGeometry(r,r+.008,64);k.stamp(ring,light,px(395),haloY,haloZ+.013);ring.dispose();
+    }
+    figure([[164,391,392,.02],[181,387,396,.05],[198,385,399,.09],[216,374,409,.14],
+      [229,371,415,.21],[244,369,416,.26],[258,369,416,.26],[272,371,415,.22],[282,375,408,.17],
+      [288,365,422,.19],[297,349,431,.23],[308,343,438,.27],[335,344,438,.29],[350,345,437,.31],
+      [360,339,439,.34],[365,329,452,.38],[370,319,465,.42],[380,317,466,.46],[391,323,462,.37],[397,345,435,.22]],392,altarZ);
+    for(const [centre,rows] of [
+      [294,[[260,294,296,.012],[277,290,299,.05],[289,283,305,.09],[302,281,307,.13],
+        [316,284,306,.14],[324,273,318,.15],[336,269,319,.17],[379,270,316,.16],[420,270,315,.13],[458,274,313,.12]]],
+      [484,[[257,484,485,.012],[278,480,489,.05],[288,475,496,.10],[301,473,499,.14],
+        [317,475,496,.14],[325,462,514,.15],[340,459,515,.17],[377,460,511,.16],[422,460,510,.13],[458,464,505,.12]]],
+    ])figure(rows,centre,altarZ+.72);
+    // Carved timber uprights and lintel from the same front view.
+    for(const side of [-1,1]){
+      const x=side*1.68;k.box(wood,x,4.64,altarZ-.12,.34,4.9,.34);
+      const pixels=side<0?[[180,431],[226,431],[254,29],[210,23]]:[[546,432],[588,430],[562,22],[522,28]];
+      panel(x-.164,x+.164,py(431),py(24),altarZ+.058,pixels);
+      k.box(ochre,x,2.56,altarZ-.11,.55,.80,.55);
+    }
+    k.box(wood,0,py(30),altarZ-.12,3.75,.34,.35);
+    panel(-1.85,1.85,py(47),py(12),altarZ+.066,[[205,47],[561,45],[561,15],[209,14]]);
+    // Gold relief and fabric hang between the posts above the main image.
+    k.box(wood,0,py(101),altarZ-.49,1.70,.55,.13);
+    panel(-.82,.82,py(137),py(83),altarZ-.41,[[301,136],[476,136],[471,86],[305,88]]);
+    for(const side of [-1,1]){
+      const x=side*.85,y0=py(153),y1=py(26);
+      k.box(wood,x,(y0+y1)/2,altarZ-.49,.105,y1-y0,.15);
+      const u=side<0?281:491;
+      panel(x-.051,x+.051,y0,y1,altarZ-.405,[[u-5,152],[u+5,152],[u+5,41],[u-5,41]]);
+    }
+    // Lower tiers recede towards the central image. Keep separate silhouettes
+    // for the white figure, the small standing figures and the seated images.
+    const backZ=altarZ+.85;
+    k.box(redWood,0,py(462),backZ-.10,1.24,1.10,.17);
+    panel(-.60,.60,py(517),py(402),backZ,[[327,517],[456,517],[455,402],[330,399]]);
+    function halo(cx,cy,rx,ry,z){
+      for(let i=0;i<32;i++){
+        const p=a=>[cx+rx*Math.cos(a),cy+ry*Math.sin(a)];
+        const pts=[[cx,cy],p(i*pi/16),p((i+1)*pi/16)];
+        triangle(altar,pts.map(([x,y])=>[px(x),py(y),z]),pts.map(([x,y])=>uv(x,y)));
+      }
+    }
+    halo(391,446,24,23,backZ+.014);
+    figure([[434,389,392,.009],[440,385,397,.026],[448,382,399,.045],[454,384,396,.041],
+      [459,378,402,.049],[469,375,406,.058],[477,369,411,.071],[482,372,408,.054]],391,backZ+.048);
+    const frontZ=altarZ+1.16;
+    halo(388,499,25,24,frontZ);
+    figure([[479,387,389,.007],[487,385,393,.018],[493,380,396,.038],[503,381,394,.039],
+      [507,377,399,.046],[516,375,400,.062],[521,369,407,.067],[528,372,404,.053]],388,frontZ+.035);
+    for(const [c,z] of [[273,altarZ+.97],[506,altarZ+.97]]){
+      figure([[480,c-1,c+1,.005],[487,c-5,c+4,.023],[495,c-7,c+6,.035],[503,c-6,c+6,.032],
+        [508,c-11,c+10,.045],[519,c-13,c+13,.049],[525,c-21,c+20,.065],[529,c-18,c+18,.048]],c,z);
+    }
+    for(const [left,right,top,bottom,z] of [[236,287,530,586,altarZ+1.01],[361,418,530,585,frontZ+.055],[477,533,529,588,altarZ+1.01]]){
+      const x0=px(left),x1=px(right),y0=py(bottom),y1=py(top);
+      k.box(ochre,(x0+x1)/2,(y0+y1)/2,z-.15,x1-x0,y1-y0,.30);
+      panel(x0,x1,y0,y1,z+.008,[[left,bottom],[right,bottom],[right,top],[left,top]]);
+    }
+    const bloom=new T.SphereGeometry(1,9,7);
+    for(const [x,z,h,colour] of [[-1.67,altarZ+.91,.40,0xcfb357],[1.64,altarZ+.92,.49,0xae739e],
+      [-.58,frontZ+.09,.27,0xb55965],[.65,frontZ+.09,.29,0xc76778]]){
+      turned(T,k,gold,x,base+.32,z,[[.096,0],[.13,.07],[.115,.16],[.075,.22],[.095,.24]]);
+      for(let i=0;i<11;i++){
+        const a=i*2.38,reach=.06+.08*(i%3),bx=x+reach*Math.cos(a),bz=z+reach*Math.sin(a),y=base+.62+h*(.35+.30*(i%3));
+        A.strut(T,k,0x67734c,x,base+.55,z,bx,y,bz,.008);
+        k.stamp(bloom,colour,bx,y,bz,.047,.052,.043);
+      }
+    }
+    bloom.dispose();
+    finish(altar,'chua-ang-be-tho.webp','Bệ thờ và các pho tượng chùa Âng');
+    finish(paint,'chua-ang-bich-hoa.webp','Tranh tường và cột sơn son');
+  }
+
   function terraceGate(T,k){
     const face=17.9;
     for(const sign of [-1,1]){
@@ -459,7 +658,7 @@
     province:'Vĩnh Long',formerProvince:'Trà Vinh',region:'Nam Bộ',kind:'Chùa',source,photo:photo(25293197),visitOnArrival:true,mappedEntrance:true,
     width:24,depth:36,views,gardenRadius:4,boundary:[[-29,-73],[55,-71],[52,51],[29,54],[29,81],[9,81],[9,55],[-29,48]],solids:[[0,0,12,18]],
     reserve:(x,z,r)=>x>-30-r&&x<55+r&&z>-74-r&&z<54+r||Math.abs(x-19.24)<9+r&&z>=50-r&&z<81+r,
-    description:'Chùa Âng (Wat Angkor Raig Borei) ở phường Nguyệt Hóa là di tích kiến trúc nghệ thuật quốc gia. Chánh điện quay về phía đông, mang hình thức kiến trúc từ năm 1842. Hai bậc nền và hàng rào theo số đo trong hồ sơ di tích. Đường hào, cao độ sân, mái và vị trí các nhà phụ là phần phục dựng.',
+    description:'Chùa Âng (Wat Angkor Raig Borei) ở phường Nguyệt Hóa là di tích kiến trúc nghệ thuật quốc gia. Chánh điện quay về phía đông, mang hình thức kiến trúc từ năm 1842. Hai bậc nền và hàng rào theo số đo trong hồ sơ di tích. Đường hào, cao độ sân, vị trí các nhà phụ và cách bố trí hiện vật trong chánh điện là phần phục dựng. Hai bích họa và bệ thờ dùng ảnh tư liệu chụp tại chùa.',
     arrivalNote:'Xe dừng trên đường phía đông khu chùa. Các góc ngắm đi bộ dẫn qua hào và lên sân chánh điện.',
     build(T,k){hall(T,k);terraceGate(T,k);precinct(T,k);const approach=easternApproach(T,k),trees=garden(T,k);
       k.group.userData.fitGround=ground=>{approach(ground);trees(ground);};}});

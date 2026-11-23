@@ -447,6 +447,8 @@
       ['chua-ang-hao-nuoc','Lối qua hào nước chùa Âng',106.3029877,9.9157989,1],
       ['chua-ang-hanh-lang','Hành lang và ba cấp mái chùa Âng',106.3038469,9.9156893,2],
       ['chua-ang-dau-hoi','Đầu hồi chạm gỗ chánh điện chùa Âng',106.3037212,9.9158208,3],
+      ['chua-ang-be-tho','Bệ thờ Phật Thích Ca trong chánh điện chùa Âng',106.3035691,9.9157907,7],
+      ['chua-ang-bich-hoa','Bích họa và cột chạm rồng trong chùa Âng',106.3036547,9.9157671,8],
       ['chua-ang-cong-dong','Cổng chính chùa Âng dưới hai hàng sao',106.3042934,9.9161108,5],
       ['chua-ang-thap-nam-ngon','Bảo tháp năm ngọn bên hào chùa Âng',106.3038985,9.9158849,6],
       ['chua-ang-toan-canh','Toàn cảnh khuôn viên chùa Âng',106.3034999,9.9158874,4],
