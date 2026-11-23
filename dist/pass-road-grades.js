@@ -188,7 +188,7 @@ function createPassRoadFormation(graph,tiles,terrain,cx,cz,radius,halfWidth){
         if(buckets.has(key(i,j)))return true;
     return false;
   }
-  return {ground,roadHeight,affected,intersects,fine};
+  return {ground,roadHeight,hasRoad:edge=>profiles.has(edge.id),affected,intersects,fine};
 }
 
 // The verge and its cut or embankment share the wheel terrain grid. Only refine

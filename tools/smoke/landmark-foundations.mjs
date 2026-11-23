@@ -16,7 +16,8 @@ const catalogue=scripts.slice(scripts.indexOf('sight-details.js'),scripts.indexO
 assert.ok(catalogue.length>100);
 const sources=['three.min.js','tree-scan-data.js','tree-models.js','surface-materials.js','pass-surface.js',
   'landmark-terrain.js','mountain-stages.js','stage-terrain.js',
-  'sight-landscapes.js','urban-terrain.js','vietnam-relief.js','bridge-profiles.js','driving-water.js',...catalogue];
+  'sight-landscapes.js','urban-terrain.js','vietnam-relief.js','road-tile-codec.js','bridge-profiles.js',
+  'tunnel-profiles.js','world-roads.js','world-road-traffic.js','pass-road-grades.js','world-scene.js','driving-water.js',...catalogue];
 const browser=await chromium.launch(),rows=[];
 try{
   const page=await browser.newPage(),entry=new URL('foundation-audit.html',base).href;
@@ -30,17 +31,29 @@ try{
     const T={...THREE,TextureLoader:textures};
     const landscapes=createSightLandscapes(T),terrain=createVietnamRelief(T,scene,true,landscapes,null,2048);
     await terrain.ready;
+    const grades=createPassRoadGrades();
+    const [index,traffic,gradeIndex]=await Promise.all(['vn-roads/index.json','vn-traffic/index.json','pass-road-grades/index.json']
+      .map(async url=>{
+        const response=await fetch(url);
+        if(!response.ok)throw Error(url+' '+response.status);
+        return response.json();
+      }));
+    if(!gradeIndex.tiles?.length)throw Error('Missing surveyed pass tiles');
+    if(traffic.graphSourceSha256===index.sourceSha256&&traffic.osmTimestamp===index.osmTimestamp)index.trafficTiles=traffic.tiles;
     const models=VietnamLandmarks.create(T,scene),registry=VietnamLandmarks.entries;
     const sites=new Map(registry.map(s=>[s.id,s]));
     window.inspectLandmark=async id=>{
-      const site=sites.get(id),mx=111320*Math.cos(site.lat*Math.PI/180),my=110900;
-      const graph={mx,my,lat:site.lat,point:(u,v)=>({x:(u-site.lon)*mx,z:(site.lat-v)*my}),
-        geo:(x,z)=>[site.lon+x/mx,site.lat-z/my]};
+      const site=sites.get(id),graph=new VietnamRoads(index,site.lon,site.lat);
       registry.splice(0,registry.length,site);
-      await Promise.all([terrain.loadLocal(graph,0,0),landscapes.load(graph,0,0)]);
-      const {ground}=terrain.prepare(graph,landscapes.prepare(graph));
+      await Promise.all([terrain.loadLocal(graph,0,0),landscapes.load(graph,0,0),grades.load(graph,0,0)]);
+      const raw=terrain.prepare(graph,landscapes.prepare(graph)),tiles=grades.tiles(graph);
+      if(tiles?.size)await graph.load(0,0);
+      const formation=createPassRoadFormation(graph,tiles,raw,0,0,1088,worldRoadHalfWidth);
+      const ground=formation?.ground??raw.ground;
       window.roads=graph;window.gfx={ground};
-      const district=models.prepare(graph,0,0,ground);district.activate();
+      const district=models.prepare(graph,0,0,ground);
+      if(formation)district.setShoreFootings({step:formation.fine,intersects:formation.intersects,ground:(x,z,h)=>h});
+      district.activate();
       const active=district.active[0];
       if(!active)return {id,surveyed:!!site.surveyed,vertices:0};
       active.mesh.updateMatrixWorld(true);
@@ -82,7 +95,7 @@ try{
           gap=Math.max(gap??-Infinity,hit.point.y-land);
         }
       }
-      return {id,name:site.name,vertices,meshes,fitted:!!active.mesh.userData.fitGround,gap,
+      return {id,name:site.name,vertices,meshes,fitted:!!active.mesh.userData.fitGround,gap,passEarthworks:!!formation,
         surveyed:!!site.surveyed,explicitOpen:site.solids?.length===0,span:+(high-low).toFixed(2)};
     };
     return [...sites.keys()];
@@ -95,9 +108,10 @@ try{
   }
   const summary={entries:rows.length,withGeometry:rows.filter(r=>r.vertices>0).length,
     vertices:rows.reduce((total,r)=>total+r.vertices,0),fitted:rows.filter(r=>r.fitted).length,
-    markedSurveyed:rows.filter(r=>r.surveyed).length};
+    markedSurveyed:rows.filter(r=>r.surveyed).length,nearPassEarthworks:rows.filter(r=>r.passEarthworks).length};
   console.log(summary);
   if(values.output)writeFileSync(values.output,JSON.stringify({summary,entries:rows},null,2)+'\n');
+  if(!values.id)assert.ok(summary.nearPassEarthworks>0,'Full catalogue never loaded surveyed pass earthworks');
   for(const site of rows)if(site.gap!==null&&site.gap!==undefined)
     assert.ok(site.gap<=.02,site.id+' has a '+site.gap.toFixed(2)+' m visible gap');
 }finally{await browser.close();}

@@ -1,0 +1,43 @@
+{
+  "tiles": 1406,
+  "uniqueEdges": 3880332,
+  "graphNodes": 3249489,
+  "tunnelInteriorNodes": 40,
+  "counts": {
+    "bridgeDecks": 107803,
+    "tunnelBores": 2780,
+    "buildingPassages": 388,
+    "bridgeApproaches": 201249,
+    "tunnelApproaches": 4528,
+    "partialApproaches": 119595,
+    "endpointsChecked": 941392,
+    "offsetChecks": 1666682
+  },
+  "nodesWithProfiles": 391995,
+  "combinedMountainGrades": {
+    "bridgeSpan": {
+      "edges": 10872,
+      "above12Percent": 0,
+      "peakPercent": 11.990809374098815,
+      "peakEdge": 2746241
+    },
+    "bridgeApproach": {
+      "edges": 22271,
+      "above12Percent": 0,
+      "peakPercent": 11.993737169902811,
+      "peakEdge": 2016193
+    },
+    "tunnelSpan": {
+      "edges": 337,
+      "above12Percent": 0,
+      "peakPercent": 11.987270361317794,
+      "peakEdge": 3623131
+    },
+    "tunnelApproach": {
+      "edges": 602,
+      "above12Percent": 0,
+      "peakPercent": 11.985280775461067,
+      "peakEdge": 3420098
+    }
+  }
+}

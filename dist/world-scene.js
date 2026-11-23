@@ -214,7 +214,7 @@
     const wireMaterial=new T.LineBasicMaterial({color:0x50554d,transparent:true,opacity:.64});
     const temp=new T.Object3D(),tone=new T.Color();
     const roadsideImpact=createRoadsideImpact(T,scene,relief.ground);
-    let groundAt=relief.ground,bridges=null,tunnels=null;
+    let groundAt=relief.ground,bridges=null,tunnels=null,roadFormation=null;
     const driveGround=(x,z,edge)=>groundAt(x,z,edge);
     function drivingSurface(bridges,tunnels,pavementLift,roadway,shoreBed,cx,cz){
       return (x,z,edge)=>{
@@ -229,10 +229,23 @@
       // Sample the slope along the road's tangent so the edge of a raised deck
       // doesn't induce a near-vertical roll when a tyre gets near the rail.
       const structure=edge&&(sceneGraph?.tunnels.info(edge)?tunnels:bridges);
-      if(structure?.at(x,z,edge)!=null){
+      const onStructure=structure?.at(x,z,edge)!=null;
+      if(onStructure||edge&&roadFormation?.hasRoad(edge)){
         const c=sceneGraph.nearest(x,z,[edge]),p=sceneGraph.sample(c);
         const a=Math.max(0,c.s-2.2),b=Math.min(edge.length,c.s+2.2);
-        return (structure.height(edge,b)-structure.height(edge,a))/(b-a)*Math.cos(yaw-p.yaw);
+        const forward=Math.cos(yaw-p.yaw);
+        if(onStructure)return (structure.height(edge,b)-structure.height(edge,a))/(b-a)*forward;
+        if(c.error<=worldRoadHalfWidth(edge)**2){
+          const lo=roadFormation.roadHeight(edge,a),hi=roadFormation.roadHeight(edge,b);
+          if(lo!=null&&hi!=null){
+            // Keep the surveyed tangent through junctions. Across the lane,
+            // the tyres still follow the camber of the visible pavement.
+            const side=Math.sin(yaw-p.yaw);
+            const nx=2.2*Math.cos(p.yaw),nz=2.2*Math.sin(p.yaw);
+            const bank=Math.abs(side)<.001?0:(driveGround(x+nx,z+nz)-driveGround(x-nx,z-nz))/4.4;
+            return (hi-lo)/(b-a)*forward+bank*side;
+          }
+        }
       }
       return (driveGround(x+dx,z+dz)-driveGround(x-dx,z-dz))/4.4;
     }
@@ -304,7 +317,7 @@
       const previous={land,district,grounds};
       formationMesh?.dispose();shorePatch?.dispose();
       discardRoads(roadGroup);land.removeFromParent();district.group.removeFromParent();district.clear();
-      ({land,district,grounds,landmarks,roadGroup,shorePatch,formationMesh,groundAt,bridges,tunnels,obstacleCells,waterAt,
+      ({land,district,grounds,landmarks,roadGroup,shorePatch,formationMesh,groundAt,bridges,tunnels,roadFormation,obstacleCells,waterAt,
         nearestWaterBlock,sceneGraph,originX,originZ,treeBatches,streetBulbs}=next);
       spare=previous;
       scene.add(land,roadGroup,district.group);groundSource.display(grounds);landmarks?.activate();
@@ -594,6 +607,8 @@
           const s={ax,az,bx,bz,fx,fz,nx,nz,len:length,sourceLength,w:width,kind:e.kind,oneway:e.oneway,rank:perp,seed};
           s.traffic=e.traffic;s.station=station;s.source=source;s.roadMaterial=material[finish];
           s.profiled=formation&&(formation.roadHeight(source,station)!=null||formation.roadHeight(source,station+length)!=null);
+          s.priority=s.profiled&&(namedPass(e)||/^(motorway|trunk|primary)/.test(e.kind))?2:
+            s.profiled&&/^(secondary|tertiary)/.test(e.kind)?1:0;
           s.graded=s.profiled||namedPass(e)||terrain.altitude((a.x+b.x)*.5,(a.z+b.z)*.5)>280&&(e.visitorRoad||!district.builtUp(cx+(ax+bx)*.5,cz+(az+bz)*.5)&&!['residential','service','living_street'].includes(e.kind));
           s.laneLayout=roadLaneLayout(s,width);
           if(s.graded){
@@ -651,11 +666,12 @@
           bounds(seg,w+9,key=>{if(!cells.has(key))cells.set(key,[]);cells.get(key).push(seg);});
         }
       }
-      const crestNodes=new Map(),nodeKey=(x,z)=>Math.round((cx+x)*10)+','+Math.round((cz+z)*10);
+      const crestNodes=new Map(),surveyNodes=new Set(),nodeKey=(x,z)=>Math.round((cx+x)*10)+','+Math.round((cz+z)*10);
       for(const s of segments)if(s.graded){
         for(const [x,z,h] of [[s.ax,s.az,s.crown[0]],[s.bx,s.bz,s.crown.at(-1)]]){
           const k=nodeKey(x,z);
-          crestNodes.set(k,Math.max(crestNodes.get(k)??-Infinity,h));
+          if(s.profiled){crestNodes.set(k,h);surveyNodes.add(k);}
+          else if(!surveyNodes.has(k))crestNodes.set(k,Math.max(crestNodes.get(k)??-Infinity,h));
         }
       }
       for(const s of segments)if(s.graded){
@@ -666,20 +682,34 @@
       const roadway=!wooded?terrain.ground:(x,z)=>{
         const lx=x-cx,lz=z-cz,naturalY=natural(lx,lz);
         let weightSum=0,formationSum=0,influence=0;
+        let highest=0,lowest=Infinity,throughSum=0,throughWeight=0,throughBlend=0;
         for(const s of cells.get(nearbyCell(lx,lz))||[]){
           if(!s.graded)continue;
           const d=Math.max(0,Math.min(s.len,(lx-s.ax)*s.fx+(lz-s.az)*s.fz));
           const cross=Math.hypot(lx-s.ax-s.fx*d,lz-s.az-s.fz*d);
-          if(cross>=s.w+4)continue;
+          if(cross>=s.w+(s.priority?8:4))continue;
           const j=Math.min(s.crown.length-2,Math.floor(d/s.interval)),f=d/s.interval-j;
           const crown=s.crown[j]*(1-f)+s.crown[j+1]*f;
+          const surface=crown-Math.min(s.w,cross)*.018;
+          // Where a climbing side road runs beside the main carriageway,
+          // retain the through road's crossfall and ease the side road into it.
+          if(s.priority&&s.priority>=highest){
+            if(s.priority>highest){highest=s.priority;throughSum=throughWeight=throughBlend=0;}
+            const t=Math.max(0,Math.min(1,(s.w+8-cross)/7.7)),blend=t*t*(3-2*t),w=blend/(1+cross*cross);
+            throughWeight+=w;throughSum+=surface*w;throughBlend=Math.max(throughBlend,blend);
+          }
+          if(cross>=s.w+4)continue;
+          lowest=Math.min(lowest,s.priority);
           const t=Math.max(0,Math.min(1,(s.w+4-cross)/3.35));
           // Intersecting formations meet continuously where their nearest edges switch.
           const blend=t*t*(3-2*t),weight=blend/(1+cross*cross);
-          formationSum+=(crown-Math.min(s.w,cross)*.018)*weight;
+          formationSum+=surface*weight;
           weightSum+=weight;influence=Math.max(influence,blend);
         }
-        return weightSum?naturalY+(formationSum/weightSum-naturalY)*influence:naturalY;
+        if(!weightSum)return naturalY;
+        let road=formationSum/weightSum;
+        if(lowest<highest&&throughWeight)road+=(throughSum/throughWeight-road)*throughBlend;
+        return naturalY+(road-naturalY)*influence;
       };
       function cutClearance(x,z,own){
         let gap=8;
@@ -1246,7 +1276,7 @@
       }
       yield;
       // Publish geometry and its complete contact index in the same frame.
-      activate({land,district,grounds,landmarks,roadGroup,shorePatch,formationMesh,groundAt,bridges,tunnels,obstacleCells,waterAt,
+      activate({land,district,grounds,landmarks,roadGroup,shorePatch,formationMesh,groundAt,bridges,tunnels,roadFormation:formation,obstacleCells,waterAt,
         nearestWaterBlock,sceneGraph:graph,originX:cx,originZ:cz,treeBatches,streetBulbs});
       committed=true;districtRadius=cutoff;nextLightCheck=0;asphaltOrigin.set(cx,cz);landOrigin.set(gx,gz);
       centralStreetscapes?.trimFronts(regionalFronts);

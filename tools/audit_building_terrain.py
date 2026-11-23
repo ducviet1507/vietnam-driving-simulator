@@ -13,7 +13,7 @@ from pathlib import Path
 
 import numpy as np
 
-from audit_urban_roads import Terrain, read_gzip, read_json
+from terrain_sources import Terrain, read_gzip, read_json
 
 
 def tiles(dist):

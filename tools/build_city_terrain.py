@@ -19,6 +19,7 @@ from PIL import Image
 import rasterio
 from rasterio.windows import Window
 from scipy import ndimage
+from urban_terrain_transitions import balance_tiles, prepare
 
 
 ROOT = Path(__file__).resolve().parents[1] / "dist"
@@ -331,10 +332,23 @@ def build(work, output, workers):
             if missing:
                 partial[key] = missing
     present = {tuple(map(int, k.split("_"))) for k in groups["tiles"]}
+    # Use the original half-degree tiles as read-only inputs until every neighbour
+    # has been sampled. Only the staged output is replaced, after seam checks.
+    with TemporaryDirectory(prefix="urban-transitions-", dir=output.parent) as temp:
+        cache = Path(temp) / "reference"
+        balanced = Path(temp) / "balanced"
+        balanced.mkdir()
+        ordered = sorted(present)
+        prepare(ROOT, output, cache, ordered, workers)
+        balance_tiles(ROOT, output, balanced, cache, ordered, workers)
+        verify_edges(balanced, present, set(tiles))
+        for path in balanced.glob("*.png"):
+            path.replace(output / path.name)
     verify_edges(output, present, set(tiles))
     if {p.stem for p in output.glob("*.png")} != set(groups["tiles"]):
         raise ValueError(f"Unexpected PNGs in {output}")
-    manifest = dict(grid=GRID, cells=CELLS, **groups, noLandCover=no_cover, missingElevationNodes=partial)
+    manifest = dict(grid=GRID, cells=CELLS, **groups, noLandCover=no_cover, missingElevationNodes=partial,
+                    transitionModel="datum-gradient-v1")
     (output / "index.json").write_text(json.dumps(manifest, separators=(",", ":")) + "\n", encoding="ascii")
     print(f"Verified {len(tiles)} half-degree tiles and all shared edges: "
           f"{len(present)} with urban terrain, {len(groups['noUrban'])} without urban footprint, "

@@ -1,0 +1,6486 @@
+{
+  "graph_sha256": "9a5b9ee9f571366867eec6aaeff301debbfb19f5ad77a3cdc2b765556fe86826",
+  "unique_labelled_edges": 856,
+  "profile_endpoint_nodes": 393591,
+  "counts": {
+    "profile_surface": 423040,
+    "profile_bridge": 10872,
+    "profile_tunnel": 337,
+    "prefix_surface": 678,
+    "prefix_bridge": 50,
+    "QL4C_surface": 4,
+    "other_bridge": 6,
+    "other_tunnel": 12,
+    "other_surface": 99,
+    "access_surface": 7
+  },
+  "profile_metres": 101887172.71,
+  "profile_intervals": 5118895,
+  "profile_peak_percent": 17.955,
+  "profile_p95_percent": 14.917,
+  "metres": {
+    "prefix": 557730.1591715747,
+    "QL4C": 5667.991890085759,
+    "other": 40525.51817837361,
+    "access": 6271.407486933333
+  },
+  "names": {
+    "prefix": {
+      "Đèo Pha Đin cũ": 17,
+      "Đèo Pha Đin": 34,
+      "Đèo Ô Quy Hồ": 15,
+      "Đèo Khau Cọ": 18,
+      "Đèo Chẹn cũ": 5,
+      "Đèo Chẹn": 22,
+      "Đèo Khau Phạ": 21,
+      "Đèo Phiêng Ban": 19,
+      "Đèo Lũng Lô": 9,
+      "Đèo Lũng Lô cũ": 19,
+      "Đèo Ban": 3,
+      "Đèo Ách": 2,
+      "Đèo Khế": 7,
+      "Đèo Bẳn": 5,
+      "Đèo Din": 8,
+      "Đèo Thung Khe": 16,
+      "Đèo Gà": 2,
+      "Đèo De": 3,
+      "Đèo Muồng": 9,
+      "Đèo Giàng": 5,
+      "Đèo Khau Cốc Chà": 3,
+      "Đèo Nà Tềnh": 6,
+      "Đèo Ngang": 10,
+      "Đèo Lý Hoà": 6,
+      "Đèo Khau Luông": 7,
+      "Đèo A Co": 20,
+      "Đèo Kim Quy": 3,
+      "Đèo Tà Lương": 2,
+      "Đèo Bảo Lộc": 9,
+      "Đèo Chuối": 12,
+      "Đèo Tà Pứa": 3,
+      "Đèo Con Ó": 14,
+      "Đèo B40": 7,
+      "Đèo Lò Xo": 64,
+      "Đèo Mũi Trâu": 4,
+      "Đèo Phước Tượng": 19,
+      "Đèo Phú Gia": 17,
+      "Đèo Mũi Né": 9,
+      "Đèo Gia Bắc": 7,
+      "Đèo Phú Hiệp": 17,
+      "Đèo Phù Mỹ": 4,
+      "Đèo Chư Sê": 3,
+      "Đèo H'Mun": 3,
+      "Đèo H'Chang": 3,
+      "Đèo Le": 3,
+      "Đèo Hải Vân": 23,
+      "Đèo Đại Ninh": 13,
+      "Đèo Mimosa": 11,
+      "Đèo Sacom": 7,
+      "Đèo Prenn": 16,
+      "Đèo D'Ran": 8,
+      "Đèo Ngoạn Mục": 12,
+      "Đèo Khánh Lê": 25,
+      "Đèo Vi Ô Lăk": 7,
+      "Đèo Phượng Hoàng": 6,
+      "Đèo An Khê": 2,
+      "Đèo Khánh Sơn": 12,
+      "Đèo Cù Hin": 14,
+      "Đèo Lương Sơn": 6,
+      "Đèo Rù Rỳ": 13,
+      "Đèo Rọ Tượng": 3,
+      "Đèo Gành Đỏ": 9,
+      "Đèo Cù Mông": 12,
+      "Đèo Nại": 8,
+      "Đèo Cổ Mã": 14,
+      "Đèo Cả": 13
+    },
+    "QL4C": {
+      "Đèo Mã Pí Lèng": 4
+    },
+    "other": {
+      "Cầu Sáu Đèo": 2,
+      "Hầm Đèo Ngang": 2,
+      "Hầm Đèo Bụt": 2,
+      "Ba Đèo": 6,
+      "Đường Đèo Nai - Cọc Sáu": 18,
+      "ĐH.18B (Đèo Nhông - Mỹ Thọ)": 46,
+      "Đường dẫn phía Bắc hầm đèo Cổ Mã": 4,
+      "Hầm đèo Cổ Mã": 2,
+      "Đường dẫn phía Nam hầm đèo Cổ Mã": 6,
+      "Đường dẫn phía Nam hầm đèo Cả": 4,
+      "Hầm Đèo Cả": 6,
+      "Đường dẫn phía Bắc hầm đèo Cả": 19
+    },
+    "access": {
+      "Lối vào Di tích Đèo Văn Long": 1,
+      "Lối vào Khu du lịch Đèo Nước Ngọt": 1,
+      "Lối vào Bãi tắm Đèo Nước Ngọt": 1,
+      "Lối vào Bia chiến thắng Đèo Bảo Lộc": 1,
+      "Lối vào Đèo Hải Vân": 1,
+      "Lối vào Đèo Cả": 2
+    }
+  },
+  "pass_formations": {
+    "files": 497,
+    "edges": 434249,
+    "sha256": "9264ab5369b534363130b9411d7f89f2c4f4627116236c7d0b9a5b6122466a0c"
+  },
+  "urban_terrain": {
+    "sha256": "f22d1795dfe2877330bb0d5e664d3e5890ca936a8dbc60622731078dc760baa0",
+    "files": 188,
+    "tiles": 187,
+    "digest_method": "Sorted relative file name in UTF-8, NUL, binary SHA-256 of file contents; repeat for index.json and every listed PNG."
+  },
+  "measurements": {
+    "station": "20 m along the OSM centreline selected by the stage builder.",
+    "terrain_source": "The stage regional raster and the streamed sight DEMs, with the shipped urban overlay. Samples use the named stage in its own frame. No per-road formation, bridge lift, tunnel depth or route-origin triangle interpolation is included.",
+    "arcade_course": "The actual smoothRoadProfile function evaluated on the bundled relative longitudinal profile. This is a game course, not a surveyed road grade."
+  },
+  "stages": {
+    "deo-a-co": {
+      "stations": 161,
+      "profiled_stations": 161,
+      "length_m": 3200,
+      "angles_station_error_max_m": 8.922,
+      "angles_lateral_error_max_m": 8.293,
+      "trace_station_error_max_m": null,
+      "terrain_source_peak_percent": 34.254,
+      "terrain_source_p95_percent": 26.083,
+      "formation_peak_percent": 11.859,
+      "formation_p95_percent": 11.536,
+      "arcade_course_peak_percent": 7.772
+    },
+    "deo-b40": {
+      "stations": 161,
+      "profiled_stations": 161,
+      "length_m": 3200,
+      "angles_station_error_max_m": 12.597,
+      "angles_lateral_error_max_m": 12.394,
+      "trace_station_error_max_m": null,
+      "terrain_source_peak_percent": 38.856,
+      "terrain_source_p95_percent": 34.319,
+      "formation_peak_percent": 11.871,
+      "formation_p95_percent": 11.871,
+      "arcade_course_peak_percent": 7.341
+    },
+    "deo-ban": {
+      "stations": 104,
+      "profiled_stations": 104,
+      "length_m": 2060,
+      "angles_station_error_max_m": 6.365,
+      "angles_lateral_error_max_m": 5.427,
+      "trace_station_error_max_m": null,
+      "terrain_source_peak_percent": 30.238,
+      "terrain_source_p95_percent": 21.883,
+      "formation_peak_percent": 11.532,
+      "formation_p95_percent": 11.532,
+      "arcade_course_peak_percent": 8.024
+    },
+    "deo-bao-loc": {
+      "stations": 161,
+      "profiled_stations": 161,
+      "length_m": 3200,
+      "angles_station_error_max_m": 10.786,
+      "angles_lateral_error_max_m": 9.614,
+      "trace_station_error_max_m": null,
+      "terrain_source_peak_percent": 46.093,
+      "terrain_source_p95_percent": 24.496,
+      "formation_peak_percent": 10.924,
+      "formation_p95_percent": 9.809,
+      "arcade_course_peak_percent": 8.164
+    },
+    "deo-ban-3816921": {
+      "stations": 158,
+      "profiled_stations": 158,
+      "length_m": 3140,
+      "angles_station_error_max_m": 16.08,
+      "angles_lateral_error_max_m": 13.655,
+      "trace_station_error_max_m": null,
+      "terrain_source_peak_percent": 29.613,
+      "terrain_source_p95_percent": 21.071,
+      "formation_peak_percent": 11.843,
+      "formation_p95_percent": 11.842,
+      "arcade_course_peak_percent": 7.778
+    },
+    "deo-chuoi": {
+      "stations": 161,
+      "profiled_stations": 161,
+      "length_m": 3200,
+      "angles_station_error_max_m": 13.465,
+      "angles_lateral_error_max_m": 12.911,
+      "trace_station_error_max_m": null,
+      "terrain_source_peak_percent": 70.643,
+      "terrain_source_p95_percent": 46.647,
+      "formation_peak_percent": 11.938,
+      "formation_p95_percent": 11.937,
+      "arcade_course_peak_percent": 8.121
+    },
+    "deo-chu-se": {
+      "stations": 129,
+      "profiled_stations": 129,
+      "length_m": 2560,
+      "angles_station_error_max_m": 7.996,
+      "angles_lateral_error_max_m": 7.527,
+      "trace_station_error_max_m": null,
+      "terrain_source_peak_percent": 22.211,
+      "terrain_source_p95_percent": 16.041,
+      "formation_peak_percent": 11.562,
+      "formation_p95_percent": 11.382,
+      "arcade_course_peak_percent": 4.925
+    },
+    "deo-chen": {
+      "stations": 161,
+      "profiled_stations": 161,
+      "length_m": 3200,
+      "angles_station_error_max_m": 8.449,
+      "angles_lateral_error_max_m": 5.717,
+      "trace_station_error_max_m": null,
+      "terrain_source_peak_percent": 50.116,
+      "terrain_source_p95_percent": 37.468,
+      "formation_peak_percent": 11.963,
+      "formation_p95_percent": 11.963,
+      "arcade_course_peak_percent": 8.164
+    },
+    "deo-chen-cu": {
+      "stations": 94,
+      "profiled_stations": 94,
+      "length_m": 1860,
+      "angles_station_error_max_m": 17.671,
+      "angles_lateral_error_max_m": 17.565,
+      "trace_station_error_max_m": null,
+      "terrain_source_peak_percent": 33.992,
+      "terrain_source_p95_percent": 29.933,
+      "formation_peak_percent": 17.894,
+      "formation_p95_percent": 17.894,
+      "arcade_course_peak_percent": 8.152
+    },
+    "deo-con-o": {
+      "stations": 161,
+      "profiled_stations": 161,
+      "length_m": 3200,
+      "angles_station_error_max_m": 6.616,
+      "angles_lateral_error_max_m": 5.397,
+      "trace_station_error_max_m": null,
+      "terrain_source_peak_percent": 30.58,
+      "terrain_source_p95_percent": 16.411,
+      "formation_peak_percent": 11.408,
+      "formation_p95_percent": 8.298,
+      "arcade_course_peak_percent": 6.009
+    },
+    "deo-cu-mong": {
+      "stations": 161,
+      "profiled_stations": 161,
+      "length_m": 3200,
+      "angles_station_error_max_m": 5.675,
+      "angles_lateral_error_max_m": 5.256,
+      "trace_station_error_max_m": null,
+      "terrain_source_peak_percent": 24.741,
+      "terrain_source_p95_percent": 14.354,
+      "formation_peak_percent": 11.528,
+      "formation_p95_percent": 11.528,
+      "arcade_course_peak_percent": 8.164
+    },
+    "deo-ca": {
+      "stations": 161,
+      "profiled_stations": 161,
+      "length_m": 3200,
+      "angles_station_error_max_m": 9.682,
+      "angles_lateral_error_max_m": 7.735,
+      "trace_station_error_max_m": null,
+      "terrain_source_peak_percent": 36.2,
+      "terrain_source_p95_percent": 21.357,
+      "formation_peak_percent": 11.532,
+      "formation_p95_percent": 9.332,
+      "arcade_course_peak_percent": 7.984
+    },
+    "deo-co-ma": {
+      "stations": 127,
+      "profiled_stations": 127,
+      "length_m": 2520,
+      "angles_station_error_max_m": 3.58,
+      "angles_lateral_error_max_m": 3.55,
+      "trace_station_error_max_m": null,
+      "terrain_source_peak_percent": 31.994,
+      "terrain_source_p95_percent": 14.41,
+      "formation_peak_percent": 11.561,
+      "formation_p95_percent": 8.202,
+      "arcade_course_peak_percent": 4.674
+    },
+    "deo-dran": {
+      "stations": 161,
+      "profiled_stations": 161,
+      "length_m": 3200,
+      "angles_station_error_max_m": 14.431,
+      "angles_lateral_error_max_m": 14.289,
+      "trace_station_error_max_m": null,
+      "terrain_source_peak_percent": 50.664,
+      "terrain_source_p95_percent": 35.794,
+      "formation_peak_percent": 11.557,
+      "formation_p95_percent": 11.557,
+      "arcade_course_peak_percent": 8.164
+    },
+    "deo-de": {
+      "stations": 161,
+      "profiled_stations": 161,
+      "length_m": 3200,
+      "angles_station_error_max_m": 16.623,
+      "angles_lateral_error_max_m": 16.237,
+      "trace_station_error_max_m": null,
+      "terrain_source_peak_percent": 58.602,
+      "terrain_source_p95_percent": 27.141,
+      "formation_peak_percent": 14.035,
+      "formation_p95_percent": 11.071,
+      "arcade_course_peak_percent": 7.376
+    },
+    "deo-din": {
+      "stations": 161,
+      "profiled_stations": 161,
+      "length_m": 3200,
+      "angles_station_error_max_m": 17.48,
+      "angles_lateral_error_max_m": 15.521,
+      "trace_station_error_max_m": null,
+      "terrain_source_peak_percent": 34.359,
+      "terrain_source_p95_percent": 23.338,
+      "formation_peak_percent": 11.895,
+      "formation_p95_percent": 11.895,
+      "arcade_course_peak_percent": 6.41
+    },
+    "deo-gia-bac": {
+      "stations": 161,
+      "profiled_stations": 161,
+      "length_m": 3200,
+      "angles_station_error_max_m": 28.193,
+      "angles_lateral_error_max_m": 27.739,
+      "trace_station_error_max_m": null,
+      "terrain_source_peak_percent": 39.155,
+      "terrain_source_p95_percent": 27.945,
+      "formation_peak_percent": 11.959,
+      "formation_p95_percent": 11.959,
+      "arcade_course_peak_percent": 8.113
+    },
+    "deo-giang": {
+      "stations": 161,
+      "profiled_stations": 161,
+      "length_m": 3200,
+      "angles_station_error_max_m": 14.332,
+      "angles_lateral_error_max_m": 13.497,
+      "trace_station_error_max_m": null,
+      "terrain_source_peak_percent": 40.832,
+      "terrain_source_p95_percent": 28.532,
+      "formation_peak_percent": 11.94,
+      "formation_p95_percent": 11.538,
+      "arcade_course_peak_percent": 7.635
+    },
+    "deo-ga": {
+      "stations": 104,
+      "profiled_stations": 104,
+      "length_m": 2060,
+      "angles_station_error_max_m": 12.232,
+      "angles_lateral_error_max_m": 10.876,
+      "trace_station_error_max_m": null,
+      "terrain_source_peak_percent": 26.787,
+      "terrain_source_p95_percent": 23.394,
+      "formation_peak_percent": 11.647,
+      "formation_p95_percent": 11.555,
+      "arcade_course_peak_percent": 7.681
+    },
+    "deo-hchang": {
+      "stations": 161,
+      "profiled_stations": 161,
+      "length_m": 3200,
+      "angles_station_error_max_m": 14.948,
+      "angles_lateral_error_max_m": 12.458,
+      "trace_station_error_max_m": null,
+      "terrain_source_peak_percent": 28.405,
+      "terrain_source_p95_percent": 17.93,
+      "formation_peak_percent": 12.273,
+      "formation_p95_percent": 11.375,
+      "arcade_course_peak_percent": 6.908
+    },
+    "deo-hmun": {
+      "stations": 161,
+      "profiled_stations": 161,
+      "length_m": 3200,
+      "angles_station_error_max_m": 6.164,
+      "angles_lateral_error_max_m": 6.053,
+      "trace_station_error_max_m": null,
+      "terrain_source_peak_percent": 32.391,
+      "terrain_source_p95_percent": 16.252,
+      "formation_peak_percent": 14.538,
+      "formation_p95_percent": 14.537,
+      "arcade_course_peak_percent": 8.164
+    },
+    "deo-hai-van": {
+      "stations": 161,
+      "profiled_stations": 161,
+      "length_m": 3200,
+      "angles_station_error_max_m": 8.637,
+      "angles_lateral_error_max_m": 8.528,
+      "trace_station_error_max_m": 0.072,
+      "terrain_source_peak_percent": 56.69,
+      "terrain_source_p95_percent": 30.853,
+      "formation_peak_percent": 11.595,
+      "formation_p95_percent": 11.553,
+      "arcade_course_peak_percent": 8.15
+    },
+    "deo-khau-co": {
+      "stations": 161,
+      "profiled_stations": 161,
+      "length_m": 3200,
+      "angles_station_error_max_m": 9.055,
+      "angles_lateral_error_max_m": 9.01,
+      "trace_station_error_max_m": null,
+      "terrain_source_peak_percent": 68.42,
+      "terrain_source_p95_percent": 36.404,
+      "formation_peak_percent": 11.934,
+      "formation_p95_percent": 11.721,
+      "arcade_course_peak_percent": 8.164
+    },
+    "deo-khau-coc-cha": {
+      "stations": 161,
+      "profiled_stations": 161,
+      "length_m": 3200,
+      "angles_station_error_max_m": 38.549,
+      "angles_lateral_error_max_m": 33.428,
+      "trace_station_error_max_m": null,
+      "terrain_source_peak_percent": 65.819,
+      "terrain_source_p95_percent": 48.291,
+      "formation_peak_percent": 11.918,
+      "formation_p95_percent": 11.918,
+      "arcade_course_peak_percent": 8.164
+    },
+    "deo-khau-luong": {
+      "stations": 161,
+      "profiled_stations": 161,
+      "length_m": 3200,
+      "angles_station_error_max_m": 13.946,
+      "angles_lateral_error_max_m": 10.508,
+      "trace_station_error_max_m": null,
+      "terrain_source_peak_percent": 32.91,
+      "terrain_source_p95_percent": 23.659,
+      "formation_peak_percent": 11.558,
+      "formation_p95_percent": 11.557,
+      "arcade_course_peak_percent": 7.691
+    },
+    "deo-khau-pha": {
+      "stations": 161,
+      "profiled_stations": 161,
+      "length_m": 3200,
+      "angles_station_error_max_m": 20.054,
+      "angles_lateral_error_max_m": 19.141,
+      "trace_station_error_max_m": 0.071,
+      "terrain_source_peak_percent": 67.812,
+      "terrain_source_p95_percent": 46.112,
+      "formation_peak_percent": 11.601,
+      "formation_p95_percent": 11.547,
+      "arcade_course_peak_percent": 8.164
+    },
+    "deo-khanh-le": {
+      "stations": 161,
+      "profiled_stations": 161,
+      "length_m": 3200,
+      "angles_station_error_max_m": 7.484,
+      "angles_lateral_error_max_m": 7.402,
+      "trace_station_error_max_m": null,
+      "terrain_source_peak_percent": 65.248,
+      "terrain_source_p95_percent": 33.982,
+      "formation_peak_percent": 11.55,
+      "formation_p95_percent": 11.524,
+      "arcade_course_peak_percent": 8.164
+    },
+    "deo-khanh-son": {
+      "stations": 161,
+      "profiled_stations": 161,
+      "length_m": 3200,
+      "angles_station_error_max_m": 21.063,
+      "angles_lateral_error_max_m": 20.527,
+      "trace_station_error_max_m": null,
+      "terrain_source_peak_percent": 50.689,
+      "terrain_source_p95_percent": 31.344,
+      "formation_peak_percent": 14.939,
+      "formation_p95_percent": 14.414,
+      "arcade_course_peak_percent": 7.92
+    },
+    "deo-khe": {
+      "stations": 161,
+      "profiled_stations": 161,
+      "length_m": 3200,
+      "angles_station_error_max_m": 21.889,
+      "angles_lateral_error_max_m": 13.801,
+      "trace_station_error_max_m": null,
+      "terrain_source_peak_percent": 43.892,
+      "terrain_source_p95_percent": 28.131,
+      "formation_peak_percent": 11.55,
+      "formation_p95_percent": 11.538,
+      "arcade_course_peak_percent": 8.164
+    },
+    "deo-kim-quy": {
+      "stations": 161,
+      "profiled_stations": 161,
+      "length_m": 3200,
+      "angles_station_error_max_m": 13.448,
+      "angles_lateral_error_max_m": 12.098,
+      "trace_station_error_max_m": null,
+      "terrain_source_peak_percent": 34.6,
+      "terrain_source_p95_percent": 25.502,
+      "formation_peak_percent": 11.539,
+      "formation_p95_percent": 11.539,
+      "arcade_course_peak_percent": 7.499
+    },
+    "deo-le": {
+      "stations": 161,
+      "profiled_stations": 161,
+      "length_m": 3200,
+      "angles_station_error_max_m": 25.988,
+      "angles_lateral_error_max_m": 18.748,
+      "trace_station_error_max_m": null,
+      "terrain_source_peak_percent": 37.214,
+      "terrain_source_p95_percent": 25.225,
+      "formation_peak_percent": 14.573,
+      "formation_p95_percent": 13.968,
+      "arcade_course_peak_percent": 7.986
+    },
+    "deo-lo-xo": {
+      "stations": 161,
+      "profiled_stations": 161,
+      "length_m": 3200,
+      "angles_station_error_max_m": 17.267,
+      "angles_lateral_error_max_m": 17.068,
+      "trace_station_error_max_m": null,
+      "terrain_source_peak_percent": 50.202,
+      "terrain_source_p95_percent": 36.932,
+      "formation_peak_percent": 11.705,
+      "formation_p95_percent": 11.703,
+      "arcade_course_peak_percent": 8.104
+    },
+    "deo-lung-lo": {
+      "stations": 161,
+      "profiled_stations": 161,
+      "length_m": 3200,
+      "angles_station_error_max_m": 6.636,
+      "angles_lateral_error_max_m": 6.153,
+      "trace_station_error_max_m": null,
+      "terrain_source_peak_percent": 56.968,
+      "terrain_source_p95_percent": 32.074,
+      "formation_peak_percent": 11.557,
+      "formation_p95_percent": 11.541,
+      "arcade_course_peak_percent": 7.901
+    },
+    "deo-lung-lo-cu": {
+      "stations": 161,
+      "profiled_stations": 161,
+      "length_m": 3200,
+      "angles_station_error_max_m": 15.121,
+      "angles_lateral_error_max_m": 14.974,
+      "trace_station_error_max_m": null,
+      "terrain_source_peak_percent": 45.76,
+      "terrain_source_p95_percent": 21.081,
+      "formation_peak_percent": 17.948,
+      "formation_p95_percent": 16.842,
+      "arcade_course_peak_percent": 7.207
+    },
+    "deo-mimosa": {
+      "stations": 161,
+      "profiled_stations": 161,
+      "length_m": 3200,
+      "angles_station_error_max_m": 9.725,
+      "angles_lateral_error_max_m": 9.673,
+      "trace_station_error_max_m": null,
+      "terrain_source_peak_percent": 30.34,
+      "terrain_source_p95_percent": 23.197,
+      "formation_peak_percent": 11.512,
+      "formation_p95_percent": 11.508,
+      "arcade_course_peak_percent": 8.126
+    },
+    "deo-muong": {
+      "stations": 161,
+      "profiled_stations": 161,
+      "length_m": 3200,
+      "angles_station_error_max_m": 5.296,
+      "angles_lateral_error_max_m": 5.046,
+      "trace_station_error_max_m": null,
+      "terrain_source_peak_percent": 41.104,
+      "terrain_source_p95_percent": 24.108,
+      "formation_peak_percent": 11.963,
+      "formation_p95_percent": 11.963,
+      "arcade_course_peak_percent": 7.95
+    },
+    "deo-ma-pi-leng": {
+      "stations": 161,
+      "profiled_stations": 161,
+      "length_m": 3200,
+      "angles_station_error_max_m": 11.727,
+      "angles_lateral_error_max_m": 11.719,
+      "trace_station_error_max_m": 0.069,
+      "terrain_source_peak_percent": 79.225,
+      "terrain_source_p95_percent": 60.874,
+      "formation_peak_percent": 11.901,
+      "formation_p95_percent": 11.9,
+      "arcade_course_peak_percent": 8.164
+    },
+    "deo-mui-trau": {
+      "stations": 161,
+      "profiled_stations": 161,
+      "length_m": 3200,
+      "angles_station_error_max_m": 30.473,
+      "angles_lateral_error_max_m": 30.004,
+      "trace_station_error_max_m": null,
+      "terrain_source_peak_percent": 69.177,
+      "terrain_source_p95_percent": 43.173,
+      "formation_peak_percent": 14.545,
+      "formation_p95_percent": 14.545,
+      "arcade_course_peak_percent": 7.977
+    },
+    "deo-ngang": {
+      "stations": 161,
+      "profiled_stations": 161,
+      "length_m": 3200,
+      "angles_station_error_max_m": 6.939,
+      "angles_lateral_error_max_m": 6.806,
+      "trace_station_error_max_m": null,
+      "terrain_source_peak_percent": 25.378,
+      "terrain_source_p95_percent": 18.52,
+      "formation_peak_percent": 13.12,
+      "formation_p95_percent": 10.585,
+      "arcade_course_peak_percent": 7.565
+    },
+    "deo-ngoan-muc": {
+      "stations": 161,
+      "profiled_stations": 161,
+      "length_m": 3200,
+      "angles_station_error_max_m": 10.926,
+      "angles_lateral_error_max_m": 10.731,
+      "trace_station_error_max_m": 0.074,
+      "terrain_source_peak_percent": 39.319,
+      "terrain_source_p95_percent": 26.377,
+      "formation_peak_percent": 11.555,
+      "formation_p95_percent": 9.836,
+      "arcade_course_peak_percent": 8.164
+    },
+    "deo-na-tenh": {
+      "stations": 161,
+      "profiled_stations": 161,
+      "length_m": 3200,
+      "angles_station_error_max_m": 43.986,
+      "angles_lateral_error_max_m": 40.78,
+      "trace_station_error_max_m": null,
+      "terrain_source_peak_percent": 45.408,
+      "terrain_source_p95_percent": 27.046,
+      "formation_peak_percent": 11.887,
+      "formation_p95_percent": 11.641,
+      "arcade_course_peak_percent": 8.095
+    },
+    "deo-pha-din": {
+      "stations": 161,
+      "profiled_stations": 161,
+      "length_m": 3200,
+      "angles_station_error_max_m": 12.601,
+      "angles_lateral_error_max_m": 11.408,
+      "trace_station_error_max_m": 0.074,
+      "terrain_source_peak_percent": 29.099,
+      "terrain_source_p95_percent": 22.07,
+      "formation_peak_percent": 11.957,
+      "formation_p95_percent": 11.606,
+      "arcade_course_peak_percent": 7.797
+    },
+    "deo-pha-din-cu": {
+      "stations": 161,
+      "profiled_stations": 161,
+      "length_m": 3200,
+      "angles_station_error_max_m": 28.672,
+      "angles_lateral_error_max_m": 28.59,
+      "trace_station_error_max_m": null,
+      "terrain_source_peak_percent": 43.048,
+      "terrain_source_p95_percent": 34.645,
+      "formation_peak_percent": 14.942,
+      "formation_p95_percent": 14.942,
+      "arcade_course_peak_percent": 7.959
+    },
+    "deo-phieng-ban": {
+      "stations": 161,
+      "profiled_stations": 161,
+      "length_m": 3200,
+      "angles_station_error_max_m": 16.073,
+      "angles_lateral_error_max_m": 14.213,
+      "trace_station_error_max_m": null,
+      "terrain_source_peak_percent": 30.005,
+      "terrain_source_p95_percent": 20.129,
+      "formation_peak_percent": 11.939,
+      "formation_p95_percent": 11.939,
+      "arcade_course_peak_percent": 8.164
+    },
+    "deo-phu-my": {
+      "stations": 161,
+      "profiled_stations": 161,
+      "length_m": 3200,
+      "angles_station_error_max_m": 24.957,
+      "angles_lateral_error_max_m": 24.494,
+      "trace_station_error_max_m": null,
+      "terrain_source_peak_percent": 53.084,
+      "terrain_source_p95_percent": 36.262,
+      "formation_peak_percent": 11.949,
+      "formation_p95_percent": 11.949,
+      "arcade_course_peak_percent": 8.164
+    },
+    "deo-phu-gia": {
+      "stations": 121,
+      "profiled_stations": 121,
+      "length_m": 2400,
+      "angles_station_error_max_m": 6.565,
+      "angles_lateral_error_max_m": 4.994,
+      "trace_station_error_max_m": null,
+      "terrain_source_peak_percent": 30.109,
+      "terrain_source_p95_percent": 20.238,
+      "formation_peak_percent": 11.65,
+      "formation_p95_percent": 11.542,
+      "arcade_course_peak_percent": 8.061
+    },
+    "deo-phu-hiep": {
+      "stations": 127,
+      "profiled_stations": 127,
+      "length_m": 2520,
+      "angles_station_error_max_m": 4.483,
+      "angles_lateral_error_max_m": 4.447,
+      "trace_station_error_max_m": null,
+      "terrain_source_peak_percent": 16.162,
+      "terrain_source_p95_percent": 11.234,
+      "formation_peak_percent": 8.918,
+      "formation_p95_percent": 7.836,
+      "arcade_course_peak_percent": 4.762
+    },
+    "deo-phuoc-tuong": {
+      "stations": 161,
+      "profiled_stations": 161,
+      "length_m": 3200,
+      "angles_station_error_max_m": 5.119,
+      "angles_lateral_error_max_m": 5.117,
+      "trace_station_error_max_m": null,
+      "terrain_source_peak_percent": 32.341,
+      "terrain_source_p95_percent": 19.95,
+      "formation_peak_percent": 11.535,
+      "formation_p95_percent": 11.32,
+      "arcade_course_peak_percent": 4.859
+    },
+    "deo-phuong-hoang": {
+      "stations": 161,
+      "profiled_stations": 161,
+      "length_m": 3200,
+      "angles_station_error_max_m": 19.029,
+      "angles_lateral_error_max_m": 18.835,
+      "trace_station_error_max_m": null,
+      "terrain_source_peak_percent": 29.665,
+      "terrain_source_p95_percent": 20.758,
+      "formation_peak_percent": 11.556,
+      "formation_p95_percent": 11.555,
+      "arcade_course_peak_percent": 7.136
+    },
+    "deo-prenn": {
+      "stations": 161,
+      "profiled_stations": 161,
+      "length_m": 3200,
+      "angles_station_error_max_m": 11.529,
+      "angles_lateral_error_max_m": 8.448,
+      "trace_station_error_max_m": null,
+      "terrain_source_peak_percent": 41.374,
+      "terrain_source_p95_percent": 22.069,
+      "formation_peak_percent": 11.549,
+      "formation_p95_percent": 11.488,
+      "arcade_course_peak_percent": 8.089
+    },
+    "deo-sacom": {
+      "stations": 161,
+      "profiled_stations": 161,
+      "length_m": 3200,
+      "angles_station_error_max_m": 18.47,
+      "angles_lateral_error_max_m": 15.804,
+      "trace_station_error_max_m": null,
+      "terrain_source_peak_percent": 44.03,
+      "terrain_source_p95_percent": 24.239,
+      "formation_peak_percent": 14.57,
+      "formation_p95_percent": 13.085,
+      "arcade_course_peak_percent": 7.237
+    },
+    "deo-thung-khe": {
+      "stations": 161,
+      "profiled_stations": 161,
+      "length_m": 3200,
+      "angles_station_error_max_m": 9.011,
+      "angles_lateral_error_max_m": 7.499,
+      "trace_station_error_max_m": null,
+      "terrain_source_peak_percent": 38.846,
+      "terrain_source_p95_percent": 25.837,
+      "formation_peak_percent": 11.935,
+      "formation_p95_percent": 11.934,
+      "arcade_course_peak_percent": 8.072
+    },
+    "deo-ta-luong": {
+      "stations": 115,
+      "profiled_stations": 115,
+      "length_m": 2280,
+      "angles_station_error_max_m": 14.649,
+      "angles_lateral_error_max_m": 11.949,
+      "trace_station_error_max_m": null,
+      "terrain_source_peak_percent": 28.201,
+      "terrain_source_p95_percent": 19.526,
+      "formation_peak_percent": 11.668,
+      "formation_p95_percent": 11.548,
+      "arcade_course_peak_percent": 6.726
+    },
+    "deo-ta-pua": {
+      "stations": 161,
+      "profiled_stations": 161,
+      "length_m": 3200,
+      "angles_station_error_max_m": 18.037,
+      "angles_lateral_error_max_m": 15.204,
+      "trace_station_error_max_m": null,
+      "terrain_source_peak_percent": 50.81,
+      "terrain_source_p95_percent": 26.977,
+      "formation_peak_percent": 11.553,
+      "formation_p95_percent": 11.552,
+      "arcade_course_peak_percent": 7.955
+    },
+    "deo-vi-o-lak": {
+      "stations": 161,
+      "profiled_stations": 161,
+      "length_m": 3200,
+      "angles_station_error_max_m": 6.87,
+      "angles_lateral_error_max_m": 6.823,
+      "trace_station_error_max_m": null,
+      "terrain_source_peak_percent": 40.31,
+      "terrain_source_p95_percent": 29.894,
+      "formation_peak_percent": 11.529,
+      "formation_p95_percent": 11.529,
+      "arcade_course_peak_percent": 8.164
+    },
+    "deo-ach": {
+      "stations": 134,
+      "profiled_stations": 134,
+      "length_m": 2660,
+      "angles_station_error_max_m": 12.906,
+      "angles_lateral_error_max_m": 9.988,
+      "trace_station_error_max_m": null,
+      "terrain_source_peak_percent": 34.553,
+      "terrain_source_p95_percent": 25.116,
+      "formation_peak_percent": 11.556,
+      "formation_p95_percent": 11.556,
+      "arcade_course_peak_percent": 8.164
+    },
+    "deo-o-quy-ho": {
+      "stations": 161,
+      "profiled_stations": 161,
+      "length_m": 3200,
+      "angles_station_error_max_m": 20.2,
+      "angles_lateral_error_max_m": 16.6,
+      "trace_station_error_max_m": 0.077,
+      "terrain_source_peak_percent": 51.555,
+      "terrain_source_p95_percent": 38.518,
+      "formation_peak_percent": 11.935,
+      "formation_p95_percent": 11.934,
+      "arcade_course_peak_percent": 8.164
+    },
+    "deo-dai-ninh": {
+      "stations": 161,
+      "profiled_stations": 161,
+      "length_m": 3200,
+      "angles_station_error_max_m": 7.016,
+      "angles_lateral_error_max_m": 7.014,
+      "trace_station_error_max_m": null,
+      "terrain_source_peak_percent": 32.709,
+      "terrain_source_p95_percent": 26.062,
+      "formation_peak_percent": 11.536,
+      "formation_p95_percent": 11.524,
+      "arcade_course_peak_percent": 8.164
+    }
+  },
+  "named_surface_edges": {
+    "Đèo A Co": [
+      {
+        "edge": 2435442,
+        "metres": 1785.08,
+        "intervals": 56,
+        "terrain_source_peak_percent": 41.388,
+        "terrain_source_p95_percent": 37.2,
+        "formation_peak_percent": 11.966
+      },
+      {
+        "edge": 2435443,
+        "metres": 1783.68,
+        "intervals": 56,
+        "terrain_source_peak_percent": 32.456,
+        "terrain_source_p95_percent": 22.272,
+        "formation_peak_percent": 11.476
+      },
+      {
+        "edge": 2435444,
+        "metres": 66.88,
+        "intervals": 3,
+        "terrain_source_peak_percent": 13.764,
+        "terrain_source_p95_percent": 13.064,
+        "formation_peak_percent": 2.243
+      },
+      {
+        "edge": 2435475,
+        "metres": 1793.52,
+        "intervals": 57,
+        "terrain_source_peak_percent": 34.57,
+        "terrain_source_p95_percent": 25.529,
+        "formation_peak_percent": 11.542
+      },
+      {
+        "edge": 2435476,
+        "metres": 314.24,
+        "intervals": 10,
+        "terrain_source_peak_percent": 27.283,
+        "terrain_source_p95_percent": 25.739,
+        "formation_peak_percent": 11.711
+      },
+      {
+        "edge": 2480509,
+        "metres": 1499.6,
+        "intervals": 47,
+        "terrain_source_peak_percent": 26.917,
+        "terrain_source_p95_percent": 20.015,
+        "formation_peak_percent": 11.503
+      },
+      {
+        "edge": 2480512,
+        "metres": 83.51,
+        "intervals": 3,
+        "terrain_source_peak_percent": 14.46,
+        "terrain_source_p95_percent": 14.01,
+        "formation_peak_percent": 2.395
+      },
+      {
+        "edge": 2480513,
+        "metres": 1350.37,
+        "intervals": 43,
+        "terrain_source_peak_percent": 26.612,
+        "terrain_source_p95_percent": 21.916,
+        "formation_peak_percent": 11.582
+      },
+      {
+        "edge": 2502304,
+        "metres": 123.14,
+        "intervals": 4,
+        "terrain_source_peak_percent": 19.011,
+        "terrain_source_p95_percent": 18.169,
+        "formation_peak_percent": 2.436
+      },
+      {
+        "edge": 2502334,
+        "metres": 959.58,
+        "intervals": 30,
+        "terrain_source_peak_percent": 16.328,
+        "terrain_source_p95_percent": 14.036,
+        "formation_peak_percent": 11.505
+      },
+      {
+        "edge": 2502416,
+        "metres": 1796.15,
+        "intervals": 57,
+        "terrain_source_peak_percent": 28.912,
+        "terrain_source_p95_percent": 25.188,
+        "formation_peak_percent": 11.525
+      },
+      {
+        "edge": 2502417,
+        "metres": 551.62,
+        "intervals": 18,
+        "terrain_source_peak_percent": 20.375,
+        "terrain_source_p95_percent": 20.171,
+        "formation_peak_percent": 11.675
+      },
+      {
+        "edge": 2533636,
+        "metres": 608.58,
+        "intervals": 20,
+        "terrain_source_peak_percent": 33.306,
+        "terrain_source_p95_percent": 30.437,
+        "formation_peak_percent": 11.831
+      }
+    ],
+    "Đèo An Khê": [
+      {
+        "edge": 1769494,
+        "metres": 500.06,
+        "intervals": 16,
+        "terrain_source_peak_percent": 14.051,
+        "terrain_source_p95_percent": 13.953,
+        "formation_peak_percent": 9.999
+      }
+    ],
+    "Đèo B40": [
+      {
+        "edge": 3167238,
+        "metres": 1790.15,
+        "intervals": 56,
+        "terrain_source_peak_percent": 39.591,
+        "terrain_source_p95_percent": 26.001,
+        "formation_peak_percent": 11.563
+      },
+      {
+        "edge": 3167239,
+        "metres": 1795.52,
+        "intervals": 57,
+        "terrain_source_peak_percent": 34.516,
+        "terrain_source_p95_percent": 23.596,
+        "formation_peak_percent": 11.529
+      },
+      {
+        "edge": 3167240,
+        "metres": 1794.63,
+        "intervals": 57,
+        "terrain_source_peak_percent": 38.269,
+        "terrain_source_p95_percent": 32.782,
+        "formation_peak_percent": 11.534
+      },
+      {
+        "edge": 3167241,
+        "metres": 748.05,
+        "intervals": 24,
+        "terrain_source_peak_percent": 30.828,
+        "terrain_source_p95_percent": 22.378,
+        "formation_peak_percent": 11.871
+      },
+      {
+        "edge": 3733633,
+        "metres": 1796.6,
+        "intervals": 57,
+        "terrain_source_peak_percent": 35.668,
+        "terrain_source_p95_percent": 26.13,
+        "formation_peak_percent": 11.522
+      },
+      {
+        "edge": 3733634,
+        "metres": 872.07,
+        "intervals": 28,
+        "terrain_source_peak_percent": 46.2,
+        "terrain_source_p95_percent": 33.218,
+        "formation_peak_percent": 9.082
+      }
+    ],
+    "Đèo Ban": [
+      {
+        "edge": 3816484,
+        "metres": 1795.0,
+        "intervals": 57,
+        "terrain_source_peak_percent": 30.572,
+        "terrain_source_p95_percent": 22.382,
+        "formation_peak_percent": 11.532
+      },
+      {
+        "edge": 3816485,
+        "metres": 132.23,
+        "intervals": 5,
+        "terrain_source_peak_percent": 9.398,
+        "terrain_source_p95_percent": 9.332,
+        "formation_peak_percent": 8.47
+      },
+      {
+        "edge": 3816486,
+        "metres": 135.46,
+        "intervals": 5,
+        "terrain_source_peak_percent": 6.93,
+        "terrain_source_p95_percent": 6.676,
+        "formation_peak_percent": 8.785
+      }
+    ],
+    "Đèo Bảo Lộc": [
+      {
+        "edge": 210255,
+        "metres": 1793.04,
+        "intervals": 57,
+        "terrain_source_peak_percent": 54.016,
+        "terrain_source_p95_percent": 28.877,
+        "formation_peak_percent": 11.545
+      },
+      {
+        "edge": 210256,
+        "metres": 1795.06,
+        "intervals": 57,
+        "terrain_source_peak_percent": 27.12,
+        "terrain_source_p95_percent": 20.178,
+        "formation_peak_percent": 10.028
+      },
+      {
+        "edge": 210257,
+        "metres": 1794.96,
+        "intervals": 57,
+        "terrain_source_peak_percent": 30.903,
+        "terrain_source_p95_percent": 25.065,
+        "formation_peak_percent": 11.532
+      },
+      {
+        "edge": 210258,
+        "metres": 1029.84,
+        "intervals": 33,
+        "terrain_source_peak_percent": 47.705,
+        "terrain_source_p95_percent": 23.273,
+        "formation_peak_percent": 10.895
+      },
+      {
+        "edge": 210259,
+        "metres": 153.74,
+        "intervals": 5,
+        "terrain_source_peak_percent": 3.021,
+        "terrain_source_p95_percent": 3.019,
+        "formation_peak_percent": 2.602
+      },
+      {
+        "edge": 3634286,
+        "metres": 105.09,
+        "intervals": 4,
+        "terrain_source_peak_percent": 35.78,
+        "terrain_source_p95_percent": 32.367,
+        "formation_peak_percent": 2.379
+      },
+      {
+        "edge": 3634287,
+        "metres": 1795.63,
+        "intervals": 57,
+        "terrain_source_peak_percent": 28.881,
+        "terrain_source_p95_percent": 24.272,
+        "formation_peak_percent": 11.027
+      },
+      {
+        "edge": 3634288,
+        "metres": 676.82,
+        "intervals": 22,
+        "terrain_source_peak_percent": 26.47,
+        "terrain_source_p95_percent": 20.844,
+        "formation_peak_percent": 8.54
+      },
+      {
+        "edge": 3707206,
+        "metres": 588.96,
+        "intervals": 19,
+        "terrain_source_peak_percent": 33.239,
+        "terrain_source_p95_percent": 23.539,
+        "formation_peak_percent": 10.833
+      }
+    ],
+    "Đèo Bẳn": [
+      {
+        "edge": 3816927,
+        "metres": 52.2,
+        "intervals": 2,
+        "terrain_source_peak_percent": 16.43,
+        "terrain_source_p95_percent": 16.366,
+        "formation_peak_percent": 11.495
+      },
+      {
+        "edge": 3816926,
+        "metres": 648.55,
+        "intervals": 21,
+        "terrain_source_peak_percent": 25.316,
+        "terrain_source_p95_percent": 20.316,
+        "formation_peak_percent": 11.842
+      },
+      {
+        "edge": 3816921,
+        "metres": 981.13,
+        "intervals": 31,
+        "terrain_source_peak_percent": 21.327,
+        "terrain_source_p95_percent": 19.909,
+        "formation_peak_percent": 11.487
+      },
+      {
+        "edge": 3816922,
+        "metres": 1212.14,
+        "intervals": 38,
+        "terrain_source_peak_percent": 28.599,
+        "terrain_source_p95_percent": 19.803,
+        "formation_peak_percent": 11.575
+      },
+      {
+        "edge": 3816925,
+        "metres": 259.15,
+        "intervals": 9,
+        "terrain_source_peak_percent": 17.036,
+        "terrain_source_p95_percent": 16.161,
+        "formation_peak_percent": 11.538
+      }
+    ],
+    "Đèo Chuối": [
+      {
+        "edge": 227459,
+        "metres": 343.27,
+        "intervals": 11,
+        "terrain_source_peak_percent": 13.399,
+        "terrain_source_p95_percent": 12.958,
+        "formation_peak_percent": 4.952
+      },
+      {
+        "edge": 227460,
+        "metres": 629.7,
+        "intervals": 20,
+        "terrain_source_peak_percent": 20.214,
+        "terrain_source_p95_percent": 18.654,
+        "formation_peak_percent": 6.892
+      },
+      {
+        "edge": 227461,
+        "metres": 1796.43,
+        "intervals": 57,
+        "terrain_source_peak_percent": 34.009,
+        "terrain_source_p95_percent": 31.3,
+        "formation_peak_percent": 11.523
+      },
+      {
+        "edge": 227462,
+        "metres": 1797.23,
+        "intervals": 57,
+        "terrain_source_peak_percent": 46.419,
+        "terrain_source_p95_percent": 25.088,
+        "formation_peak_percent": 11.518
+      },
+      {
+        "edge": 227463,
+        "metres": 186.49,
+        "intervals": 6,
+        "terrain_source_peak_percent": 4.9,
+        "terrain_source_p95_percent": 4.885,
+        "formation_peak_percent": 6.274
+      },
+      {
+        "edge": 227464,
+        "metres": 3.95,
+        "intervals": 1,
+        "terrain_source_peak_percent": 2.938,
+        "terrain_source_p95_percent": 2.938,
+        "formation_peak_percent": 0.0
+      },
+      {
+        "edge": 227465,
+        "metres": 138.11,
+        "intervals": 5,
+        "terrain_source_peak_percent": 4.53,
+        "terrain_source_p95_percent": 4.45,
+        "formation_peak_percent": 3.548
+      },
+      {
+        "edge": 227466,
+        "metres": 181.64,
+        "intervals": 6,
+        "terrain_source_peak_percent": 7.509,
+        "terrain_source_p95_percent": 7.315,
+        "formation_peak_percent": 4.955
+      },
+      {
+        "edge": 484390,
+        "metres": 1790.28,
+        "intervals": 56,
+        "terrain_source_peak_percent": 43.604,
+        "terrain_source_p95_percent": 23.284,
+        "formation_peak_percent": 11.562
+      },
+      {
+        "edge": 484391,
+        "metres": 1792.35,
+        "intervals": 57,
+        "terrain_source_peak_percent": 70.645,
+        "terrain_source_p95_percent": 51.102,
+        "formation_peak_percent": 11.549
+      },
+      {
+        "edge": 484392,
+        "metres": 1789.29,
+        "intervals": 56,
+        "terrain_source_peak_percent": 37.027,
+        "terrain_source_p95_percent": 36.036,
+        "formation_peak_percent": 11.938
+      },
+      {
+        "edge": 484393,
+        "metres": 1768.36,
+        "intervals": 56,
+        "terrain_source_peak_percent": 39.037,
+        "terrain_source_p95_percent": 28.532,
+        "formation_peak_percent": 11.943
+      }
+    ],
+    "Đèo Chư Sê": [
+      {
+        "edge": 1588010,
+        "metres": 1790.35,
+        "intervals": 56,
+        "terrain_source_peak_percent": 19.755,
+        "terrain_source_p95_percent": 15.062,
+        "formation_peak_percent": 11.562
+      },
+      {
+        "edge": 1588011,
+        "metres": 399.78,
+        "intervals": 13,
+        "terrain_source_peak_percent": 10.037,
+        "terrain_source_p95_percent": 9.495,
+        "formation_peak_percent": 11.506
+      },
+      {
+        "edge": 1588012,
+        "metres": 386.13,
+        "intervals": 13,
+        "terrain_source_peak_percent": 17.704,
+        "terrain_source_p95_percent": 16.665,
+        "formation_peak_percent": 10.333
+      }
+    ],
+    "Đèo Chẹn": [
+      {
+        "edge": 3812583,
+        "metres": 464.39,
+        "intervals": 15,
+        "terrain_source_peak_percent": 28.546,
+        "terrain_source_p95_percent": 25.96,
+        "formation_peak_percent": 11.886
+      },
+      {
+        "edge": 3812584,
+        "metres": 860.82,
+        "intervals": 27,
+        "terrain_source_peak_percent": 40.586,
+        "terrain_source_p95_percent": 24.116,
+        "formation_peak_percent": 11.489
+      },
+      {
+        "edge": 3812585,
+        "metres": 44.88,
+        "intervals": 2,
+        "terrain_source_peak_percent": 2.293,
+        "terrain_source_p95_percent": 2.274,
+        "formation_peak_percent": 6.239
+      },
+      {
+        "edge": 3812586,
+        "metres": 16.68,
+        "intervals": 1,
+        "terrain_source_peak_percent": 6.496,
+        "terrain_source_p95_percent": 6.496,
+        "formation_peak_percent": 8.994
+      },
+      {
+        "edge": 3812587,
+        "metres": 124.06,
+        "intervals": 4,
+        "terrain_source_peak_percent": 15.128,
+        "terrain_source_p95_percent": 14.914,
+        "formation_peak_percent": 8.705
+      },
+      {
+        "edge": 3812588,
+        "metres": 292.83,
+        "intervals": 10,
+        "terrain_source_peak_percent": 16.404,
+        "terrain_source_p95_percent": 16.329,
+        "formation_peak_percent": 11.781
+      },
+      {
+        "edge": 3812589,
+        "metres": 166.93,
+        "intervals": 6,
+        "terrain_source_peak_percent": 19.569,
+        "terrain_source_p95_percent": 16.791,
+        "formation_peak_percent": 11.502
+      },
+      {
+        "edge": 3812590,
+        "metres": 7.59,
+        "intervals": 1,
+        "terrain_source_peak_percent": 1.613,
+        "terrain_source_p95_percent": 1.613,
+        "formation_peak_percent": 11.85
+      },
+      {
+        "edge": 3812591,
+        "metres": 1582.19,
+        "intervals": 50,
+        "terrain_source_peak_percent": 21.974,
+        "terrain_source_p95_percent": 17.918,
+        "formation_peak_percent": 11.484
+      },
+      {
+        "edge": 3812592,
+        "metres": 214.29,
+        "intervals": 7,
+        "terrain_source_peak_percent": 9.167,
+        "terrain_source_p95_percent": 8.85,
+        "formation_peak_percent": 11.806
+      },
+      {
+        "edge": 3812593,
+        "metres": 28.03,
+        "intervals": 1,
+        "terrain_source_peak_percent": 6.917,
+        "terrain_source_p95_percent": 6.917,
+        "formation_peak_percent": 11.415
+      },
+      {
+        "edge": 3812594,
+        "metres": 668.06,
+        "intervals": 21,
+        "terrain_source_peak_percent": 14.159,
+        "terrain_source_p95_percent": 14.09,
+        "formation_peak_percent": 11.855
+      },
+      {
+        "edge": 3812596,
+        "metres": 61.57,
+        "intervals": 2,
+        "terrain_source_peak_percent": 17.6,
+        "terrain_source_p95_percent": 17.193,
+        "formation_peak_percent": 11.694
+      },
+      {
+        "edge": 3812597,
+        "metres": 1665.18,
+        "intervals": 53,
+        "terrain_source_peak_percent": 41.132,
+        "terrain_source_p95_percent": 25.129,
+        "formation_peak_percent": 11.963
+      },
+      {
+        "edge": 3812598,
+        "metres": 884.95,
+        "intervals": 28,
+        "terrain_source_peak_percent": 49.964,
+        "terrain_source_p95_percent": 44.199,
+        "formation_peak_percent": 11.933
+      },
+      {
+        "edge": 3812595,
+        "metres": 1432.11,
+        "intervals": 45,
+        "terrain_source_peak_percent": 27.135,
+        "terrain_source_p95_percent": 26.556,
+        "formation_peak_percent": 11.563
+      },
+      {
+        "edge": 786845,
+        "metres": 6.97,
+        "intervals": 1,
+        "terrain_source_peak_percent": 0.231,
+        "terrain_source_p95_percent": 0.231,
+        "formation_peak_percent": 1.435
+      },
+      {
+        "edge": 786846,
+        "metres": 144.28,
+        "intervals": 5,
+        "terrain_source_peak_percent": 13.65,
+        "terrain_source_p95_percent": 13.116,
+        "formation_peak_percent": 11.644
+      },
+      {
+        "edge": 786847,
+        "metres": 55.22,
+        "intervals": 2,
+        "terrain_source_peak_percent": 28.52,
+        "terrain_source_p95_percent": 28.19,
+        "formation_peak_percent": 11.951
+      },
+      {
+        "edge": 786848,
+        "metres": 1787.15,
+        "intervals": 56,
+        "terrain_source_peak_percent": 38.67,
+        "terrain_source_p95_percent": 29.799,
+        "formation_peak_percent": 11.952
+      },
+      {
+        "edge": 786849,
+        "metres": 656.42,
+        "intervals": 21,
+        "terrain_source_peak_percent": 41.567,
+        "terrain_source_p95_percent": 27.568,
+        "formation_peak_percent": 11.563
+      },
+      {
+        "edge": 786850,
+        "metres": 83.71,
+        "intervals": 3,
+        "terrain_source_peak_percent": 6.018,
+        "terrain_source_p95_percent": 6.003,
+        "formation_peak_percent": 11.946
+      }
+    ],
+    "Đèo Chẹn cũ": [
+      {
+        "edge": 2497355,
+        "metres": 133.01,
+        "intervals": 5,
+        "terrain_source_peak_percent": 34.057,
+        "terrain_source_p95_percent": 33.869,
+        "formation_peak_percent": 17.894
+      },
+      {
+        "edge": 2497356,
+        "metres": 108.25,
+        "intervals": 4,
+        "terrain_source_peak_percent": 21.492,
+        "terrain_source_p95_percent": 19.934,
+        "formation_peak_percent": 17.552
+      },
+      {
+        "edge": 2497357,
+        "metres": 517.28,
+        "intervals": 17,
+        "terrain_source_peak_percent": 32.911,
+        "terrain_source_p95_percent": 27.337,
+        "formation_peak_percent": 17.592
+      },
+      {
+        "edge": 2497358,
+        "metres": 278.91,
+        "intervals": 9,
+        "terrain_source_peak_percent": 16.071,
+        "terrain_source_p95_percent": 14.747,
+        "formation_peak_percent": 11.043
+      },
+      {
+        "edge": 2497359,
+        "metres": 823.15,
+        "intervals": 26,
+        "terrain_source_peak_percent": 17.662,
+        "terrain_source_p95_percent": 17.307,
+        "formation_peak_percent": 13.448
+      }
+    ],
+    "Đèo Con Ó": [
+      {
+        "edge": 225050,
+        "metres": 1792.89,
+        "intervals": 57,
+        "terrain_source_peak_percent": 14.328,
+        "terrain_source_p95_percent": 11.534,
+        "formation_peak_percent": 11.044
+      },
+      {
+        "edge": 225051,
+        "metres": 1795.14,
+        "intervals": 57,
+        "terrain_source_peak_percent": 21.927,
+        "terrain_source_p95_percent": 16.566,
+        "formation_peak_percent": 11.531
+      },
+      {
+        "edge": 225052,
+        "metres": 1793.81,
+        "intervals": 57,
+        "terrain_source_peak_percent": 13.594,
+        "terrain_source_p95_percent": 10.785,
+        "formation_peak_percent": 6.522
+      },
+      {
+        "edge": 225053,
+        "metres": 1796.19,
+        "intervals": 57,
+        "terrain_source_peak_percent": 17.532,
+        "terrain_source_p95_percent": 14.919,
+        "formation_peak_percent": 11.524
+      },
+      {
+        "edge": 225054,
+        "metres": 1794.97,
+        "intervals": 57,
+        "terrain_source_peak_percent": 29.629,
+        "terrain_source_p95_percent": 18.177,
+        "formation_peak_percent": 11.532
+      },
+      {
+        "edge": 225055,
+        "metres": 1795.37,
+        "intervals": 57,
+        "terrain_source_peak_percent": 25.813,
+        "terrain_source_p95_percent": 18.843,
+        "formation_peak_percent": 11.53
+      },
+      {
+        "edge": 225056,
+        "metres": 1791.65,
+        "intervals": 56,
+        "terrain_source_peak_percent": 34.754,
+        "terrain_source_p95_percent": 26.63,
+        "formation_peak_percent": 11.554
+      },
+      {
+        "edge": 225057,
+        "metres": 1792.62,
+        "intervals": 57,
+        "terrain_source_peak_percent": 29.336,
+        "terrain_source_p95_percent": 26.564,
+        "formation_peak_percent": 11.547
+      },
+      {
+        "edge": 225058,
+        "metres": 1789.57,
+        "intervals": 56,
+        "terrain_source_peak_percent": 33.948,
+        "terrain_source_p95_percent": 29.752,
+        "formation_peak_percent": 11.936
+      },
+      {
+        "edge": 225059,
+        "metres": 1792.81,
+        "intervals": 57,
+        "terrain_source_peak_percent": 21.452,
+        "terrain_source_p95_percent": 16.785,
+        "formation_peak_percent": 11.546
+      },
+      {
+        "edge": 225060,
+        "metres": 443.82,
+        "intervals": 14,
+        "terrain_source_peak_percent": 7.315,
+        "terrain_source_p95_percent": 5.053,
+        "formation_peak_percent": 3.966
+      },
+      {
+        "edge": 3747313,
+        "metres": 883.4,
+        "intervals": 28,
+        "terrain_source_peak_percent": 5.991,
+        "terrain_source_p95_percent": 5.479,
+        "formation_peak_percent": 6.973
+      },
+      {
+        "edge": 3747314,
+        "metres": 1645.44,
+        "intervals": 52,
+        "terrain_source_peak_percent": 11.116,
+        "terrain_source_p95_percent": 10.416,
+        "formation_peak_percent": 11.96
+      }
+    ],
+    "Đèo Cù Hin": [
+      {
+        "edge": 28442,
+        "metres": 1671.78,
+        "intervals": 53,
+        "terrain_source_peak_percent": 18.958,
+        "terrain_source_p95_percent": 17.689,
+        "formation_peak_percent": 11.557
+      },
+      {
+        "edge": 28443,
+        "metres": 1700.79,
+        "intervals": 54,
+        "terrain_source_peak_percent": 23.121,
+        "terrain_source_p95_percent": 16.946,
+        "formation_peak_percent": 9.995
+      },
+      {
+        "edge": 28444,
+        "metres": 619.06,
+        "intervals": 20,
+        "terrain_source_peak_percent": 33.415,
+        "terrain_source_p95_percent": 29.849,
+        "formation_peak_percent": 11.517
+      },
+      {
+        "edge": 28445,
+        "metres": 371.56,
+        "intervals": 12,
+        "terrain_source_peak_percent": 24.902,
+        "terrain_source_p95_percent": 23.697,
+        "formation_peak_percent": 11.761
+      },
+      {
+        "edge": 28446,
+        "metres": 1796.84,
+        "intervals": 57,
+        "terrain_source_peak_percent": 17.696,
+        "terrain_source_p95_percent": 15.854,
+        "formation_peak_percent": 9.016
+      },
+      {
+        "edge": 28447,
+        "metres": 846.39,
+        "intervals": 27,
+        "terrain_source_peak_percent": 20.405,
+        "terrain_source_p95_percent": 20.075,
+        "formation_peak_percent": 11.909
+      },
+      {
+        "edge": 28448,
+        "metres": 520.6,
+        "intervals": 17,
+        "terrain_source_peak_percent": 4.114,
+        "terrain_source_p95_percent": 4.06,
+        "formation_peak_percent": 7.991
+      },
+      {
+        "edge": 42840,
+        "metres": 499.41,
+        "intervals": 16,
+        "terrain_source_peak_percent": 6.766,
+        "terrain_source_p95_percent": 6.675,
+        "formation_peak_percent": 9.011
+      },
+      {
+        "edge": 42841,
+        "metres": 1797.42,
+        "intervals": 57,
+        "terrain_source_peak_percent": 20.31,
+        "terrain_source_p95_percent": 19.305,
+        "formation_peak_percent": 11.517
+      },
+      {
+        "edge": 42842,
+        "metres": 876.5,
+        "intervals": 28,
+        "terrain_source_peak_percent": 20.386,
+        "terrain_source_p95_percent": 17.635,
+        "formation_peak_percent": 9.036
+      },
+      {
+        "edge": 42843,
+        "metres": 350.81,
+        "intervals": 11,
+        "terrain_source_peak_percent": 27.161,
+        "terrain_source_p95_percent": 22.904,
+        "formation_peak_percent": 11.288
+      },
+      {
+        "edge": 42844,
+        "metres": 624.07,
+        "intervals": 20,
+        "terrain_source_peak_percent": 30.935,
+        "terrain_source_p95_percent": 28.845,
+        "formation_peak_percent": 11.922
+      },
+      {
+        "edge": 42845,
+        "metres": 1703.71,
+        "intervals": 54,
+        "terrain_source_peak_percent": 24.464,
+        "terrain_source_p95_percent": 16.266,
+        "formation_peak_percent": 9.479
+      },
+      {
+        "edge": 42846,
+        "metres": 1680.26,
+        "intervals": 53,
+        "terrain_source_peak_percent": 20.028,
+        "terrain_source_p95_percent": 16.608,
+        "formation_peak_percent": 11.498
+      }
+    ],
+    "Đèo Cù Mông": [
+      {
+        "edge": 116608,
+        "metres": 1795.67,
+        "intervals": 57,
+        "terrain_source_peak_percent": 20.96,
+        "terrain_source_p95_percent": 16.248,
+        "formation_peak_percent": 11.528
+      },
+      {
+        "edge": 116609,
+        "metres": 1795.68,
+        "intervals": 57,
+        "terrain_source_peak_percent": 15.861,
+        "terrain_source_p95_percent": 14.786,
+        "formation_peak_percent": 11.528
+      },
+      {
+        "edge": 116610,
+        "metres": 1651.73,
+        "intervals": 52,
+        "terrain_source_peak_percent": 19.386,
+        "terrain_source_p95_percent": 17.327,
+        "formation_peak_percent": 11.558
+      },
+      {
+        "edge": 308612,
+        "metres": 151.96,
+        "intervals": 5,
+        "terrain_source_peak_percent": 2.572,
+        "terrain_source_p95_percent": 2.318,
+        "formation_peak_percent": 2.106
+      },
+      {
+        "edge": 308613,
+        "metres": 273.38,
+        "intervals": 9,
+        "terrain_source_peak_percent": 3.598,
+        "terrain_source_p95_percent": 3.17,
+        "formation_peak_percent": 3.585
+      },
+      {
+        "edge": 308614,
+        "metres": 1548.08,
+        "intervals": 49,
+        "terrain_source_peak_percent": 30.631,
+        "terrain_source_p95_percent": 22.254,
+        "formation_peak_percent": 11.937
+      },
+      {
+        "edge": 934547,
+        "metres": 132.29,
+        "intervals": 5,
+        "terrain_source_peak_percent": 8.647,
+        "terrain_source_p95_percent": 7.713,
+        "formation_peak_percent": 5.821
+      },
+      {
+        "edge": 1768568,
+        "metres": 47.43,
+        "intervals": 2,
+        "terrain_source_peak_percent": 3.771,
+        "terrain_source_p95_percent": 3.685,
+        "formation_peak_percent": 0.843
+      },
+      {
+        "edge": 1768570,
+        "metres": 136.17,
+        "intervals": 5,
+        "terrain_source_peak_percent": 12.095,
+        "terrain_source_p95_percent": 10.337,
+        "formation_peak_percent": 5.141
+      },
+      {
+        "edge": 3655055,
+        "metres": 140.14,
+        "intervals": 5,
+        "terrain_source_peak_percent": 2.382,
+        "terrain_source_p95_percent": 2.168,
+        "formation_peak_percent": 0.999
+      },
+      {
+        "edge": 3655056,
+        "metres": 440.14,
+        "intervals": 14,
+        "terrain_source_peak_percent": 1.726,
+        "terrain_source_p95_percent": 1.653,
+        "formation_peak_percent": 2.499
+      },
+      {
+        "edge": 3655057,
+        "metres": 191.16,
+        "intervals": 6,
+        "terrain_source_peak_percent": 1.014,
+        "terrain_source_p95_percent": 1.004,
+        "formation_peak_percent": 2.616
+      }
+    ],
+    "Đèo Cả": [
+      {
+        "edge": 25913,
+        "metres": 1795.16,
+        "intervals": 57,
+        "terrain_source_peak_percent": 40.079,
+        "terrain_source_p95_percent": 17.757,
+        "formation_peak_percent": 11.531
+      },
+      {
+        "edge": 25914,
+        "metres": 1794.96,
+        "intervals": 57,
+        "terrain_source_peak_percent": 24.938,
+        "terrain_source_p95_percent": 16.937,
+        "formation_peak_percent": 9.025
+      },
+      {
+        "edge": 25915,
+        "metres": 1797.35,
+        "intervals": 57,
+        "terrain_source_peak_percent": 26.829,
+        "terrain_source_p95_percent": 18.129,
+        "formation_peak_percent": 10.515
+      },
+      {
+        "edge": 25916,
+        "metres": 519.03,
+        "intervals": 17,
+        "terrain_source_peak_percent": 15.617,
+        "terrain_source_p95_percent": 12.481,
+        "formation_peak_percent": 7.514
+      },
+      {
+        "edge": 106387,
+        "metres": 1796.59,
+        "intervals": 57,
+        "terrain_source_peak_percent": 14.265,
+        "terrain_source_p95_percent": 6.516,
+        "formation_peak_percent": 3.006
+      },
+      {
+        "edge": 106388,
+        "metres": 656.98,
+        "intervals": 21,
+        "terrain_source_peak_percent": 4.16,
+        "terrain_source_p95_percent": 4.069,
+        "formation_peak_percent": 5.023
+      },
+      {
+        "edge": 933506,
+        "metres": 1790.64,
+        "intervals": 56,
+        "terrain_source_peak_percent": 26.906,
+        "terrain_source_p95_percent": 20.133,
+        "formation_peak_percent": 11.56
+      },
+      {
+        "edge": 933507,
+        "metres": 93.87,
+        "intervals": 3,
+        "terrain_source_peak_percent": 6.972,
+        "terrain_source_p95_percent": 6.365,
+        "formation_peak_percent": 3.728
+      },
+      {
+        "edge": 933508,
+        "metres": 509.18,
+        "intervals": 16,
+        "terrain_source_peak_percent": 17.54,
+        "terrain_source_p95_percent": 15.823,
+        "formation_peak_percent": 11.293
+      },
+      {
+        "edge": 3183001,
+        "metres": 1795.83,
+        "intervals": 57,
+        "terrain_source_peak_percent": 21.29,
+        "terrain_source_p95_percent": 13.545,
+        "formation_peak_percent": 10.023
+      },
+      {
+        "edge": 3183002,
+        "metres": 152.34,
+        "intervals": 5,
+        "terrain_source_peak_percent": 16.47,
+        "terrain_source_p95_percent": 15.897,
+        "formation_peak_percent": 2.101
+      },
+      {
+        "edge": 3563288,
+        "metres": 1441.19,
+        "intervals": 46,
+        "terrain_source_peak_percent": 22.871,
+        "terrain_source_p95_percent": 19.561,
+        "formation_peak_percent": 10.991
+      }
+    ],
+    "Đèo Cổ Mã": [
+      {
+        "edge": 25882,
+        "metres": 1492.2,
+        "intervals": 47,
+        "terrain_source_peak_percent": 29.077,
+        "terrain_source_p95_percent": 17.463,
+        "formation_peak_percent": 11.56
+      },
+      {
+        "edge": 891237,
+        "metres": 795.53,
+        "intervals": 25,
+        "terrain_source_peak_percent": 2.987,
+        "terrain_source_p95_percent": 2.824,
+        "formation_peak_percent": 3.52
+      },
+      {
+        "edge": 3707040,
+        "metres": 120.11,
+        "intervals": 4,
+        "terrain_source_peak_percent": 0.275,
+        "terrain_source_p95_percent": 0.272,
+        "formation_peak_percent": 0.5
+      },
+      {
+        "edge": 3707041,
+        "metres": 463.68,
+        "intervals": 15,
+        "terrain_source_peak_percent": 0.887,
+        "terrain_source_p95_percent": 0.625,
+        "formation_peak_percent": 0.992
+      },
+      {
+        "edge": 3707042,
+        "metres": 452.86,
+        "intervals": 15,
+        "terrain_source_peak_percent": 4.171,
+        "terrain_source_p95_percent": 3.402,
+        "formation_peak_percent": 1.524
+      },
+      {
+        "edge": 3707043,
+        "metres": 75.72,
+        "intervals": 3,
+        "terrain_source_peak_percent": 6.474,
+        "terrain_source_p95_percent": 6.34,
+        "formation_peak_percent": 2.641
+      },
+      {
+        "edge": 3707044,
+        "metres": 66.17,
+        "intervals": 3,
+        "terrain_source_peak_percent": 3.917,
+        "terrain_source_p95_percent": 3.827,
+        "formation_peak_percent": 1.36
+      },
+      {
+        "edge": 3707045,
+        "metres": 19.27,
+        "intervals": 1,
+        "terrain_source_peak_percent": 1.837,
+        "terrain_source_p95_percent": 1.837,
+        "formation_peak_percent": 1.038
+      },
+      {
+        "edge": 3707046,
+        "metres": 91.6,
+        "intervals": 3,
+        "terrain_source_peak_percent": 7.62,
+        "terrain_source_p95_percent": 7.074,
+        "formation_peak_percent": 6.004
+      },
+      {
+        "edge": 3707047,
+        "metres": 127.93,
+        "intervals": 4,
+        "terrain_source_peak_percent": 10.03,
+        "terrain_source_p95_percent": 9.357,
+        "formation_peak_percent": 10.787
+      },
+      {
+        "edge": 3707048,
+        "metres": 109.01,
+        "intervals": 4,
+        "terrain_source_peak_percent": 8.256,
+        "terrain_source_p95_percent": 7.923,
+        "formation_peak_percent": 1.376
+      },
+      {
+        "edge": 3707155,
+        "metres": 223.02,
+        "intervals": 7,
+        "terrain_source_peak_percent": 9.825,
+        "terrain_source_p95_percent": 8.812,
+        "formation_peak_percent": 7.398
+      },
+      {
+        "edge": 3707156,
+        "metres": 149.03,
+        "intervals": 5,
+        "terrain_source_peak_percent": 6.233,
+        "terrain_source_p95_percent": 5.877,
+        "formation_peak_percent": 4.697
+      }
+    ],
+    "Đèo D'Ran": [
+      {
+        "edge": 247441,
+        "metres": 942.26,
+        "intervals": 30,
+        "terrain_source_peak_percent": 36.294,
+        "terrain_source_p95_percent": 31.523,
+        "formation_peak_percent": 11.472
+      },
+      {
+        "edge": 247442,
+        "metres": 1791.2,
+        "intervals": 56,
+        "terrain_source_peak_percent": 46.289,
+        "terrain_source_p95_percent": 34.825,
+        "formation_peak_percent": 11.557
+      },
+      {
+        "edge": 247443,
+        "metres": 1179.23,
+        "intervals": 37,
+        "terrain_source_peak_percent": 37.049,
+        "terrain_source_p95_percent": 22.111,
+        "formation_peak_percent": 11.508
+      },
+      {
+        "edge": 247444,
+        "metres": 643.34,
+        "intervals": 21,
+        "terrain_source_peak_percent": 25.78,
+        "terrain_source_p95_percent": 15.959,
+        "formation_peak_percent": 11.938
+      },
+      {
+        "edge": 247445,
+        "metres": 727.43,
+        "intervals": 23,
+        "terrain_source_peak_percent": 17.459,
+        "terrain_source_p95_percent": 15.951,
+        "formation_peak_percent": 10.888
+      },
+      {
+        "edge": 247446,
+        "metres": 123.87,
+        "intervals": 4,
+        "terrain_source_peak_percent": 3.745,
+        "terrain_source_p95_percent": 3.745,
+        "formation_peak_percent": 7.265
+      },
+      {
+        "edge": 1494207,
+        "metres": 36.04,
+        "intervals": 2,
+        "terrain_source_peak_percent": 1.272,
+        "terrain_source_p95_percent": 1.229,
+        "formation_peak_percent": 3.33
+      },
+      {
+        "edge": 1494208,
+        "metres": 36.59,
+        "intervals": 2,
+        "terrain_source_peak_percent": 1.824,
+        "terrain_source_p95_percent": 1.763,
+        "formation_peak_percent": 2.733
+      }
+    ],
+    "Đèo De": [
+      {
+        "edge": 2697652,
+        "metres": 1793.82,
+        "intervals": 57,
+        "terrain_source_peak_percent": 33.426,
+        "terrain_source_p95_percent": 24.29,
+        "formation_peak_percent": 13.045
+      },
+      {
+        "edge": 2697653,
+        "metres": 1793.4,
+        "intervals": 57,
+        "terrain_source_peak_percent": 44.367,
+        "terrain_source_p95_percent": 25.619,
+        "formation_peak_percent": 14.553
+      },
+      {
+        "edge": 2697654,
+        "metres": 91.25,
+        "intervals": 3,
+        "terrain_source_peak_percent": 5.847,
+        "terrain_source_p95_percent": 5.796,
+        "formation_peak_percent": 4.932
+      }
+    ],
+    "Đèo Din": [
+      {
+        "edge": 3816912,
+        "metres": 711.87,
+        "intervals": 23,
+        "terrain_source_peak_percent": 32.976,
+        "terrain_source_p95_percent": 21.417,
+        "formation_peak_percent": 11.631
+      },
+      {
+        "edge": 3816913,
+        "metres": 1201.95,
+        "intervals": 38,
+        "terrain_source_peak_percent": 22.346,
+        "terrain_source_p95_percent": 20.042,
+        "formation_peak_percent": 11.481
+      },
+      {
+        "edge": 3816914,
+        "metres": 847.47,
+        "intervals": 27,
+        "terrain_source_peak_percent": 32.44,
+        "terrain_source_p95_percent": 27.912,
+        "formation_peak_percent": 11.894
+      },
+      {
+        "edge": 3816915,
+        "metres": 1795.77,
+        "intervals": 57,
+        "terrain_source_peak_percent": 25.657,
+        "terrain_source_p95_percent": 20.983,
+        "formation_peak_percent": 11.527
+      },
+      {
+        "edge": 3816916,
+        "metres": 393.64,
+        "intervals": 13,
+        "terrain_source_peak_percent": 20.571,
+        "terrain_source_p95_percent": 18.78,
+        "formation_peak_percent": 9.145
+      },
+      {
+        "edge": 3816918,
+        "metres": 255.79,
+        "intervals": 8,
+        "terrain_source_peak_percent": 7.548,
+        "terrain_source_p95_percent": 7.31,
+        "formation_peak_percent": 5.082
+      },
+      {
+        "edge": 3816919,
+        "metres": 1005.44,
+        "intervals": 32,
+        "terrain_source_peak_percent": 15.284,
+        "terrain_source_p95_percent": 13.045,
+        "formation_peak_percent": 10.94
+      },
+      {
+        "edge": 3816920,
+        "metres": 63.83,
+        "intervals": 2,
+        "terrain_source_peak_percent": 1.42,
+        "terrain_source_p95_percent": 1.397,
+        "formation_peak_percent": 7.05
+      }
+    ],
+    "Đèo Gia Bắc": [
+      {
+        "edge": 500096,
+        "metres": 1793.79,
+        "intervals": 57,
+        "terrain_source_peak_percent": 24.323,
+        "terrain_source_p95_percent": 17.449,
+        "formation_peak_percent": 11.54
+      },
+      {
+        "edge": 500097,
+        "metres": 1788.33,
+        "intervals": 56,
+        "terrain_source_peak_percent": 44.944,
+        "terrain_source_p95_percent": 32.833,
+        "formation_peak_percent": 11.944
+      },
+      {
+        "edge": 500098,
+        "metres": 1786.01,
+        "intervals": 56,
+        "terrain_source_peak_percent": 37.736,
+        "terrain_source_p95_percent": 29.182,
+        "formation_peak_percent": 11.96
+      },
+      {
+        "edge": 500099,
+        "metres": 1789.24,
+        "intervals": 56,
+        "terrain_source_peak_percent": 28.497,
+        "terrain_source_p95_percent": 21.351,
+        "formation_peak_percent": 11.938
+      },
+      {
+        "edge": 500100,
+        "metres": 1791.34,
+        "intervals": 56,
+        "terrain_source_peak_percent": 38.684,
+        "terrain_source_p95_percent": 22.785,
+        "formation_peak_percent": 11.556
+      },
+      {
+        "edge": 500101,
+        "metres": 663.73,
+        "intervals": 21,
+        "terrain_source_peak_percent": 24.707,
+        "terrain_source_p95_percent": 23.883,
+        "formation_peak_percent": 11.933
+      },
+      {
+        "edge": 500102,
+        "metres": 391.57,
+        "intervals": 13,
+        "terrain_source_peak_percent": 17.148,
+        "terrain_source_p95_percent": 13.962,
+        "formation_peak_percent": 10.215
+      }
+    ],
+    "Đèo Giàng": [
+      {
+        "edge": 3546172,
+        "metres": 1537.16,
+        "intervals": 49,
+        "terrain_source_peak_percent": 40.369,
+        "terrain_source_p95_percent": 23.934,
+        "formation_peak_percent": 11.521
+      },
+      {
+        "edge": 3546173,
+        "metres": 1795.17,
+        "intervals": 57,
+        "terrain_source_peak_percent": 28.306,
+        "terrain_source_p95_percent": 20.331,
+        "formation_peak_percent": 11.531
+      },
+      {
+        "edge": 3546174,
+        "metres": 8.36,
+        "intervals": 1,
+        "terrain_source_peak_percent": 1.092,
+        "terrain_source_p95_percent": 1.092,
+        "formation_peak_percent": 2.394
+      },
+      {
+        "edge": 3808820,
+        "metres": 1788.96,
+        "intervals": 56,
+        "terrain_source_peak_percent": 45.054,
+        "terrain_source_p95_percent": 33.246,
+        "formation_peak_percent": 11.94
+      },
+      {
+        "edge": 3808821,
+        "metres": 142.7,
+        "intervals": 5,
+        "terrain_source_peak_percent": 6.668,
+        "terrain_source_p95_percent": 6.149,
+        "formation_peak_percent": 11.773
+      }
+    ],
+    "Đèo Gà": [
+      {
+        "edge": 3845056,
+        "metres": 1791.47,
+        "intervals": 56,
+        "terrain_source_peak_percent": 26.618,
+        "terrain_source_p95_percent": 24.021,
+        "formation_peak_percent": 11.555
+      },
+      {
+        "edge": 3845057,
+        "metres": 276.45,
+        "intervals": 9,
+        "terrain_source_peak_percent": 24.588,
+        "terrain_source_p95_percent": 19.841,
+        "formation_peak_percent": 11.647
+      }
+    ],
+    "Đèo Gành Đỏ": [
+      {
+        "edge": 3663467,
+        "metres": 72.74,
+        "intervals": 3,
+        "terrain_source_peak_percent": 1.262,
+        "terrain_source_p95_percent": 1.188,
+        "formation_peak_percent": 0.55
+      },
+      {
+        "edge": 3663468,
+        "metres": 162.4,
+        "intervals": 6,
+        "terrain_source_peak_percent": 4.145,
+        "terrain_source_p95_percent": 3.351,
+        "formation_peak_percent": 1.97
+      },
+      {
+        "edge": 3663469,
+        "metres": 397.64,
+        "intervals": 13,
+        "terrain_source_peak_percent": 10.513,
+        "terrain_source_p95_percent": 8.242,
+        "formation_peak_percent": 9.053
+      },
+      {
+        "edge": 3663470,
+        "metres": 777.71,
+        "intervals": 25,
+        "terrain_source_peak_percent": 8.725,
+        "terrain_source_p95_percent": 5.911,
+        "formation_peak_percent": 9.027
+      },
+      {
+        "edge": 3663471,
+        "metres": 302.15,
+        "intervals": 10,
+        "terrain_source_peak_percent": 1.089,
+        "terrain_source_p95_percent": 0.996,
+        "formation_peak_percent": 7.447
+      },
+      {
+        "edge": 3663472,
+        "metres": 1085.97,
+        "intervals": 34,
+        "terrain_source_peak_percent": 7.541,
+        "terrain_source_p95_percent": 6.488,
+        "formation_peak_percent": 9.448
+      },
+      {
+        "edge": 3663473,
+        "metres": 58.68,
+        "intervals": 2,
+        "terrain_source_peak_percent": 3.169,
+        "terrain_source_p95_percent": 3.124,
+        "formation_peak_percent": 4.601
+      },
+      {
+        "edge": 3663474,
+        "metres": 485.2,
+        "intervals": 16,
+        "terrain_source_peak_percent": 7.388,
+        "terrain_source_p95_percent": 6.586,
+        "formation_peak_percent": 7.42
+      },
+      {
+        "edge": 3663475,
+        "metres": 72.6,
+        "intervals": 3,
+        "terrain_source_peak_percent": 1.251,
+        "terrain_source_p95_percent": 1.176,
+        "formation_peak_percent": 0.551
+      }
+    ],
+    "Đèo H'Chang": [
+      {
+        "edge": 2086466,
+        "metres": 1793.42,
+        "intervals": 57,
+        "terrain_source_peak_percent": 25.704,
+        "terrain_source_p95_percent": 17.269,
+        "formation_peak_percent": 11.542
+      },
+      {
+        "edge": 2086467,
+        "metres": 1792.73,
+        "intervals": 57,
+        "terrain_source_peak_percent": 27.355,
+        "terrain_source_p95_percent": 12.567,
+        "formation_peak_percent": 12.551
+      },
+      {
+        "edge": 2086468,
+        "metres": 371.19,
+        "intervals": 12,
+        "terrain_source_peak_percent": 9.261,
+        "terrain_source_p95_percent": 9.028,
+        "formation_peak_percent": 3.071
+      }
+    ],
+    "Đèo H'Mun": [
+      {
+        "edge": 1488634,
+        "metres": 1794.14,
+        "intervals": 57,
+        "terrain_source_peak_percent": 15.016,
+        "terrain_source_p95_percent": 14.461,
+        "formation_peak_percent": 11.036
+      },
+      {
+        "edge": 1488635,
+        "metres": 1795.41,
+        "intervals": 57,
+        "terrain_source_peak_percent": 31.147,
+        "terrain_source_p95_percent": 16.563,
+        "formation_peak_percent": 14.537
+      },
+      {
+        "edge": 1488636,
+        "metres": 78.23,
+        "intervals": 3,
+        "terrain_source_peak_percent": 25.607,
+        "terrain_source_p95_percent": 25.169,
+        "formation_peak_percent": 14.829
+      }
+    ],
+    "Đèo Hải Vân": [
+      {
+        "edge": 35556,
+        "metres": 45.99,
+        "intervals": 2,
+        "terrain_source_peak_percent": 3.806,
+        "terrain_source_p95_percent": 3.776,
+        "formation_peak_percent": 0.87
+      },
+      {
+        "edge": 35557,
+        "metres": 312.79,
+        "intervals": 10,
+        "terrain_source_peak_percent": 4.906,
+        "terrain_source_p95_percent": 4.171,
+        "formation_peak_percent": 4.604
+      },
+      {
+        "edge": 35558,
+        "metres": 1792.42,
+        "intervals": 57,
+        "terrain_source_peak_percent": 26.014,
+        "terrain_source_p95_percent": 17.113,
+        "formation_peak_percent": 11.549
+      },
+      {
+        "edge": 35559,
+        "metres": 1791.1,
+        "intervals": 56,
+        "terrain_source_peak_percent": 26.318,
+        "terrain_source_p95_percent": 24.626,
+        "formation_peak_percent": 11.557
+      },
+      {
+        "edge": 35560,
+        "metres": 1529.48,
+        "intervals": 48,
+        "terrain_source_peak_percent": 39.445,
+        "terrain_source_p95_percent": 21.392,
+        "formation_peak_percent": 11.926
+      },
+      {
+        "edge": 35573,
+        "metres": 149.55,
+        "intervals": 5,
+        "terrain_source_peak_percent": 0.608,
+        "terrain_source_p95_percent": 0.588,
+        "formation_peak_percent": 0.936
+      },
+      {
+        "edge": 35574,
+        "metres": 46.96,
+        "intervals": 2,
+        "terrain_source_peak_percent": 1.879,
+        "terrain_source_p95_percent": 1.824,
+        "formation_peak_percent": 0.852
+      },
+      {
+        "edge": 35575,
+        "metres": 650.82,
+        "intervals": 21,
+        "terrain_source_peak_percent": 5.597,
+        "terrain_source_p95_percent": 2.338,
+        "formation_peak_percent": 2.535
+      },
+      {
+        "edge": 3771681,
+        "metres": 1795.74,
+        "intervals": 57,
+        "terrain_source_peak_percent": 51.336,
+        "terrain_source_p95_percent": 35.044,
+        "formation_peak_percent": 11.527
+      },
+      {
+        "edge": 3771682,
+        "metres": 57.92,
+        "intervals": 2,
+        "terrain_source_peak_percent": 5.646,
+        "terrain_source_p95_percent": 5.549,
+        "formation_peak_percent": 2.072
+      },
+      {
+        "edge": 3771684,
+        "metres": 1791.88,
+        "intervals": 56,
+        "terrain_source_peak_percent": 43.181,
+        "terrain_source_p95_percent": 27.319,
+        "formation_peak_percent": 11.552
+      },
+      {
+        "edge": 285603,
+        "metres": 1794.03,
+        "intervals": 57,
+        "terrain_source_peak_percent": 40.056,
+        "terrain_source_p95_percent": 24.936,
+        "formation_peak_percent": 11.538
+      },
+      {
+        "edge": 285604,
+        "metres": 1794.13,
+        "intervals": 57,
+        "terrain_source_peak_percent": 31.593,
+        "terrain_source_p95_percent": 23.564,
+        "formation_peak_percent": 11.538
+      },
+      {
+        "edge": 285605,
+        "metres": 1179.4,
+        "intervals": 37,
+        "terrain_source_peak_percent": 25.401,
+        "terrain_source_p95_percent": 23.743,
+        "formation_peak_percent": 11.506
+      },
+      {
+        "edge": 285606,
+        "metres": 1791.51,
+        "intervals": 56,
+        "terrain_source_peak_percent": 26.373,
+        "terrain_source_p95_percent": 22.112,
+        "formation_peak_percent": 11.555
+      },
+      {
+        "edge": 285607,
+        "metres": 583.93,
+        "intervals": 19,
+        "terrain_source_peak_percent": 22.698,
+        "terrain_source_p95_percent": 20.172,
+        "formation_peak_percent": 10.429
+      },
+      {
+        "edge": 287342,
+        "metres": 1254.39,
+        "intervals": 40,
+        "terrain_source_peak_percent": 21.368,
+        "terrain_source_p95_percent": 18.788,
+        "formation_peak_percent": 11.551
+      },
+      {
+        "edge": 287343,
+        "metres": 12.31,
+        "intervals": 1,
+        "terrain_source_peak_percent": 4.787,
+        "terrain_source_p95_percent": 4.787,
+        "formation_peak_percent": 11.371
+      },
+      {
+        "edge": 287344,
+        "metres": 63.06,
+        "intervals": 2,
+        "terrain_source_peak_percent": 6.331,
+        "terrain_source_p95_percent": 6.119,
+        "formation_peak_percent": 5.709
+      },
+      {
+        "edge": 287345,
+        "metres": 433.29,
+        "intervals": 14,
+        "terrain_source_peak_percent": 20.401,
+        "terrain_source_p95_percent": 17.29,
+        "formation_peak_percent": 9.647
+      },
+      {
+        "edge": 3771685,
+        "metres": 694.29,
+        "intervals": 22,
+        "terrain_source_peak_percent": 18.143,
+        "terrain_source_p95_percent": 15.925,
+        "formation_peak_percent": 11.595
+      }
+    ],
+    "Đèo Khau Cọ": [
+      {
+        "edge": 2678602,
+        "metres": 291.53,
+        "intervals": 10,
+        "terrain_source_peak_percent": 11.475,
+        "terrain_source_p95_percent": 10.829,
+        "formation_peak_percent": 11.834
+      },
+      {
+        "edge": 2678603,
+        "metres": 1791.84,
+        "intervals": 56,
+        "terrain_source_peak_percent": 29.207,
+        "terrain_source_p95_percent": 22.671,
+        "formation_peak_percent": 11.552
+      },
+      {
+        "edge": 2678604,
+        "metres": 1789.77,
+        "intervals": 56,
+        "terrain_source_peak_percent": 43.712,
+        "terrain_source_p95_percent": 29.682,
+        "formation_peak_percent": 11.934
+      },
+      {
+        "edge": 2678605,
+        "metres": 1791.13,
+        "intervals": 56,
+        "terrain_source_peak_percent": 69.493,
+        "terrain_source_p95_percent": 33.369,
+        "formation_peak_percent": 11.557
+      },
+      {
+        "edge": 2678606,
+        "metres": 1792.14,
+        "intervals": 57,
+        "terrain_source_peak_percent": 34.908,
+        "terrain_source_p95_percent": 30.01,
+        "formation_peak_percent": 11.55
+      },
+      {
+        "edge": 2678607,
+        "metres": 1787.99,
+        "intervals": 56,
+        "terrain_source_peak_percent": 74.412,
+        "terrain_source_p95_percent": 64.783,
+        "formation_peak_percent": 11.946
+      },
+      {
+        "edge": 2678608,
+        "metres": 1792.79,
+        "intervals": 57,
+        "terrain_source_peak_percent": 35.726,
+        "terrain_source_p95_percent": 25.96,
+        "formation_peak_percent": 11.546
+      },
+      {
+        "edge": 2678609,
+        "metres": 1163.32,
+        "intervals": 37,
+        "terrain_source_peak_percent": 22.346,
+        "terrain_source_p95_percent": 20.978,
+        "formation_peak_percent": 11.966
+      },
+      {
+        "edge": 2678610,
+        "metres": 128.38,
+        "intervals": 5,
+        "terrain_source_peak_percent": 6.168,
+        "terrain_source_p95_percent": 6.003,
+        "formation_peak_percent": 4.206
+      },
+      {
+        "edge": 2678611,
+        "metres": 204.58,
+        "intervals": 7,
+        "terrain_source_peak_percent": 22.529,
+        "terrain_source_p95_percent": 21.935,
+        "formation_peak_percent": 11.731
+      },
+      {
+        "edge": 2678612,
+        "metres": 30.38,
+        "intervals": 1,
+        "terrain_source_peak_percent": 1.247,
+        "terrain_source_p95_percent": 1.247,
+        "formation_peak_percent": 6.582
+      },
+      {
+        "edge": 2678613,
+        "metres": 100.04,
+        "intervals": 4,
+        "terrain_source_peak_percent": 7.799,
+        "terrain_source_p95_percent": 7.709,
+        "formation_peak_percent": 9.496
+      },
+      {
+        "edge": 2699216,
+        "metres": 153.08,
+        "intervals": 5,
+        "terrain_source_peak_percent": 12.226,
+        "terrain_source_p95_percent": 12.179,
+        "formation_peak_percent": 2.09
+      },
+      {
+        "edge": 3785521,
+        "metres": 933.35,
+        "intervals": 30,
+        "terrain_source_peak_percent": 30.613,
+        "terrain_source_p95_percent": 25.891,
+        "formation_peak_percent": 11.582
+      },
+      {
+        "edge": 3785522,
+        "metres": 1789.95,
+        "intervals": 56,
+        "terrain_source_peak_percent": 53.683,
+        "terrain_source_p95_percent": 31.419,
+        "formation_peak_percent": 11.933
+      },
+      {
+        "edge": 3785523,
+        "metres": 1402.67,
+        "intervals": 44,
+        "terrain_source_peak_percent": 21.753,
+        "terrain_source_p95_percent": 20.141,
+        "formation_peak_percent": 11.478
+      }
+    ],
+    "Đèo Khau Cốc Chà": [
+      {
+        "edge": 3807795,
+        "metres": 1784.43,
+        "intervals": 56,
+        "terrain_source_peak_percent": 59.64,
+        "terrain_source_p95_percent": 42.631,
+        "formation_peak_percent": 11.471
+      },
+      {
+        "edge": 3807796,
+        "metres": 986.73,
+        "intervals": 31,
+        "terrain_source_peak_percent": 57.148,
+        "terrain_source_p95_percent": 49.582,
+        "formation_peak_percent": 11.918
+      },
+      {
+        "edge": 3807797,
+        "metres": 1001.34,
+        "intervals": 32,
+        "terrain_source_peak_percent": 46.571,
+        "terrain_source_p95_percent": 25.688,
+        "formation_peak_percent": 11.485
+      }
+    ],
+    "Đèo Khau Luông": [
+      {
+        "edge": 169236,
+        "metres": 9.11,
+        "intervals": 1,
+        "terrain_source_peak_percent": 3.684,
+        "terrain_source_p95_percent": 3.684,
+        "formation_peak_percent": 4.392
+      },
+      {
+        "edge": 169237,
+        "metres": 182.23,
+        "intervals": 6,
+        "terrain_source_peak_percent": 7.634,
+        "terrain_source_p95_percent": 7.611,
+        "formation_peak_percent": 4.445
+      },
+      {
+        "edge": 169238,
+        "metres": 103.26,
+        "intervals": 4,
+        "terrain_source_peak_percent": 1.653,
+        "terrain_source_p95_percent": 1.643,
+        "formation_peak_percent": 1.453
+      },
+      {
+        "edge": 169239,
+        "metres": 1794.77,
+        "intervals": 57,
+        "terrain_source_peak_percent": 28.768,
+        "terrain_source_p95_percent": 18.564,
+        "formation_peak_percent": 11.534
+      },
+      {
+        "edge": 169240,
+        "metres": 1790.92,
+        "intervals": 56,
+        "terrain_source_peak_percent": 30.435,
+        "terrain_source_p95_percent": 24.056,
+        "formation_peak_percent": 11.558
+      },
+      {
+        "edge": 169241,
+        "metres": 914.8,
+        "intervals": 29,
+        "terrain_source_peak_percent": 20.005,
+        "terrain_source_p95_percent": 17.194,
+        "formation_peak_percent": 11.565
+      },
+      {
+        "edge": 169242,
+        "metres": 10.58,
+        "intervals": 1,
+        "terrain_source_peak_percent": 9.375,
+        "terrain_source_p95_percent": 9.375,
+        "formation_peak_percent": 1.89
+      }
+    ],
+    "Đèo Khau Phạ": [
+      {
+        "edge": 3106646,
+        "metres": 1790.08,
+        "intervals": 56,
+        "terrain_source_peak_percent": 49.002,
+        "terrain_source_p95_percent": 31.89,
+        "formation_peak_percent": 11.564
+      },
+      {
+        "edge": 3106647,
+        "metres": 1788.69,
+        "intervals": 56,
+        "terrain_source_peak_percent": 48.459,
+        "terrain_source_p95_percent": 27.063,
+        "formation_peak_percent": 11.942
+      },
+      {
+        "edge": 3106649,
+        "metres": 1791.89,
+        "intervals": 56,
+        "terrain_source_peak_percent": 54.937,
+        "terrain_source_p95_percent": 35.188,
+        "formation_peak_percent": 11.552
+      },
+      {
+        "edge": 3106648,
+        "metres": 281.99,
+        "intervals": 9,
+        "terrain_source_peak_percent": 17.755,
+        "terrain_source_p95_percent": 17.015,
+        "formation_peak_percent": 11.915
+      },
+      {
+        "edge": 3106650,
+        "metres": 1792.56,
+        "intervals": 57,
+        "terrain_source_peak_percent": 49.382,
+        "terrain_source_p95_percent": 39.689,
+        "formation_peak_percent": 11.548
+      },
+      {
+        "edge": 3106651,
+        "metres": 1794.08,
+        "intervals": 57,
+        "terrain_source_peak_percent": 39.751,
+        "terrain_source_p95_percent": 29.442,
+        "formation_peak_percent": 11.538
+      },
+      {
+        "edge": 3106653,
+        "metres": 852.55,
+        "intervals": 27,
+        "terrain_source_peak_percent": 57.715,
+        "terrain_source_p95_percent": 41.614,
+        "formation_peak_percent": 11.601
+      },
+      {
+        "edge": 3245006,
+        "metres": 1791.51,
+        "intervals": 56,
+        "terrain_source_peak_percent": 35.038,
+        "terrain_source_p95_percent": 27.738,
+        "formation_peak_percent": 11.554
+      },
+      {
+        "edge": 3106652,
+        "metres": 1792.67,
+        "intervals": 57,
+        "terrain_source_peak_percent": 50.389,
+        "terrain_source_p95_percent": 39.605,
+        "formation_peak_percent": 11.547
+      },
+      {
+        "edge": 3245007,
+        "metres": 1790.46,
+        "intervals": 56,
+        "terrain_source_peak_percent": 56.03,
+        "terrain_source_p95_percent": 46.339,
+        "formation_peak_percent": 11.561
+      },
+      {
+        "edge": 3245008,
+        "metres": 357.61,
+        "intervals": 12,
+        "terrain_source_peak_percent": 25.681,
+        "terrain_source_p95_percent": 23.059,
+        "formation_peak_percent": 11.577
+      },
+      {
+        "edge": 3245009,
+        "metres": 363.83,
+        "intervals": 12,
+        "terrain_source_peak_percent": 12.841,
+        "terrain_source_p95_percent": 11.83,
+        "formation_peak_percent": 11.874
+      },
+      {
+        "edge": 3245010,
+        "metres": 75.3,
+        "intervals": 3,
+        "terrain_source_peak_percent": 2.008,
+        "terrain_source_p95_percent": 1.918,
+        "formation_peak_percent": 11.686
+      },
+      {
+        "edge": 3245011,
+        "metres": 111.93,
+        "intervals": 4,
+        "terrain_source_peak_percent": 10.1,
+        "terrain_source_p95_percent": 9.862,
+        "formation_peak_percent": 11.793
+      },
+      {
+        "edge": 3245012,
+        "metres": 1792.96,
+        "intervals": 57,
+        "terrain_source_peak_percent": 33.702,
+        "terrain_source_p95_percent": 24.503,
+        "formation_peak_percent": 11.545
+      },
+      {
+        "edge": 3245013,
+        "metres": 838.71,
+        "intervals": 27,
+        "terrain_source_peak_percent": 37.634,
+        "terrain_source_p95_percent": 35.715,
+        "formation_peak_percent": 11.518
+      },
+      {
+        "edge": 3245014,
+        "metres": 835.06,
+        "intervals": 27,
+        "terrain_source_peak_percent": 29.439,
+        "terrain_source_p95_percent": 22.731,
+        "formation_peak_percent": 11.568
+      },
+      {
+        "edge": 3245015,
+        "metres": 114.0,
+        "intervals": 4,
+        "terrain_source_peak_percent": 11.2,
+        "terrain_source_p95_percent": 10.222,
+        "formation_peak_percent": 11.579
+      },
+      {
+        "edge": 3245016,
+        "metres": 827.04,
+        "intervals": 26,
+        "terrain_source_peak_percent": 17.129,
+        "terrain_source_p95_percent": 9.069,
+        "formation_peak_percent": 11.898
+      },
+      {
+        "edge": 3245017,
+        "metres": 66.55,
+        "intervals": 3,
+        "terrain_source_peak_percent": 10.489,
+        "terrain_source_p95_percent": 10.419,
+        "formation_peak_percent": 9.918
+      }
+    ],
+    "Đèo Khánh Lê": [
+      {
+        "edge": 496592,
+        "metres": 1795.92,
+        "intervals": 57,
+        "terrain_source_peak_percent": 30.533,
+        "terrain_source_p95_percent": 26.379,
+        "formation_peak_percent": 11.526
+      },
+      {
+        "edge": 496593,
+        "metres": 1794.32,
+        "intervals": 57,
+        "terrain_source_peak_percent": 41.303,
+        "terrain_source_p95_percent": 29.017,
+        "formation_peak_percent": 11.536
+      },
+      {
+        "edge": 496594,
+        "metres": 1103.29,
+        "intervals": 35,
+        "terrain_source_peak_percent": 39.908,
+        "terrain_source_p95_percent": 37.115,
+        "formation_peak_percent": 11.964
+      },
+      {
+        "edge": 496606,
+        "metres": 1028.82,
+        "intervals": 33,
+        "terrain_source_peak_percent": 43.692,
+        "terrain_source_p95_percent": 26.518,
+        "formation_peak_percent": 11.897
+      },
+      {
+        "edge": 3519486,
+        "metres": 1796.06,
+        "intervals": 57,
+        "terrain_source_peak_percent": 61.734,
+        "terrain_source_p95_percent": 36.565,
+        "formation_peak_percent": 11.525
+      },
+      {
+        "edge": 3519487,
+        "metres": 94.02,
+        "intervals": 3,
+        "terrain_source_peak_percent": 30.474,
+        "terrain_source_p95_percent": 28.989,
+        "formation_peak_percent": 2.127
+      },
+      {
+        "edge": 3601132,
+        "metres": 1797.51,
+        "intervals": 57,
+        "terrain_source_peak_percent": 42.044,
+        "terrain_source_p95_percent": 26.881,
+        "formation_peak_percent": 11.516
+      },
+      {
+        "edge": 3601133,
+        "metres": 781.54,
+        "intervals": 25,
+        "terrain_source_peak_percent": 59.295,
+        "terrain_source_p95_percent": 23.747,
+        "formation_peak_percent": 9.98
+      },
+      {
+        "edge": 3601135,
+        "metres": 220.67,
+        "intervals": 7,
+        "terrain_source_peak_percent": 24.259,
+        "terrain_source_p95_percent": 24.094,
+        "formation_peak_percent": 11.964
+      },
+      {
+        "edge": 496605,
+        "metres": 1791.86,
+        "intervals": 56,
+        "terrain_source_peak_percent": 41.116,
+        "terrain_source_p95_percent": 37.361,
+        "formation_peak_percent": 11.552
+      },
+      {
+        "edge": 496599,
+        "metres": 1793.68,
+        "intervals": 57,
+        "terrain_source_peak_percent": 46.183,
+        "terrain_source_p95_percent": 39.32,
+        "formation_peak_percent": 11.541
+      },
+      {
+        "edge": 496600,
+        "metres": 1792.68,
+        "intervals": 57,
+        "terrain_source_peak_percent": 45.032,
+        "terrain_source_p95_percent": 37.149,
+        "formation_peak_percent": 11.547
+      },
+      {
+        "edge": 496601,
+        "metres": 678.08,
+        "intervals": 22,
+        "terrain_source_peak_percent": 30.095,
+        "terrain_source_p95_percent": 26.085,
+        "formation_peak_percent": 7.02
+      },
+      {
+        "edge": 496602,
+        "metres": 1794.32,
+        "intervals": 57,
+        "terrain_source_peak_percent": 40.918,
+        "terrain_source_p95_percent": 25.307,
+        "formation_peak_percent": 11.536
+      },
+      {
+        "edge": 496603,
+        "metres": 1796.35,
+        "intervals": 57,
+        "terrain_source_peak_percent": 29.357,
+        "terrain_source_p95_percent": 23.409,
+        "formation_peak_percent": 11.523
+      },
+      {
+        "edge": 496604,
+        "metres": 1792.32,
+        "intervals": 57,
+        "terrain_source_peak_percent": 50.953,
+        "terrain_source_p95_percent": 35.363,
+        "formation_peak_percent": 11.549
+      },
+      {
+        "edge": 496626,
+        "metres": 1795.45,
+        "intervals": 57,
+        "terrain_source_peak_percent": 31.165,
+        "terrain_source_p95_percent": 23.802,
+        "formation_peak_percent": 11.529
+      },
+      {
+        "edge": 496627,
+        "metres": 1792.68,
+        "intervals": 57,
+        "terrain_source_peak_percent": 34.309,
+        "terrain_source_p95_percent": 26.585,
+        "formation_peak_percent": 11.547
+      },
+      {
+        "edge": 496628,
+        "metres": 1792.99,
+        "intervals": 57,
+        "terrain_source_peak_percent": 39.542,
+        "terrain_source_p95_percent": 30.109,
+        "formation_peak_percent": 11.545
+      },
+      {
+        "edge": 496629,
+        "metres": 1796.17,
+        "intervals": 57,
+        "terrain_source_peak_percent": 36.165,
+        "terrain_source_p95_percent": 22.332,
+        "formation_peak_percent": 11.023
+      },
+      {
+        "edge": 496630,
+        "metres": 357.62,
+        "intervals": 12,
+        "terrain_source_peak_percent": 22.725,
+        "terrain_source_p95_percent": 19.752,
+        "formation_peak_percent": 11.577
+      }
+    ],
+    "Đèo Khánh Sơn": [
+      {
+        "edge": 245945,
+        "metres": 256.22,
+        "intervals": 9,
+        "terrain_source_peak_percent": 9.244,
+        "terrain_source_p95_percent": 8.868,
+        "formation_peak_percent": 7.103
+      },
+      {
+        "edge": 245986,
+        "metres": 441.78,
+        "intervals": 14,
+        "terrain_source_peak_percent": 15.777,
+        "terrain_source_p95_percent": 12.937,
+        "formation_peak_percent": 10.458
+      },
+      {
+        "edge": 245999,
+        "metres": 1788.19,
+        "intervals": 56,
+        "terrain_source_peak_percent": 39.853,
+        "terrain_source_p95_percent": 25.807,
+        "formation_peak_percent": 14.931
+      },
+      {
+        "edge": 246000,
+        "metres": 1788.4,
+        "intervals": 56,
+        "terrain_source_peak_percent": 33.472,
+        "terrain_source_p95_percent": 27.25,
+        "formation_peak_percent": 14.93
+      },
+      {
+        "edge": 246001,
+        "metres": 1787.28,
+        "intervals": 56,
+        "terrain_source_peak_percent": 35.465,
+        "terrain_source_p95_percent": 22.283,
+        "formation_peak_percent": 14.939
+      },
+      {
+        "edge": 246002,
+        "metres": 1792.06,
+        "intervals": 57,
+        "terrain_source_peak_percent": 39.89,
+        "terrain_source_p95_percent": 33.751,
+        "formation_peak_percent": 14.564
+      },
+      {
+        "edge": 246003,
+        "metres": 1787.74,
+        "intervals": 56,
+        "terrain_source_peak_percent": 52.083,
+        "terrain_source_p95_percent": 31.158,
+        "formation_peak_percent": 14.935
+      },
+      {
+        "edge": 246004,
+        "metres": 445.47,
+        "intervals": 14,
+        "terrain_source_peak_percent": 17.576,
+        "terrain_source_p95_percent": 15.39,
+        "formation_peak_percent": 9.383
+      },
+      {
+        "edge": 3791911,
+        "metres": 571.61,
+        "intervals": 18,
+        "terrain_source_peak_percent": 13.78,
+        "terrain_source_p95_percent": 11.415,
+        "formation_peak_percent": 11.161
+      }
+    ],
+    "Đèo Khế": [
+      {
+        "edge": 3807134,
+        "metres": 1794.9,
+        "intervals": 57,
+        "terrain_source_peak_percent": 14.035,
+        "terrain_source_p95_percent": 9.93,
+        "formation_peak_percent": 11.533
+      },
+      {
+        "edge": 3807135,
+        "metres": 1792.13,
+        "intervals": 57,
+        "terrain_source_peak_percent": 28.203,
+        "terrain_source_p95_percent": 21.902,
+        "formation_peak_percent": 11.551
+      },
+      {
+        "edge": 3807136,
+        "metres": 48.7,
+        "intervals": 2,
+        "terrain_source_peak_percent": 5.087,
+        "terrain_source_p95_percent": 5.009,
+        "formation_peak_percent": 11.908
+      },
+      {
+        "edge": 3807137,
+        "metres": 1793.94,
+        "intervals": 57,
+        "terrain_source_peak_percent": 36.949,
+        "terrain_source_p95_percent": 32.922,
+        "formation_peak_percent": 11.539
+      },
+      {
+        "edge": 3807138,
+        "metres": 440.97,
+        "intervals": 14,
+        "terrain_source_peak_percent": 27.237,
+        "terrain_source_p95_percent": 26.667,
+        "formation_peak_percent": 11.475
+      },
+      {
+        "edge": 3807139,
+        "metres": 1793.19,
+        "intervals": 57,
+        "terrain_source_peak_percent": 35.07,
+        "terrain_source_p95_percent": 33.024,
+        "formation_peak_percent": 11.544
+      },
+      {
+        "edge": 3807140,
+        "metres": 423.84,
+        "intervals": 14,
+        "terrain_source_peak_percent": 28.419,
+        "terrain_source_p95_percent": 24.49,
+        "formation_peak_percent": 11.891
+      }
+    ],
+    "Đèo Kim Quy": [
+      {
+        "edge": 169854,
+        "metres": 1793.96,
+        "intervals": 57,
+        "terrain_source_peak_percent": 25.414,
+        "terrain_source_p95_percent": 22.776,
+        "formation_peak_percent": 11.539
+      },
+      {
+        "edge": 169855,
+        "metres": 1794.89,
+        "intervals": 57,
+        "terrain_source_peak_percent": 33.336,
+        "terrain_source_p95_percent": 26.221,
+        "formation_peak_percent": 11.533
+      },
+      {
+        "edge": 169856,
+        "metres": 127.02,
+        "intervals": 4,
+        "terrain_source_peak_percent": 10.321,
+        "terrain_source_p95_percent": 9.494,
+        "formation_peak_percent": 11.809
+      }
+    ],
+    "Đèo Le": [
+      {
+        "edge": 13034,
+        "metres": 1789.52,
+        "intervals": 56,
+        "terrain_source_peak_percent": 30.619,
+        "terrain_source_p95_percent": 21.062,
+        "formation_peak_percent": 11.936
+      },
+      {
+        "edge": 13035,
+        "metres": 1791.04,
+        "intervals": 56,
+        "terrain_source_peak_percent": 20.891,
+        "terrain_source_p95_percent": 17.952,
+        "formation_peak_percent": 14.573
+      },
+      {
+        "edge": 13036,
+        "metres": 1759.1,
+        "intervals": 55,
+        "terrain_source_peak_percent": 36.367,
+        "terrain_source_p95_percent": 20.364,
+        "formation_peak_percent": 14.507
+      }
+    ],
+    "Đèo Lò Xo": [
+      {
+        "edge": 28074,
+        "metres": 1090.53,
+        "intervals": 35,
+        "terrain_source_peak_percent": 51.232,
+        "terrain_source_p95_percent": 43.014,
+        "formation_peak_percent": 11.6
+      },
+      {
+        "edge": 28075,
+        "metres": 278.77,
+        "intervals": 9,
+        "terrain_source_peak_percent": 11.914,
+        "terrain_source_p95_percent": 11.05,
+        "formation_peak_percent": 6.529
+      },
+      {
+        "edge": 28076,
+        "metres": 137.33,
+        "intervals": 5,
+        "terrain_source_peak_percent": 13.696,
+        "terrain_source_p95_percent": 13.343,
+        "formation_peak_percent": 11.724
+      },
+      {
+        "edge": 28077,
+        "metres": 57.08,
+        "intervals": 2,
+        "terrain_source_peak_percent": 6.413,
+        "terrain_source_p95_percent": 6.242,
+        "formation_peak_percent": 8.935
+      },
+      {
+        "edge": 28078,
+        "metres": 85.67,
+        "intervals": 3,
+        "terrain_source_peak_percent": 11.206,
+        "terrain_source_p95_percent": 10.704,
+        "formation_peak_percent": 8.405
+      },
+      {
+        "edge": 28079,
+        "metres": 46.6,
+        "intervals": 2,
+        "terrain_source_peak_percent": 4.478,
+        "terrain_source_p95_percent": 4.341,
+        "formation_peak_percent": 3.863
+      },
+      {
+        "edge": 28080,
+        "metres": 48.6,
+        "intervals": 2,
+        "terrain_source_peak_percent": 12.849,
+        "terrain_source_p95_percent": 12.764,
+        "formation_peak_percent": 0.823
+      },
+      {
+        "edge": 28081,
+        "metres": 7.92,
+        "intervals": 1,
+        "terrain_source_peak_percent": 1.451,
+        "terrain_source_p95_percent": 1.451,
+        "formation_peak_percent": 3.788
+      },
+      {
+        "edge": 28082,
+        "metres": 57.2,
+        "intervals": 2,
+        "terrain_source_peak_percent": 3.229,
+        "terrain_source_p95_percent": 3.093,
+        "formation_peak_percent": 5.245
+      },
+      {
+        "edge": 28083,
+        "metres": 141.36,
+        "intervals": 5,
+        "terrain_source_peak_percent": 12.35,
+        "terrain_source_p95_percent": 11.741,
+        "formation_peak_percent": 4.952
+      },
+      {
+        "edge": 28084,
+        "metres": 5.48,
+        "intervals": 1,
+        "terrain_source_peak_percent": 7.434,
+        "terrain_source_p95_percent": 7.434,
+        "formation_peak_percent": 1.824
+      },
+      {
+        "edge": 28085,
+        "metres": 243.87,
+        "intervals": 8,
+        "terrain_source_peak_percent": 12.591,
+        "terrain_source_p95_percent": 12.194,
+        "formation_peak_percent": 6.889
+      },
+      {
+        "edge": 28086,
+        "metres": 1250.84,
+        "intervals": 40,
+        "terrain_source_peak_percent": 38.218,
+        "terrain_source_p95_percent": 19.912,
+        "formation_peak_percent": 8.059
+      },
+      {
+        "edge": 31131,
+        "metres": 1791.62,
+        "intervals": 56,
+        "terrain_source_peak_percent": 40.412,
+        "terrain_source_p95_percent": 29.754,
+        "formation_peak_percent": 11.554
+      },
+      {
+        "edge": 31132,
+        "metres": 1795.34,
+        "intervals": 57,
+        "terrain_source_peak_percent": 32.762,
+        "terrain_source_p95_percent": 25.461,
+        "formation_peak_percent": 11.53
+      },
+      {
+        "edge": 31133,
+        "metres": 308.59,
+        "intervals": 10,
+        "terrain_source_peak_percent": 61.25,
+        "terrain_source_p95_percent": 55.62,
+        "formation_peak_percent": 5.833
+      },
+      {
+        "edge": 676018,
+        "metres": 71.03,
+        "intervals": 3,
+        "terrain_source_peak_percent": 9.46,
+        "terrain_source_p95_percent": 9.158,
+        "formation_peak_percent": 8.447
+      },
+      {
+        "edge": 1873783,
+        "metres": 93.17,
+        "intervals": 3,
+        "terrain_source_peak_percent": 40.947,
+        "terrain_source_p95_percent": 39.96,
+        "formation_peak_percent": 2.147
+      },
+      {
+        "edge": 1873784,
+        "metres": 183.68,
+        "intervals": 6,
+        "terrain_source_peak_percent": 20.48,
+        "terrain_source_p95_percent": 18.971,
+        "formation_peak_percent": 9.31
+      },
+      {
+        "edge": 1873785,
+        "metres": 103.29,
+        "intervals": 4,
+        "terrain_source_peak_percent": 14.741,
+        "terrain_source_p95_percent": 14.427,
+        "formation_peak_percent": 11.618
+      },
+      {
+        "edge": 1873786,
+        "metres": 129.04,
+        "intervals": 5,
+        "terrain_source_peak_percent": 24.329,
+        "terrain_source_p95_percent": 21.075,
+        "formation_peak_percent": 11.159
+      },
+      {
+        "edge": 1873787,
+        "metres": 71.31,
+        "intervals": 3,
+        "terrain_source_peak_percent": 15.755,
+        "terrain_source_p95_percent": 14.642,
+        "formation_peak_percent": 2.244
+      },
+      {
+        "edge": 1873789,
+        "metres": 34.38,
+        "intervals": 2,
+        "terrain_source_peak_percent": 22.078,
+        "terrain_source_p95_percent": 21.81,
+        "formation_peak_percent": 2.327
+      },
+      {
+        "edge": 1873790,
+        "metres": 843.35,
+        "intervals": 27,
+        "terrain_source_peak_percent": 20.888,
+        "terrain_source_p95_percent": 19.181,
+        "formation_peak_percent": 11.952
+      },
+      {
+        "edge": 1873791,
+        "metres": 29.36,
+        "intervals": 1,
+        "terrain_source_peak_percent": 13.182,
+        "terrain_source_p95_percent": 13.182,
+        "formation_peak_percent": 0.0
+      },
+      {
+        "edge": 1873792,
+        "metres": 1296.51,
+        "intervals": 41,
+        "terrain_source_peak_percent": 35.078,
+        "terrain_source_p95_percent": 31.93,
+        "formation_peak_percent": 11.531
+      },
+      {
+        "edge": 1873793,
+        "metres": 477.33,
+        "intervals": 15,
+        "terrain_source_peak_percent": 36.169,
+        "terrain_source_p95_percent": 23.558,
+        "formation_peak_percent": 11.564
+      },
+      {
+        "edge": 3689562,
+        "metres": 294.73,
+        "intervals": 10,
+        "terrain_source_peak_percent": 20.455,
+        "terrain_source_p95_percent": 18.384,
+        "formation_peak_percent": 11.706
+      },
+      {
+        "edge": 3723651,
+        "metres": 1749.83,
+        "intervals": 55,
+        "terrain_source_peak_percent": 48.024,
+        "terrain_source_p95_percent": 27.433,
+        "formation_peak_percent": 11.933
+      },
+      {
+        "edge": 2436554,
+        "metres": 1793.83,
+        "intervals": 57,
+        "terrain_source_peak_percent": 30.623,
+        "terrain_source_p95_percent": 23.193,
+        "formation_peak_percent": 11.54
+      },
+      {
+        "edge": 2436555,
+        "metres": 1794.74,
+        "intervals": 57,
+        "terrain_source_peak_percent": 15.994,
+        "terrain_source_p95_percent": 13.73,
+        "formation_peak_percent": 11.534
+      },
+      {
+        "edge": 2436556,
+        "metres": 714.48,
+        "intervals": 23,
+        "terrain_source_peak_percent": 33.817,
+        "terrain_source_p95_percent": 33.11,
+        "formation_peak_percent": 9.07
+      },
+      {
+        "edge": 2438259,
+        "metres": 506.56,
+        "intervals": 16,
+        "terrain_source_peak_percent": 21.157,
+        "terrain_source_p95_percent": 21.122,
+        "formation_peak_percent": 10.364
+      },
+      {
+        "edge": 2438260,
+        "metres": 35.85,
+        "intervals": 2,
+        "terrain_source_peak_percent": 4.02,
+        "terrain_source_p95_percent": 3.869,
+        "formation_peak_percent": 5.579
+      },
+      {
+        "edge": 2438261,
+        "metres": 171.83,
+        "intervals": 6,
+        "terrain_source_peak_percent": 14.913,
+        "terrain_source_p95_percent": 13.554,
+        "formation_peak_percent": 11.523
+      },
+      {
+        "edge": 2438262,
+        "metres": 1283.59,
+        "intervals": 41,
+        "terrain_source_peak_percent": 37.255,
+        "terrain_source_p95_percent": 33.962,
+        "formation_peak_percent": 11.966
+      },
+      {
+        "edge": 2438264,
+        "metres": 1688.08,
+        "intervals": 53,
+        "terrain_source_peak_percent": 40.116,
+        "terrain_source_p95_percent": 31.999,
+        "formation_peak_percent": 11.943
+      },
+      {
+        "edge": 2467176,
+        "metres": 1029.57,
+        "intervals": 33,
+        "terrain_source_peak_percent": 53.426,
+        "terrain_source_p95_percent": 18.646,
+        "formation_peak_percent": 10.402
+      },
+      {
+        "edge": 3507004,
+        "metres": 523.82,
+        "intervals": 17,
+        "terrain_source_peak_percent": 55.572,
+        "terrain_source_p95_percent": 22.164,
+        "formation_peak_percent": 7.942
+      },
+      {
+        "edge": 3507006,
+        "metres": 233.91,
+        "intervals": 8,
+        "terrain_source_peak_percent": 15.147,
+        "terrain_source_p95_percent": 14.947,
+        "formation_peak_percent": 3.591
+      },
+      {
+        "edge": 3723650,
+        "metres": 1794.16,
+        "intervals": 57,
+        "terrain_source_peak_percent": 31.325,
+        "terrain_source_p95_percent": 26.603,
+        "formation_peak_percent": 11.537
+      },
+      {
+        "edge": 676017,
+        "metres": 315.77,
+        "intervals": 10,
+        "terrain_source_peak_percent": 12.479,
+        "terrain_source_p95_percent": 12.205,
+        "formation_peak_percent": 10.641
+      },
+      {
+        "edge": 676023,
+        "metres": 144.47,
+        "intervals": 5,
+        "terrain_source_peak_percent": 11.731,
+        "terrain_source_p95_percent": 11.529,
+        "formation_peak_percent": 11.629
+      },
+      {
+        "edge": 676019,
+        "metres": 427.04,
+        "intervals": 14,
+        "terrain_source_peak_percent": 20.716,
+        "terrain_source_p95_percent": 20.166,
+        "formation_peak_percent": 6.393
+      },
+      {
+        "edge": 676020,
+        "metres": 160.85,
+        "intervals": 6,
+        "terrain_source_peak_percent": 6.337,
+        "terrain_source_p95_percent": 6.194,
+        "formation_peak_percent": 10.445
+      },
+      {
+        "edge": 676021,
+        "metres": 14.58,
+        "intervals": 1,
+        "terrain_source_peak_percent": 7.019,
+        "terrain_source_p95_percent": 7.019,
+        "formation_peak_percent": 4.802
+      },
+      {
+        "edge": 676022,
+        "metres": 162.55,
+        "intervals": 6,
+        "terrain_source_peak_percent": 9.092,
+        "terrain_source_p95_percent": 8.842,
+        "formation_peak_percent": 11.812
+      },
+      {
+        "edge": 676031,
+        "metres": 1793.23,
+        "intervals": 57,
+        "terrain_source_peak_percent": 28.654,
+        "terrain_source_p95_percent": 23.84,
+        "formation_peak_percent": 11.543
+      },
+      {
+        "edge": 676032,
+        "metres": 290.6,
+        "intervals": 10,
+        "terrain_source_peak_percent": 22.619,
+        "terrain_source_p95_percent": 22.407,
+        "formation_peak_percent": 9.291
+      },
+      {
+        "edge": 676033,
+        "metres": 922.2,
+        "intervals": 29,
+        "terrain_source_peak_percent": 30.164,
+        "terrain_source_p95_percent": 24.507,
+        "formation_peak_percent": 11.473
+      },
+      {
+        "edge": 3689566,
+        "metres": 64.82,
+        "intervals": 3,
+        "terrain_source_peak_percent": 26.349,
+        "terrain_source_p95_percent": 25.211,
+        "formation_peak_percent": 2.314
+      }
+    ],
+    "Đèo Lý Hoà": [
+      {
+        "edge": 3710607,
+        "metres": 148.91,
+        "intervals": 5,
+        "terrain_source_peak_percent": 1.318,
+        "terrain_source_p95_percent": 1.314,
+        "formation_peak_percent": 8.461
+      },
+      {
+        "edge": 3710608,
+        "metres": 216.45,
+        "intervals": 7,
+        "terrain_source_peak_percent": 1.647,
+        "terrain_source_p95_percent": 1.638,
+        "formation_peak_percent": 11.688
+      },
+      {
+        "edge": 3710609,
+        "metres": 695.86,
+        "intervals": 22,
+        "terrain_source_peak_percent": 7.213,
+        "terrain_source_p95_percent": 6.874,
+        "formation_peak_percent": 11.568
+      },
+      {
+        "edge": 3710610,
+        "metres": 11.84,
+        "intervals": 1,
+        "terrain_source_peak_percent": 3.916,
+        "terrain_source_p95_percent": 3.916,
+        "formation_peak_percent": 0.0
+      },
+      {
+        "edge": 3710611,
+        "metres": 9.4,
+        "intervals": 1,
+        "terrain_source_peak_percent": 3.873,
+        "terrain_source_p95_percent": 3.873,
+        "formation_peak_percent": 5.318
+      },
+      {
+        "edge": 3710612,
+        "metres": 1063.77,
+        "intervals": 34,
+        "terrain_source_peak_percent": 7.184,
+        "terrain_source_p95_percent": 6.761,
+        "formation_peak_percent": 11.958
+      }
+    ],
+    "Đèo Lũng Lô": [
+      {
+        "edge": 2708098,
+        "metres": 34.44,
+        "intervals": 2,
+        "terrain_source_peak_percent": 5.207,
+        "terrain_source_p95_percent": 5.206,
+        "formation_peak_percent": 5.226
+      },
+      {
+        "edge": 2708097,
+        "metres": 1397.11,
+        "intervals": 44,
+        "terrain_source_peak_percent": 27.083,
+        "terrain_source_p95_percent": 17.352,
+        "formation_peak_percent": 11.524
+      },
+      {
+        "edge": 2708090,
+        "metres": 1794.45,
+        "intervals": 57,
+        "terrain_source_peak_percent": 47.105,
+        "terrain_source_p95_percent": 28.201,
+        "formation_peak_percent": 11.536
+      },
+      {
+        "edge": 2708091,
+        "metres": 1791.11,
+        "intervals": 56,
+        "terrain_source_peak_percent": 39.396,
+        "terrain_source_p95_percent": 24.571,
+        "formation_peak_percent": 11.557
+      },
+      {
+        "edge": 2708092,
+        "metres": 1793.76,
+        "intervals": 57,
+        "terrain_source_peak_percent": 53.029,
+        "terrain_source_p95_percent": 26.856,
+        "formation_peak_percent": 11.54
+      },
+      {
+        "edge": 2708093,
+        "metres": 882.09,
+        "intervals": 28,
+        "terrain_source_peak_percent": 29.684,
+        "terrain_source_p95_percent": 27.829,
+        "formation_peak_percent": 11.473
+      },
+      {
+        "edge": 2708094,
+        "metres": 387.37,
+        "intervals": 13,
+        "terrain_source_peak_percent": 39.434,
+        "terrain_source_p95_percent": 34.964,
+        "formation_peak_percent": 11.772
+      },
+      {
+        "edge": 2708095,
+        "metres": 98.15,
+        "intervals": 4,
+        "terrain_source_peak_percent": 24.997,
+        "terrain_source_p95_percent": 24.442,
+        "formation_peak_percent": 11.716
+      },
+      {
+        "edge": 2708096,
+        "metres": 1784.8,
+        "intervals": 56,
+        "terrain_source_peak_percent": 49.491,
+        "terrain_source_p95_percent": 22.071,
+        "formation_peak_percent": 11.968
+      }
+    ],
+    "Đèo Lũng Lô cũ": [
+      {
+        "edge": 3640466,
+        "metres": 1724.95,
+        "intervals": 54,
+        "terrain_source_peak_percent": 40.112,
+        "terrain_source_p95_percent": 24.193,
+        "formation_peak_percent": 17.948
+      },
+      {
+        "edge": 3640467,
+        "metres": 438.05,
+        "intervals": 14,
+        "terrain_source_peak_percent": 19.892,
+        "terrain_source_p95_percent": 17.909,
+        "formation_peak_percent": 17.578
+      },
+      {
+        "edge": 3640468,
+        "metres": 37.26,
+        "intervals": 2,
+        "terrain_source_peak_percent": 4.267,
+        "terrain_source_p95_percent": 4.076,
+        "formation_peak_percent": 6.442
+      },
+      {
+        "edge": 3640469,
+        "metres": 82.48,
+        "intervals": 3,
+        "terrain_source_peak_percent": 6.286,
+        "terrain_source_p95_percent": 6.278,
+        "formation_peak_percent": 1.94
+      },
+      {
+        "edge": 3640470,
+        "metres": 169.0,
+        "intervals": 6,
+        "terrain_source_peak_percent": 6.165,
+        "terrain_source_p95_percent": 5.5,
+        "formation_peak_percent": 5.207
+      },
+      {
+        "edge": 3640471,
+        "metres": 95.71,
+        "intervals": 3,
+        "terrain_source_peak_percent": 5.715,
+        "terrain_source_p95_percent": 5.548,
+        "formation_peak_percent": 2.09
+      },
+      {
+        "edge": 3640472,
+        "metres": 147.52,
+        "intervals": 5,
+        "terrain_source_peak_percent": 6.069,
+        "terrain_source_p95_percent": 5.941,
+        "formation_peak_percent": 4.271
+      },
+      {
+        "edge": 3640473,
+        "metres": 14.69,
+        "intervals": 1,
+        "terrain_source_peak_percent": 1.718,
+        "terrain_source_p95_percent": 1.718,
+        "formation_peak_percent": 4.086
+      },
+      {
+        "edge": 3640474,
+        "metres": 160.01,
+        "intervals": 6,
+        "terrain_source_peak_percent": 8.194,
+        "terrain_source_p95_percent": 7.824,
+        "formation_peak_percent": 9.999
+      },
+      {
+        "edge": 3640475,
+        "metres": 70.08,
+        "intervals": 3,
+        "terrain_source_peak_percent": 10.102,
+        "terrain_source_p95_percent": 9.848,
+        "formation_peak_percent": 8.561
+      },
+      {
+        "edge": 3640476,
+        "metres": 21.21,
+        "intervals": 1,
+        "terrain_source_peak_percent": 11.474,
+        "terrain_source_p95_percent": 11.474,
+        "formation_peak_percent": 7.073
+      },
+      {
+        "edge": 3640477,
+        "metres": 37.96,
+        "intervals": 2,
+        "terrain_source_peak_percent": 10.87,
+        "terrain_source_p95_percent": 10.788,
+        "formation_peak_percent": 6.323
+      },
+      {
+        "edge": 3640478,
+        "metres": 25.96,
+        "intervals": 1,
+        "terrain_source_peak_percent": 4.227,
+        "terrain_source_p95_percent": 4.227,
+        "formation_peak_percent": 5.394
+      },
+      {
+        "edge": 3640479,
+        "metres": 62.49,
+        "intervals": 2,
+        "terrain_source_peak_percent": 3.684,
+        "terrain_source_p95_percent": 3.602,
+        "formation_peak_percent": 2.4
+      },
+      {
+        "edge": 3640480,
+        "metres": 69.29,
+        "intervals": 3,
+        "terrain_source_peak_percent": 2.959,
+        "terrain_source_p95_percent": 2.799,
+        "formation_peak_percent": 1.299
+      },
+      {
+        "edge": 3640481,
+        "metres": 30.51,
+        "intervals": 1,
+        "terrain_source_peak_percent": 6.772,
+        "terrain_source_p95_percent": 6.772,
+        "formation_peak_percent": 1.967
+      },
+      {
+        "edge": 3640482,
+        "metres": 46.96,
+        "intervals": 2,
+        "terrain_source_peak_percent": 3.1,
+        "terrain_source_p95_percent": 2.955,
+        "formation_peak_percent": 5.11
+      },
+      {
+        "edge": 3816483,
+        "metres": 47.73,
+        "intervals": 2,
+        "terrain_source_peak_percent": 9.01,
+        "terrain_source_p95_percent": 9.004,
+        "formation_peak_percent": 5.866
+      },
+      {
+        "edge": 3816482,
+        "metres": 1794.1,
+        "intervals": 57,
+        "terrain_source_peak_percent": 50.338,
+        "terrain_source_p95_percent": 30.59,
+        "formation_peak_percent": 16.554
+      }
+    ],
+    "Đèo Lương Sơn": [
+      {
+        "edge": 28674,
+        "metres": 1795.31,
+        "intervals": 57,
+        "terrain_source_peak_percent": 25.071,
+        "terrain_source_p95_percent": 17.01,
+        "formation_peak_percent": 11.53
+      },
+      {
+        "edge": 28675,
+        "metres": 110.54,
+        "intervals": 4,
+        "terrain_source_peak_percent": 7.26,
+        "terrain_source_p95_percent": 6.395,
+        "formation_peak_percent": 10.856
+      },
+      {
+        "edge": 28676,
+        "metres": 1428.0,
+        "intervals": 45,
+        "terrain_source_peak_percent": 21.727,
+        "terrain_source_p95_percent": 15.825,
+        "formation_peak_percent": 11.933
+      },
+      {
+        "edge": 195515,
+        "metres": 1416.18,
+        "intervals": 45,
+        "terrain_source_peak_percent": 26.396,
+        "terrain_source_p95_percent": 15.88,
+        "formation_peak_percent": 11.531
+      },
+      {
+        "edge": 195516,
+        "metres": 1794.68,
+        "intervals": 57,
+        "terrain_source_peak_percent": 28.363,
+        "terrain_source_p95_percent": 22.083,
+        "formation_peak_percent": 11.534
+      },
+      {
+        "edge": 195517,
+        "metres": 97.2,
+        "intervals": 4,
+        "terrain_source_peak_percent": 5.785,
+        "terrain_source_p95_percent": 5.376,
+        "formation_peak_percent": 5.144
+      }
+    ],
+    "Đèo Mimosa": [
+      {
+        "edge": 27911,
+        "metres": 1798.26,
+        "intervals": 57,
+        "terrain_source_peak_percent": 22.069,
+        "terrain_source_p95_percent": 16.152,
+        "formation_peak_percent": 11.511
+      },
+      {
+        "edge": 27912,
+        "metres": 1798.79,
+        "intervals": 57,
+        "terrain_source_peak_percent": 30.457,
+        "terrain_source_p95_percent": 24.651,
+        "formation_peak_percent": 11.508
+      },
+      {
+        "edge": 27913,
+        "metres": 995.22,
+        "intervals": 32,
+        "terrain_source_peak_percent": 51.884,
+        "terrain_source_p95_percent": 35.206,
+        "formation_peak_percent": 11.555
+      },
+      {
+        "edge": 706028,
+        "metres": 897.85,
+        "intervals": 29,
+        "terrain_source_peak_percent": 17.536,
+        "terrain_source_p95_percent": 12.438,
+        "formation_peak_percent": 11.026
+      },
+      {
+        "edge": 3707298,
+        "metres": 79.64,
+        "intervals": 3,
+        "terrain_source_peak_percent": 6.668,
+        "terrain_source_p95_percent": 6.371,
+        "formation_peak_percent": 4.018
+      },
+      {
+        "edge": 3707299,
+        "metres": 72.74,
+        "intervals": 3,
+        "terrain_source_peak_percent": 1.072,
+        "terrain_source_p95_percent": 1.07,
+        "formation_peak_percent": 1.1
+      },
+      {
+        "edge": 3771329,
+        "metres": 944.67,
+        "intervals": 30,
+        "terrain_source_peak_percent": 34.238,
+        "terrain_source_p95_percent": 26.152,
+        "formation_peak_percent": 11.941
+      },
+      {
+        "edge": 3771330,
+        "metres": 928.58,
+        "intervals": 30,
+        "terrain_source_peak_percent": 18.066,
+        "terrain_source_p95_percent": 14.61,
+        "formation_peak_percent": 4.954
+      },
+      {
+        "edge": 3771331,
+        "metres": 212.1,
+        "intervals": 7,
+        "terrain_source_peak_percent": 13.209,
+        "terrain_source_p95_percent": 13.15,
+        "formation_peak_percent": 8.298
+      },
+      {
+        "edge": 3771332,
+        "metres": 71.9,
+        "intervals": 3,
+        "terrain_source_peak_percent": 11.852,
+        "terrain_source_p95_percent": 11.801,
+        "formation_peak_percent": 7.789
+      },
+      {
+        "edge": 3771333,
+        "metres": 1143.44,
+        "intervals": 36,
+        "terrain_source_peak_percent": 14.285,
+        "terrain_source_p95_percent": 12.005,
+        "formation_peak_percent": 4.486
+      }
+    ],
+    "Đèo Muồng": [
+      {
+        "edge": 3875362,
+        "metres": 902.75,
+        "intervals": 29,
+        "terrain_source_peak_percent": 20.852,
+        "terrain_source_p95_percent": 18.389,
+        "formation_peak_percent": 11.963
+      },
+      {
+        "edge": 3877112,
+        "metres": 209.33,
+        "intervals": 7,
+        "terrain_source_peak_percent": 30.241,
+        "terrain_source_p95_percent": 29.308,
+        "formation_peak_percent": 2.389
+      },
+      {
+        "edge": 3877116,
+        "metres": 678.77,
+        "intervals": 22,
+        "terrain_source_peak_percent": 25.821,
+        "terrain_source_p95_percent": 18.49,
+        "formation_peak_percent": 11.521
+      },
+      {
+        "edge": 3877128,
+        "metres": 1040.49,
+        "intervals": 33,
+        "terrain_source_peak_percent": 22.394,
+        "terrain_source_p95_percent": 21.217,
+        "formation_peak_percent": 11.495
+      },
+      {
+        "edge": 3877129,
+        "metres": 1798.48,
+        "intervals": 57,
+        "terrain_source_peak_percent": 22.913,
+        "terrain_source_p95_percent": 21.411,
+        "formation_peak_percent": 11.51
+      },
+      {
+        "edge": 3877130,
+        "metres": 1291.24,
+        "intervals": 41,
+        "terrain_source_peak_percent": 22.029,
+        "terrain_source_p95_percent": 17.875,
+        "formation_peak_percent": 11.578
+      }
+    ],
+    "Đèo Mã Pí Lèng": [
+      {
+        "edge": 320139,
+        "metres": 1791.85,
+        "intervals": 56,
+        "terrain_source_peak_percent": 111.136,
+        "terrain_source_p95_percent": 79.826,
+        "formation_peak_percent": 11.552
+      },
+      {
+        "edge": 320140,
+        "metres": 867.18,
+        "intervals": 28,
+        "terrain_source_peak_percent": 75.863,
+        "terrain_source_p95_percent": 74.357,
+        "formation_peak_percent": 11.901
+      },
+      {
+        "edge": 320141,
+        "metres": 1794.85,
+        "intervals": 57,
+        "terrain_source_peak_percent": 58.118,
+        "terrain_source_p95_percent": 46.213,
+        "formation_peak_percent": 11.533
+      },
+      {
+        "edge": 320142,
+        "metres": 1214.05,
+        "intervals": 38,
+        "terrain_source_peak_percent": 29.998,
+        "terrain_source_p95_percent": 24.089,
+        "formation_peak_percent": 11.556
+      }
+    ],
+    "Đèo Mũi Né": [
+      {
+        "edge": 3765168,
+        "metres": 164.16,
+        "intervals": 6,
+        "terrain_source_peak_percent": 12.426,
+        "terrain_source_p95_percent": 11.606,
+        "formation_peak_percent": 11.696
+      },
+      {
+        "edge": 3765169,
+        "metres": 161.03,
+        "intervals": 6,
+        "terrain_source_peak_percent": 9.014,
+        "terrain_source_p95_percent": 8.348,
+        "formation_peak_percent": 11.426
+      },
+      {
+        "edge": 3765170,
+        "metres": 160.88,
+        "intervals": 6,
+        "terrain_source_peak_percent": 15.198,
+        "terrain_source_p95_percent": 14.292,
+        "formation_peak_percent": 11.934
+      },
+      {
+        "edge": 3765171,
+        "metres": 624.07,
+        "intervals": 20,
+        "terrain_source_peak_percent": 13.581,
+        "terrain_source_p95_percent": 6.932,
+        "formation_peak_percent": 3.974
+      },
+      {
+        "edge": 3765172,
+        "metres": 490.85,
+        "intervals": 16,
+        "terrain_source_peak_percent": 3.352,
+        "terrain_source_p95_percent": 3.03,
+        "formation_peak_percent": 4.075
+      },
+      {
+        "edge": 3765174,
+        "metres": 290.73,
+        "intervals": 10,
+        "terrain_source_peak_percent": 3.321,
+        "terrain_source_p95_percent": 2.995,
+        "formation_peak_percent": 3.096
+      },
+      {
+        "edge": 3765175,
+        "metres": 212.25,
+        "intervals": 7,
+        "terrain_source_peak_percent": 3.462,
+        "terrain_source_p95_percent": 3.442,
+        "formation_peak_percent": 2.073
+      },
+      {
+        "edge": 3765176,
+        "metres": 922.2,
+        "intervals": 29,
+        "terrain_source_peak_percent": 13.67,
+        "terrain_source_p95_percent": 11.788,
+        "formation_peak_percent": 11.473
+      },
+      {
+        "edge": 3765177,
+        "metres": 165.68,
+        "intervals": 6,
+        "terrain_source_peak_percent": 15.33,
+        "terrain_source_p95_percent": 15.273,
+        "formation_peak_percent": 11.106
+      }
+    ],
+    "Đèo Mũi Trâu": [
+      {
+        "edge": 1358657,
+        "metres": 1794.72,
+        "intervals": 57,
+        "terrain_source_peak_percent": 65.238,
+        "terrain_source_p95_percent": 45.915,
+        "formation_peak_percent": 14.543
+      },
+      {
+        "edge": 1358658,
+        "metres": 1794.43,
+        "intervals": 57,
+        "terrain_source_peak_percent": 46.542,
+        "terrain_source_p95_percent": 32.749,
+        "formation_peak_percent": 14.545
+      },
+      {
+        "edge": 1358659,
+        "metres": 235.65,
+        "intervals": 8,
+        "terrain_source_peak_percent": 32.617,
+        "terrain_source_p95_percent": 28.811,
+        "formation_peak_percent": 9.166
+      }
+    ],
+    "Đèo Ngang": [
+      {
+        "edge": 26800,
+        "metres": 22.98,
+        "intervals": 1,
+        "terrain_source_peak_percent": 9.618,
+        "terrain_source_p95_percent": 9.618,
+        "formation_peak_percent": 5.657
+      },
+      {
+        "edge": 26801,
+        "metres": 1795.81,
+        "intervals": 57,
+        "terrain_source_peak_percent": 26.775,
+        "terrain_source_p95_percent": 16.073,
+        "formation_peak_percent": 13.531
+      },
+      {
+        "edge": 26802,
+        "metres": 1796.64,
+        "intervals": 57,
+        "terrain_source_peak_percent": 20.83,
+        "terrain_source_p95_percent": 16.846,
+        "formation_peak_percent": 11.521
+      },
+      {
+        "edge": 26803,
+        "metres": 1796.3,
+        "intervals": 57,
+        "terrain_source_peak_percent": 22.2,
+        "terrain_source_p95_percent": 15.504,
+        "formation_peak_percent": 13.528
+      },
+      {
+        "edge": 26804,
+        "metres": 103.06,
+        "intervals": 4,
+        "terrain_source_peak_percent": 2.062,
+        "terrain_source_p95_percent": 2.038,
+        "formation_peak_percent": 2.911
+      },
+      {
+        "edge": 26805,
+        "metres": 28.55,
+        "intervals": 1,
+        "terrain_source_peak_percent": 0.624,
+        "terrain_source_p95_percent": 0.624,
+        "formation_peak_percent": 2.102
+      },
+      {
+        "edge": 26806,
+        "metres": 320.62,
+        "intervals": 11,
+        "terrain_source_peak_percent": 0.81,
+        "terrain_source_p95_percent": 0.779,
+        "formation_peak_percent": 1.497
+      },
+      {
+        "edge": 26807,
+        "metres": 7.76,
+        "intervals": 1,
+        "terrain_source_peak_percent": 0.27,
+        "terrain_source_p95_percent": 0.27,
+        "formation_peak_percent": 1.288
+      },
+      {
+        "edge": 26808,
+        "metres": 9.98,
+        "intervals": 1,
+        "terrain_source_peak_percent": 0.272,
+        "terrain_source_p95_percent": 0.272,
+        "formation_peak_percent": 1.002
+      },
+      {
+        "edge": 26809,
+        "metres": 44.37,
+        "intervals": 2,
+        "terrain_source_peak_percent": 0.21,
+        "terrain_source_p95_percent": 0.205,
+        "formation_peak_percent": 0.0
+      }
+    ],
+    "Đèo Ngoạn Mục": [
+      {
+        "edge": 1215762,
+        "metres": 1790.86,
+        "intervals": 56,
+        "terrain_source_peak_percent": 35.709,
+        "terrain_source_p95_percent": 27.543,
+        "formation_peak_percent": 11.559
+      },
+      {
+        "edge": 1215763,
+        "metres": 1787.4,
+        "intervals": 56,
+        "terrain_source_peak_percent": 31.684,
+        "terrain_source_p95_percent": 27.5,
+        "formation_peak_percent": 11.95
+      },
+      {
+        "edge": 1215764,
+        "metres": 1791.68,
+        "intervals": 56,
+        "terrain_source_peak_percent": 33.807,
+        "terrain_source_p95_percent": 26.799,
+        "formation_peak_percent": 11.553
+      },
+      {
+        "edge": 1215765,
+        "metres": 1793.41,
+        "intervals": 57,
+        "terrain_source_peak_percent": 31.001,
+        "terrain_source_p95_percent": 19.122,
+        "formation_peak_percent": 9.033
+      },
+      {
+        "edge": 1215766,
+        "metres": 1793.47,
+        "intervals": 57,
+        "terrain_source_peak_percent": 33.222,
+        "terrain_source_p95_percent": 21.397,
+        "formation_peak_percent": 10.538
+      },
+      {
+        "edge": 1215767,
+        "metres": 1791.36,
+        "intervals": 56,
+        "terrain_source_peak_percent": 32.996,
+        "terrain_source_p95_percent": 26.796,
+        "formation_peak_percent": 11.555
+      },
+      {
+        "edge": 1215768,
+        "metres": 1791.23,
+        "intervals": 56,
+        "terrain_source_peak_percent": 37.999,
+        "terrain_source_p95_percent": 29.33,
+        "formation_peak_percent": 11.556
+      },
+      {
+        "edge": 1215769,
+        "metres": 1792.09,
+        "intervals": 57,
+        "terrain_source_peak_percent": 44.033,
+        "terrain_source_p95_percent": 29.41,
+        "formation_peak_percent": 11.551
+      },
+      {
+        "edge": 1215770,
+        "metres": 1225.64,
+        "intervals": 39,
+        "terrain_source_peak_percent": 25.055,
+        "terrain_source_p95_percent": 18.958,
+        "formation_peak_percent": 10.452
+      },
+      {
+        "edge": 1215771,
+        "metres": 453.59,
+        "intervals": 15,
+        "terrain_source_peak_percent": 19.799,
+        "terrain_source_p95_percent": 15.714,
+        "formation_peak_percent": 6.592
+      },
+      {
+        "edge": 1215772,
+        "metres": 89.95,
+        "intervals": 3,
+        "terrain_source_peak_percent": 2.455,
+        "terrain_source_p95_percent": 2.454,
+        "formation_peak_percent": 4.447
+      },
+      {
+        "edge": 1215773,
+        "metres": 28.91,
+        "intervals": 1,
+        "terrain_source_peak_percent": 3.546,
+        "terrain_source_p95_percent": 3.546,
+        "formation_peak_percent": 2.075
+      }
+    ],
+    "Đèo Nà Tềnh": [
+      {
+        "edge": 3807798,
+        "metres": 541.09,
+        "intervals": 17,
+        "terrain_source_peak_percent": 21.863,
+        "terrain_source_p95_percent": 17.291,
+        "formation_peak_percent": 11.477
+      },
+      {
+        "edge": 3807799,
+        "metres": 1696.53,
+        "intervals": 54,
+        "terrain_source_peak_percent": 30.025,
+        "terrain_source_p95_percent": 23.234,
+        "formation_peak_percent": 11.524
+      },
+      {
+        "edge": 3807800,
+        "metres": 504.76,
+        "intervals": 16,
+        "terrain_source_peak_percent": 24.521,
+        "terrain_source_p95_percent": 19.172,
+        "formation_peak_percent": 11.887
+      },
+      {
+        "edge": 3807801,
+        "metres": 46.39,
+        "intervals": 2,
+        "terrain_source_peak_percent": 27.065,
+        "terrain_source_p95_percent": 26.811,
+        "formation_peak_percent": 11.641
+      },
+      {
+        "edge": 3807802,
+        "metres": 320.31,
+        "intervals": 11,
+        "terrain_source_peak_percent": 45.344,
+        "terrain_source_p95_percent": 29.97,
+        "formation_peak_percent": 11.489
+      },
+      {
+        "edge": 3807803,
+        "metres": 508.47,
+        "intervals": 16,
+        "terrain_source_peak_percent": 30.969,
+        "terrain_source_p95_percent": 27.241,
+        "formation_peak_percent": 11.8
+      }
+    ],
+    "Đèo Nại": [
+      {
+        "edge": 3663435,
+        "metres": 639.82,
+        "intervals": 20,
+        "terrain_source_peak_percent": 7.515,
+        "terrain_source_p95_percent": 6.791,
+        "formation_peak_percent": 2.001
+      },
+      {
+        "edge": 3663436,
+        "metres": 839.14,
+        "intervals": 27,
+        "terrain_source_peak_percent": 18.7,
+        "terrain_source_p95_percent": 17.416,
+        "formation_peak_percent": 11.512
+      },
+      {
+        "edge": 3663437,
+        "metres": 725.79,
+        "intervals": 23,
+        "terrain_source_peak_percent": 7.95,
+        "terrain_source_p95_percent": 7.796,
+        "formation_peak_percent": 10.416
+      },
+      {
+        "edge": 3663438,
+        "metres": 30.64,
+        "intervals": 1,
+        "terrain_source_peak_percent": 2.495,
+        "terrain_source_p95_percent": 2.495,
+        "formation_peak_percent": 1.306
+      },
+      {
+        "edge": 3663439,
+        "metres": 695.95,
+        "intervals": 22,
+        "terrain_source_peak_percent": 8.072,
+        "terrain_source_p95_percent": 7.763,
+        "formation_peak_percent": 11.064
+      },
+      {
+        "edge": 3663440,
+        "metres": 647.29,
+        "intervals": 21,
+        "terrain_source_peak_percent": 18.604,
+        "terrain_source_p95_percent": 17.291,
+        "formation_peak_percent": 11.865
+      },
+      {
+        "edge": 3663441,
+        "metres": 200.46,
+        "intervals": 7,
+        "terrain_source_peak_percent": 9.69,
+        "terrain_source_p95_percent": 9.313,
+        "formation_peak_percent": 3.492
+      },
+      {
+        "edge": 3663442,
+        "metres": 631.49,
+        "intervals": 20,
+        "terrain_source_peak_percent": 7.789,
+        "terrain_source_p95_percent": 7.509,
+        "formation_peak_percent": 2.534
+      }
+    ],
+    "Đèo Pha Đin": [
+      {
+        "edge": 324011,
+        "metres": 1402.08,
+        "intervals": 44,
+        "terrain_source_peak_percent": 33.237,
+        "terrain_source_p95_percent": 25.751,
+        "formation_peak_percent": 11.483
+      },
+      {
+        "edge": 324012,
+        "metres": 358.27,
+        "intervals": 12,
+        "terrain_source_peak_percent": 26.585,
+        "terrain_source_p95_percent": 25.9,
+        "formation_peak_percent": 11.556
+      },
+      {
+        "edge": 2662839,
+        "metres": 1501.46,
+        "intervals": 47,
+        "terrain_source_peak_percent": 30.648,
+        "terrain_source_p95_percent": 21.89,
+        "formation_peak_percent": 11.489
+      },
+      {
+        "edge": 2662840,
+        "metres": 763.67,
+        "intervals": 24,
+        "terrain_source_peak_percent": 24.365,
+        "terrain_source_p95_percent": 21.667,
+        "formation_peak_percent": 11.942
+      },
+      {
+        "edge": 2662841,
+        "metres": 651.81,
+        "intervals": 21,
+        "terrain_source_peak_percent": 28.369,
+        "terrain_source_p95_percent": 23.129,
+        "formation_peak_percent": 11.644
+      },
+      {
+        "edge": 2662842,
+        "metres": 19.67,
+        "intervals": 1,
+        "terrain_source_peak_percent": 14.835,
+        "terrain_source_p95_percent": 14.835,
+        "formation_peak_percent": 3.05
+      },
+      {
+        "edge": 2662843,
+        "metres": 179.96,
+        "intervals": 6,
+        "terrain_source_peak_percent": 11.411,
+        "terrain_source_p95_percent": 9.353,
+        "formation_peak_percent": 11.502
+      },
+      {
+        "edge": 324010,
+        "metres": 1793.14,
+        "intervals": 57,
+        "terrain_source_peak_percent": 24.177,
+        "terrain_source_p95_percent": 20.644,
+        "formation_peak_percent": 11.544
+      },
+      {
+        "edge": 19813,
+        "metres": 1794.23,
+        "intervals": 57,
+        "terrain_source_peak_percent": 36.645,
+        "terrain_source_p95_percent": 26.912,
+        "formation_peak_percent": 11.537
+      },
+      {
+        "edge": 19814,
+        "metres": 778.84,
+        "intervals": 25,
+        "terrain_source_peak_percent": 15.352,
+        "terrain_source_p95_percent": 14.973,
+        "formation_peak_percent": 11.517
+      },
+      {
+        "edge": 19815,
+        "metres": 742.62,
+        "intervals": 24,
+        "terrain_source_peak_percent": 27.333,
+        "terrain_source_p95_percent": 26.939,
+        "formation_peak_percent": 11.958
+      },
+      {
+        "edge": 19816,
+        "metres": 207.97,
+        "intervals": 7,
+        "terrain_source_peak_percent": 14.918,
+        "terrain_source_p95_percent": 14.847,
+        "formation_peak_percent": 5.289
+      },
+      {
+        "edge": 19817,
+        "metres": 1452.14,
+        "intervals": 46,
+        "terrain_source_peak_percent": 24.065,
+        "terrain_source_p95_percent": 19.488,
+        "formation_peak_percent": 11.562
+      },
+      {
+        "edge": 19818,
+        "metres": 493.07,
+        "intervals": 16,
+        "terrain_source_peak_percent": 19.766,
+        "terrain_source_p95_percent": 19.089,
+        "formation_peak_percent": 11.662
+      },
+      {
+        "edge": 19819,
+        "metres": 490.53,
+        "intervals": 16,
+        "terrain_source_peak_percent": 24.002,
+        "terrain_source_p95_percent": 22.361,
+        "formation_peak_percent": 11.722
+      },
+      {
+        "edge": 19820,
+        "metres": 743.74,
+        "intervals": 24,
+        "terrain_source_peak_percent": 27.929,
+        "terrain_source_p95_percent": 24.571,
+        "formation_peak_percent": 11.94
+      },
+      {
+        "edge": 19821,
+        "metres": 507.46,
+        "intervals": 16,
+        "terrain_source_peak_percent": 15.644,
+        "terrain_source_p95_percent": 15.462,
+        "formation_peak_percent": 11.824
+      },
+      {
+        "edge": 19822,
+        "metres": 1793.35,
+        "intervals": 57,
+        "terrain_source_peak_percent": 31.237,
+        "terrain_source_p95_percent": 24.671,
+        "formation_peak_percent": 11.543
+      },
+      {
+        "edge": 19823,
+        "metres": 301.52,
+        "intervals": 10,
+        "terrain_source_peak_percent": 18.354,
+        "terrain_source_p95_percent": 17.969,
+        "formation_peak_percent": 11.94
+      },
+      {
+        "edge": 19824,
+        "metres": 915.25,
+        "intervals": 29,
+        "terrain_source_peak_percent": 33.713,
+        "terrain_source_p95_percent": 27.823,
+        "formation_peak_percent": 11.56
+      },
+      {
+        "edge": 19825,
+        "metres": 658.25,
+        "intervals": 21,
+        "terrain_source_peak_percent": 21.119,
+        "terrain_source_p95_percent": 18.754,
+        "formation_peak_percent": 11.531
+      },
+      {
+        "edge": 19826,
+        "metres": 81.69,
+        "intervals": 3,
+        "terrain_source_peak_percent": 12.716,
+        "terrain_source_p95_percent": 12.372,
+        "formation_peak_percent": 10.283
+      },
+      {
+        "edge": 19827,
+        "metres": 245.59,
+        "intervals": 8,
+        "terrain_source_peak_percent": 21.735,
+        "terrain_source_p95_percent": 21.176,
+        "formation_peak_percent": 11.727
+      },
+      {
+        "edge": 19828,
+        "metres": 1003.37,
+        "intervals": 32,
+        "terrain_source_peak_percent": 24.847,
+        "terrain_source_p95_percent": 22.005,
+        "formation_peak_percent": 11.96
+      },
+      {
+        "edge": 19829,
+        "metres": 1473.57,
+        "intervals": 47,
+        "terrain_source_peak_percent": 27.393,
+        "terrain_source_p95_percent": 19.492,
+        "formation_peak_percent": 11.55
+      },
+      {
+        "edge": 19830,
+        "metres": 365.99,
+        "intervals": 12,
+        "terrain_source_peak_percent": 9.22,
+        "terrain_source_p95_percent": 8.477,
+        "formation_peak_percent": 5.41
+      },
+      {
+        "edge": 19831,
+        "metres": 846.92,
+        "intervals": 27,
+        "terrain_source_peak_percent": 25.883,
+        "terrain_source_p95_percent": 24.478,
+        "formation_peak_percent": 11.902
+      },
+      {
+        "edge": 324005,
+        "metres": 350.78,
+        "intervals": 11,
+        "terrain_source_peak_percent": 15.641,
+        "terrain_source_p95_percent": 14.101,
+        "formation_peak_percent": 11.802
+      },
+      {
+        "edge": 324006,
+        "metres": 613.97,
+        "intervals": 20,
+        "terrain_source_peak_percent": 25.722,
+        "terrain_source_p95_percent": 21.454,
+        "formation_peak_percent": 11.613
+      },
+      {
+        "edge": 324007,
+        "metres": 85.95,
+        "intervals": 3,
+        "terrain_source_peak_percent": 20.812,
+        "terrain_source_p95_percent": 19.363,
+        "formation_peak_percent": 11.635
+      },
+      {
+        "edge": 324008,
+        "metres": 396.45,
+        "intervals": 13,
+        "terrain_source_peak_percent": 22.31,
+        "terrain_source_p95_percent": 21.589,
+        "formation_peak_percent": 11.603
+      },
+      {
+        "edge": 324009,
+        "metres": 140.37,
+        "intervals": 5,
+        "terrain_source_peak_percent": 20.285,
+        "terrain_source_p95_percent": 19.723,
+        "formation_peak_percent": 11.47
+      }
+    ],
+    "Đèo Pha Đin cũ": [
+      {
+        "edge": 19747,
+        "metres": 29.01,
+        "intervals": 1,
+        "terrain_source_peak_percent": 2.207,
+        "terrain_source_p95_percent": 2.207,
+        "formation_peak_percent": 14.477
+      },
+      {
+        "edge": 19748,
+        "metres": 138.08,
+        "intervals": 5,
+        "terrain_source_peak_percent": 15.22,
+        "terrain_source_p95_percent": 14.705,
+        "formation_peak_percent": 7.097
+      },
+      {
+        "edge": 19749,
+        "metres": 722.13,
+        "intervals": 23,
+        "terrain_source_peak_percent": 24.736,
+        "terrain_source_p95_percent": 23.349,
+        "formation_peak_percent": 14.956
+      },
+      {
+        "edge": 19750,
+        "metres": 1783.66,
+        "intervals": 56,
+        "terrain_source_peak_percent": 30.132,
+        "terrain_source_p95_percent": 24.786,
+        "formation_peak_percent": 14.47
+      },
+      {
+        "edge": 19751,
+        "metres": 1550.61,
+        "intervals": 49,
+        "terrain_source_peak_percent": 31.664,
+        "terrain_source_p95_percent": 26.09,
+        "formation_peak_percent": 14.588
+      },
+      {
+        "edge": 19752,
+        "metres": 15.93,
+        "intervals": 1,
+        "terrain_source_peak_percent": 11.615,
+        "terrain_source_p95_percent": 11.615,
+        "formation_peak_percent": 14.436
+      },
+      {
+        "edge": 19753,
+        "metres": 264.72,
+        "intervals": 9,
+        "terrain_source_peak_percent": 13.238,
+        "terrain_source_p95_percent": 12.18,
+        "formation_peak_percent": 14.733
+      },
+      {
+        "edge": 19754,
+        "metres": 329.83,
+        "intervals": 11,
+        "terrain_source_peak_percent": 38.866,
+        "terrain_source_p95_percent": 32.256,
+        "formation_peak_percent": 14.553
+      },
+      {
+        "edge": 19755,
+        "metres": 14.45,
+        "intervals": 1,
+        "terrain_source_peak_percent": 27.43,
+        "terrain_source_p95_percent": 27.43,
+        "formation_peak_percent": 14.529
+      },
+      {
+        "edge": 19756,
+        "metres": 1786.88,
+        "intervals": 56,
+        "terrain_source_peak_percent": 40.655,
+        "terrain_source_p95_percent": 38.024,
+        "formation_peak_percent": 14.942
+      },
+      {
+        "edge": 19757,
+        "metres": 92.75,
+        "intervals": 3,
+        "terrain_source_peak_percent": 3.229,
+        "terrain_source_p95_percent": 3.047,
+        "formation_peak_percent": 2.156
+      },
+      {
+        "edge": 19758,
+        "metres": 1005.88,
+        "intervals": 32,
+        "terrain_source_peak_percent": 34.078,
+        "terrain_source_p95_percent": 28.339,
+        "formation_peak_percent": 14.912
+      },
+      {
+        "edge": 19759,
+        "metres": 755.01,
+        "intervals": 24,
+        "terrain_source_peak_percent": 33.618,
+        "terrain_source_p95_percent": 21.732,
+        "formation_peak_percent": 14.596
+      },
+      {
+        "edge": 19760,
+        "metres": 1789.13,
+        "intervals": 56,
+        "terrain_source_peak_percent": 28.863,
+        "terrain_source_p95_percent": 20.86,
+        "formation_peak_percent": 14.923
+      },
+      {
+        "edge": 19761,
+        "metres": 1787.26,
+        "intervals": 56,
+        "terrain_source_peak_percent": 31.726,
+        "terrain_source_p95_percent": 24.467,
+        "formation_peak_percent": 14.939
+      },
+      {
+        "edge": 19762,
+        "metres": 542.96,
+        "intervals": 17,
+        "terrain_source_peak_percent": 31.455,
+        "terrain_source_p95_percent": 22.974,
+        "formation_peak_percent": 10.94
+      },
+      {
+        "edge": 19763,
+        "metres": 884.9,
+        "intervals": 28,
+        "terrain_source_peak_percent": 29.382,
+        "terrain_source_p95_percent": 26.649,
+        "formation_peak_percent": 14.917
+      }
+    ],
+    "Đèo Phiêng Ban": [
+      {
+        "edge": 2644265,
+        "metres": 1789.2,
+        "intervals": 56,
+        "terrain_source_peak_percent": 30.477,
+        "terrain_source_p95_percent": 21.759,
+        "formation_peak_percent": 11.938
+      },
+      {
+        "edge": 2644266,
+        "metres": 1087.2,
+        "intervals": 34,
+        "terrain_source_peak_percent": 38.171,
+        "terrain_source_p95_percent": 17.073,
+        "formation_peak_percent": 11.921
+      },
+      {
+        "edge": 2644267,
+        "metres": 159.49,
+        "intervals": 5,
+        "terrain_source_peak_percent": 17.683,
+        "terrain_source_p95_percent": 16.654,
+        "formation_peak_percent": 11.537
+      },
+      {
+        "edge": 2644268,
+        "metres": 379.74,
+        "intervals": 12,
+        "terrain_source_peak_percent": 14.661,
+        "terrain_source_p95_percent": 14.52,
+        "formation_peak_percent": 11.008
+      },
+      {
+        "edge": 2644269,
+        "metres": 133.98,
+        "intervals": 5,
+        "terrain_source_peak_percent": 17.704,
+        "terrain_source_p95_percent": 16.576,
+        "formation_peak_percent": 11.494
+      },
+      {
+        "edge": 2644270,
+        "metres": 200.44,
+        "intervals": 7,
+        "terrain_source_peak_percent": 12.997,
+        "terrain_source_p95_percent": 11.387,
+        "formation_peak_percent": 7.484
+      },
+      {
+        "edge": 2729188,
+        "metres": 55.01,
+        "intervals": 2,
+        "terrain_source_peak_percent": 10.421,
+        "terrain_source_p95_percent": 9.945,
+        "formation_peak_percent": 10.362
+      },
+      {
+        "edge": 2729189,
+        "metres": 560.96,
+        "intervals": 18,
+        "terrain_source_peak_percent": 17.778,
+        "terrain_source_p95_percent": 15.203,
+        "formation_peak_percent": 11.48
+      },
+      {
+        "edge": 2729190,
+        "metres": 36.74,
+        "intervals": 2,
+        "terrain_source_peak_percent": 6.343,
+        "terrain_source_p95_percent": 6.135,
+        "formation_peak_percent": 0.544
+      },
+      {
+        "edge": 2729191,
+        "metres": 207.11,
+        "intervals": 7,
+        "terrain_source_peak_percent": 10.481,
+        "terrain_source_p95_percent": 9.996,
+        "formation_peak_percent": 10.623
+      },
+      {
+        "edge": 2729192,
+        "metres": 249.83,
+        "intervals": 8,
+        "terrain_source_peak_percent": 14.679,
+        "terrain_source_p95_percent": 14.253,
+        "formation_peak_percent": 11.528
+      },
+      {
+        "edge": 2729193,
+        "metres": 400.19,
+        "intervals": 13,
+        "terrain_source_peak_percent": 23.03,
+        "terrain_source_p95_percent": 22.074,
+        "formation_peak_percent": 11.495
+      },
+      {
+        "edge": 3754785,
+        "metres": 269.19,
+        "intervals": 9,
+        "terrain_source_peak_percent": 19.015,
+        "terrain_source_p95_percent": 17.806,
+        "formation_peak_percent": 8.21
+      },
+      {
+        "edge": 2729187,
+        "metres": 911.25,
+        "intervals": 29,
+        "terrain_source_peak_percent": 47.577,
+        "terrain_source_p95_percent": 32.99,
+        "formation_peak_percent": 11.61
+      },
+      {
+        "edge": 2715386,
+        "metres": 87.91,
+        "intervals": 3,
+        "terrain_source_peak_percent": 20.884,
+        "terrain_source_p95_percent": 20.477,
+        "formation_peak_percent": 2.275
+      },
+      {
+        "edge": 2715387,
+        "metres": 1514.65,
+        "intervals": 48,
+        "terrain_source_peak_percent": 20.645,
+        "terrain_source_p95_percent": 17.375,
+        "formation_peak_percent": 11.541
+      },
+      {
+        "edge": 2729186,
+        "metres": 534.46,
+        "intervals": 17,
+        "terrain_source_peak_percent": 19.068,
+        "terrain_source_p95_percent": 19.005,
+        "formation_peak_percent": 11.619
+      }
+    ],
+    "Đèo Phù Mỹ": [
+      {
+        "edge": 3809647,
+        "metres": 1790.7,
+        "intervals": 56,
+        "terrain_source_peak_percent": 44.228,
+        "terrain_source_p95_percent": 24.746,
+        "formation_peak_percent": 11.56
+      },
+      {
+        "edge": 3809648,
+        "metres": 1787.6,
+        "intervals": 56,
+        "terrain_source_peak_percent": 40.127,
+        "terrain_source_p95_percent": 35.094,
+        "formation_peak_percent": 11.949
+      },
+      {
+        "edge": 3809649,
+        "metres": 1791.89,
+        "intervals": 56,
+        "terrain_source_peak_percent": 44.815,
+        "terrain_source_p95_percent": 32.567,
+        "formation_peak_percent": 11.552
+      },
+      {
+        "edge": 3809650,
+        "metres": 1011.15,
+        "intervals": 32,
+        "terrain_source_peak_percent": 36.357,
+        "terrain_source_p95_percent": 32.392,
+        "formation_peak_percent": 11.601
+      }
+    ],
+    "Đèo Phú Gia": [
+      {
+        "edge": 840870,
+        "metres": 238.27,
+        "intervals": 8,
+        "terrain_source_peak_percent": 7.249,
+        "terrain_source_p95_percent": 6.56,
+        "formation_peak_percent": 9.065
+      },
+      {
+        "edge": 944672,
+        "metres": 34.22,
+        "intervals": 2,
+        "terrain_source_peak_percent": 15.678,
+        "terrain_source_p95_percent": 15.258,
+        "formation_peak_percent": 4.092
+      },
+      {
+        "edge": 944755,
+        "metres": 168.11,
+        "intervals": 6,
+        "terrain_source_peak_percent": 0.562,
+        "terrain_source_p95_percent": 0.531,
+        "formation_peak_percent": 0.476
+      },
+      {
+        "edge": 944756,
+        "metres": 125.99,
+        "intervals": 4,
+        "terrain_source_peak_percent": 0.634,
+        "terrain_source_p95_percent": 0.572,
+        "formation_peak_percent": 0.476
+      },
+      {
+        "edge": 944757,
+        "metres": 17.95,
+        "intervals": 1,
+        "terrain_source_peak_percent": 0.044,
+        "terrain_source_p95_percent": 0.044,
+        "formation_peak_percent": 0.0
+      },
+      {
+        "edge": 944758,
+        "metres": 121.75,
+        "intervals": 4,
+        "terrain_source_peak_percent": 0.656,
+        "terrain_source_p95_percent": 0.577,
+        "formation_peak_percent": 0.493
+      },
+      {
+        "edge": 944759,
+        "metres": 73.76,
+        "intervals": 3,
+        "terrain_source_peak_percent": 0.317,
+        "terrain_source_p95_percent": 0.315,
+        "formation_peak_percent": 0.542
+      },
+      {
+        "edge": 944760,
+        "metres": 50.3,
+        "intervals": 2,
+        "terrain_source_peak_percent": 0.149,
+        "terrain_source_p95_percent": 0.144,
+        "formation_peak_percent": 0.0
+      },
+      {
+        "edge": 944761,
+        "metres": 19.99,
+        "intervals": 1,
+        "terrain_source_peak_percent": 0.158,
+        "terrain_source_p95_percent": 0.158,
+        "formation_peak_percent": 0.0
+      },
+      {
+        "edge": 3467842,
+        "metres": 47.91,
+        "intervals": 2,
+        "terrain_source_peak_percent": 10.123,
+        "terrain_source_p95_percent": 9.866,
+        "formation_peak_percent": 2.505
+      },
+      {
+        "edge": 3720334,
+        "metres": 116.61,
+        "intervals": 4,
+        "terrain_source_peak_percent": 0.333,
+        "terrain_source_p95_percent": 0.333,
+        "formation_peak_percent": 0.515
+      },
+      {
+        "edge": 3720335,
+        "metres": 100.67,
+        "intervals": 4,
+        "terrain_source_peak_percent": 0.327,
+        "terrain_source_p95_percent": 0.327,
+        "formation_peak_percent": 0.497
+      },
+      {
+        "edge": 3720336,
+        "metres": 1793.9,
+        "intervals": 57,
+        "terrain_source_peak_percent": 27.219,
+        "terrain_source_p95_percent": 21.439,
+        "formation_peak_percent": 11.539
+      },
+      {
+        "edge": 3720337,
+        "metres": 315.88,
+        "intervals": 10,
+        "terrain_source_peak_percent": 17.489,
+        "terrain_source_p95_percent": 12.447,
+        "formation_peak_percent": 11.65
+      },
+      {
+        "edge": 3720338,
+        "metres": 6.94,
+        "intervals": 1,
+        "terrain_source_peak_percent": 0.375,
+        "terrain_source_p95_percent": 0.375,
+        "formation_peak_percent": 4.32
+      },
+      {
+        "edge": 3720339,
+        "metres": 63.66,
+        "intervals": 2,
+        "terrain_source_peak_percent": 0.337,
+        "terrain_source_p95_percent": 0.333,
+        "formation_peak_percent": 1.414
+      }
+    ],
+    "Đèo Phú Hiệp": [
+      {
+        "edge": 3661497,
+        "metres": 46.45,
+        "intervals": 2,
+        "terrain_source_peak_percent": 1.381,
+        "terrain_source_p95_percent": 1.346,
+        "formation_peak_percent": 1.722
+      },
+      {
+        "edge": 3661498,
+        "metres": 25.47,
+        "intervals": 1,
+        "terrain_source_peak_percent": 1.544,
+        "terrain_source_p95_percent": 1.544,
+        "formation_peak_percent": 0.785
+      },
+      {
+        "edge": 3661499,
+        "metres": 161.94,
+        "intervals": 6,
+        "terrain_source_peak_percent": 4.139,
+        "terrain_source_p95_percent": 4.021,
+        "formation_peak_percent": 8.398
+      },
+      {
+        "edge": 3661500,
+        "metres": 200.59,
+        "intervals": 7,
+        "terrain_source_peak_percent": 10.279,
+        "terrain_source_p95_percent": 10.126,
+        "formation_peak_percent": 5.982
+      },
+      {
+        "edge": 3661501,
+        "metres": 474.93,
+        "intervals": 15,
+        "terrain_source_peak_percent": 14.893,
+        "terrain_source_p95_percent": 14.186,
+        "formation_peak_percent": 8.085
+      },
+      {
+        "edge": 3661502,
+        "metres": 35.14,
+        "intervals": 2,
+        "terrain_source_peak_percent": 2.783,
+        "terrain_source_p95_percent": 2.657,
+        "formation_peak_percent": 1.138
+      },
+      {
+        "edge": 3661503,
+        "metres": 282.56,
+        "intervals": 9,
+        "terrain_source_peak_percent": 11.376,
+        "terrain_source_p95_percent": 10.771,
+        "formation_peak_percent": 8.918
+      },
+      {
+        "edge": 3661504,
+        "metres": 168.25,
+        "intervals": 6,
+        "terrain_source_peak_percent": 9.007,
+        "terrain_source_p95_percent": 8.958,
+        "formation_peak_percent": 6.657
+      },
+      {
+        "edge": 3661505,
+        "metres": 180.96,
+        "intervals": 6,
+        "terrain_source_peak_percent": 11.13,
+        "terrain_source_p95_percent": 10.663,
+        "formation_peak_percent": 8.455
+      },
+      {
+        "edge": 3661506,
+        "metres": 109.05,
+        "intervals": 4,
+        "terrain_source_peak_percent": 10.556,
+        "terrain_source_p95_percent": 9.937,
+        "formation_peak_percent": 8.712
+      },
+      {
+        "edge": 3661507,
+        "metres": 70.84,
+        "intervals": 3,
+        "terrain_source_peak_percent": 7.555,
+        "terrain_source_p95_percent": 7.453,
+        "formation_peak_percent": 3.952
+      },
+      {
+        "edge": 3661508,
+        "metres": 174.19,
+        "intervals": 6,
+        "terrain_source_peak_percent": 5.104,
+        "terrain_source_p95_percent": 5.081,
+        "formation_peak_percent": 5.167
+      },
+      {
+        "edge": 3661509,
+        "metres": 36.57,
+        "intervals": 2,
+        "terrain_source_peak_percent": 3.107,
+        "terrain_source_p95_percent": 2.999,
+        "formation_peak_percent": 3.281
+      },
+      {
+        "edge": 3661510,
+        "metres": 344.37,
+        "intervals": 11,
+        "terrain_source_peak_percent": 8.771,
+        "terrain_source_p95_percent": 8.289,
+        "formation_peak_percent": 6.911
+      },
+      {
+        "edge": 3661511,
+        "metres": 114.71,
+        "intervals": 4,
+        "terrain_source_peak_percent": 2.95,
+        "terrain_source_p95_percent": 2.904,
+        "formation_peak_percent": 5.231
+      },
+      {
+        "edge": 3661512,
+        "metres": 16.72,
+        "intervals": 1,
+        "terrain_source_peak_percent": 1.007,
+        "terrain_source_p95_percent": 1.007,
+        "formation_peak_percent": 1.196
+      },
+      {
+        "edge": 3661513,
+        "metres": 80.18,
+        "intervals": 3,
+        "terrain_source_peak_percent": 1.466,
+        "terrain_source_p95_percent": 1.348,
+        "formation_peak_percent": 0.998
+      }
+    ],
+    "Đèo Phước Tượng": [
+      {
+        "edge": 26687,
+        "metres": 1794.6,
+        "intervals": 57,
+        "terrain_source_peak_percent": 25.794,
+        "terrain_source_p95_percent": 21.196,
+        "formation_peak_percent": 11.535
+      },
+      {
+        "edge": 26688,
+        "metres": 153.04,
+        "intervals": 5,
+        "terrain_source_peak_percent": 7.116,
+        "terrain_source_p95_percent": 6.405,
+        "formation_peak_percent": 11.5
+      },
+      {
+        "edge": 35531,
+        "metres": 630.43,
+        "intervals": 20,
+        "terrain_source_peak_percent": 2.788,
+        "terrain_source_p95_percent": 2.511,
+        "formation_peak_percent": 2.538
+      },
+      {
+        "edge": 35532,
+        "metres": 92.14,
+        "intervals": 3,
+        "terrain_source_peak_percent": 2.667,
+        "terrain_source_p95_percent": 2.578,
+        "formation_peak_percent": 1.628
+      },
+      {
+        "edge": 35533,
+        "metres": 308.27,
+        "intervals": 10,
+        "terrain_source_peak_percent": 2.931,
+        "terrain_source_p95_percent": 2.472,
+        "formation_peak_percent": 2.919
+      },
+      {
+        "edge": 181163,
+        "metres": 163.95,
+        "intervals": 6,
+        "terrain_source_peak_percent": 1.029,
+        "terrain_source_p95_percent": 0.978,
+        "formation_peak_percent": 5.855
+      },
+      {
+        "edge": 786412,
+        "metres": 367.14,
+        "intervals": 12,
+        "terrain_source_peak_percent": 0.526,
+        "terrain_source_p95_percent": 0.458,
+        "formation_peak_percent": 0.49
+      },
+      {
+        "edge": 786413,
+        "metres": 43.89,
+        "intervals": 2,
+        "terrain_source_peak_percent": 0.226,
+        "terrain_source_p95_percent": 0.222,
+        "formation_peak_percent": 0.0
+      },
+      {
+        "edge": 944821,
+        "metres": 943.8,
+        "intervals": 30,
+        "terrain_source_peak_percent": 22.311,
+        "terrain_source_p95_percent": 12.551,
+        "formation_peak_percent": 6.474
+      },
+      {
+        "edge": 2741097,
+        "metres": 282.2,
+        "intervals": 9,
+        "terrain_source_peak_percent": 0.547,
+        "terrain_source_p95_percent": 0.504,
+        "formation_peak_percent": 0.496
+      },
+      {
+        "edge": 2741098,
+        "metres": 57.59,
+        "intervals": 2,
+        "terrain_source_peak_percent": 0.686,
+        "terrain_source_p95_percent": 0.678,
+        "formation_peak_percent": 0.521
+      },
+      {
+        "edge": 2741099,
+        "metres": 44.84,
+        "intervals": 2,
+        "terrain_source_peak_percent": 0.193,
+        "terrain_source_p95_percent": 0.192,
+        "formation_peak_percent": 0.446
+      },
+      {
+        "edge": 2741188,
+        "metres": 67.1,
+        "intervals": 3,
+        "terrain_source_peak_percent": 0.293,
+        "terrain_source_p95_percent": 0.282,
+        "formation_peak_percent": 5.813
+      },
+      {
+        "edge": 2741189,
+        "metres": 69.03,
+        "intervals": 3,
+        "terrain_source_peak_percent": 0.507,
+        "terrain_source_p95_percent": 0.472,
+        "formation_peak_percent": 6.085
+      },
+      {
+        "edge": 2741190,
+        "metres": 17.87,
+        "intervals": 1,
+        "terrain_source_peak_percent": 0.414,
+        "terrain_source_p95_percent": 0.414,
+        "formation_peak_percent": 6.155
+      },
+      {
+        "edge": 2741191,
+        "metres": 19.77,
+        "intervals": 1,
+        "terrain_source_peak_percent": 0.282,
+        "terrain_source_p95_percent": 0.282,
+        "formation_peak_percent": 1.517
+      },
+      {
+        "edge": 2741192,
+        "metres": 42.14,
+        "intervals": 2,
+        "terrain_source_peak_percent": 0.259,
+        "terrain_source_p95_percent": 0.253,
+        "formation_peak_percent": 6.171
+      },
+      {
+        "edge": 2741193,
+        "metres": 132.21,
+        "intervals": 5,
+        "terrain_source_peak_percent": 0.215,
+        "terrain_source_p95_percent": 0.215,
+        "formation_peak_percent": 11.648
+      },
+      {
+        "edge": 2741194,
+        "metres": 43.34,
+        "intervals": 2,
+        "terrain_source_peak_percent": 0.313,
+        "terrain_source_p95_percent": 0.303,
+        "formation_peak_percent": 5.999
+      }
+    ],
+    "Đèo Phượng Hoàng": [
+      {
+        "edge": 28634,
+        "metres": 1791.36,
+        "intervals": 56,
+        "terrain_source_peak_percent": 29.724,
+        "terrain_source_p95_percent": 23.992,
+        "formation_peak_percent": 11.555
+      },
+      {
+        "edge": 28635,
+        "metres": 1792.03,
+        "intervals": 57,
+        "terrain_source_peak_percent": 28.589,
+        "terrain_source_p95_percent": 21.998,
+        "formation_peak_percent": 11.551
+      },
+      {
+        "edge": 28636,
+        "metres": 1652.11,
+        "intervals": 52,
+        "terrain_source_peak_percent": 26.839,
+        "terrain_source_p95_percent": 21.95,
+        "formation_peak_percent": 11.555
+      },
+      {
+        "edge": 28637,
+        "metres": 1794.05,
+        "intervals": 57,
+        "terrain_source_peak_percent": 21.519,
+        "terrain_source_p95_percent": 17.318,
+        "formation_peak_percent": 11.538
+      },
+      {
+        "edge": 28638,
+        "metres": 1796.8,
+        "intervals": 57,
+        "terrain_source_peak_percent": 21.749,
+        "terrain_source_p95_percent": 20.483,
+        "formation_peak_percent": 11.52
+      },
+      {
+        "edge": 28639,
+        "metres": 676.29,
+        "intervals": 22,
+        "terrain_source_peak_percent": 16.352,
+        "terrain_source_p95_percent": 16.221,
+        "formation_peak_percent": 9.049
+      }
+    ],
+    "Đèo Prenn": [
+      {
+        "edge": 3444809,
+        "metres": 57.94,
+        "intervals": 2,
+        "terrain_source_peak_percent": 1.831,
+        "terrain_source_p95_percent": 1.742,
+        "formation_peak_percent": 2.071
+      },
+      {
+        "edge": 3585193,
+        "metres": 42.74,
+        "intervals": 2,
+        "terrain_source_peak_percent": 5.577,
+        "terrain_source_p95_percent": 5.39,
+        "formation_peak_percent": 5.148
+      },
+      {
+        "edge": 3585194,
+        "metres": 134.82,
+        "intervals": 5,
+        "terrain_source_peak_percent": 8.751,
+        "terrain_source_p95_percent": 8.24,
+        "formation_peak_percent": 7.788
+      },
+      {
+        "edge": 3585195,
+        "metres": 125.08,
+        "intervals": 4,
+        "terrain_source_peak_percent": 3.548,
+        "terrain_source_p95_percent": 3.539,
+        "formation_peak_percent": 3.838
+      },
+      {
+        "edge": 3585196,
+        "metres": 50.86,
+        "intervals": 2,
+        "terrain_source_peak_percent": 4.89,
+        "terrain_source_p95_percent": 4.874,
+        "formation_peak_percent": 4.129
+      },
+      {
+        "edge": 3585198,
+        "metres": 290.43,
+        "intervals": 10,
+        "terrain_source_peak_percent": 11.214,
+        "terrain_source_p95_percent": 11.063,
+        "formation_peak_percent": 9.813
+      },
+      {
+        "edge": 3585199,
+        "metres": 316.95,
+        "intervals": 10,
+        "terrain_source_peak_percent": 14.648,
+        "terrain_source_p95_percent": 14.276,
+        "formation_peak_percent": 8.582
+      },
+      {
+        "edge": 3627988,
+        "metres": 36.16,
+        "intervals": 2,
+        "terrain_source_peak_percent": 8.857,
+        "terrain_source_p95_percent": 8.486,
+        "formation_peak_percent": 2.766
+      },
+      {
+        "edge": 3627989,
+        "metres": 1792.35,
+        "intervals": 57,
+        "terrain_source_peak_percent": 30.433,
+        "terrain_source_p95_percent": 21.292,
+        "formation_peak_percent": 11.549
+      },
+      {
+        "edge": 3627990,
+        "metres": 219.66,
+        "intervals": 7,
+        "terrain_source_peak_percent": 34.494,
+        "terrain_source_p95_percent": 30.897,
+        "formation_peak_percent": 11.518
+      },
+      {
+        "edge": 3627991,
+        "metres": 482.76,
+        "intervals": 16,
+        "terrain_source_peak_percent": 22.325,
+        "terrain_source_p95_percent": 21.241,
+        "formation_peak_percent": 8.451
+      },
+      {
+        "edge": 3636274,
+        "metres": 1795.21,
+        "intervals": 57,
+        "terrain_source_peak_percent": 26.626,
+        "terrain_source_p95_percent": 21.059,
+        "formation_peak_percent": 11.531
+      },
+      {
+        "edge": 3636275,
+        "metres": 894.36,
+        "intervals": 28,
+        "terrain_source_peak_percent": 40.387,
+        "terrain_source_p95_percent": 34.399,
+        "formation_peak_percent": 11.572
+      },
+      {
+        "edge": 3636480,
+        "metres": 1421.48,
+        "intervals": 45,
+        "terrain_source_peak_percent": 24.722,
+        "terrain_source_p95_percent": 20.972,
+        "formation_peak_percent": 11.488
+      },
+      {
+        "edge": 3636481,
+        "metres": 45.62,
+        "intervals": 2,
+        "terrain_source_peak_percent": 3.659,
+        "terrain_source_p95_percent": 3.545,
+        "formation_peak_percent": 3.508
+      }
+    ],
+    "Đèo Rù Rỳ": [
+      {
+        "edge": 3698126,
+        "metres": 829.7,
+        "intervals": 26,
+        "terrain_source_peak_percent": 16.071,
+        "terrain_source_p95_percent": 14.803,
+        "formation_peak_percent": 7.412
+      },
+      {
+        "edge": 3698127,
+        "metres": 45.43,
+        "intervals": 2,
+        "terrain_source_peak_percent": 11.542,
+        "terrain_source_p95_percent": 11.401,
+        "formation_peak_percent": 1.321
+      },
+      {
+        "edge": 3795061,
+        "metres": 605.77,
+        "intervals": 19,
+        "terrain_source_peak_percent": 15.621,
+        "terrain_source_p95_percent": 13.073,
+        "formation_peak_percent": 11.886
+      },
+      {
+        "edge": 3795062,
+        "metres": 933.02,
+        "intervals": 30,
+        "terrain_source_peak_percent": 15.697,
+        "terrain_source_p95_percent": 13.518,
+        "formation_peak_percent": 11.586
+      },
+      {
+        "edge": 3795063,
+        "metres": 205.22,
+        "intervals": 7,
+        "terrain_source_peak_percent": 11.77,
+        "terrain_source_p95_percent": 11.53,
+        "formation_peak_percent": 6.822
+      },
+      {
+        "edge": 3795064,
+        "metres": 106.74,
+        "intervals": 4,
+        "terrain_source_peak_percent": 5.623,
+        "terrain_source_p95_percent": 5.188,
+        "formation_peak_percent": 8.9
+      },
+      {
+        "edge": 3795065,
+        "metres": 1254.76,
+        "intervals": 40,
+        "terrain_source_peak_percent": 18.98,
+        "terrain_source_p95_percent": 13.59,
+        "formation_peak_percent": 11.548
+      },
+      {
+        "edge": 3795066,
+        "metres": 225.05,
+        "intervals": 8,
+        "terrain_source_peak_percent": 12.932,
+        "terrain_source_p95_percent": 12.748,
+        "formation_peak_percent": 11.731
+      },
+      {
+        "edge": 3795067,
+        "metres": 310.14,
+        "intervals": 10,
+        "terrain_source_peak_percent": 11.839,
+        "terrain_source_p95_percent": 11.382,
+        "formation_peak_percent": 9.802
+      },
+      {
+        "edge": 3863455,
+        "metres": 355.07,
+        "intervals": 12,
+        "terrain_source_peak_percent": 10.893,
+        "terrain_source_p95_percent": 5.934,
+        "formation_peak_percent": 4.056
+      },
+      {
+        "edge": 3863456,
+        "metres": 363.54,
+        "intervals": 12,
+        "terrain_source_peak_percent": 13.271,
+        "terrain_source_p95_percent": 10.369,
+        "formation_peak_percent": 5.942
+      }
+    ],
+    "Đèo Rọ Tượng": [
+      {
+        "edge": 3795005,
+        "metres": 1175.43,
+        "intervals": 37,
+        "terrain_source_peak_percent": 18.648,
+        "terrain_source_p95_percent": 14.798,
+        "formation_peak_percent": 11.545
+      },
+      {
+        "edge": 3795009,
+        "metres": 809.18,
+        "intervals": 26,
+        "terrain_source_peak_percent": 17.632,
+        "terrain_source_p95_percent": 12.8,
+        "formation_peak_percent": 11.864
+      },
+      {
+        "edge": 3795010,
+        "metres": 333.39,
+        "intervals": 11,
+        "terrain_source_peak_percent": 13.099,
+        "terrain_source_p95_percent": 10.568,
+        "formation_peak_percent": 10.198
+      }
+    ],
+    "Đèo Sacom": [
+      {
+        "edge": 462358,
+        "metres": 1793.3,
+        "intervals": 57,
+        "terrain_source_peak_percent": 33.494,
+        "terrain_source_p95_percent": 21.611,
+        "formation_peak_percent": 14.554
+      },
+      {
+        "edge": 462359,
+        "metres": 1791.46,
+        "intervals": 56,
+        "terrain_source_peak_percent": 35.445,
+        "terrain_source_p95_percent": 19.877,
+        "formation_peak_percent": 14.569
+      },
+      {
+        "edge": 462360,
+        "metres": 1047.67,
+        "intervals": 33,
+        "terrain_source_peak_percent": 25.978,
+        "terrain_source_p95_percent": 21.451,
+        "formation_peak_percent": 14.89
+      },
+      {
+        "edge": 3770448,
+        "metres": 1545.63,
+        "intervals": 49,
+        "terrain_source_peak_percent": 21.122,
+        "terrain_source_p95_percent": 18.707,
+        "formation_peak_percent": 14.945
+      },
+      {
+        "edge": 3770449,
+        "metres": 10.88,
+        "intervals": 1,
+        "terrain_source_peak_percent": 16.772,
+        "terrain_source_p95_percent": 16.772,
+        "formation_peak_percent": 9.19
+      },
+      {
+        "edge": 3770450,
+        "metres": 99.67,
+        "intervals": 4,
+        "terrain_source_peak_percent": 3.409,
+        "terrain_source_p95_percent": 3.34,
+        "formation_peak_percent": 9.029
+      },
+      {
+        "edge": 3770451,
+        "metres": 1452.32,
+        "intervals": 46,
+        "terrain_source_peak_percent": 38.655,
+        "terrain_source_p95_percent": 25.751,
+        "formation_peak_percent": 14.074
+      }
+    ],
+    "Đèo Thung Khe": [
+      {
+        "edge": 18616,
+        "metres": 1796.98,
+        "intervals": 57,
+        "terrain_source_peak_percent": 34.455,
+        "terrain_source_p95_percent": 24.057,
+        "formation_peak_percent": 11.519
+      },
+      {
+        "edge": 18617,
+        "metres": 1796.74,
+        "intervals": 57,
+        "terrain_source_peak_percent": 42.981,
+        "terrain_source_p95_percent": 28.246,
+        "formation_peak_percent": 11.521
+      },
+      {
+        "edge": 18618,
+        "metres": 609.91,
+        "intervals": 20,
+        "terrain_source_peak_percent": 29.064,
+        "terrain_source_p95_percent": 26.565,
+        "formation_peak_percent": 11.805
+      },
+      {
+        "edge": 18619,
+        "metres": 986.66,
+        "intervals": 31,
+        "terrain_source_peak_percent": 25.896,
+        "terrain_source_p95_percent": 24.188,
+        "formation_peak_percent": 11.919
+      },
+      {
+        "edge": 18620,
+        "metres": 502.02,
+        "intervals": 16,
+        "terrain_source_peak_percent": 11.658,
+        "terrain_source_p95_percent": 11.202,
+        "formation_peak_percent": 8.964
+      },
+      {
+        "edge": 18621,
+        "metres": 680.73,
+        "intervals": 22,
+        "terrain_source_peak_percent": 15.663,
+        "terrain_source_p95_percent": 14.379,
+        "formation_peak_percent": 7.492
+      },
+      {
+        "edge": 18622,
+        "metres": 1795.19,
+        "intervals": 57,
+        "terrain_source_peak_percent": 38.079,
+        "terrain_source_p95_percent": 27.307,
+        "formation_peak_percent": 11.531
+      },
+      {
+        "edge": 18623,
+        "metres": 1608.67,
+        "intervals": 51,
+        "terrain_source_peak_percent": 24.757,
+        "terrain_source_p95_percent": 20.603,
+        "formation_peak_percent": 11.935
+      },
+      {
+        "edge": 18624,
+        "metres": 49.81,
+        "intervals": 2,
+        "terrain_source_peak_percent": 16.054,
+        "terrain_source_p95_percent": 15.782,
+        "formation_peak_percent": 11.644
+      },
+      {
+        "edge": 18625,
+        "metres": 1796.35,
+        "intervals": 57,
+        "terrain_source_peak_percent": 52.254,
+        "terrain_source_p95_percent": 44.423,
+        "formation_peak_percent": 11.523
+      },
+      {
+        "edge": 18626,
+        "metres": 1794.0,
+        "intervals": 57,
+        "terrain_source_peak_percent": 44.024,
+        "terrain_source_p95_percent": 39.276,
+        "formation_peak_percent": 11.538
+      },
+      {
+        "edge": 18627,
+        "metres": 671.8,
+        "intervals": 21,
+        "terrain_source_peak_percent": 28.266,
+        "terrain_source_p95_percent": 27.617,
+        "formation_peak_percent": 11.64
+      },
+      {
+        "edge": 18628,
+        "metres": 95.09,
+        "intervals": 3,
+        "terrain_source_peak_percent": 28.878,
+        "terrain_source_p95_percent": 28.616,
+        "formation_peak_percent": 11.568
+      },
+      {
+        "edge": 18629,
+        "metres": 60.83,
+        "intervals": 2,
+        "terrain_source_peak_percent": 25.029,
+        "terrain_source_p95_percent": 24.997,
+        "formation_peak_percent": 7.891
+      },
+      {
+        "edge": 18630,
+        "metres": 29.68,
+        "intervals": 1,
+        "terrain_source_peak_percent": 24.149,
+        "terrain_source_p95_percent": 24.149,
+        "formation_peak_percent": 6.065
+      },
+      {
+        "edge": 18631,
+        "metres": 10.65,
+        "intervals": 1,
+        "terrain_source_peak_percent": 23.715,
+        "terrain_source_p95_percent": 23.715,
+        "formation_peak_percent": 1.878
+      }
+    ],
+    "Đèo Tà Lương": [
+      {
+        "edge": 169857,
+        "metres": 1792.55,
+        "intervals": 57,
+        "terrain_source_peak_percent": 25.163,
+        "terrain_source_p95_percent": 19.516,
+        "formation_peak_percent": 11.548
+      },
+      {
+        "edge": 169858,
+        "metres": 492.79,
+        "intervals": 16,
+        "terrain_source_peak_percent": 12.494,
+        "terrain_source_p95_percent": 10.51,
+        "formation_peak_percent": 11.668
+      }
+    ],
+    "Đèo Tà Pứa": [
+      {
+        "edge": 3632084,
+        "metres": 674.43,
+        "intervals": 22,
+        "terrain_source_peak_percent": 5.188,
+        "terrain_source_p95_percent": 5.038,
+        "formation_peak_percent": 7.562
+      },
+      {
+        "edge": 3632085,
+        "metres": 1791.79,
+        "intervals": 56,
+        "terrain_source_peak_percent": 38.482,
+        "terrain_source_p95_percent": 24.43,
+        "formation_peak_percent": 11.553
+      },
+      {
+        "edge": 3632086,
+        "metres": 1474.72,
+        "intervals": 47,
+        "terrain_source_peak_percent": 39.595,
+        "terrain_source_p95_percent": 24.161,
+        "formation_peak_percent": 11.541
+      }
+    ],
+    "Đèo Vi Ô Lăk": [
+      {
+        "edge": 637084,
+        "metres": 1792.36,
+        "intervals": 57,
+        "terrain_source_peak_percent": 40.961,
+        "terrain_source_p95_percent": 30.274,
+        "formation_peak_percent": 11.549
+      },
+      {
+        "edge": 637085,
+        "metres": 1794.77,
+        "intervals": 57,
+        "terrain_source_peak_percent": 28.758,
+        "terrain_source_p95_percent": 22.489,
+        "formation_peak_percent": 11.533
+      },
+      {
+        "edge": 637086,
+        "metres": 1795.43,
+        "intervals": 57,
+        "terrain_source_peak_percent": 33.459,
+        "terrain_source_p95_percent": 26.28,
+        "formation_peak_percent": 11.529
+      },
+      {
+        "edge": 637087,
+        "metres": 1796.99,
+        "intervals": 57,
+        "terrain_source_peak_percent": 36.776,
+        "terrain_source_p95_percent": 33.059,
+        "formation_peak_percent": 11.519
+      },
+      {
+        "edge": 637088,
+        "metres": 1795.15,
+        "intervals": 57,
+        "terrain_source_peak_percent": 28.192,
+        "terrain_source_p95_percent": 24.755,
+        "formation_peak_percent": 11.531
+      },
+      {
+        "edge": 637089,
+        "metres": 1794.96,
+        "intervals": 57,
+        "terrain_source_peak_percent": 24.801,
+        "terrain_source_p95_percent": 16.467,
+        "formation_peak_percent": 11.532
+      },
+      {
+        "edge": 637090,
+        "metres": 1371.73,
+        "intervals": 43,
+        "terrain_source_peak_percent": 26.791,
+        "terrain_source_p95_percent": 20.212,
+        "formation_peak_percent": 11.569
+      }
+    ],
+    "Đèo Ách": [
+      {
+        "edge": 3807066,
+        "metres": 1791.23,
+        "intervals": 56,
+        "terrain_source_peak_percent": 32.751,
+        "terrain_source_p95_percent": 24.488,
+        "formation_peak_percent": 11.556
+      },
+      {
+        "edge": 3807067,
+        "metres": 877.42,
+        "intervals": 28,
+        "terrain_source_peak_percent": 16.532,
+        "terrain_source_p95_percent": 15.113,
+        "formation_peak_percent": 11.534
+      }
+    ],
+    "Đèo Ô Quy Hồ": [
+      {
+        "edge": 459061,
+        "metres": 381.74,
+        "intervals": 12,
+        "terrain_source_peak_percent": 11.456,
+        "terrain_source_p95_percent": 10.874,
+        "formation_peak_percent": 8.461
+      },
+      {
+        "edge": 459062,
+        "metres": 1789.77,
+        "intervals": 56,
+        "terrain_source_peak_percent": 41.725,
+        "terrain_source_p95_percent": 38.383,
+        "formation_peak_percent": 11.934
+      },
+      {
+        "edge": 459063,
+        "metres": 1199.9,
+        "intervals": 38,
+        "terrain_source_peak_percent": 36.743,
+        "terrain_source_p95_percent": 27.759,
+        "formation_peak_percent": 11.501
+      },
+      {
+        "edge": 459064,
+        "metres": 1789.73,
+        "intervals": 56,
+        "terrain_source_peak_percent": 46.849,
+        "terrain_source_p95_percent": 38.495,
+        "formation_peak_percent": 11.935
+      },
+      {
+        "edge": 459065,
+        "metres": 1789.56,
+        "intervals": 56,
+        "terrain_source_peak_percent": 43.581,
+        "terrain_source_p95_percent": 35.348,
+        "formation_peak_percent": 11.936
+      },
+      {
+        "edge": 459066,
+        "metres": 1791.09,
+        "intervals": 56,
+        "terrain_source_peak_percent": 28.415,
+        "terrain_source_p95_percent": 18.451,
+        "formation_peak_percent": 11.557
+      },
+      {
+        "edge": 459067,
+        "metres": 440.75,
+        "intervals": 14,
+        "terrain_source_peak_percent": 18.818,
+        "terrain_source_p95_percent": 17.546,
+        "formation_peak_percent": 11.48
+      },
+      {
+        "edge": 459068,
+        "metres": 38.03,
+        "intervals": 2,
+        "terrain_source_peak_percent": 1.093,
+        "terrain_source_p95_percent": 1.04,
+        "formation_peak_percent": 9.467
+      },
+      {
+        "edge": 459069,
+        "metres": 15.85,
+        "intervals": 1,
+        "terrain_source_peak_percent": 1.952,
+        "terrain_source_p95_percent": 1.952,
+        "formation_peak_percent": 0.0
+      },
+      {
+        "edge": 459060,
+        "metres": 1792.44,
+        "intervals": 57,
+        "terrain_source_peak_percent": 52.357,
+        "terrain_source_p95_percent": 38.699,
+        "formation_peak_percent": 11.548
+      },
+      {
+        "edge": 459059,
+        "metres": 1789.75,
+        "intervals": 56,
+        "terrain_source_peak_percent": 70.216,
+        "terrain_source_p95_percent": 37.917,
+        "formation_peak_percent": 11.935
+      },
+      {
+        "edge": 2667641,
+        "metres": 1792.89,
+        "intervals": 57,
+        "terrain_source_peak_percent": 64.572,
+        "terrain_source_p95_percent": 35.476,
+        "formation_peak_percent": 11.546
+      },
+      {
+        "edge": 2667642,
+        "metres": 1788.36,
+        "intervals": 56,
+        "terrain_source_peak_percent": 62.658,
+        "terrain_source_p95_percent": 44.487,
+        "formation_peak_percent": 11.944
+      },
+      {
+        "edge": 2667643,
+        "metres": 412.87,
+        "intervals": 13,
+        "terrain_source_peak_percent": 37.751,
+        "terrain_source_p95_percent": 31.037,
+        "formation_peak_percent": 11.698
+      }
+    ],
+    "Đèo Đại Ninh": [
+      {
+        "edge": 138956,
+        "metres": 791.66,
+        "intervals": 25,
+        "terrain_source_peak_percent": 19.612,
+        "terrain_source_p95_percent": 18.715,
+        "formation_peak_percent": 11.621
+      },
+      {
+        "edge": 3831837,
+        "metres": 178.58,
+        "intervals": 6,
+        "terrain_source_peak_percent": 6.982,
+        "terrain_source_p95_percent": 6.675,
+        "formation_peak_percent": 7.056
+      },
+      {
+        "edge": 3831838,
+        "metres": 1794.44,
+        "intervals": 57,
+        "terrain_source_peak_percent": 30.004,
+        "terrain_source_p95_percent": 23.401,
+        "formation_peak_percent": 11.536
+      },
+      {
+        "edge": 3831839,
+        "metres": 1796.57,
+        "intervals": 57,
+        "terrain_source_peak_percent": 29.413,
+        "terrain_source_p95_percent": 19.478,
+        "formation_peak_percent": 11.522
+      },
+      {
+        "edge": 3831840,
+        "metres": 1796.39,
+        "intervals": 57,
+        "terrain_source_peak_percent": 29.49,
+        "terrain_source_p95_percent": 24.309,
+        "formation_peak_percent": 11.523
+      },
+      {
+        "edge": 3831841,
+        "metres": 39.95,
+        "intervals": 2,
+        "terrain_source_peak_percent": 2.976,
+        "terrain_source_p95_percent": 2.946,
+        "formation_peak_percent": 2.002
+      },
+      {
+        "edge": 3831898,
+        "metres": 377.24,
+        "intervals": 12,
+        "terrain_source_peak_percent": 12.337,
+        "terrain_source_p95_percent": 11.769,
+        "formation_peak_percent": 11.584
+      },
+      {
+        "edge": 3831900,
+        "metres": 935.31,
+        "intervals": 30,
+        "terrain_source_peak_percent": 25.381,
+        "terrain_source_p95_percent": 21.881,
+        "formation_peak_percent": 11.558
+      },
+      {
+        "edge": 3831902,
+        "metres": 161.15,
+        "intervals": 6,
+        "terrain_source_peak_percent": 9.346,
+        "terrain_source_p95_percent": 9.167,
+        "formation_peak_percent": 2.482
+      },
+      {
+        "edge": 3831904,
+        "metres": 46.49,
+        "intervals": 2,
+        "terrain_source_peak_percent": 9.118,
+        "terrain_source_p95_percent": 8.981,
+        "formation_peak_percent": 2.151
+      },
+      {
+        "edge": 3831905,
+        "metres": 164.54,
+        "intervals": 6,
+        "terrain_source_peak_percent": 13.983,
+        "terrain_source_p95_percent": 13.677,
+        "formation_peak_percent": 11.669
+      },
+      {
+        "edge": 3831907,
+        "metres": 282.44,
+        "intervals": 9,
+        "terrain_source_peak_percent": 5.744,
+        "terrain_source_p95_percent": 5.691,
+        "formation_peak_percent": 11.896
+      },
+      {
+        "edge": 3831909,
+        "metres": 313.78,
+        "intervals": 10,
+        "terrain_source_peak_percent": 14.869,
+        "terrain_source_p95_percent": 14.778,
+        "formation_peak_percent": 11.728
+      }
+    ]
+  }
+}
