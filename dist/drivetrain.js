@@ -110,7 +110,7 @@ window.DriveBody={
    // Parking stays linear. A held key still reaches full lock at every speed.
    const travel=c.steerTravel??c.steer;
    const speedKmh=Math.abs(forward)*3.6;
-   const curve=1+3*Math.max(0,Math.min(1,(speedKmh-20)/120));
+   const curve=1+.3*Math.max(0,Math.min(1,(speedKmh-20)/80));
    // Reversing unwinds the previous turn faster, until the wheel crosses centre.
    let decay=dt*8;
    if(travel*input.steer<0){
@@ -121,8 +121,14 @@ window.DriveBody={
    c.steerTravel=travel+(input.steer-travel)*(1-Math.exp(-decay));
    c.steer=Math.sign(c.steerTravel)*Math.abs(c.steerTravel)**curve;
    const next=this.forwardSpeed(c,input,dt,forward);
-   const wheel=c.steer*(c.spec?.steerLock??.52)/(1+Math.abs(next)*.056);
-   const yawRate=Math.max(-1.8,Math.min(1.8,next*Math.tan(wheel)/(c.spec?.wheelbase??2.68)));
+   const wheelbase=c.spec?.wheelbase??2.68;
+   const steeringLock=(c.spec?.steerLock??.52)/(1+Math.abs(next)*.056);
+   // Limit the available cornering angle at speed. Even a light input can use
+   // part of that range immediately; holding the button fills it progressively.
+   const lateralLimit=Math.min(c.offroad?7:12,c.spec?.braking??12);
+   const gripLock=Math.atan2(lateralLimit*wheelbase,next*next);
+   const wheel=c.steer*Math.min(steeringLock,gripLock);
+   const yawRate=Math.max(-1.8,Math.min(1.8,next*Math.tan(wheel)/wheelbase));
    const settle=1-Math.exp(-dt*5);
    c.pitch+=(Math.max(-.065,Math.min(.045,(next-forward)/dt*.003))-c.pitch)*settle;
    const targetRoll=c.model==='motorcycle'?-Math.max(-.58,Math.min(.58,Math.atan(yawRate*next/9.81))):Math.max(-.072,Math.min(.072,yawRate*next*.004));

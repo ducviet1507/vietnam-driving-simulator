@@ -1,5 +1,6 @@
 // Run with "working" or the Git revision containing the drivetrain to compare.
-// The second argument is a JSON result path. Game assets are served from dist.
+// The second argument is a JSON result path. An optional third revision pins
+// the rest of the browser's HTML, CSS and JS for comparisons on a dirty tree.
 import assert from 'node:assert/strict';
 import {execFileSync} from 'node:child_process';
 import {writeFile} from 'node:fs/promises';
@@ -7,10 +8,11 @@ import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {chromium} from 'playwright-core';
 
-const [revision,output]=process.argv.slice(2);
+const [revision,output,fixtureRevision]=process.argv.slice(2);
 assert(revision && output,'Provide working or a Git revision, then an output JSON path');
 const dist=fileURLToPath(new URL('../../dist/',import.meta.url));
 const baseline=revision==='working'?null:execFileSync('git',['show',revision+':dist/drivetrain.js'],{cwd:dist});
+const pinnedFiles=new Map();
 const origin='http://127.0.0.1:8871',results=[];
 const browser=await chromium.launch({executablePath:chromium.executablePath(),args:['--enable-gpu']});
 try{
@@ -30,6 +32,12 @@ try{
       if(baseline&&url.pathname==='/drivetrain.js')return route.fulfill({contentType:'text/javascript',body:baseline});
       const file=path.resolve(dist,'.'+decodeURIComponent(url.pathname==='/'?'/index.html':url.pathname));
       assert(file.startsWith(dist));
+      const extension=path.extname(file),contentType={'.html':'text/html','.css':'text/css','.js':'text/javascript'}[extension];
+      if(fixtureRevision&&contentType&&url.pathname!=='/drivetrain.js'){
+        const relative=path.relative(dist,file).split(path.sep).join('/');
+        if(!pinnedFiles.has(file))pinnedFiles.set(file,execFileSync('git',['show',fixtureRevision+':dist/'+relative],{cwd:dist,maxBuffer:16*1024*1024}));
+        return route.fulfill({body:pinnedFiles.get(file),contentType});
+      }
       try{await route.fulfill({path:file});}catch{await route.fulfill({status:404});}
     });
     await page.goto(origin+(cup?'/cup.html?route=river':'/?intro=turtle'),{waitUntil:'domcontentloaded'});
@@ -75,11 +83,16 @@ try{
       const taps=(cup?[20,100]:[0,20,60,100,150,200]).map(speed=>({speed,name:'tap',right:10,left:0,coast:90}));
       const maneuvers=[{speed:12,name:'hold',right:65,left:0,coast:0},
         {speed:60,name:'counter',right:25,left:25,coast:25}];
+      const highway=cup?[]:[100,200].flatMap(speed=>[
+        ...[5,15,20,25].map(right=>({speed,name:'tap',right,left:0,coast:100-right})),
+        {speed,name:'hold',right:65,left:0,coast:0}
+      ]);
       const trafficTaps=cup||input==='touch'?[]:['quiet','busy'].flatMap(traffic=>
         taps.filter(t=>t.speed>0).map(t=>({...t,traffic})));
-      for(const test of [...taps,...maneuvers,...trafficTaps]){
+      for(const test of [...taps,...maneuvers,...highway,...trafficTaps]){
         await page.evaluate(({speed,traffic,cup})=>{
           window.contacts=0;
+          window.peakLateralG=0;
           if(cup){state.d=90;state.offset=-2.8;parkCup();vitality=100;grace=0;}
           else{
             player={...steeringStart};parkOnRoad();
@@ -110,10 +123,22 @@ try{
             if(held('d','arrowright')!==right||held('a','arrowleft')!==left)throw Error('Input mismatch');
             const random=Math.random;
             if(traffic)Math.random=trafficRandom;
-            try{for(let i=0;i<count;i++)advanceSteering(.01);}finally{Math.random=random;}
+            const b=measuredCar;
+            try{
+              for(let i=0;i<count;i++){
+                const vx=b.vx,vz=b.vz;
+                advanceSteering(.01);
+                // Project the velocity change onto the normal to the path.
+                const midX=(vx+b.vx)/2,midZ=(vz+b.vz)/2,speed=Math.hypot(midX,midZ);
+                if(speed>.05){
+                  const normalAcceleration=(midX*(b.vz-vz)-midZ*(b.vx-vx))/(speed*.01);
+                  window.peakLateralG=Math.max(peakLateralG,Math.abs(normalAcceleration)/9.80665);
+                }
+              }
+            }finally{Math.random=random;}
             if((cup?state.mode:mode)!=='drive')throw Error('Drive interrupted');
-            const a=referencePose,b=measuredCar;
-            return {steer:b.steer,heading:(b.yaw-a.yaw)*180/Math.PI,
+            const a=referencePose;
+            return {steer:b.steer,heading:(b.yaw-a.yaw)*180/Math.PI,peakLateralG,
               lateral:(b.x-a.x)*Math.cos(a.yaw)+(b.z-a.z)*Math.sin(a.yaw),health:cup?vitality:hp,contacts};
           },{count,right,left,cup,traffic:test.traffic});
         }
@@ -151,9 +176,10 @@ try{
           }
         }
         if(input==='touch'){
-          const keyboard=results.find(r=>r.input==='keyboard'&&r.mode===result.mode&&r.name===test.name&&r.speed===test.speed);
+          const keyboard=results.find(r=>r.input==='keyboard'&&r.mode===result.mode&&r.name===test.name&&
+            r.speed===test.speed&&r.right===test.right&&!r.traffic);
           for(const phase of ['atRight','atLeft','end']){
-            for(const key of ['lateral','heading','steer']){
+            for(const key of ['lateral','heading','steer','peakLateralG']){
               if(result[phase])assert(Math.abs(result[phase][key]-keyboard[phase][key])<1e-6,'Keyboard and touch diverged');
             }
           }

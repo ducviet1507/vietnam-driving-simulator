@@ -199,7 +199,7 @@ function finishRace(){
  $('result').textContent=route.name+' · '+clockText(total)+' · Kỷ lục '+clockText(best)+' · '+repairs+' lượt vào gara'+(penalty?' · gồm '+penalty+' giây phạt':'')+'.';
  $('finish').showModal();
 }
-function raceUpdate(dt){
+function raceUpdate(dt,stepEnd){
  if(state.mode==='crash'){
    for(const n of roadTraffic){advanceRacerRecoil(n,n.lane,dt);placeCivilian(n);}
    for(const r of rivals)DriveBody.advanceRecoil(r,dt);placeRivals();
@@ -214,7 +214,7 @@ function raceUpdate(dt){
  const gas=held('w','arrowup'),brake=held('s','arrowdown',' ');
  const nitro=held('shift')&&s.charge>1&&!brake&&!s.airborne,setup=cupSetups[chosenCar];
  drafting=!s.airborne&&rivals.some(r=>inSlipstream(s,r));
- const steer=Number(held('d','arrowright'))-Number(held('a','arrowleft'));
+ const steer=keys.steering(stepEnd,dt);
  if(route.stage)cupBody.offroad=Math.abs(s.offset)>roadHalfWidth;
  if(s.airborne){
    cupBody.x+=cupBody.vx*dt;cupBody.z+=cupBody.vz*dt;
@@ -348,9 +348,9 @@ window.addEventListener('keydown',e=>{
  const key=e.key.toLowerCase();
  if(key==='p'&&!e.repeat){if(state.mode==='paused')$('resume').click();else pauseRace();return;}
  if(!['drive','countdown'].includes(state.mode))return;
- if(['w','a','s','d','arrowup','arrowleft','arrowdown','arrowright','shift',' '].includes(key)){keys.add(key);e.preventDefault();}
+ if(['w','a','s','d','arrowup','arrowleft','arrowdown','arrowright','shift',' '].includes(key)){keys.add(key,e.timeStamp);e.preventDefault();}
 });
-window.addEventListener('keyup',e=>keys.delete(e.key.toLowerCase()));
+window.addEventListener('keyup',e=>keys.delete(e.key.toLowerCase(),e.timeStamp));
 window.addEventListener('blur',pauseRace);
 document.addEventListener('visibilitychange',()=>{if(document.hidden)pauseRace();});
 beginRace();

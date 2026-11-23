@@ -582,7 +582,7 @@ for(const [name,first,velocity] of arcade?[]:[['hatchback',140,-8],['kei-van',35
    scene.add(model);traffic.push({model,first,velocity,d:first});
  }).catch(()=>{});
 }
-const keys=createDriveInput(),gearCaps=[0,25,42,62,80,96];
+const keys=createDriveInput({timedSteering:arcade}),gearCaps=[0,25,42,62,80,96];
 let state,inside=true,sound=driveAudio.enabled,lastFrame=performance.now(),message='',feedbackUntil=0;
 function reset(){
  const p=at(0,3.7);
@@ -746,7 +746,10 @@ let lastHud=0,lastShadow=-1000;
 function render(now){
  const elapsed=now-lastFrame,dt=clamp(elapsed/1000,0,.1);lastFrame=now;
  graphics.frame(now,state.mode==='drive');
- if(arcade){const steps=Math.max(1,Math.ceil(dt*90));for(let i=0;i<steps;i++)raceUpdate(dt/steps);}else update(dt);
+ if(arcade){
+   const steps=Math.max(1,Math.ceil(dt*90)),step=dt/steps;
+   for(let i=0;i<steps;i++)raceUpdate(step,now-(steps-i-1)*step*1000);
+ }else update(dt);
  const s=state,ground=at(s.d);
  rig.position.set(s.x,ground.y+(arcade?s.lift:0),s.z);
  rig.rotation.set(Math.atan(roadGrade(s.d,s.h))+(arcade?s.jumpPitch:0),-s.h,0,'YXZ');yawQ.copy(rig.quaternion);

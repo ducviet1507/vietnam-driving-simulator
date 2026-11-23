@@ -7,9 +7,33 @@ function updateDriveViewButton(button, inside) {
 }
 
 // Keyboard and individual contacts own their input independently on hybrid devices.
-function createDriveInput() {
+function createDriveInput({timedSteering=false}={}) {
   const keyboard = new Set(), contacts = new Map(), active = new Set();
-  function setContact(id, button) {
+  const edges=[];
+  const has=key=>keyboard.has(key)||active.has(key);
+  let applied=0, latest=0;
+  function recordSteering(time) {
+    if (!timedSteering) return;
+    const direction=Number(has('d')||has('arrowright'))-Number(has('a')||has('arrowleft'));
+    if (direction===latest) return;
+    latest=direction;
+    edges.push({time:Math.max(time??performance.now(),edges.at(-1)?.time??0),direction});
+  }
+  // Integrate only the part of each physics step for which a button was down.
+  // A complete tap between two rendered frames still reaches the wheels.
+  function steering(end,dt) {
+    if (end===undefined||dt<=0) return latest;
+    const start=end-dt*1000;
+    let cursor=start,area=0;
+    while (edges.length&&edges[0].time<=end) {
+      const edge=edges.shift(),time=Math.max(start,edge.time);
+      area+=(time-cursor)*applied;
+      cursor=time;applied=edge.direction;
+    }
+    if (cursor===start) return applied;
+    return (area+(end-cursor)*applied)/(dt*1000);
+  }
+  function setContact(id, button, time) {
     const previous = contacts.get(id);
     if (previous === button) return;
     if (button) contacts.set(id, button);
@@ -21,28 +45,30 @@ function createDriveInput() {
     for (const control of pressed) {
       for (const key of control.dataset.key.split(' ')) active.add(key);
     }
+    recordSteering(time);
   }
   function clear() {
     keyboard.clear();
     for (const id of contacts.keys()) setContact(id);
+    edges.length=0;applied=latest=0;
   }
   for (const button of document.querySelectorAll('[data-key]')) {
     button.addEventListener('pointerdown', event => {
       if (event.button !== 0) return;
       event.preventDefault();
       button.setPointerCapture(event.pointerId);
-      setContact(event.pointerId, button);
+      setContact(event.pointerId, button,event.timeStamp);
     });
     if (button.hasAttribute('data-slide-pedal')) {
       button.addEventListener('pointermove', event => {
         if (!contacts.has(event.pointerId)) return;
         // Capture keeps the release reliable. Hit-test the thumb as it crosses pedals.
         const pedal = document.elementFromPoint(event.clientX, event.clientY)?.closest('[data-slide-pedal]');
-        if (pedal) setContact(event.pointerId, pedal);
+        if (pedal) setContact(event.pointerId, pedal,event.timeStamp);
       });
     }
     for (const type of ['pointerup', 'pointercancel', 'lostpointercapture']) {
-      button.addEventListener(type, event => setContact(event.pointerId));
+      button.addEventListener(type, event => setContact(event.pointerId,null,event.timeStamp));
     }
     button.addEventListener('contextmenu', event => event.preventDefault());
   }
@@ -50,5 +76,8 @@ function createDriveInput() {
   window.addEventListener('pagehide', clear);
   matchMedia('(orientation: landscape)').addEventListener('change', clear);
   document.addEventListener('visibilitychange', () => { if (document.hidden) clear(); });
-  return {has: key => keyboard.has(key) || active.has(key), add: key => keyboard.add(key), delete: key => keyboard.delete(key), clear};
+  return {has,steering,clear,
+    add(key,time){keyboard.add(key);recordSteering(time);},
+    delete(key,time){keyboard.delete(key);recordSteering(time);}
+  };
 }

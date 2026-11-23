@@ -1,6 +1,6 @@
 'use strict';
 const $=id=>document.getElementById(id),clamp=(x,min,max)=>Math.max(min,Math.min(max,x));
-const keySet=createDriveInput(),held=(...names)=>names.some(n=>keySet.has(n));
+const keySet=createDriveInput({timedSteering:true}),held=(...names)=>names.some(n=>keySet.has(n));
 const featured=[['Hà Nội',105.8521,21.0277],['TP. Hồ Chí Minh',106.6994,10.7743],['Đà Nẵng',108.2204,16.0677],['Hải Phòng',106.6821,20.8587],['Huế',107.5887,16.4645],['Đà Lạt',108.4373,11.9418],['Cần Thơ',105.7831,10.0324],['Cà Mau',105.1507,9.1769],['Hà Giang',104.9844,22.8234],['Phú Quốc',103.959,10.2135]];
 const baSaoDrive=['Ba Sao · Quốc lộ 21',105.815695,20.550735];featured.push(baSaoDrive);
 const nameOf=e=>e.name||({motorway:'Đường cao tốc',trunk:'Đường trục chính',primary:'Đường chính',secondary:'Đường liên huyện',tertiary:'Đường địa phương',residential:'Đường dân cư',service:'Đường dịch vụ'}[e.kind]||'Đường địa phương');
@@ -471,14 +471,14 @@ function waterStep(dt){
  const drag=Math.exp(-depth*2.4*dt);
  car.vx*=drag;car.vz*=drag;car.speed*=drag;car.boost=false;
 }
-function tick(dt){
+function tick(dt,stepEnd){
  cooldown=Math.max(0,cooldown-dt);streamRetry=Math.max(0,streamRetry-dt);
  const gas=held('w','arrowup'),reverse=held('s','arrowdown');
  if(gas||reverse)car.parked=false;
  const brake=car.parked||held(' '),boost=!car.spec.speedGovernor&&!car.wading&&held('shift')&&nitro>1&&!reverse&&!brake;
  nitro=clamp(nitro+(boost?-27:held('shift')?0:6)*dt,0,100);
  const x=car.x,z=car.z;
- DriveBody.step(car,{grade:gfx.grade(car.x,car.z,car.yaw,car.edge),gas,reverse,brake,boost,steer:Number(held('d','arrowright'))-Number(held('a','arrowleft')),power:car.spec.power,top:car.spec.top},dt);
+ DriveBody.step(car,{grade:gfx.grade(car.x,car.z,car.yaw,car.edge),gas,reverse,brake,boost,steer:keySet.steering(stepEnd,dt),power:car.spec.power,top:car.spec.top},dt);
  const radius=car.spec.width?car.spec.width/2:.88;
  const probeOffset=car.spec.width?car.spec.length/2-radius:1.2;
  const probes=car.spec.rearAxle?[probeOffset,0,-probeOffset]:[probeOffset,-probeOffset];
@@ -686,7 +686,8 @@ function frame(now){
  if(gfx&&player){
    if(mode==='drive'){
      const steps=Math.max(1,Math.ceil(dt*90));
-     for(let i=0;i<steps&&mode==='drive';i++)tick(dt/steps);
+     const step=dt/steps;
+     for(let i=0;i<steps&&mode==='drive';i++)tick(step,now-(steps-i-1)*step*1000);
      if(car.openingPose){
        openingCameraTime=Math.min(1,openingCameraTime+dt/.85);
        car.openingPose=reduceMotion.matches||inside?0:1-openingCameraTime**2*(3-2*openingCameraTime);
@@ -1170,9 +1171,9 @@ window.addEventListener('keydown',e=>{
  if(['p','u','c'].includes(k)&&!e.repeat){
    if(k==='p')pause();if(k==='u')recover();if(k==='c')$('camera').click();e.preventDefault();return;
  }
- if(['w','a','s','d','arrowleft','arrowright','arrowup','arrowdown','shift',' '].includes(k)){keySet.add(k);e.preventDefault();}
+ if(['w','a','s','d','arrowleft','arrowright','arrowup','arrowdown','shift',' '].includes(k)){keySet.add(k,e.timeStamp);e.preventDefault();}
 });
-window.addEventListener('keyup',e=>keySet.delete(e.key.toLowerCase()));
+window.addEventListener('keyup',e=>keySet.delete(e.key.toLowerCase(),e.timeStamp));
 window.addEventListener('blur',pause);document.addEventListener('visibilitychange',()=>{if(document.hidden)pause();});window.addEventListener('pagehide',save);
 
 let pendingPlace=featured[0],atlasPromise,originatedInPause=false;

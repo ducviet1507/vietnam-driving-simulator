@@ -55,4 +55,45 @@ for(const hz of [30,60,100,144]) {
     }
   }
 }
-console.log('PASS steering taps, held turns, release, reversal and reset at 30–144 Hz');
+
+const host={window:{addEventListener(){}},document:{querySelectorAll:()=>[],addEventListener(){}},
+  matchMedia:()=>({addEventListener(){}}),performance};
+const makeInput=runInNewContext(readFileSync(new URL('../../dist/drive-input.js',import.meta.url),'utf8')+
+  '\ncreateDriveInput',host);
+for(const hz of [30,60,100,144]) {
+  for(const speed of [100,150,200]) {
+    let previous=0;
+    for(const ms of [50,100,150,200,250]) {
+      const car=start(speed);
+      drive(car,1,ms/1000,hz);
+      drive(car,0,1-ms/1000,hz);
+      const increment=car.x-previous;
+      assert.ok(increment>.18&&increment<.40,`Progressive 50 ms increment at ${speed} km/h: ${increment} m`);
+      previous=car.x;
+    }
+    const turn=start(speed);
+    drive(turn,1,.65,hz);
+    assert.ok(turn.yaw>.08&&turn.yaw<.25,'A held turn is effective and bounded at highway speed');
+  }
+  for(const phase of [1,5,13,22]) {
+    const input=makeInput({timedSteering:true});
+    input.add('d',phase);
+    input.add('arrowright',phase+5);
+    input.delete('d',phase+20);
+    input.delete('arrowright',phase+100);
+    input.add('a',phase+112);
+    input.delete('a',phase+117);
+    let duration=0;
+    for(let frame=1;frame<=hz;frame++) {
+      const steps=Math.ceil(90/hz),dt=1/hz/steps;
+      for(let i=0;i<steps;i++){
+        const end=1000*(frame/hz-(steps-i-1)*dt);
+        duration+=input.steering(end,dt)*dt*1000;
+      }
+    }
+    assert.ok(Math.abs(duration-95)<1e-6,'100 ms right, then a 5 ms left tap between frames');
+    input.add('d',1200);input.clear();
+    assert.equal(input.steering(1250,.01),0,'Clearing input discards pending turns');
+  }
+}
+console.log('PASS progressive steering and timestamped button durations at 30–144 Hz');
