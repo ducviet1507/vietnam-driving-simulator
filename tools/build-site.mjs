@@ -36,6 +36,11 @@ await rm(path.join(client,trailerPath));
 for (const name of ["my-son","my-son-g4","den-ngoc-son"]) {
   await rm(path.join(client,"landmark-scans",name+".glb"));
 }
+// The garage previews stay in the release. Full-size player models stream
+// on demand from the same GitHub revision through their normal public URLs.
+for (const name of ["city-sedan","classic-sedan","compact-mpv","touring-mpv"]) {
+  await rm(path.join(client,"streetscape",name+".glb"));
+}
 // Terrain generation consumes this national raster offline. Its public URL
 // serves the original PNG from the pinned source revision.
 await rm(path.join(client,"streetscape","surfaces","vietnam-elevation.png"));

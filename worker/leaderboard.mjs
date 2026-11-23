@@ -192,8 +192,9 @@ async function serveGameAsset(request, env, url) {
       return Response.redirect(url.href, 301);
     }
     const scan = /^\/landmark-scans\/(?:my-son|my-son-g4|den-ngoc-son)\.glb$/.test(pathname);
+    const garageModel = /^\/streetscape\/(?:city-sedan|classic-sedan|compact-mpv|touring-mpv)\.glb$/.test(pathname);
     const elevationSource = pathname === "/streetscape/surfaces/vietnam-elevation.png";
-    const pinnedAsset = scan || elevationSource;
+    const pinnedAsset = scan || garageModel || elevationSource;
     if (pinnedAsset || pathname === "/trailer/qua-mot-khuc-cua.mp4") {
       const upstreamHeaders = new Headers({"Accept-Encoding":"identity"});
       for (const name of ["Range","If-Range","If-None-Match","If-Modified-Since"]) {
@@ -217,7 +218,7 @@ async function serveGameAsset(request, env, url) {
       for (const name of ["Accept-Ranges","Content-Range","Content-Length","ETag","Last-Modified","Cache-Control"]) {
         if (media.headers.has(name)) headers.set(name,media.headers.get(name));
       }
-      if (media.ok) headers.set("Content-Type",elevationSource?"image/png":scan?"model/gltf-binary":"video/mp4");
+      if (media.ok) headers.set("Content-Type",elevationSource?"image/png":pinnedAsset?"model/gltf-binary":"video/mp4");
       return new Response(media.body,{status:media.status,headers});
     }
   }
