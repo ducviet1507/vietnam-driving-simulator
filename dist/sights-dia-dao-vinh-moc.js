@@ -245,12 +245,6 @@
     function head(x,y,z,ang=0){
       mesh(ball,hair,x,y+.045,z-.027,.123,.155,.111,ang);
       mesh(ball,skin,x,y+.003,z+.040,.101,.125,.092,ang);
-      mesh(ball,skin,x,y-.005,z+.123,.026,.030,.025,ang);
-      for(const side of [-1,1]){
-        mesh(ball,0x655144,x+side*.039,y+.030,z+.123,.012,.005,.006);
-        mesh(ball,hair,x+side*.044,y+.046,z+.117,.027,.006,.008,0,side*.10);
-      }
-      mesh(ball,0x9c7161,x,y-.047,z+.119,.026,.005,.006);
     }
     // The standing attendant holds a wrapped infant; the mother lies on
     // the adjacent wooden bed. These are museum figures, not a live scene.

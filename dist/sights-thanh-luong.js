@@ -52,53 +52,24 @@
   function ellipsoid(k,colour,x,y,z,w,h,d,rx=0,rz=0){
     k.stamp(k.ball,colour,x,y,z,w,h,d,0,rx,rz);
   }
-  // A single continuous face. The horizontal sections taper to the chin.
-  // Local +z is the face. Shallow offsets define cheeks, temples, the bridge
-  // of the nose, nostrils and lips before the lids and brows are delineated.
+  // Elliptical sections form an uninterrupted patinated surface inside the veil.
   function bust(T,k){
     const sphere=new T.SphereGeometry(.5,24,19);
     k={...k,ball:sphere};
     const rows=[[1.22,.12,.29],[1.38,.44,.55],[1.67,.70,.79],[2.08,.92,.92],[2.55,1.11,1.00],
       [2.96,1.22,1.05],[3.40,1.25,1.065],[3.87,1.23,1.07],[4.34,1.13,.99],[4.66,.89,.81],[4.85,.32,.34]];
-    function radii(y){
-      let i=1;while(i<rows.length-1&&rows[i][0]<y)i++;
-      const a=rows[i-1],b=rows[i],t=Math.min(1,Math.max(0,(y-a[0])/(b[0]-a[0])));
-      return [a[1]+t*(b[1]-a[1]),a[2]+t*(b[2]-a[2])];
-    }
-    const bell=(x,y,rx,ry)=>Math.exp(-(x*x/(rx*rx)+y*y/(ry*ry)));
-    function front(x,y){
-      const [rx,rz]=radii(y),c=Math.sqrt(Math.max(0,1-(x/rx)**2));
-      const nose=.24*bell(x,y-2.97,.177,.67)+.36*bell(x,y-2.62,.22,.18)+.112*bell(Math.abs(x)-.22,y-2.55,.11,.10);
-      const cheeks=.145*bell(Math.abs(x)-.59,y-2.62,.35,.33)-.105*bell(Math.abs(x)-.53,y-3.20,.39,.19);
-      const mouth=.115*bell(x,y-2.15,.395,.16)+.08*bell(x,y-1.63,.39,.17);
-      return rz*c+(nose+cheeks+mouth)*c;
-    }
-    const v=[],idx=[],cols=88,n=57;
-    for(let j=0;j<=n;j++){
-      const y=rows[0][0]+(4.85-rows[0][0])*j/n,[rx,rz]=radii(y);
+    const v=[],idx=[],cols=48;
+    for(const [y,rx,rz] of rows){
       for(let i=0;i<cols;i++){
-        const a=i*2*Math.PI/cols,x=rx*Math.sin(a),c=Math.cos(a);
-        v.push(x,y,c>0?front(x,y):rz*c);
+        const a=i*2*Math.PI/cols;
+        v.push(rx*Math.sin(a),y,rz*Math.cos(a));
       }
     }
-    for(let j=0;j<n;j++)for(let i=0;i<cols;i++){const a=j*cols+i,b=j*cols+(i+1)%cols;
+    for(let j=0;j<rows.length-1;j++)for(let i=0;i<cols;i++){const a=j*cols+i,b=j*cols+(i+1)%cols;
       idx.push(a,b,a+cols,b,b+cols,a+cols);}
     const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(v,3));g.setIndex(idx);g.computeVertexNormals();k.stamp(g,patina,0,0,0);g.dispose();
     ellipsoid(k,patina,0,.90,-.03,1.43,2.03,1.47);
     ellipsoid(k,patina,0,.01,-.16,5.65,1.76,2.63);
-    function feature(line,colour,r,offset=.03){curve(T,k,line.map(([x,y])=>[x,y,front(x,y)+offset]),colour,r,16);}
-    for(const sign of [-1,1]){
-      const pts=a=>a.map(([x,y])=>[sign*x,y]);
-      feature(pts([[.20,3.16],[.38,3.10],[.55,3.085],[.73,3.11],[.86,3.18]]),deep,.028);
-      feature(pts([[.23,3.18],[.39,3.21],[.57,3.22],[.75,3.19],[.85,3.19]]),pale,.037);
-      feature(pts([[.18,3.47],[.37,3.59],[.53,3.63],[.73,3.60],[.89,3.49]]),deep,.048);
-      feature(pts([[.12,2.53],[.18,2.51],[.24,2.535]]),deep,.022);
-      ellipsoid(k,patina,sign*1.12,2.64,-.02,.43,1.47,.49,0,-sign*.09);
-      curve(T,k,[[sign*1.08,3.12,.19],[sign*1.19,3.18,.20],[sign*1.25,2.94,.22],[sign*1.21,2.50,.21],[sign*1.10,2.08,.19]],pale,.055);
-    }
-    feature([[-.405,2.14],[-.24,2.105],[-.09,2.12],[0,2.105],[.09,2.12],[.24,2.105],[.405,2.14]],deep,.023,.038);
-    feature([[-.28,2.09],[-.12,2.045],[.08,2.044],[.29,2.09]],pale,.031);
-    ellipsoid(k,pale,0,3.57,front(0,3.57)+.04,.09,.11,.071);
     // Gathered hair rises above the forehead. The veil folds back round the
     // crown, leaving its front open; its side panels fall to the shoulders.
     ellipsoid(k,deep,0,4.23,-.03,2.36,1.20,2.09);
@@ -345,7 +316,7 @@
       [-36.85,-20.3,5.1,4.8],[-38,-26.1,2.2,1.2],[-35.5,-14.8,2.22,1.25],[-17.9,39.7,2.1,2.1]],
     boundary,reserve:reserved,gardenRadius:1,modeledBuildings:['w903827683','w903834500'],
     source,photo:tour+'#node4',map:'https://www.openstreetmap.org/way/903827683',
-    description:'Ở chùa Thanh Lương, hồ Long Thủy nằm trước chính điện ốp đá san hô và gáo dừa. Qua điện Quan Âm Linh Ứng mới tới hồ Long Ẩn. Tại đây, tượng Quan Âm Nam Hải bằng bê tông cao khoảng 7 m nổi bán thân trên mặt nước, bàn tay phải nhô lên bên lối đá. Hướng các nhà và đường bờ hai hồ theo bản đồ. Vị trí từng viên đá, các nếp áo và chi tiết mặt tượng được ước lượng từ ảnh.',
+    description:'Ở chùa Thanh Lương, hồ Long Thủy nằm trước chính điện ốp đá san hô và gáo dừa. Qua điện Quan Âm Linh Ứng mới tới hồ Long Ẩn. Tại đây, tượng Quan Âm Nam Hải bằng bê tông cao khoảng 7 m nổi bán thân trên mặt nước, bàn tay phải nhô lên bên lối đá. Hướng các nhà và đường bờ hai hồ theo bản đồ. Vị trí từng viên đá và các nếp áo được ước lượng từ ảnh.',
     arrivalNote:'Xe theo đường làng Mỹ Quang Nam vào bãi đỗ phía nam khuôn viên. Từ bãi, đi bộ ra sân trước chính điện và men theo hồ Long Thủy tới điện Quan Âm.',
     views,build});
 })();

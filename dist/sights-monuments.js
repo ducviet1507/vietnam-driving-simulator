@@ -107,10 +107,10 @@
   photo:'https://thanhnien.vn/nha-tho-duc-ba-sai-gon-duoc-dat-ten-tu-buc-tuong-duc-me-hoa-binh-185230409113206155.htm',
   description:'Tượng bằng cẩm thạch trắng cao 4,6 mét, do G. Ciocchetti tạc. Đức Mẹ ngước nhìn lên, hai tay nâng quả địa cầu có thánh giá. Bệ trụ bằng đá hoa cương đỏ nằm trên trục chính của nhà thờ.',
   views:[{name:'Tượng và mặt tiền nhà thờ',height:8.7,viewAngle:.818,viewRadius:12.6,viewElevation:-.070,viewFov:48},
-    {name:'Quả địa cầu và gương mặt',height:14.55,viewAngle:1.28,viewRadius:2.8,viewElevation:-.08,viewFov:46},
+    {name:'Đôi tay nâng quả địa cầu',height:13.95,viewAngle:1.28,viewRadius:3.55,viewElevation:-.08,viewFov:46},
     {name:'Bảng đồng trên trụ đá đỏ',height:3.27,viewAngle:.79,viewRadius:2.37,viewElevation:.025,viewFov:46}],
   build(T,k){
-    const marble=0xe2dfd4,veil=0xd5d2c7,fold=0xc6c3b6,granite=0x8e5f53,rim=0x986c5c,bronze=0x667565;
+    const marble=0xe2dfd4,veil=0xd5d2c7,granite=0x8e5f53,rim=0x986c5c,bronze=0x667565;
     const pedestal=2.74,sphere=new T.SphereGeometry(1,22,16);
     k.palette({stone:[granite,rim],metal:bronze});
     // The column, bronze collar and little projecting cornice can be seen
@@ -142,15 +142,16 @@
     // An open angular sweep leaves the robe visible between the two veil edges.
     function drape(rows,color,pleats=0){
       const coords=[],indices=[],segments=48;
+      const columns=rows.some(row=>row[4]>0)?segments+1:segments;
       for(let i=0;i<rows.length;i++){
         const [y,rx,rz,z,opening=0,wave=0,shift=0]=rows[i];
-        for(let j=0;j<=segments;j++){
+        for(let j=0;j<columns;j++){
           const a=opening+(Math.PI*2-opening*2)*j/segments;
           const ripple=wave*Math.cos(a*pleats+shift);
           coords.push((rx+ripple)*Math.sin(a),pedestal+y,z+(rz+ripple)*Math.cos(a));
-          if(i&&j){
-            const p=i*(segments+1)+j;
-            indices.push(p-segments-2,p-segments-1,p-1,p-segments-1,p,p-1);
+          if(i&&j<segments){
+            const a=(i-1)*columns+j,b=(i-1)*columns+(j+1)%columns;
+            indices.push(a,b,a+columns,b,b+columns,a+columns);
           }
         }
       }
@@ -178,19 +179,13 @@
       [3.50,.51,.32,-.03,.76],[3.65,.38,.25,-.03,.66],[3.90,.28,.22,-.025,.73],
       [4.22,.255,.227,-.025,.88],[4.41,.244,.227,-.020,.83],[4.53,.190,.199,-.019,.63],
       [4.585,.090,.109,-.01,.10],[4.60,.012,.016,-.012,0]],veil,11);
-    // Slightly raised chin, nose bridge, shallow brows and lips are cut from
-    // the same stone. The reference has no painted facial features.
+    // The continuous marble silhouette follows the upward tilt beneath the veil.
     drape([[3.60,.235,.155,.016],[3.75,.161,.128,.027],[3.87,.129,.113,.038],
       [3.99,.122,.106,.050],[4.055,.117,.112,.070],[4.103,.114,.142,.089],
       [4.153,.141,.153,.098],[4.215,.160,.163,.094],[4.275,.173,.160,.086],
       [4.332,.176,.156,.075],[4.409,.179,.157,.052],[4.487,.145,.131,.035],[4.525,.094,.115,.030]],marble);
-    oval(marble,0,4.279,.236,.029,.076,.036,-.19);
-    oval(marble,0,4.238,.263,.033,.026,.027);
-    for(const s of [-1,1])oval(marble,s*.024,4.228,.255,.021,.016,.022);
     for(const side of [-1,1]){
       const dx=n=>side*n;
-      cord([[dx(.038),4.335,.222],[dx(.079),4.350,.219],[dx(.126),4.341,.195]],.011,veil);
-      cord([[dx(.041),4.313,.228],[dx(.083),4.323,.222],[dx(.12),4.318,.206]],.007,fold);
       cord([[dx(.02),4.506,.126],[dx(.13),4.472,.151],[dx(.18),4.381,.117],
         [dx(.198),4.21,.124],[dx(.206),4.02,.130],[dx(.228),3.78,.155],[dx(.284),3.58,.163]],.031,veil);
       // Elbows stay low and the hands rise inward around the orb.
@@ -201,8 +196,6 @@
       for(let j=0;j<4;j++)
         cord([[dx(.238),3.087+j*.033,.469],[dx(.178),3.117+j*.035,.524],[dx(.114),3.17+j*.033,.547]],.018,marble);
     }
-    cord([[-.050,4.164,.245],[-.018,4.172,.254],[0,4.168,.258],[.018,4.173,.254],[.050,4.164,.245]],.009,veil);
-    cord([[-.038,4.155,.247],[0,4.148,.255],[.038,4.156,.247]],.008,marble);
     oval(veil,0,3.204,.411,.235,.241,.235);
     k.box(marble,0,pedestal+3.525,.408,.039,.174,.040);
     k.box(marble,0,pedestal+3.556,.408,.132,.033,.040);

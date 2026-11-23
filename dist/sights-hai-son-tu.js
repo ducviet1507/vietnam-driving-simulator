@@ -52,12 +52,10 @@
       rightArm:[[-.145,.656,.025],[-.134,.751,.124],[-.134,.804,.145]],
       leftArm:[[.154,.674,.025],[.101,.711,.124],[.054,.718,.151]]});
     const sculpt=A.carving(T,k,pale,0,y,0,h);
-    // Long veil, ears and crown seen above the short shoulder cape.
+    // The long veil and crown frame the head above the short shoulder cape.
     for(const side of [-1,1]){
       sculpt.sweep([[side*.016,1.037,-.017,.027,.029],[side*.047,.997,-.015,.023,.036],
         [side*.057,.937,-.025,.024,.043],[side*.064,.86,-.027,.018,.041],[side*.095,.795,-.018,.028,.053]],.045,18);
-      sculpt.sweep([[side*.053,.925,-.002,.010,.014],[side*.055,.902,.003,.011,.011],
-        [side*.054,.875,.004,.008,.009],[side*.052,.863,.004,.004,.006]],0,14);
     }
     sculpt.sweep([[0,.977,-.010,.045,.045],[0,1.010,-.010,.048,.046],[0,1.034,-.011,.038,.034],
       [0,1.056,-.013,.024,.026],[0,1.071,-.014,.006,.007]],.09,26);sculpt.finish();
@@ -108,7 +106,6 @@
         cord(T,k,pale,[[side*(.113+j*.008),.727,.111-j*.009],[side*(.136+j*.009),.669,.092-j*.013],
           [side*(.145+j*.007),.607,.062-j*.013],[side*(.141+j*.007),.536,.019-j*.009]].map(p=>body(...p)),h*.0036);
       }
-      cord(T,k,shade,[[side*.011,.913,.054],[side*.022,.917,.053],[side*.035,.916,.046]].map(p=>body(...p)),h*.0028,9);
     }
     const loop=new T.TorusGeometry(.032*h,.0038*h,6,28);k.stamp(loop,pale,...body(0,.77,.083));loop.dispose();
     for(let j=0;j<8;j++){const a=j*tau/8;k.stamp(k.ball,pale,...body(.024*Math.sin(a),.77+.024*Math.cos(a),.084),h*.006,h*.011,h*.004,0,0,-a);}

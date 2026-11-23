@@ -244,10 +244,8 @@
           }
           oval(dark,0,yy(.896),-.022*h,.078*h,.104*h,.068*h);
           oval(light,0,yy(.887),.019*h,.058*h,.077*h,.057*h);
-          oval(light,0,yy(.879),.077*h,.011*h,.019*h,.014*h);
           k.box(dark,0,yy(.587),.088*h,.008*h,.24*h,.006*h);
           for(const side of [-1,1]){
-            oval(dark,side*.024*h,yy(.907),.073*h,.015*h,.004*h,.007*h,side*.11);
             const elbow=[side*.141*h,yy(.609),.072*h];
             beam(cloth,[side*.125*h,yy(.745),.012*h],elbow,.055*h,.053*h,true);
             const wrist=[side*(child?.004:.027)*h,yy(child?.556:side<0?.704:.615),.123*h];

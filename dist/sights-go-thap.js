@@ -197,7 +197,6 @@
       form(0,-.356,.065,.049,.056,.041);
       // High straight-sided kirita crown and the low ridge of the wrap.
       k.stamp(k.round,stone,0,yBase+.049*S,zBody(-.435),.047*S,.112*S*(bar?.64:1),.043*S,0,Math.PI/2);
-      form(0,-.366,.102,.014,.018,.011);form(0,-.346,.102,.011,.015,.012);
       limb([-.019,.002,.087],[-.010,.361,.063],.009);
       for(const e of [-1,1]){
         limb([e*.038,.175,.048],[e*.040,.463,.042],.034);

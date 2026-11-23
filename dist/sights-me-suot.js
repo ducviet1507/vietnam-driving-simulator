@@ -53,8 +53,6 @@
       const x=[-.67,-.85,-.90,-.76][i],y=2.88+i*.012;
       kit.stamp(form,stone,x,y-.18,z,.215,.22,.235);kit.stamp(form,0xb6b2a4,x-.058,y+.045,z,.170,.216,.153);
       kit.stamp(form,0x99998d,x-.043,y+.179,z-.014,.172,.108,.163);
-      kit.stamp(form,0xc6c4b8,x-.183,y+.050,z+.090,.064,.053,.045);
-      kit.stamp(form,0x9d9b8b,x-.159,y+.104,z+.069,.058,.025,.039);
     }
     form.dispose();
     const base=3.01,h=4.00;
