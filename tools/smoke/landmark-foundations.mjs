@@ -45,7 +45,8 @@ try{
     window.inspectLandmark=async id=>{
       const site=sites.get(id),graph=new VietnamRoads(index,site.lon,site.lat);
       registry.splice(0,registry.length,site);
-      await Promise.all([terrain.loadLocal(graph,0,0),landscapes.load(graph,0,0),grades.load(graph,0,0)]);
+      await Promise.all([terrain.loadLocal(graph,0,0),landscapes.load(graph,0,0),grades.load(graph,0,0),
+        VietnamTourism.loadRegion(site.lon,site.lat)]);
       const raw=terrain.prepare(graph,landscapes.prepare(graph)),tiles=grades.tiles(graph);
       if(tiles?.size)await graph.load(0,0);
       const formation=createPassRoadFormation(graph,tiles,raw,0,0,1088,worldRoadHalfWidth);
