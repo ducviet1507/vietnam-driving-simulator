@@ -14,7 +14,7 @@
     {name:'Bậc lên và cửa đông',offset:[6.65,0],height:7.6,viewAngle:1.67,viewRadius:10.5,viewElevation:-.074,viewFov:61},
     {name:'Ba tầng mái nhìn từ phía đông bắc',offset:[0,0],height:39.4,viewAngle:.91,viewRadius:22,viewElevation:.21,viewFov:54},
     {name:'Từ ngưỡng cửa nhìn vào gian thờ',offset:[-1.0,0],height:6.9,viewAngle:Math.PI/2,viewRadius:6.0,viewElevation:.025,viewFov:56,
-      photoCatalogId:'phu-yen-gian-tho-thap-nhan',description:'Qua cửa phía đông nhìn vào gian thờ Thiên Y A Na. Ảnh thực địa cho thấy tượng có mão, phía trước đặt lư hương. Đồ thờ và trang phục trong mô hình được giản lược.'}
+      photoCatalogId:'phu-yen-gian-tho-thap-nhan',description:'Qua cửa phía đông nhìn vào gian thờ Thiên Y A Na. Mão, khuôn mặt và phần áo phía trên dùng ảnh chụp tại gian thờ. Lư hương đặt trước tượng.'}
   ].map(v=>({...v,viewBase:'monument'}));
   const targetHeights=views.map(v=>v.height);
   function build(T,k){
@@ -118,28 +118,33 @@
     block(0x6a564c,4.56,1.55,6.45,.12,0,-2.25);
     block(stone,1.65,1.55,1.86,.92,0,-1.12);block(old,1.45,1.86,2.38,.79,0,-1.12);
     relief(1.34,1.66,0x504c46,0,2.30,-1.74,.20);
-    const amber=0xd1a542,bronze=0x8d764b,robe=0xcfa33e;
-    window.CentralArch.statueFigure(T,k,robe,0,2.22,-1.30,1.08,{seated:true,robe:true,
-      leftArm:[[.15,.64,.04],[.05,.51,.13]],rightArm:[[-.15,.63,.04],[-.06,.51,.13]]});
-    const head=new T.SphereGeometry(1,12,8);
-    k.stamp(head,0xb58b75,0,3.20,-1.265,.088,.119,.083);
-    for(let i=-3;i<=3;i++){
-      const x=i*.051,high=.17-.02*Math.abs(i);
-      k.stamp(head,amber,x,3.32+high*.45,-1.31,.038,high,.042,0,0,-i*.095);
-      k.stamp(head,i%2?0x5e8473:0xa4654c,x*.94,3.32+high*.26,-1.263,.019,.022,.014);
-    }
-    k.stamp(head,bronze,0,2.51,-.74,.19,.105,.14);
+    // The incense burner hides the lower robe in Christophe95's sanctuary photograph.
+    const bronze=0x8d764b,robe=0xca9b35;
+    k.tapered(robe,0,2.43,-1.33,.255,.204,.26,.67,32);
+    window.CentralArch.photoCarving(T,k,{photo:'sight-imagery/thap-nhan-thien-y-a-na.webp',
+      width:600,height:800,crop:[200,102,200,248],origin:[301,290],position:[0,2.54,-1.33],scale:.0069,tint:robe,
+      forms:[
+        {z:-.025,rows:[[108,298,303,.01],[112,291,310,.025],[117,282,317,.057],[124,281,324,.072],
+          [135,282,322,.08],[145,279,326,.091],[155,272,330,.10],[168,267,333,.11],[179,259,342,.125],
+          [191,258,344,.13],[202,264,338,.13],[211,275,331,.12]]},
+        {z:.012,rows:[[197,293,307,.078],[200,290,311,.089],[209,288,315,.097],[217,289,314,.097],
+          [224,291,311,.087],[228,296,307,.070],[232,297,305,.053]]},
+        {z:.001,rows:[[227,294,308,.075],[233,282,318,.12],[242,272,325,.14],[259,267,330,.16],
+          [275,263,332,.162],[285,261,334,.16],[290,261,334,.16]]}
+      ]});
+    const oval=new T.SphereGeometry(1,12,8);
+    k.stamp(oval,bronze,0,2.51,-.74,.19,.105,.14);
     k.tapered(bronze,0,2.55,-.74,.15,.13,.25,1,18);
     for(const side of [-1,1]){
       const x=side*.50;
-      k.stamp(head,0xaeb6a5,x,2.49,-.79,.093,.15,.085);
+      k.stamp(oval,0xaeb6a5,x,2.49,-.79,.093,.15,.085);
       for(let i=0;i<4;i++){
         const z=-.82+(i%2)*.09,px=x+side*(i-1.5)*.038,h=2.83+.046*(i%3);
         k.box(0x68783c,px,(2.56+h)/2,z,.013,h-2.56,.012);
-        k.stamp(head,i%2?0xd4bd6c:0xc4ac53,px,h,z,.039,.026,.032);
+        k.stamp(oval,i%2?0xd4bd6c:0xc4ac53,px,h,z,.039,.026,.032);
       }
     }
-    head.dispose();
+    oval.dispose();
     window.CentralArch.trees(T,k,[{x:-18.3,z:13,h:8.3},{x:-19,z:-1,h:7.4},{x:-13,z:-18.3,h:7.9},
       {x:16.5,z:-18.6,h:7.0},{x:18.8,z:-8.6,h:8.3},{x:19.4,z:16.7,h:7.2}]);
     const perimeter=[],indices=[];

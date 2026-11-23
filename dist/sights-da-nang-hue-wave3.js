@@ -312,60 +312,77 @@
     A.plaque(T, kit, 'NHÀ CỔ TẤN KÝ', 0, 3.92, 8.72, 4.2, 0.68, { bg: '#4e2618', fg: '#f6d878' });
   }
 
-  // 7. Tượng đài Mẹ Việt Nam Anh hùng Nguyễn Thị Thứ (Tam Kỳ, Quảng Nam) — Sweeping 36m granite mountain-arc portrait
+  // Monument to the Vietnamese Heroic Mothers, Tam Kỳ.
   function tuongDaiMeThu(T, kit) {
-    const { box, stamp, round, tapered } = kit;
-    const granite = 0xc9c3b8, darkGranite = 0x8f897e, lightStone = 0xded9cf, grass = 0x4b7440;
-    kit.palette({stone: [granite, darkGranite, lightStone]});
+    const pale=0xbcb7ae,grey=0xa8a39b,dark=0x928e87;
+    kit.palette({stone:[pale,grey,dark,0xd3cfc4,0xa8aaa4]});
+    kit.box(0xd3cfc4,0,.04,14,92,.20,83);
+    const disk=new T.CylinderGeometry(1,1,1,80);
+    kit.stamp(disk,0x9c9f98,0,.17,15.7,24,.18,17.05);
+    kit.stamp(disk,0x697c70,0,.27,15.7,23.5,.09,16.63);
+    kit.stamp(disk,0xaaa99f,0,.32,15.7,22.7,.13,15.82);
+    kit.stamp(disk,0x586b60,0,.392,15.7,22.2,.026,15.14);
+    disk.dispose();
 
-    // Vast stepped ceremonial mountain esplanade
-    box(0x9a958b, 0, 0.22, 2.5, 42, 0.44, 28);
-    box(grass, -14.5, 0.46, 9.5, 10.5, 0.16, 10.5);
-    box(grass, 14.5, 0.46, 9.5, 10.5, 0.16, 10.5);
-    A.steps(kit, 0, 6.2, 16.0, 3.2, 5, 0.30, 0.55, darkGranite);
-
-    // 8 carved granite symbolic legend pillars (8 trụ huyền thoại) lining the front esplanade
-    for (const s of [-1, 1]) {
-      for (let k = 0; k < 4; k++) {
-        const px = s * (6.2 + k * 2.2), pz = 12.4 - k * 2.1;
-        box(darkGranite, px, 0.65, pz, 1.25, 0.8, 1.25);
-        tapered(granite, px, 4.2, pz, 0.58, 0.48, 6.4, 1, 6);
+    // 84.7 m across; the arms follow a 117 m arc. The elevation and successive
+    // changes of plane follow the front and oblique photographs from Tam Kỳ.
+    const strips=[],surfaces=[[],[],[]],sections=42;
+    for(let i=0;i<=sections;i++){
+      const u=2*i/sections-1,a=u*1.34,x=42.35*Math.sin(a)/Math.sin(1.34);
+      const t=Math.abs(u),z=-2.2+43.5*(1-Math.cos(a)),thickness=24.3-16.3*t;
+      const shoulder=12.18-6.92*t+.48*Math.sin(i*1.85)*Math.min(t*4,1);
+      const stagger=.38*Math.sin(i*2.33),jag=.44*Math.cos(i*1.73);
+      strips.push([
+        [x,.15,z],[x,shoulder*.34,z-.63],[x+stagger,shoulder*.53,z-.15+jag],
+        [x-stagger,shoulder*.73,z-1.5-jag],[x,shoulder*.88,z-1.12+jag],
+        [x,shoulder,z-2.5],[x,shoulder*.88,z-thickness*.68],[x,.15,z-thickness]
+      ]);
+    }
+    for(let i=0;i<sections;i++){
+      for(let j=0;j<strips[i].length-1;j++){
+        const a=strips[i][j],b=strips[i+1][j],c=strips[i+1][j+1],d=strips[i][j+1];
+        const shade=j===0?0:(i*3+j*2+Math.floor(i/3))%7<2?1:0;
+        surfaces[shade].push(...a,...b,...d,...b,...c,...d);
       }
     }
-
-    // Join the rock masses into one ridgeline, with bedding planes and
-    // alternating projecting courses where the sculptors left the rock rough.
-    for (let i=-8;i<=8;i++) {
-      const t=Math.abs(i)/8, top=12.4-8.5*t+.62*Math.sin(i*2.1);
-      const x=i*2.28,z=-4.2+t*t*4.8;
-      kit.outline([[-1.18,0],[1.18,0],[1.18,top-.52],[.64,top+.13],[-.15,top+.26],[-1.18,top-.17]],
-        granite,x,.64,z,2.4-t*.7,-i*.044);
-      for(let j=0;j<3;j++){
-        const h=top*(.19+j*.25),phase=Math.sin(i*.9+j);
-        kit.outline([[-1.17,0],[.83,.17],[1.18,.70],[.71,1.41+phase*.3],[-.64,1.68],[-1.18,1.1]],
-          (i+j)%3?granite:darkGranite,x,.66+h,z+1.95-t*.62,.63+phase*.16,-i*.044);
-      }
+    for(const i of [0,sections]){
+      const end=strips[i];
+      for(let j=1;j<end.length-1;j++)surfaces[2].push(...end[0],...end[j],...end[j+1]);
     }
-    const bust=A.carving(T,kit,granite,0,0,0,1);
-    bust.sweep([[0,2,-1.08,5.5,1.25],[0,5,-1.17,6.8,1.54],[0,8.3,-1.3,6.5,1.67],
-      [0,10.7,-1.2,4.7,1.48],[0,12.0,-.94,2.32,1.27]],.065,28);
-    bust.sweep([[.03,11.35,-.20,1.01,.98],[.08,12.11,.21,1.59,1.03],[.08,13.08,.02,2.13,1.50],
-      [.06,14.12,-.15,2.41,1.65],[0,15.23,-.23,2.43,1.70],[0,16.36,-.31,2.30,1.67],
-      [-.10,17.23,-.41,1.96,1.42],[-.14,17.73,-.46,1.12,.92]],0,32);
-    for(const side of [-1,1]) {
-      bust.sweep([[side*1.58,11.83,.08,.40,.40],[side*2.35,10.48,.42,.46,.44],
-        [side*1.34,8.30,.71,.39,.34],[side*.45,6.35,.65,.23,.28]],.08);
-      for(let j=0;j<3;j++) {
-        bust.sweep([[side*(2.89+j*.63),9.64-j*.68,-.1,.11,.17],
-          [side*(2.33+j*.75),7.58-j*.56,.43,.20,.23],[side*(1.78+j*.8),6.11-j*.68,.54,.23,.25],
-          [side*(1.28+j*.9),4.37-j*.36,.40,.13,.15]],.10);
-      }
-      bust.sweep([[side*1.94,12.11,-.95,.58,.62],[side*2.31,14.0,-.75,.69,.75],
-        [side*2.12,15.82,-.63,.70,.80],[side*1.55,17.04,-.53,.69,.74],[side*.56,17.67,-.47,.59,.64]],.12);
+    for(const [i,coords] of surfaces.entries()){
+      const geo=new T.BufferGeometry();
+      geo.setAttribute('position',new T.Float32BufferAttribute(coords,3));geo.computeVertexNormals();
+      const mesh=new T.Mesh(geo,new T.MeshStandardMaterial({color:[pale,grey,dark][i],side:T.DoubleSide,roughness:.97}));
+      mesh.castShadow=mesh.receiveShadow=true;kit.group.add(mesh);
+    }
+
+    // The hair sweeps from a side part down behind the jaw into the granite.
+    // Keep the broad facial plane continuous in the absence of a measured portrait.
+    const bust=A.carving(T,kit,pale,0,0,-2.25,18.37/18.73);
+    bust.sweep([[0,3.4,-2.8,5.4,2.6],[0,5.4,-2.55,6.1,3.08],[0,8.2,-2.39,6.38,3.46],
+      [-.08,10.2,-2.65,5.38,3.05],[-.10,11.45,-2.72,4.2,2.64],[.04,12.27,-2.15,2.28,1.74],
+      [.10,13.55,-1.73,1.51,1.41]],.045,32);
+    bust.sweep([[.10,12.63,-1.20,.99,.94],[.17,13.05,-.47,1.36,1.00],
+      [.19,13.43,-.32,1.72,1.22],[.17,14.04,-.42,2.17,1.47],[.12,14.77,-.57,2.34,1.58],
+      [.04,15.63,-.63,2.42,1.66],[-.02,16.28,-.75,2.39,1.61],[-.09,17.0,-.94,2.22,1.50],
+      [-.17,17.57,-1.12,1.91,1.32],[-.25,18.02,-1.19,1.36,1.05],[-.29,18.25,-1.32,.64,.60]],0,32);
+    for(const s of [-1,1]){
+      bust.sweep([[s*.32,18.15,-1.22,.61,.64],[s*1.34,17.79,-1.35,.82,.75],
+        [s*2.01,17.1,-1.49,.78,.83],[s*2.42,15.99,-1.59,.73,.82],[s*2.70,15.14,-1.90,.65,.79],
+        [s*2.76,14.12,-2.41,.64,.94],[s*3.05,12.89,-2.89,.87,1.12],[s*3.42,11.66,-3.52,1.05,1.28]],.065,20);
+      bust.sweep([[s*1.10,17.85,-1.25,.37,.52],[s*1.82,17.14,-1.07,.34,.44],
+        [s*2.28,16.21,-1.17,.35,.45],[s*2.44,15.62,-1.37,.24,.40]],.035,18);
+      bust.sweep([[s*2.51,15.28,-1.30,.29,.42],[s*2.68,14.35,-1.66,.29,.42],
+        [s*2.73,13.44,-2.29,.36,.66],[s*3.03,12.56,-2.87,.42,.75]],.04,20);
+      bust.sweep([[s*1.55,12.26,-.39,.27,.35],[s*2.68,11.11,-.06,.41,.47],
+        [s*1.96,10.47,.52,.44,.42],[s*.64,9.78,.62,.38,.32]],.045,16);
     }
     bust.finish();
-
-    A.plaque(T, kit, 'TƯỢNG ĐÀI MẸ VIỆT NAM ANH HÙNG', 0, 2.25, 1.2, 11.4, 1.15, { bg: '#6e241c', fg: '#f6dc84' });
+    for(const s of [-1,1])for(let i=0;i<4;i++){
+      const x=s*(21+i*3.30),z=49-i*2.48;
+      kit.box(grey,x,.46,z,2.0,.62,2.15);
+      kit.tapered(pale,x,4.75,z,.88,.70,8.18,.94,8);
+    }
   }
 
   // 8. Bảo tàng Mỹ thuật Đà Nẵng (78 Lê Duẩn) — Neoclassical cream gallery mansion with pedimented portico
@@ -434,14 +451,13 @@
     }
     A.curvedRoof(T, kit, 0, 4.45, gz, 5.6, 2.8, 0.95, mosaicTeal, cream, gold, 0.28, { dragons: true, goldColor: gold });
 
-    // Trung Lập Đình octagonal pavilion (housing bronze statue of Emperor Khải Định) in front forecourt
+    // The forecourt pavilion formerly housed the emperor's bronze.
     const px = 0, pz = 5.4;
     stamp(round, stone, px, 0.45, pz, 2.8, 0.72, 2.8);
     for (let i = 0; i < 8; i++) {
       const a = i * Math.PI / 4;
       stamp(round, ochre, px + Math.sin(a) * 2.1, 2.25, pz + Math.cos(a) * 2.1, 0.14, 3.0, 0.14);
     }
-    tapered(0x5c462e, px, 1.75, pz, 0.45, 0.35, 1.9, 1, 8); // bronze royal statue silhouette
     tapered(tile, px, 4.55, pz, 3.2, 0.35, 1.85, 1, 8);
 
     // Grand 3-story Khải Tường Lâu Baroque-Huế palace behind the pavilion
@@ -483,7 +499,7 @@
 
   // 10. Lăng Gia Long (Thiên Thọ Lăng, Huế) — Solemn double stone tomb Bửu Thành, honor guard & royal pine hill
   function langGiaLong(T, kit) {
-    const { box, stamp, round } = kit;
+    const { box } = kit;
     const greyStone = 0x8f8c84, darkStone = 0x6f6c64, lime = 0xcfc8b8, tile = 0x7a4838, gold = 0xcfa44e;
     kit.palette({stone: [greyStone, darkStone], plaster: lime, tile});
 
@@ -494,14 +510,12 @@
     A.steps(kit, 0, 1.8, 6.2, 1.8, 4, 0.25, 0.42, darkStone);
     A.steps(kit, 0, -5.2, 5.8, 1.8, 4, 0.25, 0.42, darkStone);
 
-    // Paired Honor Courtyard stone mandarins, war horses & elephants (Sân Chầu)
+    // Five mandarins per side at Thiên Thọ Lăng, facing across the paved court.
     for (const s of [-1, 1]) {
-      for (const [sz, sh] of [[9.8, 1.9], [7.2, 1.85], [4.6, 1.65]]) {
-        box(darkStone, s * 5.2, 0.65, sz, 1.1, 0.45, 1.2);
-        box(lime, s * 5.2, 0.88 + sh * 0.5, sz, 0.68, sh, 0.72);
-        const hOrb = new T.SphereGeometry(0.28, 8, 8);
-        stamp(hOrb, lime, s * 5.2, 0.95 + sh, sz);
-        hOrb.dispose();
+      for (let i=0;i<5;i++) {
+        const z=3.5+i*1.58, x=s*5.2;
+        box(0x827f74,x,.565,z,.86,.13,.83);
+        A.courtAttendant(T,kit,0x827f74,x,.63,z,1.73,-s*Math.PI/2,i<2?'civil':'military');
       }
     }
 
@@ -788,13 +802,15 @@
     },
     {
       id: 'tuong-dai-me-thu', name: 'Tượng đài Mẹ Việt Nam Anh hùng', city: 'Tam Kỳ', province: 'Đà Nẵng', region: 'Trung Bộ',
-      lon: 108.511210, lat: 15.585650, start: [108.511210, 15.586030], yaw: Math.PI,
-      width: 42, depth: 30,
-      solids: [[0, -3.5, 18.0, 4.0]],
-      description: 'Quần thể tượng đài đá hoa cương hình cánh cung đồ sộ dưới chân núi Cấm ở Tam Kỳ, lấy nguyên mẫu chân dung Mẹ Việt Nam Anh hùng Nguyễn Thị Thứ cùng tám trụ huyền thoại.',
-      photo: 'https://vi.wikipedia.org/wiki/T%C6%B0%E1%BB%A3ng_%C4%91%C3%A0i_M%E1%BA%B9_Vi%E1%BB%87t_Nam_anh_h%C3%B9ng',
-      source: 'https://vi.wikipedia.org/wiki/T%C6%B0%E1%BB%A3ng_%C4%91%C3%A0i_M%E1%BA%B9_Vi%E1%BB%87t_Nam_anh_h%C3%B9ng',
-      map: 'https://www.openstreetmap.org/?mlat=15.58565&mlon=108.51121#map=17/15.58565/108.51121',
+      lon: 108.510828, lat: 15.583909, start: [108.512424,15.585730], yaw: 2.42,
+      width: 93, depth: 84,
+      solids: [[0,-12,18,11],[-29,-2,8,7],[29,-2,8,7],[-39,13,4,8],[39,13,4,8]],
+      views:[{name:'Tượng đài nhìn qua hồ',height:16,viewRadius:94,viewAngle:2.42,viewElevation:.115,viewFov:49},
+        {name:'Hai cánh cung và hồ nước',height:15,viewRadius:97,viewAngle:2.75,viewElevation:.46,viewFov:53}],
+      description: 'Tượng đài trên núi Cấm lấy nguyên mẫu Mẹ Việt Nam anh hùng Nguyễn Thị Thứ. Khối tượng cao 18,37 m, rộng 84,7 m. Hai cánh đá ôm lấy hồ nước phía trước. Khuôn mặt được để trơn trong mô hình.',
+      photo: 'https://dltm.vnptit3.vn/vi/tuongdaimevietnam',
+      source: 'https://baochinhphu.vn/quang-nam-khanh-thanh-tuong-dai-me-viet-nam-anh-hung-102180934.htm',
+      map: 'https://www.openstreetmap.org/?mlat=15.583909&mlon=108.510828#map=19/15.583909/108.510828',
       build: tuongDaiMeThu
     },
     {
@@ -815,7 +831,7 @@
       solids: [[0, -5.6, 11.2, 7.2], [0, 5.4, 2.8, 2.8], ...A.archPiers(0, 11.2, 4.6, 1.38, 1.8)],
       description: 'Lâu đài ba tầng Khải Tường Lâu mang phong cách Baroque kết hợp mỹ thuật cung đình Huế bên bờ sông An Cựu, cùng đình bát giác Trung Lập và cổng chính khảm sành sứ tinh xảo.',
       photo: 'https://hueworldheritage.org.vn/',
-      source: 'https://vi.wikipedia.org/wiki/Cung_An_%C4%90%E1%BB%8Bnh',
+      source: 'https://cdt.gov.vn/data/cung-an-dinh',
       map: 'https://www.openstreetmap.org/?mlat=16.456634&mlon=107.598309#map=18/16.456634/107.598309',
       build: cungAnDinh
     },
@@ -824,8 +840,8 @@
       lon: 107.599000, lat: 16.366600, start: [107.599180, 16.366990], yaw: 2.723,
       width: 30, depth: 30,
       solids: [[0, -10.2, 9.2, 5.0], [0, -3.5, 3.0, 3.0]],
-      description: 'Lăng vị hoàng đế sáng lập triều Nguyễn giữa rừng thông bạt ngàn núi Đại Thiên Thọ, nổi tiếng với Bửu Thành song táng hai ngôi mộ đá sóng đôi, sân chầu tượng đá và Bi Đình cổ kính.',
-      photo: 'https://hueworldheritage.org.vn/',
+      description: 'Lăng vị hoàng đế sáng lập triều Nguyễn giữa rừng thông Đại Thiên Thọ. Sân chầu có hai hàng tượng đá, mỗi bên hai quan văn và ba quan võ. Phía trên là Bửu Thành với hai ngôi mộ đá sóng đôi.',
+      photo: 'https://vtcnews.vn/bi-an-ve-nhung-vi-thach-quan-o-lang-vua-gia-long-ar281329.html',
       source: 'https://vi.wikipedia.org/wiki/L%C4%83ng_Gia_Long',
       map: 'https://www.openstreetmap.org/?mlat=16.3666&mlon=107.599#map=17/16.3666/107.599',
       build: langGiaLong

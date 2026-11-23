@@ -698,6 +698,50 @@
     return { sweep, finish };
   }
 
+  // Trace the photographed front in pixel coordinates. Each form has closed
+  // elliptical sections; its rear and end caps retain the sculpture material.
+  function photoCarving(T,kit,{photo,backPhoto,width,height,crop=[0,0,width,height],origin,scale,
+    position=[0,0,0],tint,forms}) {
+    const points=[],uv=[],front=[],back=[],sides=32;
+    for(const {z=0,rows} of forms){
+      const first=points.length/3;
+      for(const [y,left,right,radius,offset=0] of rows){
+        for(let j=0;j<sides;j++){
+          const angle=j*2*Math.PI/sides,pixel=(left+right+(right-left)*Math.cos(angle))/2;
+          points.push((pixel-origin[0])*scale,(origin[1]-y)*scale,z+offset+radius*Math.sin(angle));
+          uv.push((pixel-crop[0])/crop[2],1-(y-crop[1])/crop[3]);
+        }
+      }
+      for(let i=0;i<rows.length-1;i++){
+        for(let j=0;j<sides;j++){
+          const a=first+i*sides+j,b=first+i*sides+(j+1)%sides;
+          (j<sides/2?front:back).push(a,b,a+sides,b,b+sides,a+sides);
+        }
+      }
+      const last=first+(rows.length-1)*sides;
+      for(let j=1;j<sides-1;j++)back.push(first,first+j+1,first+j,last,last+j,last+j+1);
+    }
+    const geo=new T.BufferGeometry();
+    geo.setAttribute('position',new T.Float32BufferAttribute(points,3));
+    geo.setAttribute('uv',new T.Float32BufferAttribute(uv,2));geo.setIndex(front.concat(back));
+    geo.addGroup(0,front.length,0);geo.addGroup(front.length,back.length,1);geo.computeVertexNormals();
+    const stone=new T.MeshStandardMaterial({color:tint,roughness:.94}),image=stone.clone();
+    const mesh=new T.Mesh(geo,[image,stone]);
+    mesh.position.set(...position);mesh.castShadow=mesh.receiveShadow=true;kit.group.add(mesh);
+    function applyPhoto(material,url){
+      let disposed=false;
+      material.addEventListener('dispose',()=>{disposed=true;});
+      new T.TextureLoader().load(url,texture=>{
+        if(disposed){texture.dispose();return;}
+        texture.colorSpace=T.SRGBColorSpace;texture.anisotropy=4;
+        material.color.setHex(0xffffff);material.map=texture;material.needsUpdate=true;
+      });
+    }
+    applyPhoto(image,photo);
+    if(backPhoto)applyPhoto(stone,backPhoto);
+    return mesh;
+  }
+
   function statueFigure(T, kit, tint, x, y, z, size, pose = {}) {
     const { sweep, finish } = carving(T, kit, tint, x, y, z, size, pose.yaw);
     // Slight offset at the knees puts the weight on the rear foot. The
@@ -785,6 +829,44 @@
         petal.finish();
       }
     }
+  }
+
+  function courtAttendant(T,kit,stone,x,y,z,height,yaw,role) {
+    const {sweep,finish}=carving(T,kit,stone,x,y,z,height,yaw);
+    const guard=role==='guard', civil=role==='civil';
+    for(const s of [-1,1]){
+      sweep([[s*.067,.001,.025,.041,.072],[s*.067,.028,.025,.044,.072],
+        [s*.067,.060,0,.037,.044],[s*.063,.31,0,.041,.049]],.025,12);
+    }
+    const hem=guard?.23:.081;
+    sweep([[0,hem,0,.143,.091],[0,hem+.021,0,.145,.091],[0,.35,0,.124,.078],
+      [0,.53,-.003,.102,.073],[0,.68,-.006,.119,.082],[0,.756,-.009,.137,.071],
+      [0,.789,-.008,.079,.048],[0,.8,0,.038,.038]],.039,20);
+    // The sleeves close around the hands in front of the robe.
+    for(const s of [-1,1]){
+      sweep([[s*.108,.753,-.005,.050,.054],[s*.133,.705,.008,.052,.060],
+        [s*.140,.595,.031,.048,.055],[s*.128,.528,.046,.045,.051],
+        [s*.080,.548,.085,.045,.052],[s*.035,.590,.100,.034,.039]],.043,14);
+      sweep([[s*.043,.580,.100,.025,.026],[s*.022,.603,.110,.025,.024],
+        [s*.004,.612,.108,.015,.019]],0,12);
+    }
+    sweep([[0,.772,0,.037,.042],[0,.806,.012,.042,.047],[0,.828,.018,.052,.053],
+      [0,.860,.016,.058,.058],[0,.891,.007,.057,.057],[0,.908,.003,.047,.048]],0,20);
+    if(guard){
+      // The outer guard rank at Ứng Lăng wears broad, ribbed conical hats.
+      sweep([[0,.888,0,.109,.107],[0,.902,0,.112,.110],[0,.980,0,.024,.024],
+        [0,.990,0,.011,.011]],.014,24);
+    }else if(civil){
+      // Tall, flat-topped court headdress; the square-ended tablet rises above the sleeves.
+      sweep([[0,.886,0,.064,.062],[0,.899,-.002,.069,.065],[0,.914,-.008,.060,.059],
+        [0,.976,-.013,.057,.047],[0,.988,-.014,.050,.043]],0,16);
+      sweep([[0,.570,.109,.013,.010],[0,.610,.111,.017,.011],
+        [0,.725,.124,.020,.009],[0,.732,.125,.018,.009]],0,8);
+    }else{
+      sweep([[0,.885,-.004,.066,.064],[0,.902,-.004,.077,.069],[0,.932,-.007,.068,.063],
+        [0,.962,-.008,.045,.046],[0,.974,-.008,.018,.023]],0,20);
+    }
+    finish();
   }
 
   function memorialMonument(T, kit, opts = {}) {
@@ -1098,7 +1180,8 @@
     lighthouse,
     gothicChurch,
     colonialBuilding,
-    memorialMonument, carving, statueFigure, lotusSeat,
+    memorialMonument, carving, photoCarving, statueFigure, lotusSeat,
+    courtAttendant,
     steelTrussBridge,
     cableStayedBridge,
     suspensionBridge,

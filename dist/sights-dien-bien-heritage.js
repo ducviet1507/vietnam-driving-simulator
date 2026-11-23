@@ -20,69 +20,44 @@
     const p=[];for(let i=0;i<10;i++){const a=i*Math.PI/5,v=r*(i%2?.403:1);p.push([Math.sin(a)*v,Math.cos(a)*v]);}
     k.outline(p,color,x,y,z,depth);
   }
-  function hat(T,k,x,y,z,rad,color){
-    // The sculpted field hat has a broad, sloping brim above the brow.
-    const geom=new T.SphereGeometry(1,18,7,0,Math.PI*2,0,Math.PI/2);
-    k.stamp(geom,color,x,y,z,rad,rad*.58,rad*1.06);geom.dispose();
-    k.tapered(color,x,y,z,rad*1.22,rad,.09,1.09,20);
+  function victoryGroup(T,k){
+    // The measured group is 12.6 m from the feet to the tip of the cast flag.
+    // These sections follow Ioe2015's frontal photograph. The three soldiers
+    // surround a common centre, with the child supported above the left arm.
+    CentralArch.photoCarving(T,k,{
+      photo:'sight-imagery/dien-bien-d1-tuong-dong.webp',width:360,height:480,
+      crop:[85,26,191,308],origin:[178,330],scale:12.6/298,position:[0,3.69,0],tint:0x79634e,forms:[
+        // Curled free edge of the flag, spreading across the figures below.
+        {z:-.45,rows:[[32,215,217,.04],[37,216,231,.19],[45,217,239,.34],[72,220,242,.41],
+          [89,220,245,.39],[102,204,246,.47],[115,190,247,.54],[133,174,247,.57],[145,157,234,.54],
+          [152,147,224,.31],[161,143,218,.37],[166,125,215,.28],[174,147,207,.23],[180,161,192,.12]]},
+        // Separated shafts of the far and near legs leave two open triangles.
+        {z:-.42,rows:[[192,193,214,.40],[207,188,233,.69],[232,189,233,.83],[253,202,239,.65],
+          [274,216,246,.54],[293,227,251,.47],[312,238,261,.44],[327,248,270,.38]]},
+        {z:.28,rows:[[176,128,136,.11],[181,125,143,.28],[188,124,146,.36],[194,119,157,.49],
+          [205,110,168,.62],[216,120,172,.72],[235,132,177,.67],[249,132,174,.65],[265,129,175,.73],
+          [277,128,160,.58],[290,123,149,.49],[308,118,140,.41],[324,113,132,.39],[330,108,127,.31]]},
+        {z:.19,rows:[[252,153,169,.32],[269,149,178,.64],[282,154,182,.55],[298,163,185,.47],[326,165,188,.41]]},
+        {z:.76,rows:[[174,166,178,.19],[180,162,185,.37],[189,162,185,.43],[195,162,194,.41],
+          [205,158,207,.57],[221,161,217,.75],[241,166,220,.79],[262,164,219,.78],[281,167,218,.66],
+          [304,181,212,.53],[325,188,207,.44]]},
+        // Raised forearm before the staff and the hand at the flag edge.
+        {z:.94,rows:[[135,216,222,.13],[146,209,220,.20],[161,200,216,.28],[177,191,209,.37],
+          [190,181,204,.41],[200,173,201,.38],[210,169,193,.31]]},
+        {z:.13,rows:[[138,226,229,.065],[170,228,233,.10],[174,226,237,.17],[183,228,236,.16],
+          [200,228,239,.22],[214,217,237,.26],[216,213,234,.15]]},
+        // The child, bouquet, raised hands and the supporting soldier's elbow.
+        {z:.70,rows:[[141,106,117,.14],[146,103,121,.30],[154,104,121,.33],[161,102,119,.24],
+          [170,102,120,.31],[179,99,121,.37],[190,98,123,.42],[202,96,121,.35],[218,96,120,.30],[227,99,117,.25]]},
+        {z:.78,rows:[[111,98,101,.055],[116,89,106,.14],[122,94,110,.14],[129,95,103,.10],[137,95,102,.13],
+          [150,97,105,.15],[164,100,109,.18]]},
+        {z:.75,rows:[[133,126,135,.065],[140,124,132,.13],[155,119,128,.18],[169,112,122,.17]]},
+        {z:.84,rows:[[195,139,150,.17],[199,111,155,.28],[205,96,160,.38],[213,95,145,.38],[224,97,119,.27]]}
+      ]
+    });
   }
-  function bronzeFlag(T,k){
-    // A single heavy sheet sweeps from the tall staff down behind the child.
-    // The folds are sculptural. Its lower edge lifts clear of the bearer.
-    const v=[],ix=[],cols=24,rows=7;
-    function sheet(u,t){
-      const bottom=10.64+.43*Math.cos(2*Math.PI*u+.55)+1.32*u,top=11.93+3.64*u**1.38+.62*u**4;
-      const fold=.46*Math.abs(Math.sin(2.57*Math.PI*u-2.16*t))-.23+.28*Math.abs(Math.sin(4.57*u+3.7*t));
-      return [-2.84+u*5.45,bottom+(top-bottom)*t,.32+.69*Math.sin(Math.PI*u)*Math.sin(1.22*Math.PI*(t+.24*u))+fold];
-    }
-    for(let j=0;j<=rows;j++)for(let i=0;i<=cols;i++){
-      v.push(...sheet(i/cols,j/rows));
-      if(i<cols&&j<rows){const a=j*(cols+1)+i,b=a+cols+1;ix.push(a,a+1,b,b,a+1,b+1);}
-    }
-    const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(v,3));g.setIndex(ix);g.computeVertexNormals();
-    k.stamp(g,bronze,0,0,0);
-    for(let i=0;i<ix.length;i+=3)[ix[i+1],ix[i+2]]=[ix[i+2],ix[i+1]];
-    g.setIndex(ix);g.computeVertexNormals();k.stamp(g,patina,0,0,-.075);g.dispose();
-    CentralArch.strut(T,k,bronzeLight,2.59,8.45,.44,2.59,16.2,.44,.108);
-    // The raised words follow the lower ribbon of the cast flag.
-    const cv=document.createElement('canvas');cv.width=1024;cv.height=96;
-    const c=cv.getContext('2d');c.fillStyle='#dbbb7d';c.textAlign='center';c.textBaseline='middle';
-    c.font='bold 61px Georgia';c.fillText('QUYẾT CHIẾN QUYẾT THẮNG',512,47,980);
-    const text=[],uv=[],tri=[];
-    for(let i=0;i<=cols;i++){
-      const u=i/cols;
-      for(const y of [0,1]){
-        const p=sheet(.14+.77*u,.08+y*.16);p[2]+=.115;text.push(...p);uv.push(u,y);
-      }
-      if(i<cols){const a=2*i;tri.push(a,a+2,a+1,a+1,a+2,a+3);}
-    }
-    const label=new T.BufferGeometry();label.setAttribute('position',new T.Float32BufferAttribute(text,3));
-    label.setAttribute('uv',new T.Float32BufferAttribute(uv,2));label.setIndex(tri);label.computeVertexNormals();
-    const texture=new T.CanvasTexture(cv);texture.colorSpace=T.SRGBColorSpace;
-    k.group.add(new T.Mesh(label,new T.MeshStandardMaterial({map:texture,transparent:true,alphaTest:.16,depthWrite:false,roughness:.62,side:T.DoubleSide})));
-  }
-  function bearer(T,k,tint,x,y,z,h,pose){
-    // Spread the stance below the hips and turn the carved face upward.
-    // Transform the statue's own local sections before its surveyed pose.
-    const sculpt={stamp(g,...args){
-      const p=g.attributes.position;
-      for(let i=0;i<p.count;i++){
-        const u=p.getX(i),v=p.getY(i),w=p.getZ(i),leg=Math.max(0,1-v/.47);
-        let a=u*(1.14+leg*1.55),b=v,c=w*1.08;
-        if(v>.838&&Math.abs(u)<.071&&Math.abs(w)<.10){
-          const angle=.41,dy=v-.843;
-          b=.843+dy*Math.cos(angle)+w*Math.sin(angle);
-          c=w*Math.cos(angle)-dy*Math.sin(angle);
-        }
-        const lean=(pose.lean||0)*Math.min(1,Math.max(0,(v-.47)/.39));
-        p.setXYZ(i,a+lean,b,c);
-      }
-      g.computeVertexNormals();k.stamp(g,...args);
-    }};
-    CentralArch.statueFigure(T,sculpt,tint,x,y,z,h,pose);
-    const a=pose.yaw,dx=(pose.lean||0)*h,dz=-.039*h;
-    hat(T,k,x+Math.cos(a)*dx+Math.sin(a)*dz,y+.956*h,z-Math.sin(a)*dx+Math.cos(a)*dz,h*.065,patina);
-  }
+
+
   function peak(T,k){
     finishes(k);
     const f=createTempleFoundations(T,k);
@@ -94,27 +69,7 @@
         k.box(color,0,y,0,w,h,d,yaw);k.box(granite,0,y+h/2,0,w+.13,.105,d+.13,yaw);
       }
       k.box(patina,0,3.58,0,8.54,.24,5.03,.035);
-      // The bronze group is a single composition of three adults. The
-      // child and bouquet rise on the west, the tall staff to their right.
-      bearer(T,k,bronze,-1.70,3.62,.22,6.83,{yaw:-.55,lean:.016,jacket:true,stepUp:.055,
-        rightArm:[[-.18,.70,.10],[-.135,.845,.22],[-.119,.865,.207]],
-        leftArm:[[.10,.695,.14],[-.11,.74,.21],[-.17,.77,.21]]});
-      CentralArch.statueFigure(T,k,bronzeLight,-2.77,8.69,1.02,3.25,{yaw:-.30,robe:true,
-        rightArm:[[-.16,.94,.02],[-.15,1.17,.06],[-.14,1.22,.065]],
-        leftArm:[[.18,.94,.03],[.22,1.07,.07],[.25,1.11,.07]],openHand:true});
-      hat(T,k,-2.77,11.81,1.00,.21,bronze);
-      for(let j=0;j<8;j++){
-        const a=j*2.40,r=.21+.05*(j%3),x=-3.14+r*Math.cos(a),z=1.39+r*Math.sin(a),y=12.82+.12*Math.sin(j);
-        CentralArch.strut(T,k,bronze,-3.09,12.54,1.42,x,y,z,.033);
-        k.outline([[-.12,0],[-.19,.15],[-.11,.13],[-.045,.24],[.022,.13],[.11,.21],[.095,.09],[.18,.13],[.13,.01],[.015,-.035]],
-          bronzeLight,x,y,z,.12,a);
-      }
-      bearer(T,k,bronze,1.25,3.61,.52,7.35,{yaw:.44,lean:-.018,jacket:true,stepUp:.035,
-        rightArm:[[-.04,.93,.13],[.10,1.16,.13],[.16,1.22,.11]],
-        leftArm:[[.185,.72,.06],[.19,.91,.06],[.18,.95,.055]]});
-      bearer(T,k,patina,.03,3.61,-1.0,6.96,{yaw:Math.PI+.21,jacket:true,stepUp:.07,
-        rightArm:[[-.18,.66,.085],[-.06,.57,.15]],leftArm:[[.19,.70,.052],[.17,.87,.10]]});
-      bronzeFlag(T,k);
+      victoryGroup(T,k);
       const rock=new T.SphereGeometry(1,12,7);
       for(const s of [-1,1])for(let j=0;j<4;j++){
         const x=s*(3.75+j*.69),z=4.86;
@@ -133,96 +88,55 @@
         view('Bệ đá ba tầng trên đỉnh đồi',10,34,peakYaw+.82,.31)]},peak);
 
   function stoneRelief(T,k){
-    // The southern wall of the ceremonial square is a curved, 58 m frieze.
-    // Suggest its procession, bicycles and landscape in low relief. The
-    // individual panels remain continuous around the shallow bend.
-    const stone=0x878f89,light=0x9ba19b;
-    const profile=u=>Math.sin(Math.PI*u)*3.0+.44*Math.sin(Math.PI*2*u);
+    // The 58 m Thanh Hóa stone wall follows the south side of the plaza.
+    const curve=u=>Math.sin(Math.PI*u)*3+.44*Math.sin(2*Math.PI*u);
     const height=u=>5.25+1.52*Math.sin(Math.PI*u)+1.10*Math.abs(Math.sin(6.5*u+.35))+.46*Math.sin(19*u+.60);
-    const face=(u)=>[profile(u),-29+58*u];
-    const rim=new T.TorusGeometry(.58,.064,5,16);
+    const shades=[0x959a94,0x999d98,0x939891,0x969b95];
     for(let j=0;j<29;j++){
-      const u=j/29,v=(j+1)/29,mid=(u+v)/2,[x0,z0]=face(u),[x1,z1]=face(v);
-      const x=(x0+x1)/2,z=(z0+z1)/2,len=Math.hypot(x1-x0,z1-z0);
-      const yaw=-Math.PI/2+Math.atan2(x1-x0,z1-z0);
-      k.place(x,z,yaw,()=>{
+      const u=j/29,v=(j+1)/29,x0=curve(u),x1=curve(v),x=(x0+x1)*.5;
+      const span=Math.hypot(x1-x0,2),half=span*.5;
+      k.place(x,-28+2*j,-Math.PI/2+Math.atan2(x1-x0,2),()=>{
+        k.box(slate,0,.32,0,span+.04,.64,1.13);
         const a=height(u),b=height(v);
-        k.box(slate,0,.32,0,len+.04,.64,1.13);
-        k.outline([[-len/2,.57],[len/2+.025,.57],[len/2+.025,b],[-len/2,a]],stone,0,0,-.20,.40);
-        // Overlapping mountain silhouettes are continuous across stone joints.
-        for(let layer=0;layer<2;layer++){
-          const line=q=>3.36+layer*.96+.59*Math.sin(16*q+layer)+.56*Math.sin(34*q+1.81*layer)+.27*Math.cos(49*q-layer);
-          const profile=[[-len/2,.61],[len/2,.61]];
-          for(let m=4;m>=0;m--)profile.push([len*(m/4-.5),line((j+m/4)/29)]);
-          k.outline(profile,layer?0x89938d:0x929c94,0,0,.201+(1-layer)*.036,.048);
+        k.outline([[-half,.57],[half+.017,.57],[half+.017,b],[-half,a]],0x7f8580,0,0,-.20,.37);
+        for(let level=0;.62+level*1.08<Math.max(a,b);level++){
+          const y=.62+level*1.08;
+          const left=Math.min(a,y+1.063),right=Math.min(b,y+1.063);
+          if(Math.min(left,right)<=y)continue;
+          k.outline([[-half+.008,y],[half-.008,y],[half-.008,right],[-half+.008,left]],
+            shades[(j+3*level)%shades.length],0,0,.165,.040);
         }
       });
     }
-    const head=new T.SphereGeometry(1,13,9);
-    function onWall(at,draw){
-      const u=.5+at/58,[x,z]=face(u),a=profile(u+.002)-profile(u-.002);
-      k.place(x,z,-Math.PI/2+Math.atan2(a,.232),draw);
-    }
-    function person(at,y,h,stance,headwear,turn=1){
-      onWall(at,()=>{
-        const shape=(coords,z,depth,tint=light)=>k.outline(coords.map(([x,v])=>[x*h*turn,v*h]),tint,0,y,z,depth);
-        const stride=stance==='walk'?.28:stance==='seated'?.38:.14,hip=stance==='seated'?.38:.49;
-        shape([[-.22,0],[-.13,.22],[-.10,hip],[-.13,.64],[-.16,.77],[-.06,.82],[.02,.81],
-          [.095,.79],[.17,.68],[.12,.55],[.115,hip],[.05,.40],[stride,.17],[stride+.09,.04],
-          [stride+.06,.012],[stride-.04,.018],[-.025,.27],[-.11,.06],[-.14,.013]],.29,.22);
-        k.stamp(head,light,-.025*h*turn,y+.635*h,.50,.142*h,.202*h,.20,0,0,turn*.12);
-        k.stamp(head,light,.019*h*turn,y+.474*h,.47,.119*h,.145*h,.16);
-        k.stamp(head,light,.016*h*turn,y+.885*h,.45,.09*h,.114*h,.17);
-        if(headwear==='conical')shape([[-.18,.935],[.025,1.06],[.20,.924],[.07,.91],[-.10,.91]],.42,.17);
-        else if(headwear==='cap')shape([[-.097,.938],[-.065,.993],[.045,1.01],[.12,.978],[.185,.963],[.16,.945],[-.018,.943]],.43,.11);
-        let elbow=[.22,.60],hand=[.36,.68];
-        if(stance==='carry'){elbow=[.23,.76];hand=[.30,.88];}
-        else if(stance==='wave'){elbow=[.20,.90];hand=[.33,1.08];}
-        else if(stance==='seated'){elbow=[.20,.59];hand=[.43,.65];}
-        const joint=(p,q,r)=>CentralArch.strut(T,k,light,p[0]*h*turn,y+p[1]*h,.47,q[0]*h*turn,y+q[1]*h,.48,r*h);
-        joint([.09,.76],elbow,.062);joint(elbow,hand,.047);
-        joint([-.04,hip],[-.12,.23],.068);joint([-.12,.23],[-.19,.04],.057);
-        joint([.07,hip],[stride*.68,.25],.068);joint([stride*.68,.25],[stride+.018,.052],.053);
-      });
-    }
-    // Interpret the documented table gathering, transport by bicycle and
-    // carrying pole, and the homecoming on separate stretches of the frieze.
-    for(const [d,h,t] of [[-27.3,2.8,1],[-25.3,3.12,1],[-22.8,3.08,-1],[-20.65,3.12,-1]])
-      person(d,1.67,h,'seated','cap',t);
-    onWall(-24,()=>{k.box(light,0,3.32,.54,4.9,.22,.32);for(const x of [-1.86,1.86])k.box(light,x,2.72,.54,.19,1.18,.23);});
-    for(const [at,y,h,dir] of [[-17.2,1.19,2.77,1],[-12.9,1.02,3.22,1],[-8.62,1.72,2.85,-1]]){
-      onWall(at,()=>{
-        for(const x of [-1.16,1.03]){
-          k.stamp(rim,light,x,y+.51,.62,1.18,1.18,.72);
-          for(let j=0;j<8;j++){
-            const a=j*Math.PI/4;
-            CentralArch.strut(T,k,light,x,y+.51,.61,x+.66*Math.sin(a),y+.51+.66*Math.cos(a),.61,.021);
-          }
+    // Both photographs show the bottom register directly above the stone plinth.
+    // Their exact spacing along the 58 m panorama has not been surveyed.
+    function panel(file,centre,width,panelHeight,forms){
+      const geometry=new T.PlaneGeometry(width,panelHeight,48,28);
+      const p=geometry.attributes.position;
+      for(let i=0;i<p.count;i++){
+        const s=p.getX(i)/width+.5,t=p.getY(i)/panelHeight+.5;
+        const z=centre+(s-.5)*width,u=.5+z/58;
+        const slope=(curve(u+.001)-curve(u-.001))/.116;
+        const normal=1/Math.hypot(1,slope);
+        let projection=0;
+        for(const [cx,cy,rx,ry] of forms){
+          const r=((s-cx)/rx)**2+((t-cy)/ry)**2;
+          if(r<1)projection=Math.max(projection,.115*(1-r)**2);
         }
-        for(const [a,b] of [[[-1.16,.52],[-.39,1.51]],[[-.39,1.51],[.08,.54]],[[.08,.54],[-1.16,.52]],[[.08,.54],[.90,1.39]],[[.90,1.39],[1.03,.52]],[[.90,1.39],[.62,1.66]]])
-          CentralArch.strut(T,k,light,a[0],a[1]+y,.62,b[0],b[1]+y,.62,.059);
-        k.box(light,-.69,2.31+y,.45,1.27,1.02,.26);
-        for(const dx of [-1.13,-.50])k.box(stone,dx,y+2.31,.60,.055,1.03,.075);
-      });
-      person(at-.91,y+.04,h,'walk','conical',dir);
+        const offset=.229+projection;
+        p.setXYZ(i,curve(u)-normal*offset,.625+t*panelHeight,z+normal*slope*offset);
+      }
+      geometry.computeVertexNormals();
+      const map=new T.TextureLoader().load('sight-imagery/doi-d1-phu-dieu-'+file+'.webp');
+      map.colorSpace=T.SRGBColorSpace;map.anisotropy=4;
+      const material=new T.MeshStandardMaterial({map,transparent:true,depthWrite:false,roughness:.97});
+      const mesh=new T.Mesh(geometry,material);mesh.receiveShadow=true;k.group.add(mesh);
     }
-    for(const [at,y,h,cap] of [[-5.0,2.00,3.39,'conical'],[-.75,1.01,3.07,'cap'],[4.50,1.18,3.54,'conical']]){
-      person(at,y,h,'carry',cap);
-      onWall(at,()=>{
-        k.outline([[-1.82,0],[-.40,.17],[.46,.18],[1.48,-.04],[1.47,-.12],[.42,.095],[-.43,.09],[-1.82,-.073]],light,0,y+h*.84,.55,.103);
-        for(const x of [-1.49,1.35]){
-          for(const s of [-1,1])CentralArch.strut(T,k,light,x,y+h*.85,.54,x+s*.47,y+h*.44,.54,.036);
-          k.outline([[-.60,.19],[.59,.19],[.48,-.12],[.24,-.31],[-.25,-.30],[-.49,-.12]],light,x,y+h*.42,.48,.15);
-        }
-      });
-    }
-    for(const [d,y,h,stance,dir] of [[8.8,1.43,3.3,'walk',1],[11.7,1.04,3.31,'wave',1],[14.4,2.13,2.88,'wave',-1],
-      [17.8,1.01,3.32,'walk',1],[20,2.59,2.80,'wave',-1],[21.72,1.05,3.39,'wave',1],[25.22,1.13,3.06,'wave',-1],[27.03,1.00,2.4,'walk',-1]])
-      person(d,y,h,stance,'cap',dir);
-    for(const at of [12.1,23.85])onWall(at,()=>{
-      k.outline([[-.05,0],[.06,0],[.69,4.54],[2.92,4.95],[4.02,4.56],[2.90,5.76],[.76,5.42],[.84,5.91],[.74,5.94]],light,0,1.08,.34,.12);
-    });
-    rim.dispose();head.dispose();
+    panel('dan-cong',-9.2,6.95,4.00,[[.16,.36,.081,.34],[.26,.4,.062,.39],
+      [.328,.46,.077,.34],[.418,.33,.071,.34],[.759,.45,.13,.25],[.868,.31,.065,.30]]);
+    panel('dau-hang',15.4,5.78,4.04,[[.044,.65,.063,.27],[.165,.7,.087,.27],
+      [.333,.62,.082,.27],[.514,.64,.072,.28],[.570,.43,.112,.26],
+      [.798,.54,.083,.26],[.858,.31,.115,.23]]);
   }
   function ceremonial(T,k){
     finishes(k);const f=createTempleFoundations(T,k);
@@ -327,14 +241,17 @@
   add('san-hanh-le-doi-d1','5492241221','Sân hành lễ và trục bậc đồi D1',103.016610,21.392356,
     [103.016674,21.392736],stairYaw,52,235,{
       source:'https://www.qdnd.vn/quoc-phong-an-ninh/chien-thang-dien-bien-phu-moc-son-lich-su/dien-bien-hom-nay/tuong-dai-chien-thang-dien-bien-phu-diem-den-cua-chien-thang-va-hoa-binh-771459',photo:provincial,
-      description:'Từ sân lễ dưới chân đồi, 320 bậc đá và ba chiếu nghỉ dẫn lên tượng đài. Phía nam sân là bức phù điêu đá xanh dài 58 m. Hai hàng cột nhỏ men theo lối lên.',
+      description:'Từ sân lễ dưới chân đồi, 320 bậc đá và ba chiếu nghỉ dẫn lên tượng đài. Bức phù điêu đá xanh dài 58 m ở phía nam sân kể lại chiến dịch Điện Biên Phủ. Trong các cảnh ở tầng dưới có đoàn dân công vận tải và quân Pháp giơ tay đầu hàng.',
+      photoCredit:'Hai cảnh phù điêu cắt từ ảnh Adam Jones chụp ngày 1/7/2019 · CC BY-SA 2.0',
+      photoCreditUrl:'landmark-scans/CREDITS.txt',
       gardenRadius:22,boundary:[[3,38],[3,-17],[3,-216],[18,-216],[18,-17],[47,-17],[47,38]],
       reserve:(x,z,r)=>(Math.abs(x-11)<8+r&&z>=-217-r&&z<=-16+r)||(x>=3-r&&x<=47+r&&z>=-18-r&&z<=38+r),
       solids:[[44,10,1.1,27],[11,-116.7,6.45,99.6]],
       views:[view('Phù điêu đá xanh ở sân hành lễ',8.8,53,stairYaw-Math.PI/2-.14,.11,local(stairYaw,43,10)),
-        view('Bánh xe và quang gánh trên phù điêu',7.7,14.2,stairYaw-Math.PI/2-.10,.045,local(stairYaw,44.8,1.6)),
+        view('Đoàn dân công trên phù điêu',6.6,9.5,stairYaw-Math.PI/2-.06,.035,local(stairYaw,45.7,.8)),
         view('Trục bậc nhìn về đỉnh D1',5.4,32,stairYaw+.05,.09,local(stairYaw,11.3,-34),49),
-        view('Chiếu nghỉ và cột mốc đá',5.1,20,stairYaw+.26,.17,local(stairYaw,12,-135))]},ceremonial);
+        view('Chiếu nghỉ và cột mốc đá',5.1,20,stairYaw+.26,.17,local(stairYaw,12,-135)),
+        view('Quân Pháp đầu hàng trên phù điêu',6.6,8.8,stairYaw-Math.PI/2+.09,.035,local(stairYaw,44.3,25.4))]},ceremonial);
 
   function memorialWing(T,k,sign){
     const outline=[[0,4.95],[3.78,0],[14.25,0],[0,12.45]],shape=new T.Shape();
@@ -382,18 +299,53 @@
     // Groups on either side of the memorial are gilded, against the dark
     // granite. To the left, two women and a child lift a ribbon together.
     for(const s of [-1,1])k.box(slate,s*16.31,1.25,3.5,3.85,.49,3.14);
-    const gilt=0xc5a052;
-    CentralArch.statueFigure(T,k,gilt,-17.1,1.51,3.6,3.42,{robe:true,yaw:.08,
-      leftArm:[[.16,.60,.13],[.20,.55,.21]],rightArm:[[-.13,.60,.10],[-.11,.55,.20]]});
-    CentralArch.statueFigure(T,k,gilt,-15.49,1.51,3.66,3.19,{robe:true,yaw:-.13,
-      rightArm:[[-.14,.60,.14],[-.20,.53,.22]]});
-    CentralArch.statueFigure(T,k,gilt,-16.17,1.51,4.33,1.70,{leftArm:[[.14,.74,.07],[.20,.96,.12]]});
-    k.outline([[-1.30,.53],[-.83,.24],[-.43,.30],[.09,.55],[.74,.55],[1.18,.38],[1.17,.17],[.72,.35],
-      [.19,.37],[-.42,.10],[-.91,.08],[-1.30,.28]],gilt,-16.20,2.93,4.24,.10);
-    for(const [x,z,h,a] of [[15.70,3.68,3.55,-.20],[16.91,3.40,3.31,.31]]){
-      CentralArch.statueFigure(T,k,gilt,x,1.51,z,h,{jacket:true,yaw:a});
-      hat(T,k,x,1.51+h*.97,z,.23,gilt);
-    }
+    // Adam Jones photographed the complete silk ribbon, the kneeling child and
+    // the two women. Each end of the ribbon stands free of the bodies.
+    const gilt=0xbda153;
+    CentralArch.photoCarving(T,k,{photo:'sight-imagery/dien-bien-a1-dai-lua.webp',width:640,height:480,
+      crop:[244,123,204,303],origin:[345,422],scale:.0121,position:[-16.31,1.50,3.53],tint:gilt,forms:[
+        {rows:[[129,300,309,.045],[135,294,316,.092],[146,291,317,.15],[157,293,313,.14],[165,296,310,.098],
+          [172,293,312,.105],[180,273,332,.20],[190,269,339,.24],[206,268,341,.25],[225,269,341,.22],
+          [240,266,341,.24],[258,276,341,.23],[278,273,336,.24],[301,270,338,.26],[334,260,336,.27],
+          [360,254,334,.28],[389,249,335,.29],[410,253,339,.28],[420,263,342,.24]]},
+        {z:-.12,rows:[[143,358,373,.06],[149,347,382,.13],[159,345,378,.16],[168,346,374,.14],[179,349,368,.10],
+          [186,340,381,.20],[194,337,389,.24],[213,337,391,.25],[233,336,391,.24],[252,341,385,.21],[269,337,393,.24],
+          [295,331,398,.26],[320,331,393,.25],[374,332,389,.27],[419,341,389,.24]]},
+        {z:.24,rows:[[260,353,361,.06],[267,345,366,.11],[277,343,365,.128],[289,346,363,.11],[296,337,371,.16],
+          [308,335,382,.18],[322,336,383,.19],[346,338,380,.20],[360,339,392,.25],[374,340,394,.23],[393,344,380,.18],
+          [412,346,388,.17],[420,354,385,.14]]},
+        {z:.30,rows:[[352,397,406,.07],[359,383,411,.14],[371,379,411,.18],[389,388,408,.14],[411,390,404,.115],[422,394,423,.12]]},
+        {z:.19,rows:[[235,388,398,.063],[240,385,426,.099],[245,393,438,.086],[253,414,438,.09],[278,420,439,.086],
+          [310,421,441,.11],[344,419,443,.12],[376,412,440,.14],[397,406,434,.12],[409,404,416,.053]]},
+        {z:.26,rows:[[225,357,375,.052],[231,349,379,.072],[245,344,363,.073],[262,340,356,.072],[281,326,346,.086],
+          [291,315,339,.084],[297,291,333,.083],[303,287,326,.065],[307,295,317,.028]]},
+        {z:.25,rows:[[227,269,277,.044],[232,262,281,.086],[243,263,277,.069],[263,263,271,.06],[297,262,270,.063],
+          [334,258,268,.071],[370,251,267,.09],[407,256,273,.1],[421,262,279,.074]]},
+        {z:.28,rows:[[232,373,385,.05],[245,375,390,.071],[266,385,401,.088],[281,392,408,.087],[290,398,436,.09],
+          [298,403,434,.075],[303,414,429,.035]]}
+      ]});
+    // Jones's close view ends above the knees. The full view by Xuan Tien
+    // shows the soldier kneeling, his hand on his knee and the sloping rock
+    // behind the group. Continue the gilded surface over those lower sections.
+    const sx=16.31;
+    CentralArch.photoCarving(T,k,{photo:'sight-imagery/dien-bien-a1-chien-si.webp',width:480,height:640,
+      crop:[93,30,547,767],origin:[345,791],scale:.0047,position:[sx,1.50,3.53],tint:gilt,forms:[
+        {z:-.12,rows:[[34,234,253,.05],[44,215,273,.12],[60,196,289,.18],[77,188,300,.21],[96,188,305,.22],
+          [118,197,301,.205],[130,211,283,.16],[143,214,273,.135],[151,207,329,.17],[167,191,394,.23],
+          [191,179,412,.29],[221,165,438,.32],[246,163,455,.34],[279,167,457,.36],[333,178,456,.35],
+          [370,189,449,.34],[400,207,436,.34],[432,219,435,.37],[466,232,457,.4],[521,232,475,.42],
+          [570,224,493,.44],[623,209,513,.45],[656,220,539,.47],[703,232,566,.47],
+          [747,244,592,.46],[778,256,613,.42],[791,264,623,.37]]},
+        {z:.18,rows:[[273,135,161,.05],[278,116,178,.13],[289,102,193,.17],[306,96,201,.19],[329,101,210,.18],
+          [348,117,201,.17],[365,133,190,.14],[379,136,199,.13],[393,132,219,.19],[417,120,241,.245],
+          [439,115,249,.26],[472,120,250,.265],[505,137,249,.24],[533,140,230,.255],[559,125,233,.26],
+          [584,114,239,.26],[623,116,243,.26],[651,119,247,.25],[681,118,270,.275],
+          [708,108,266,.30],[733,99,257,.31],[753,106,256,.32],[774,111,262,.30],[788,134,260,.25]]},
+        {z:.17,rows:[[616,296,348,.21],[634,284,354,.26],[664,279,368,.27],[693,285,393,.30],
+          [717,302,423,.32],[742,309,478,.31],[763,319,501,.28],[779,315,502,.21],[790,307,469,.12]]},
+        {z:.23,rows:[[213,212,223,.045],[228,203,238,.08],[255,216,260,.075],[295,244,290,.086],[332,263,316,.103],
+          [346,270,337,.14],[367,271,344,.146],[392,288,337,.115],[403,300,329,.058]]}
+      ]});
   }
   function cemeteryGate(T,k){
     const white=0xd1d1be,verde=0x737c70;
@@ -603,5 +555,7 @@
       views:[view('Nhà tưởng niệm hình chữ A',13.9,38,cemeteryYaw+.09,.09,local(cemeteryYaw,0,3.6),54),
         view('Cổng đá và gác chuông phía tây',13.8,37.5,cemeteryYaw-.20,.13,local(cemeteryYaw,0,139)),
         view('Lối giữa những hàng mộ',6.1,36,cemeteryYaw-.04,.16,local(cemeteryYaw,0,78)),
-        view('Hai cánh tường sao của nhà tưởng niệm',15.0,16.5,cemeteryYaw+.61,.09,local(cemeteryYaw,1.75,2.95),54)]},cemetery);
+        view('Hai cánh tường sao của nhà tưởng niệm',15.0,16.5,cemeteryYaw+.61,.09,local(cemeteryYaw,1.75,2.95),54),
+        view('Phụ nữ và em bé nâng dải lụa',9.0,8.0,cemeteryYaw+.04,.035,local(cemeteryYaw,-16.31,6.73),41),
+        view('Hai chiến sĩ bên phải nhà tưởng niệm',8.5,8.0,cemeteryYaw-.04,.045,local(cemeteryYaw,16.31,6.73),41)]},cemetery);
 })();

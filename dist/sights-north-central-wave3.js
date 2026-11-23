@@ -200,7 +200,7 @@
 
   // 5. Chùa Cầm Sơn (Thiên Cầm, Cẩm Xuyên, Hà Tĩnh) — Cliffside coastal temple overlooking Thiên Cầm Bay
   function chuaCamSon(T, kit) {
-    const { box, stamp, round, tapered } = kit;
+    const { box, stamp, round } = kit;
     const ochre = 0xe2c88d, tile = 0x8f3f2c, gold = 0xdba844, stone = 0x8f8a80, crimson = 0x7b231a;
     kit.palette({plaster: ochre, tile, stone});
 
@@ -216,14 +216,6 @@
     }
     A.curvedRoof(T, kit, 0, 4.45, 10.0, 5.8, 3.2, 0.95, tile, 0xdcd0b2, gold, 0.28, { dragons: true, goldColor: gold });
     A.plaque(T, kit, 'CHÙA CẦM SƠN', 0, 3.9, 11.18, 3.8, 0.64, { bg: '#782018', fg: '#f8dc76' });
-
-    // Tall white Quan Âm Nam Hải statue facing the East Sea on right terrace
-    stamp(round, stone, 8.6, 1.25, 3.2, 2.1, 0.72, 2.1);
-    tapered(0xd47d86, 8.6, 1.95, 3.2, 0.92, 1.28, 0.82, 1, 10);
-    tapered(0xf2f0ea, 8.6, 4.45, 3.2, 0.76, 0.44, 4.2, 0.85, 12);
-    const head = new T.SphereGeometry(0.45, 10, 8);
-    stamp(head, 0xf2f0ea, 8.6, 6.85, 3.2);
-    head.dispose();
 
     // Double-tier main hall raised on mountain plinth
     const hz = -3.8;
@@ -243,11 +235,11 @@
     ]);
   }
 
-  // 6. Khu tưởng niệm Tổng Bí thư Hà Huy Tập (Cẩm Hưng, Cẩm Xuyên, Hà Tĩnh) — Thatched ancestral house + memorial hall & bronze bust
+  // 6. Khu tưởng niệm Tổng Bí thư Hà Huy Tập (Cẩm Hưng, Cẩm Xuyên, Hà Tĩnh)
   function khuTuongNiemHaHuyTap(T, kit) {
-    const { box, stamp, round, tapered } = kit;
-    const thatch = 0xb59c6a, wood = 0x5d3d26, tile = 0x8c3f2c, cream = 0xeee4ce, granite = 0xa39e94, bronze = 0x6f5536;
-    kit.palette({thatch, timber: wood, tile, plaster: cream, stone: granite, metal: bronze});
+    const { box, stamp, round } = kit;
+    const thatch = 0xb59c6a, wood = 0x5d3d26, tile = 0x8c3f2c, cream = 0xeee4ce, granite = 0xa39e94;
+    kit.palette({thatch, timber: wood, tile, plaster: cream, stone: granite});
 
     box(0xaa9c82, 0, 0.14, 0.5, 28, 0.28, 24);
 
@@ -268,15 +260,6 @@
       stamp(round, 0x6c241b, mx + i * 2.05, 2.65, mz + 3.1, 0.17, 3.4, 0.17);
     }
     A.curvedRoof(T, kit, mx, 4.4, mz, 11.8, 8.6, 1.75, tile, 0xd8c8a8, 0xd2a44c, 0.30);
-
-    // Front granite pedestal with bronze bust of Tổng Bí thư Hà Huy Tập
-    box(granite, 0, 0.42, 6.4, 7.2, 0.64, 5.4);
-    box(0x767067, 0, 1.68, 6.0, 2.2, 1.9, 1.9);
-    tapered(bronze, 0, 3.12, 6.0, 0.86, 0.58, 1.1, 0.8, 10);
-    const head = new T.SphereGeometry(0.44, 10, 8);
-    stamp(head, bronze, 0, 3.98, 6.0);
-    head.dispose();
-    A.plaque(T, kit, 'KHU LƯU NIỆM HÀ HUY TẬP', 0, 1.72, 7.02, 5.6, 0.72, { bg: '#6e2119', fg: '#f8dd7e' });
 
     A.trees(T, kit, [
       { x: -11.6, z: 6.8, h: 8.6, kind: 'palm' },
@@ -436,10 +419,10 @@
       id: 'chua-cam-son', name: 'Chùa Cầm Sơn (Thiên Cầm)', city: 'Cẩm Xuyên', province: 'Hà Tĩnh', region: 'Trung Bộ',
       lon: 106.093750, lat: 18.277720, start: [106.093589, 18.277409], yaw: -0.458,
       width: 28, depth: 26,
-      solids: [[0, -3.8, 8.4, 5.2], [8.6, 3.2, 2.2, 2.2], ...A.archPiers(0, 10.0, 4.8, 1.48, 2.2)],
-      description: 'Ngôi cổ tự Yên Lạc – Cầm Sơn tọa lạc trên triền núi Thiên Cầm nhìn ra biển Đông với tam quan mái đao, tượng Quan Âm Nam Hải trắng và chính điện giữa rừng thông biển.',
-      photo: 'https://hatinh.gov.vn/',
-      source: 'https://hatinh.gov.vn/',
+      solids: [[0, -3.8, 8.4, 5.2], ...A.archPiers(0, 10.0, 4.8, 1.48, 2.2)],
+      description: 'Chùa Cầm Sơn nằm trên núi Thiên Cầm, nhìn xuống bờ biển Cẩm Xuyên. Qua tam quan, lối đi dẫn lên chính điện.',
+      photo: 'https://vietnamtourism.vn/index.php/news/items/24863',
+      source: 'https://hatinh.gov.vn/vi/page/du-lich/diem-den/bien-thien-cam',
       map: 'https://www.openstreetmap.org/?mlat=18.27772&mlon=106.09375#map=18/18.27772/106.09375',
       build: chuaCamSon
     },
@@ -447,10 +430,10 @@
       id: 'khu-tuong-niem-ha-huy-tap', name: 'Khu lưu niệm Tổng Bí thư Hà Huy Tập', city: 'Cẩm Xuyên', province: 'Hà Tĩnh', region: 'Trung Bộ',
       lon: 105.991420, lat: 18.228820, start: [105.991800, 18.228760], yaw: 1.42,
       width: 28, depth: 24,
-      solids: [[-6.2, -1.8, 5.6, 3.5], [6.4, -3.4, 5.8, 4.2], [0, 6.4, 3.6, 2.7]],
-      description: 'Di tích lịch sử tại xã Cẩm Hưng, Cẩm Xuyên tưởng niệm cố Tổng Bí thư Hà Huy Tập với ngôi nhà gỗ mái tranh quê hương, nhà trưng bày – dâng hương và tượng đài bán thân.',
-      photo: 'https://hatinh.gov.vn/',
-      source: 'https://hatinh.gov.vn/',
+      solids: [[-6.2, -1.8, 5.6, 3.5], [6.4, -3.4, 5.8, 4.2]],
+      description: 'Khu lưu niệm Tổng Bí thư Hà Huy Tập ở xã Cẩm Hưng có ngôi nhà tranh của gia đình và nhà tưởng niệm. Bức tượng bán thân bằng đồng đặt tại gian thờ giữa bên trong nhà tưởng niệm.',
+      photo: 'https://baohatinh.vn/nguoi-dan-thanh-kinh-tuong-nho-tri-an-tong-bi-thu-ha-huy-tap-post309548.html',
+      source: 'https://baohatinh.vn/nguoi-dan-thanh-kinh-tuong-nho-tri-an-tong-bi-thu-ha-huy-tap-post309548.html',
       map: 'https://www.openstreetmap.org/?mlat=18.22882&mlon=105.99142#map=17/18.22882/105.99142',
       build: khuTuongNiemHaHuyTap
     },

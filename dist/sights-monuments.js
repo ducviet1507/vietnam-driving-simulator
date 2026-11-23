@@ -110,7 +110,7 @@
     {name:'Đôi tay nâng quả địa cầu',height:13.95,viewAngle:1.28,viewRadius:3.55,viewElevation:-.08,viewFov:46},
     {name:'Bảng đồng trên trụ đá đỏ',height:3.27,viewAngle:.79,viewRadius:2.37,viewElevation:.025,viewFov:46}],
   build(T,k){
-    const marble=0xe2dfd4,veil=0xd5d2c7,granite=0x8e5f53,rim=0x986c5c,bronze=0x667565;
+    const marble=0xe2dfd4,granite=0x8e5f53,rim=0x986c5c,bronze=0x667565;
     const pedestal=2.74,sphere=new T.SphereGeometry(1,22,16);
     k.palette({stone:[granite,rim],metal:bronze});
     // The column, bronze collar and little projecting cornice can be seen
@@ -125,80 +125,48 @@
       const a=i*Math.PI/16,x=Math.sin(a)*.672,z=Math.cos(a)*.672;
       k.stamp(sphere,0x7b8779,x,2.27,z,.048,.102,.041,a,0,(i%2?1:-1)*.52);
     }
-    const plaque=new T.Group(),paint=document.createElement('canvas');
-    paint.width=640;paint.height=340;
-    const g=paint.getContext('2d');g.fillStyle='#615f53';g.fillRect(0,0,640,340);
-    g.strokeStyle='#98917e';g.lineWidth=8;g.strokeRect(14,14,612,312);
-    g.fillStyle='#cfbea2';g.textAlign='center';g.textBaseline='middle';
-    g.font='bold 77px Georgia';g.fillText('REGINA PACIS',320,93,565);
-    g.font='bold 65px Georgia';g.fillText('ORA PRO NOBIS',320,174,568);
-    g.font='bold 40px Georgia';g.fillText('XVII-II-MCMLIX',320,259,465);
-    const texture=new T.CanvasTexture(paint);texture.colorSpace=T.SRGBColorSpace;
-    const plate=new T.Mesh(new T.PlaneGeometry(.72,.38),new T.MeshStandardMaterial({map:texture,roughness:.77}));
-    plate.position.set(0,1.57,.671);plaque.add(plate);k.group.add(plaque);
-    for(const x of [-.333,.333])for(const y of [1.41,1.73])k.stamp(sphere,rim,x,y,.673,.014,.014,.013);
+    // The inscription follows the cylindrical granite. Its lettering and four
+    // corner fasteners come from Ign christian's photograph of this plaque.
+    const plate=new T.PlaneGeometry(.87,.52,24,1),p=plate.attributes.position;
+    for(let i=0;i<p.count;i++){
+      const a=p.getX(i)/.684;
+      p.setXYZ(i,.684*Math.sin(a),p.getY(i)+1.57,.684*Math.cos(a));
+    }
+    plate.computeVertexNormals();
+    const inscription=new T.TextureLoader().load('sight-imagery/duc-ba-minh-van.webp');
+    inscription.colorSpace=T.SRGBColorSpace;
+    k.group.add(new T.Mesh(plate,new T.MeshStandardMaterial({map:inscription,roughness:.80})));
 
-    // Successive horizontal sections preserve the figure's upright silhouette.
-    // An open angular sweep leaves the robe visible between the two veil edges.
-    function drape(rows,color,pleats=0){
-      const coords=[],indices=[],segments=48;
-      const columns=rows.some(row=>row[4]>0)?segments+1:segments;
-      for(let i=0;i<rows.length;i++){
-        const [y,rx,rz,z,opening=0,wave=0,shift=0]=rows[i];
-        for(let j=0;j<columns;j++){
-          const a=opening+(Math.PI*2-opening*2)*j/segments;
-          const ripple=wave*Math.cos(a*pleats+shift);
-          coords.push((rx+ripple)*Math.sin(a),pedestal+y,z+(rz+ripple)*Math.cos(a));
-          if(i&&j<segments){
-            const a=(i-1)*columns+j,b=(i-1)*columns+(j+1)%columns;
-            indices.push(a,b,a+columns,b,b+columns,a+columns);
-          }
-        }
-      }
-      const shell=new T.BufferGeometry();shell.setAttribute('position',new T.Float32BufferAttribute(coords,3));
-      shell.setIndex(indices);shell.computeVertexNormals();k.stamp(shell,color,0,0,0);shell.dispose();
-    }
-    function oval(color,x,y,z,w,h,d,rx=0,rz=0){
-      k.stamp(sphere,color,x,pedestal+y,z,w,h,d,0,rx,rz);
-    }
-    function cord(points,radius,color){
-      const path=new T.CatmullRomCurve3(points.map(([x,y,z])=>new T.Vector3(x,pedestal+y,z)));
-      const shape=new T.TubeGeometry(path,Math.max(9,points.length*3),radius,7,false);
-      k.stamp(shape,color,0,0,0);shape.dispose();
-    }
-    drape([[0,.52,.48,0],[.12,.54,.5,0],[.24,.51,.48,-.01],[.36,.43,.41,-.014],[.52,.34,.30,-.035]],veil);
-    oval(marble,-.11,.48,.22,.15,.12,.24,-.26);
-    oval(marble,.14,.46,.28,.15,.10,.22,-.14);
-    cord([[-.36,.23,.29],[-.28,.29,.40],[-.08,.31,.44],[.13,.34,.39],[.27,.37,.38]],.054,veil);
-    oval(veil,.29,.37,.38,.085,.045,.063);
-    drape([[.40,.44,.34,-.04,0,.030,.72],[.57,.43,.33,-.05,0,.036,.3],[1.32,.39,.30,-.04,0,.029,.1],
-      [2.13,.37,.26,-.01,0,.026,-.15],[2.78,.34,.24,.01,0,.026,-.2],[3.15,.40,.27,.01,0,.017],
-      [3.48,.43,.25,-.015],[3.67,.29,.19,-.01],[3.82,.145,.13,0]],marble,17);
-    drape([[.35,.45,.36,-.045,1.28,.018],[.57,.49,.36,-.06,.91,.021],
-      [1.45,.49,.35,-.079,.66,.022],[2.43,.50,.33,-.079,.71,.020],[3.12,.52,.33,-.04,.76,.017],
-      [3.50,.51,.32,-.03,.76],[3.65,.38,.25,-.03,.66],[3.90,.28,.22,-.025,.73],
-      [4.22,.255,.227,-.025,.88],[4.41,.244,.227,-.020,.83],[4.53,.190,.199,-.019,.63],
-      [4.585,.090,.109,-.01,.10],[4.60,.012,.016,-.012,0]],veil,11);
-    // The continuous marble silhouette follows the upward tilt beneath the veil.
-    drape([[3.60,.235,.155,.016],[3.75,.161,.128,.027],[3.87,.129,.113,.038],
-      [3.99,.122,.106,.050],[4.055,.117,.112,.070],[4.103,.114,.142,.089],
-      [4.153,.141,.153,.098],[4.215,.160,.163,.094],[4.275,.173,.160,.086],
-      [4.332,.176,.156,.075],[4.409,.179,.157,.052],[4.487,.145,.131,.035],[4.525,.094,.115,.030]],marble);
-    for(const side of [-1,1]){
-      const dx=n=>side*n;
-      cord([[dx(.02),4.506,.126],[dx(.13),4.472,.151],[dx(.18),4.381,.117],
-        [dx(.198),4.21,.124],[dx(.206),4.02,.130],[dx(.228),3.78,.155],[dx(.284),3.58,.163]],.031,veil);
-      // Elbows stay low and the hands rise inward around the orb.
-      oval(veil,dx(.399),3.19,.019,.154,.339,.155,-.15,side*.13);
-      cord([[dx(.432),2.99,.082],[dx(.425),2.93,.176],[dx(.351),2.98,.317],[dx(.269),3.06,.40]],.138,marble);
-      cord([[dx(.463),3.04,.12],[dx(.443),2.84,.13],[dx(.418),2.74,.115],[dx(.391),2.76,.075]],.043,veil);
-      oval(marble,dx(.216),3.11,.437,.085,.169,.081,-.19,-side*.57);
-      for(let j=0;j<4;j++)
-        cord([[dx(.238),3.087+j*.033,.469],[dx(.178),3.117+j*.035,.524],[dx(.114),3.17+j*.033,.547]],.018,marble);
-    }
-    oval(veil,0,3.204,.411,.235,.241,.235);
-    k.box(marble,0,pedestal+3.525,.408,.039,.174,.040);
-    k.box(marble,0,pedestal+3.556,.408,.132,.033,.040);
+    // Front and back are different photographs of the same Carrara sculpture.
+    // The field outlines use a 480-pixel-wide reference. The archdiocese gives
+    // the marble itself, including the carved base under the feet, as 4.6 m.
+    const carving={width:480,height:640,origin:[164,543],scale:4.6/376,
+      position:[0,pedestal,0],tint:marble};
+    CentralArch.photoCarving(T,k,{...carving,photo:'sight-imagery/duc-ba-cam-thach.webp',
+      backPhoto:'sight-imagery/duc-ba-khan-choang.webp',crop:[100,160,124,388],forms:[
+        {rows:[[167,160,169,.060],[169,155,175,.102],[174,151,179,.157],[183,149,183,.185],
+          [198,147,184,.204],[210,144,186,.216],[216,141,189,.235],[222,132,197,.267],
+          [230,121,204,.288],[241,117,207,.306],[251,114,212,.328],[263,111,216,.34],
+          [273,110,217,.35],[292,111,216,.345],[328,112,215,.33],[378,114,212,.31],
+          [425,115,211,.32],[463,117,210,.345],[490,117,210,.38],[502,115,211,.44],
+          [514,109,216,.515],[526,108,218,.556],[537,108,218,.57],[543,110,217,.56]]}
+      ]});
+    // The oblique Delso photograph resolves the space behind the globe and
+    // how the hands curve around it. Each sleeve returns to the torso below.
+    CentralArch.photoCarving(T,k,{...carving,photo:'sight-imagery/duc-ba-dia-cau.webp',
+      crop:[108,199,111,84],forms:[
+        {z:.40,rows:[[214,156,162,.046],[217,148,168,.120],[223,143,173,.172],
+          [231,140,176,.204],[238,142,174,.178],[245,148,170,.124],[249,154,164,.057]]},
+        {z:.41,rows:[[223,144,150,.034,.09],[228,133,153,.075,.10],[234,128,154,.099,.085],
+          [241,124,153,.113,.060],[247,122,144,.129,.032],[253,119,138,.14,-.038],
+          [260,117,135,.14,-.10],[268,117,131,.13,-.18],[273,119,125,.07,-.19]]},
+        {z:.41,rows:[[224,164,170,.036,.09],[228,161,178,.077,.10],[234,160,183,.104,.085],
+          [241,163,188,.116,.060],[248,174,190,.135,.032],[254,180,196,.14,-.038],
+          [261,183,201,.15,-.10],[269,188,203,.13,-.18],[275,195,199,.07,-.19]]}
+      ]});
+    const crossX=(157.5-164)*carving.scale,crossBase=pedestal+(543-215)*carving.scale;
+    k.box(marble,crossX,crossBase+.068,.409,.038,.14,.042);
+    k.box(marble,crossX,crossBase+.083,.409,.123,.034,.042);
     sphere.dispose();
   }
 });

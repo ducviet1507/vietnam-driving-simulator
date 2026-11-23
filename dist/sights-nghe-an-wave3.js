@@ -131,9 +131,9 @@
     ]);
   }
 
-  // 3. Chùa Cần Linh (Chùa Sư Nữ) — Grand ancient Vinh Buddhist temple with Tam Quan, white Quan Âm & 7-tier pagoda
+  // 3. Chùa Cần Linh (Chùa Sư Nữ)
   function chuaCanLinh(T, kit) {
-    const { box, stamp, round, tapered } = kit;
+    const { box, stamp, round } = kit;
     const ochre = 0xe1c78c, crimson = 0x8b291f, tile = 0x8f3f2b, gold = 0xdba943, stone = 0x9b9487, water = 0x3f6e78;
     kit.palette({plaster: ochre, tile, stone});
 
@@ -152,15 +152,9 @@
     A.curvedRoof(T, kit, 0, 6.9, gz, 5.2, 2.9, 1.05, tile, 0xd9caa8, gold, 0.28, { dragons: true, goldColor: gold });
     A.plaque(T, kit, 'CHÙA CẦN LINH', 0, 3.95, gz + 1.28, 3.8, 0.64, { bg: '#7c2019', fg: '#f8da7c' });
 
-    // Lotus pool & tall white Quan Thế Âm Bồ Tát statue in front-left courtyard
+    // The lotus pond lies outside the worship halls.
     stamp(round, stone, -7.8, 0.32, 2.8, 2.8, 0.44, 2.8);
     stamp(round, water, -7.8, 0.44, 2.8, 2.45, 0.22, 2.45);
-    tapered(0xd47e88, -7.8, 1.05, 2.8, 0.95, 1.35, 0.95, 1, 10); // pink lotus pedestal
-    tapered(0xf1efe9, -7.8, 3.45, 2.8, 0.72, 0.42, 3.8, 0.85, 12); // white robe body
-    const head = new T.SphereGeometry(0.42, 12, 10);
-    stamp(head, 0xf1efe9, -7.8, 5.65, 2.8);
-    head.dispose();
-    stamp(round, gold, -7.8, 5.65, 2.52, 0.78, 0.08, 0.78, 0, Math.PI / 2); // golden halo
 
     // 7-tier octagonal Bảo Tháp stupa on right flank
     A.octagonalTower(T, kit, 9.2, 2.2, {
@@ -401,10 +395,10 @@
     ]);
   }
 
-  // 8. Khu lưu niệm Phan Bội Châu (Nam Đàn) — Authentic 5-bay thatched Nghệ An house + granite bronze bust memorial
+  // 8. Khu lưu niệm Phan Bội Châu (Nam Đàn)
   function phanBoiChau(T, kit) {
     const { box, stamp, round, tapered } = kit;
-    const thatch = 0xb59b68, thatchRidge = 0x8f774c, wood = 0x5c3c26, bamboo = 0x8f7a53, granite = 0xa8a39a, bronze = 0x6b5234;
+    const thatch = 0xb59b68, thatchRidge = 0x8f774c, wood = 0x5c3c26, bamboo = 0x8f7a53, granite = 0x858983, bronze = 0x927046;
     kit.palette({thatch, timber: [wood, bamboo], stone: granite, metal: bronze});
 
     // Quiet red-earth courtyard & low clipped hibiscus hedge
@@ -424,15 +418,27 @@
     }
     A.gabledRoof(T, kit, hx, 2.85, hz, 14.8, 7.8, 2.85, thatch, thatchRidge, { alongX: true, overhang: 0.95, thick: 0.36 });
 
-    // Side granite memorial terrace + bronze bust statue of patriot Phan Bội Châu
-    const mx = 8.4, mz = 1.6;
-    box(granite, mx, 0.42, mz, 7.2, 0.65, 7.2);
-    box(0x7c766d, mx, 1.65, mz - 0.4, 2.4, 1.95, 2.2);
-    tapered(bronze, mx, 3.15, mz - 0.4, 0.92, 0.62, 1.15, 0.8, 10);
-    const bustHead = new T.SphereGeometry(0.46, 12, 10);
-    stamp(bustHead, bronze, mx, 4.05, mz - 0.4);
-    bustHead.dispose();
-    A.plaque(T, kit, 'PHAN BỘI CHÂU', mx, 1.72, mz + 0.76, 3.6, 0.66, { bg: '#5a221b', fg: '#f6d67a' });
+    // The 2020 bronze and blue-stone plinth measured 3.2 and 2.2 m at dedication.
+    // The memorial board's frontal photograph shows the book against the right
+    // chest, a wrapped headcloth, wide trousers and the long diagonal coat fold.
+    const mx=8.4,mz=1.6,base=.24;
+    box(granite,mx,base+.06,mz,2.62,.12,2.32);
+    tapered(granite,mx,base+.72,mz,1.76,1.41,1.20,.88,4);
+    tapered(0x9a9d94,mx,base+1.70,mz,1.41,1.09,.76,.88,4);
+    box(0x69533e,mx,base+2.14,mz,1.58,.12,1.37);
+    const floor=base+2.2,h=3.2;
+    A.statueFigure(T,kit,bronze,mx,floor,mz,h,{headcloth:true,longCoat:true,
+      rightArm:[[-.181,.638,.045],[-.105,.734,.122],[-.080,.752,.135]],
+      leftArm:[[.143,.611,.002],[.147,.492,.034],[.149,.447,.052]]});
+    const garment=A.carving(T,kit,bronze,mx,floor,mz,h);
+    garment.sweep([[0,.246,-.006,.141,.085],[.003,.268,-.004,.142,.085],[.005,.416,.003,.132,.080],
+      [.004,.554,0,.104,.070],[0,.671,-.001,.105,.065],[0,.747,.003,.106,.065]],.036,32);
+    garment.sweep([[-.048,.803,.045,.005,.005],[-.009,.741,.073,.010,.008],
+      [.044,.525,.069,.009,.006],[.088,.269,.064,.010,.008]],0,16);
+    garment.sweep([[0,.798,.053,.005,.005],[.003,.815,.049,.012,.010],[0,.842,.044,.025,.014],
+      [0,.864,.037,.031,.016],[0,.876,.029,.028,.013]],.035,20);
+    garment.finish();
+    box(0x67553f,mx-.095*h,floor+.766*h,mz+.117*h,.105*h,.154*h,.022*h,.07,-.15,.62);
 
     // Quiet front lotus pond + tall straight areca palms (hàng cau xứ Nghệ)
     box(0x8a8275, -5.2, 0.22, 7.2, 8.6, 0.32, 4.6);
@@ -602,8 +608,8 @@
       lon: 105.660800, lat: 18.662080, start: [105.661040, 18.662258], yaw: 2.232,
       width: 30, depth: 25,
       solids: [[0, -5.4, 8.2, 5.4], [-7.8, 2.8, 2.8, 2.8], [9.2, 2.2, 2.2, 2.2], ...A.archPiers(0, 9.2, 4.8, 1.48, 2.4)],
-      description: 'Ngôi cổ tự danh tiếng phường Cửa Nam (Linh Vân Tự) với tam quan hai tầng mái đao, tượng Quan Thế Âm trên hồ sen, bảo tháp bảy tầng và Đại Hùng Bảo Điện.',
-      photo: 'https://visitnghean.gov.vn/',
+      description: 'Chùa Cần Linh, còn gọi là chùa Sư Nữ, có hồ sen trước khu thờ tự. Các pho tượng được thờ trong nhiều công trình của chùa.',
+      photo: 'https://amp.baonghean.vn/chiem-nguong-he-thong-tuong-phat-dac-sac-cua-ngoi-chua-nghin-tuoi-248898.html',
       source: 'https://vi.wikipedia.org/wiki/Ch%C3%B9a_C%E1%BA%A7n_Linh',
       map: 'https://www.openstreetmap.org/?mlat=18.66208&mlon=105.6608#map=18/18.66208/105.6608',
       build: chuaCanLinh
@@ -656,10 +662,10 @@
       id: 'khu-luu-niem-phan-boi-chau', name: 'Khu lưu niệm Phan Bội Châu', city: 'Nam Đàn', province: 'Nghệ An', region: 'Trung Bộ',
       lon: 105.502080, lat: 18.695700, start: [105.502177, 18.695453], yaw: 0.356,
       width: 28, depth: 22,
-      solids: [[-3.8, -2.2, 7.4, 3.8], [8.4, 1.6, 3.6, 3.6]],
-      description: 'Di tích Quốc gia đặc biệt tại thị trấn Nam Đàn lưu giữ nếp nhà tranh năm gian mái rạ, hàng cau, ao sen và tượng đài nhà chí sĩ yêu nước Phan Bội Châu.',
-      photo: 'https://visitnghean.gov.vn/',
-      source: 'https://dsvh.gov.vn/',
+      solids: [[-3.8, -2.2, 7.4, 3.8], [8.4, 1.6, 1.31, 1.16]],
+      description: 'Trong khu lưu niệm ở Nam Đàn, tượng đồng Phan Bội Châu cao 3,2 m đứng trên bệ đá xanh cao 2,2 m. Tay phải cụ cầm sách, tay trái buông, phía dưới tà áo dài lộ hai ống quần rộng.',
+      photo: 'https://banquanlyditichnghean.gov.vn/article_details/tuong-dai-cu-phan-boi-chau-mot-cong-trinh-nghe-thuat-cua-the-he-con-chau-tri-an-nha-chi-sy',
+      source: 'https://banquanlyditichnghean.gov.vn/article_details/tuong-dai-chi-sy-yeu-nuoc-phan-boi-chau-tai-khu-di-tich-luu-niem-phan-boi-chau-o-thi-tran-nam-dan-huyen-nam-dan',
       map: 'https://www.openstreetmap.org/?mlat=18.6957&mlon=105.50208#map=18/18.6957/105.50208',
       build: phanBoiChau
     },

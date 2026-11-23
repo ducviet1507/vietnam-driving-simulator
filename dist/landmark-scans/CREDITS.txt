@@ -55,3 +55,28 @@ của khung thờ để đặt trong mô hình. Ảnh gốc và phần ảnh đ�
 Ghi công – Chia sẻ tương tự 3.0 Chưa chuyển đổi (CC BY-SA 3.0).
 https://commons.wikimedia.org/wiki/File:B%C3%A0n_th%E1%BB%9D_Quan_C%C3%B4ng_(2).jpg
 https://creativecommons.org/licenses/by-sa/3.0/
+
+Phù điêu võ sĩ ở hai cổng Đền Hùng, Phú Thọ
+
+ViVu3D cắt hai phù điêu từ ảnh “Cổng đền Hùng (Phú Thọ).jpg” của
+Bùi Thụy Đào Nguyên và bỏ nền để phủ lên mô hình. Hai tệp
+den-hung-cong-cu-trai.webp và den-hung-cong-cu-phai.webp dùng cùng
+giấy phép Creative Commons Ghi công – Chia sẻ tương tự 3.0.
+https://commons.wikimedia.org/wiki/File:C%E1%BB%95ng_%C4%91%E1%BB%81n_H%C3%B9ng_(Ph%C3%BA_Th%E1%BB%8D).jpg
+https://creativecommons.org/licenses/by-sa/3.0/
+
+Hai tệp den-hung-den-thuong-trai.webp và den-hung-den-thuong-phai.webp
+là phần phù điêu được cắt và bỏ nền từ ảnh “Thuong temple.JPG” của
+Khương Việt Hà (Viethavvh). Tác giả đã hiến ảnh vào phạm vi công cộng.
+https://commons.wikimedia.org/wiki/File:Thuong_temple.JPG
+
+Phù điêu tại sân hành lễ dưới chân đồi D1, Điện Biên Phủ
+
+Adam Jones chụp hai cảnh dân công vận tải và quân Pháp đầu hàng ngày
+1/7/2019. ViVu3D cắt phần đá, loại cây che khuất và làm mờ mép ảnh
+để đặt lên tường cong. Hai tệp doi-d1-phu-dieu-dan-cong.webp và
+doi-d1-phu-dieu-dau-hang.webp dùng cùng giấy phép Creative Commons
+Ghi công – Chia sẻ tương tự 2.0 (CC BY-SA 2.0).
+https://commons.wikimedia.org/wiki/File:Frieze_Showing_Indigenous_Women_Porters_-_Foot_of_Hill_D1_(Victory_Monument)_-_Dien_Bien_Phu_-_Vietnam_(48168818402).jpg
+https://commons.wikimedia.org/wiki/File:Frieze_Showing_French_Surrender_in_May_1954_-_Hill_D1_(Victory_Monument)_-_Dien_Bien_Phu_-_Vietnam_(48168819157).jpg
+https://creativecommons.org/licenses/by-sa/2.0/

@@ -20,15 +20,23 @@
       const ca=Math.abs(Math.cos(angle)),sa=Math.abs(Math.sin(angle));
       return [x,z,(ca*w+sa*d)*.44,(sa*w+ca*d)*.44];
     });
+    const cameras=views.map(([name,e,n,height,viewRadius,viewAngle,viewElevation,platform])=>
+      ({name,offset:[e-cx,n-cz],height,viewRadius,viewAngle,viewElevation,...(platform!=null?{viewBase:'monument'}:{})}));
     stops.push({...original,id,catalogId,name,yaw,width,depth,source,photo:source,description,
       lon:original.lon+cx/mx,lat:original.lat-cz/110900,start:start||original.start,approachMeters:undefined,
       visitOnArrival:true,modeledBuildings:rows.map(p=>p.ref).filter(Boolean),solids,
-      views:views.map(([name,e,n,height,viewRadius,viewAngle,viewElevation])=>
-        ({name,offset:[e-cx,n-cz],height,viewRadius,viewAngle,viewElevation})),
+      views:cameras,
       build(T,k){
         k.palette({tile:clay,stone,plaster:ivory,timber:wood,glazedTile:green,brick:red});
         const bed=createTempleFoundations(T,k);
-        for(const p of rows)bed.building(p.x,p.z,p.angle,p.w,p.d,()=>p.draw(T,k,p.w,p.d));
+        const platforms=rows.map(p=>bed.building(p.x,p.z,p.angle,p.w,p.d,()=>p.draw(T,k,p.w,p.d)));
+        if(views.some(v=>v[7]!=null)){
+          const fit=k.group.userData.fitGround;
+          k.group.userData.fitGround=ground=>{
+            fit(ground);
+            views.forEach((v,i)=>{if(v[7]!=null)cameras[i].height=v[3]+platforms[v[7]].height/.46;});
+          };
+        }
       }});
   }
   function ellipsoid(T,k,tint,x,y,z,sx,sy,sz,rz=0){
@@ -230,20 +238,14 @@
       }
     });
   }
-  function krud(T,k,x,y,z,side){
-    // Winged brackets span the gallery posts and the roof beam.
-    k.place(x,z,side*Math.PI/2,()=>{
-      ellipsoid(T,k,gold,0,y,0,.22,.42,.22);
-      ellipsoid(T,k,gold,0,y+.47,.05,.20,.22,.19);
-      for(const s of [-1,1])k.outline([[0,0],[s*.40,.08],[s*.82,.80],[s*.97,1.02],[s*.69,.28],[s*.40,-.19]],gold,0,y+.05,0,.18);
-    });
-  }
   function khmerHall(T,k,w,d){
     k.box(ochre,0,.54,0,w*.95,1.08,d*.95);
     k.box(0xc49365,0,3.44,0,w*.65,4.72,d*.72);
     for(const s of [-1,1])for(let j=0;j<=5;j++){
       const x=s*w*.429,z=(j/5-.5)*d*.82;
-      col(k,x,z,1.07,4.33,.27,red);krud(T,k,x,4.86,z,s);
+      // The actual capitals carry both Keynor and Krud sculptures. Leave
+      // their figures out until the individual carvings can be identified.
+      col(k,x,z,1.07,4.33,.27,red);
     }
     for(const s of [-1,1]){
       for(const x of [-2.46,2.46]){
@@ -275,23 +277,26 @@
       const side=w-i*.52;
       k.box(i%2?trim:grey,0,(i+1)*.19,0,side,(i+1)*.38,side);
     }
-    k.box(grey,0,4.13,0,6.8,5.24,6.8);
     for(let i=0;i<4;i++)k.place(0,0,i*Math.PI/2,()=>{
-      k.box(dark,0,3.95,3.44,2.33,4.30,.18);
-      ellipsoid(T,k,gold,0,2.95,3.65,.59,.32,.26);
-      ellipsoid(T,k,gold,0,3.48,3.65,.29,.57,.22);
-      ellipsoid(T,k,gold,0,4.14,3.65,.22,.26,.18);
+      for(const side of [-1,1])k.box(grey,side*2.28,4.13,3.14,2.24,5.24,.52);
+      k.box(grey,0,6.30,3.14,2.32,.90,.52);
       for(const s of [-1,1])col(k,s*1.58,3.79,1.65,4.39,.24,trim);
       k.outline([[-2.06,0],[-1.50,.28],[-.88,1.10],[0,2.36],[.88,1.10],[1.50,.28],[2.06,0]],trim,0,5.87,3.38,.57);
       for(const s of [-1,1])k.tapered(trim,s*3.27,7.94,3.27,.73,.08,3.70,1,8);
     });
+    // All four entrances look into a single shrine. The gilded Buddha
+    // faces east and sits in meditation on the central plinth.
+    k.tapered(ochre,0,2.12,0,1.12,.98,1.20,1,12);
+    A.lotusSeat(T,k,0,2.72,0,.83,.23,gold,ochre);
+    k.place(0,0,Math.PI/2-1.27,()=>A.statueFigure(T,k,gold,0,1.98,0,3.06,{seated:true,
+      leftArm:[[.132,.620,.030],[.047,.480,.143],[.003,.465,.152]],
+      rightArm:[[-.130,.610,.036],[-.042,.474,.151],[.015,.467,.158]]}));
     for(let i=0;i<5;i++)k.tapered(i%2?grey:trim,0,7.45+i*1.07,0,4.50-i*.52,3.99-i*.51,1.12,1,4);
     turned(T,k,grey,0,12.0,0,[[1.56,0],[1.76,.31],[1.43,.77],[1.15,2.65],[.86,3.66],[.81,4.15]]);
     for(let i=0;i<9;i++)k.tapered(i%2?grey:trim,0,16.38+i*.57,0,.94-i*.076,.82-i*.076,.64,1,12);
     k.tapered(trim,0,22.65,0,.35,.025,3.4,1,12);
   }
   function reclining(T,k,w,d){
-    const robe=0xc9d6df,skin=0xdce4e3,fold=0xa9bac6,hair=0x415166;
     k.box(0xa49b91,0,3.10,0,w,6.2,d);
     k.box(ochre,0,6.33,0,w+.22,.29,d+.22);
     for(const side of [-1,1])for(let i=-7;i<=7;i++){
@@ -302,33 +307,51 @@
       k.box(ivory,x,5.74,side*d*.514,2.85,.16,.14);
     }
     for(let i=-13;i<=13;i++)ellipsoid(T,k,gold,i*2.28,6.68,d*.47,.43,.37,.15);
-    // Successive cloth sections join the shoulders, hips and converging legs.
-    const ribs=[[-23,9.35,1.05,1.48],[-19,10.62,3.60,3.66],[-15,11.49,4.99,4.52],[-9,11.21,4.73,4.59],
-      [-3,10.08,3.62,4.04],[3,9.89,4.13,4.66],[9,9.80,3.46,4.12],[16,9.39,2.71,3.32],[23,8.83,1.86,2.60],[27,8.28,1.22,2.05]];
-    const positions=[],indices=[];
-    const vertex=([x,y,ry,rz],a)=>[x,y+Math.sin(a)*ry,-.24+Math.cos(a)*rz];
-    for(const rib of ribs)for(let j=0;j<24;j++)positions.push(...vertex(rib,j*Math.PI/12));
-    for(let i=0;i<ribs.length-1;i++)for(let j=0;j<24;j++){
-      const a=i*24+j,b=a+24,d=i*24+(j+1)%24,c=d+24;indices.push(a,b,d,b,c,d);
-    }
-    const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(positions,3));g.setIndex(indices);g.computeVertexNormals();k.stamp(g,robe,0,0,0);g.dispose();
-    for(let j=0;j<5;j++)curve(T,k,fold,[[-16+j*1.32,14.6-j*.29,1.77+j*.47],[-11+j*1.25,12.56-j*.29,3.98],[-4+j*1.72,10.23-j*.37,3.89],[4+j*1.22,8.67-j*.14,4.20]],.08);
-    for(const z of [-1.29,1.56])ellipsoid(T,k,skin,27.92,8.70,z,2.86,1.31,.98,-.22);
-    // Right elbow on the dais, right hand against the cheek.
-    curve(T,k,skin,[[-28,7.47,2.89],[-26.6,9.02,2.85],[-24.86,12.62,2.58],[-23.53,15.28,2.02]],1.05);
-    ellipsoid(T,k,skin,-23.17,15.69,1.80,1.33,1.66,.77,-.48);
-    curve(T,k,skin,[[-15.4,12.38,2.53],[-11,10.28,3.29],[-6.4,9.66,3.47],[.80,9.83,3.91],[4.21,9.68,4.20]],.77);
-    ellipsoid(T,k,skin,5.10,9.59,4.18,1.62,.54,.78);
-    ellipsoid(T,k,skin,-21.1,16.04,.05,3.48,4.12,2.78,.54);
-    ellipsoid(T,k,hair,-22.30,18.18,-.61,3.34,2.88,2.67,.54);
-    ellipsoid(T,k,hair,-23.53,20.53,-.76,1.66,1.44,1.36,.4);
-    for(const side of [-1,1]){
-      const x=-21.35+side*1.21,y=16.14+side*.51;
-      curve(T,k,0x76818a,[[x-.44,y+.16,2.39],[x,y+.01,2.57],[x+.40,y+.18,2.54]],.077);
-    }
-    ellipsoid(T,k,skin,-20.84,15.57,2.57,.50,.74,.49,.49);
-    curve(T,k,0xc29789,[[-21.04,14.63,2.47],[-20.56,14.64,2.56],[-20.11,14.82,2.45]],.10);
-    ellipsoid(T,k,skin,-18.33,16.39,.28,.56,1.44,.48,.39);
+    // Huynhdat1909's front elevation, 27 May 2023. The two hands,
+    // elbow, gold bolster and stacked feet have separate depth profiles.
+    // Coordinates refer to a 900-pixel-wide copy before the texture crop.
+    const figure=A.photoCarving(T,k,{photo:'sight-photos/som-rong-tuong-nam.webp',width:900,height:675,
+      crop:[40,140,820,249],origin:[450,384],scale:63/809,position:[0,6.51,0],tint:0xc5d1d8,
+      forms:[
+        // Robed torso, including the high left shoulder and cloth over the hips.
+        {z:-.44,rows:[[221,317,325,.29],[224,305,337,.89],[231,296,352,1.53],[243,271,378,2.39],
+          [252,255,399,2.91],[260,248,420,3.24],[267,242,459,3.67],[271,237,506,3.84],
+          [276,231,551,4.04],[285,218,563,4.23],[292,204,583,4.33],[300,151,614,4.37],
+          [318,130,681,4.37],[335,115,738,4.13],[346,106,785,3.92],[357,94,803,3.62],
+          [369,83,802,3.45],[378,73,803,3.05],[384,69,804,2.62]]},
+        // The bare shoulder beneath the inclined neck.
+        {z:.19,rows:[[288,153,162,.43],[290,150,173,.70],[295,144,201,1.05],[300,140,213,1.37],
+          [310,132,220,1.59],[329,119,242,1.69],[354,101,247,1.58],[377,74,231,1.25],[384,70,215,1.02]]},
+        // Cloth around both legs. Separate terminal sections preserve the
+        // distinct feet when viewed from the end of the platform.
+        {z:-.66,rows:[[289,548,560,.36],[296,543,590,1.03],[302,539,619,1.47],[311,532,651,1.89],
+          [320,524,690,2.26],[328,515,718,2.49],[336,509,744,2.68],[343,498,768,2.80],
+          [350,493,795,2.77],[359,500,820,2.60],[370,507,821,2.25],[380,521,823,1.86],[384,533,825,1.58]]},
+        {z:-.60,rows:[[337,830,844,.38],[340,817,849,.78],[344,803,852,1.22],[348,775,853,1.51],
+          [353,759,853,1.68],[358,745,852,1.59],[363,741,850,1.26],[369,754,845,.78],[372,773,837,.42]]},
+        {z:1.09,rows:[[366,769,845,.41],[369,757,851,.76],[373,755,853,1.01],
+          [378,765,852,.98],[382,771,850,.76],[384,775,844,.54]]},
+        // Left hand visible over the robe at the thigh.
+        {z:.35,rows:[[279,555,562,.18],[281,555,572,.25],[285,555,581,.38],[289,555,590,.46],
+          [293,577,602,.37],[297,593,613,.25],[300,608,619,.11]]},
+        // The head inclines onto the right palm; the dark curls stop at the hairline.
+        {z:-.04,rows:[[146,125,126,.05],[153,129,135,.15],[162,134,145,.34],[167,137,160,.73],
+          [171,136,181,1.19],[177,132,193,1.76],[187,131,199,2.17],[197,129,206,2.45],
+          [208,131,213,2.65],[218,136,219,2.75],[231,143,226,2.73],[241,151,230,2.58],
+          [251,161,231,2.29],[262,178,232,1.94],[273,189,227,1.48],[283,198,222,1.13],
+          [291,197,215,.75],[296,198,210,.45]]},
+        // Elongated ear at the far edge of the face.
+        {z:-.39,rows:[[225,223,225,.10],[232,225,230,.22],[241,227,236,.27],[247,232,240,.18],[251,237,240,.07]]},
+        // Right upper arm and the palm along the hair, ahead of the torso.
+        {z:.38,rows:[[193,122,125,.09],[205,121,132,.29],[218,124,141,.43],[232,129,148,.53],
+          [243,136,153,.61],[248,141,152,.54],[255,138,148,.52],[268,130,143,.61],
+          [281,121,138,.73],[297,107,132,.86],[311,94,124,1.00],[328,78,112,1.11],
+          [345,63,101,1.21],[359,53,90,1.22],[372,48,82,1.06],[381,49,73,.73],[384,52,68,.53]]},
+        // The carved gold bolster runs underneath the elbow, ending under the chest.
+        {z:2.86,rows:[[329,181,191,.28],[334,174,200,.59],[343,151,207,.83],[353,130,216,1.06],
+          [363,107,225,1.15],[374,85,238,1.17],[384,75,248,1.03]]}
+      ]});
+    figure.scale.y=22.5/((384-146)*63/809);
   }
   function clayTemple(T,k,w,d){
     const yellow=0xe5bd5b;
@@ -413,7 +436,7 @@
     'Trong sân phía tây là tượng Phật nằm dài 63 m. Gần chánh điện, bảo tháp màu xám có bốn lối và khám thờ Phật quay về hướng đông.',
     [[-60,19.8,1.33,17.7,26,khmerHall,'w668649248'],[-36.4,-14.0,1.27,11,11,stupa],
       [-172.5,-47.4,1.12,64,11.6,reclining]],
-    [['Tượng Phật nhập Niết bàn',-172.5,-47.4,18.7,67,1.14,.15],['Bảo tháp bốn hướng',-36.4,-14,19.8,37,1.54,.15],['Sân chánh điện',-60,19.8,9.3,38,1.00,.23]]);
+    [['Tượng Phật nhập Niết bàn',-172.5,-47.4,14.8,65,1.12,.025],['Bảo tháp bốn hướng',-36.4,-14,10.6,38,1.54,.075],['Sân chánh điện',-60,19.8,9.3,38,1.00,.23]]);
 
   const earth=0x977e61, brick=0x9d6951, paleBrick=0xb48060, fieldstone=0x9a9787;
   function residue(k,ax,az,bx,bz,width,rise,stony=false){
@@ -503,15 +526,98 @@
     for(const s of [-1,1])k.box(wall,s*w*.47,h/2+base,-d*.11,.45,h,d*.69);
     for(let i=0;i<4;i++)col(k,(i/3-.5)*w*.88,d*.36,base,h,.20,wood);
     hip(T,k,0,base+h,0,w,d,2.42,clay);
-    const y=.63,z=-1.18;
-    k.box(red,0,y+.31,z,3.02,.62,2.17);
-    ellipsoid(T,k,gold,0,y+.88,z,.88,.34,.63);
-    ellipsoid(T,k,gold,0,y+1.56,z,.48,.78,.38);
-    ellipsoid(T,k,gold,0,y+2.46,z,.35,.43,.32);
-    k.tapered(red,0,y+2.86,z,.35,.18,.42,1,10);
+    const y=.63,z=-1.18,gilt=0xdca644,flesh=0xecbd8e;
+    k.box(0xd8dacf,0,y+.28,z,3.02,.56,2.17);
+    k.box(0x453d3b,0,y+.61,z,1.79,.10,1.21);
+    // The painted image at Ba Thê has crossed legs, four distinct hands, a
+    // high gold crown and a seven-headed cobra canopy behind it.
+    const seat=y+.66;
+    const clayBody=A.carving(T,k,flesh,0,seat,z,1);
+    const cloth=A.carving(T,k,gilt,0,seat,z,1);
+    clayBody.sweep([[0,.29,0,.24,.17],[0,.55,0,.235,.17],[0,.80,-.01,.28,.165],
+      [0,.99,-.02,.35,.145],[0,1.04,-.02,.28,.13],[0,1.08,0,.113,.093]]);
+    cloth.sweep([[0,.015,-.016,.53,.32],[0,.09,-.009,.56,.34],[0,.19,-.01,.54,.31],
+      [0,.28,-.02,.45,.28],[0,.42,-.025,.32,.23],[0,.56,-.03,.26,.19],
+      [0,.65,-.02,.24,.17]],.034,32);
     for(const side of [-1,1]){
-      curve(T,k,gold,[[side*.35,y+1.88,z],[side*.68,y+1.61,z+.01],[side*.79,y+2.08,z+.08]],.12);
-      curve(T,k,gold,[[side*.34,y+1.69,z],[side*.62,y+1.29,z+.15],[side*.76,y+1.40,z+.32]],.12);
+      cloth.sweep([[side*.16,.15,.01,.18,.17],[side*.39,.16,.08,.166,.19],
+        [side*.46,.13,.18,.128,.16],[side*.31,.15,.27,.099,.111],
+        [side*.05,.19,.31,.084,.079],[-side*.15,.21,.26,.061,.061],
+        [-side*.19,.216,.22,.022,.026]],.036,22);
+      // The outer pair rises beside the crown. The left wrist at the ear
+      // points inwards, while the right hand holds the dark circular beads.
+      const highX=side<0?-.52:.210,highY=side<0?1.28:1.36;
+      clayBody.sweep([[side*.27,.94,-.080,.111,.091],[side*.39,.84,-.12,.092,.085],
+        [side*.54,.91,-.13,.089,.082],[side*.60,1.01,-.11,.077,.079],
+        [side*.61,1.10,-.09,.073,.074],[highX,highY-.085,-.07,.058,.056],
+        [highX,highY,-.047,.049,.046]],0,20);
+      cloth.sweep([[highX,highY-.095,-.067,.061,.059],[highX,highY-.054,-.062,.061,.058]]);
+      clayBody.sweep([[highX,highY-.01,-.05,.049,.045],[highX+side*.006,highY+.045,-.045,.061,.048],
+        [highX+side*.016,highY+.079,-.028,.043,.038],[highX-side*.016,highY+.095,-.008,.018,.025]],0,16);
+      for(let digit=0;digit<4;digit++){
+        const dx=digit*.014;
+        clayBody.sweep([[highX-side*dx,highY+.067,-.012,.014,.017],
+          [highX-side*(.019+dx),highY+.085,.005,.013,.015],
+          [highX-side*(.031+dx),highY+.065,.015,.011,.011]],0,12);
+      }
+      // Lower hands turn up in the lap, each holding a small red attribute.
+      const cx=side*.25;
+      const arm=side<0?clayBody:cloth;
+      arm.sweep([[side*.275,.991,.003,.103,.097],[side*.347,.91,.037,.110,.106],
+        [side*.374,.78,.066,.085,.088],[side*.382,.62,.11,.075,.079],
+        [side*.362,.529,.154,.077,.083],[cx,.492,.252,.064,.062]],side>0?.035:0,20);
+      cloth.sweep([[cx+side*.017,.498,.229,.067,.060],[cx-side*.014,.484,.269,.063,.062]]);
+      clayBody.sweep([[cx,.48,.256,.054,.056],[cx-side*.021,.475,.303,.070,.062],
+        [cx-side*.042,.49,.35,.063,.043],[cx-side*.047,.525,.363,.035,.032]],0,16);
+      for(let digit=0;digit<4;digit++){
+        const edge=cx-side*.042+(digit-1.5)*.022;
+        clayBody.sweep([[edge,.49,.336,.016,.016],[edge,.506,.369,.017,.015],
+          [edge,.536,.371,.014,.013],[edge,.548,.351,.009,.012]],0,12);
+      }
+      ellipsoid(T,k,0x9c3933,cx-side*.052,seat+.522,z+.317,.046,.041,.057);
+      cloth.sweep([[side*.360,.893,.035,.095,.09],[side*.352,.918,.032,.107,.101],
+        [side*.338,.973,.018,.103,.093],[side*.308,1.011,.002,.080,.076],
+        [side*.287,1.032,-.011,.039,.045]],.025,24);
+    }
+    const beads=Array.from({length:15},(_,i)=>{const a=i*Math.PI/7;
+      return [-.515+.051*Math.cos(a),seat+1.342+.055*Math.sin(a),z-.007];});
+    curve(T,k,0x4d3731,beads,.014);
+    // The broad fold crosses from the bare right side to the covered left shoulder.
+    cloth.sweep([[-.18,.54,.102,.065,.042],[-.07,.59,.161,.112,.042],[.086,.70,.165,.102,.045],
+      [.18,.83,.123,.111,.051],[.223,.977,.059,.115,.069],[.242,1.036,-.016,.098,.088]],.045,24);
+    cloth.sweep([[.12,.20,-.016,.26,.24],[.165,.37,-.01,.188,.203],[.17,.59,.01,.166,.18],
+      [.206,.77,.02,.144,.144],[.24,.94,.003,.126,.13],[.265,1.00,-.015,.095,.103]],.075,28);
+    for(let n=0;n<3;n++)cloth.sweep([[.209+n*.022,.961,.114,.005,.007],[.174+n*.021,.81,.172,.01,.013],
+      [.095+n*.021,.694,.203,.008,.013],[-.080+n*.022,.576,.201,.005,.008]],0,12);
+    clayBody.sweep([[0,1.012,0,.106,.094],[0,1.10,.017,.103,.090],[0,1.175,.017,.108,.095]]);
+    clayBody.finish();cloth.finish();
+    // The licensed 2007 photograph is oblique. Keep its eye, mouth and
+    // ear on the photographed side, registered to the actual crown profile.
+    k.place(0,z,1.12,()=>A.photoCarving(T,k,{photo:'sight-photos/linh-son-mu-va-chan-dung.webp',
+      width:487,height:740,crop:[184,245,66,125],origin:[215,366],scale:.00555,position:[0,seat+1.052,.021],
+      tint:flesh,forms:[{rows:[[253,220,222,.021],[256,207,229,.074],[260,204,233,.103],
+        [268,205,238,.129],[278,206,243,.144],[287,202,246,.151],[296,201,244,.152],
+        [304,197,244,.150],[311,196,243,.148],[318,194,243,.146],[325,192,243,.142],
+        [331,191,242,.139],[335,190,241,.134],[341,192,240,.126],[346,192,239,.120],
+        [351,192,239,.115],[355,194,238,.103],[359,199,232,.089],[366,200,221,.078]]}]}));
+    // Seven flaring hoods rise behind the shoulders from the same coiled support.
+    const canopy=A.carving(T,k,0x9a9d89,0,seat,z,1),heads=A.carving(T,k,0xa63a36,0,seat,z,1);
+    canopy.sweep([[0,.55,-.315,.38,.11],[0,.90,-.32,.49,.12],[0,1.18,-.30,.565,.13],
+      [0,1.40,-.279,.569,.125],[0,1.55,-.254,.51,.12],[0,1.69,-.235,.348,.10],
+      [0,1.77,-.199,.187,.066],[0,1.798,-.172,.063,.051]],.018,32);
+    canopy.sweep([[0,.01,-.21,.42,.19],[0,.17,-.25,.49,.22],[0,.33,-.26,.46,.206],
+      [0,.43,-.27,.39,.19],[0,.54,-.27,.46,.21],[0,.68,-.28,.48,.20],[0,.77,-.28,.40,.19]],.025,26);
+    for(let i=-3;i<=3;i++){
+      const x=i*.17,h=1.82-Math.abs(i)*Math.abs(i)*.042;
+      canopy.sweep([[x*.60,.51,-.255,.16,.14],[x*.79,.76,-.26,.17,.13],
+        [x*1.04,1.07,-.23,.16,.12],[x*1.11,h-.19,-.20,.132,.105],
+        [x*1.03,h-.07,-.16,.103,.087],[x,h-.012,-.12,.061,.067]],0,18);
+      heads.sweep([[x*1.06,h-.074,-.151,.099,.054],[x,h-.037,-.111,.102,.057],
+        [x*.97,h-.015,-.062,.077,.044],[x*.95,h-.015,-.011,.046,.027],
+        [x*.94,h-.025,.020,.016,.015]],0,20);
+    }
+    canopy.finish();heads.finish();
+    for(const side of [-1,1]){
       k.box(0x555b55,side*2.02,y+.87,z+.08,.90,1.65,.24);
       k.outline([[-.45,0],[-.43,.22],[-.26,.30],[.20,.29],[.40,.20],[.45,0]],0x555b55,side*2.02,y+1.68,z-.04,.24);
     }
@@ -527,5 +633,5 @@
   add('osm-way-1182462619','linh-son-co-tu-ba-the','Linh Sơn cổ tự – Chùa Phật Bốn Tay',guide+'#page=50',
     'Chùa trên sườn Ba Thê lưu giữ tượng bốn tay và hai bia đá cổ. Từ hiên, nhìn vào trong có thể thấy các bia sẫm màu cạnh bệ thờ.',
     [[-16.0,-1.2,1.15,15.6,18.7,linhSon]],
-    [['Hiên chùa dưới tán cây',-16,-1.2,7.2,26,1.57,.21],['Tượng bốn tay và bia đá',-17.1,-1.7,3.85,4.90,1.12,.12]]);
+    [['Hiên chùa dưới tán cây',-16,-1.2,7.2,26,1.57,.21],['Tượng bốn tay và bia đá',-17.1,-1.7,4.96,3.4,1.68,.025,0]]);
 })();

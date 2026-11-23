@@ -83,25 +83,49 @@
 
   // 4. Tượng đài Xô Viết Nghệ Tĩnh (Ngã ba Nghèn, Can Lộc)
   function tuongDaiXoVietCanLoc(T, kit) {
-    A.memorialMonument(T, kit, {
-      plazaW: 25, plazaD: 19, style: 'statue', flags: false, wings: false,
-      stone: 0x92938b, darkStone: 0x666860,
-      sculpt(T, kit, base) {
-        const slate = 0x92958d;
-        kit.palette({stone:[slate,0x9b9d94,0xa0a297,0x82867e,0x9b9e92]});
-        // The Nghèn group rises against a tall, cantilevered stone banner.
-        // Recessing successive planes makes the folds readable from either side.
-        kit.outline([[-3,0],[-3,5.3],[-4.1,6.3],[-4.35,10.2],[-3.4,9.7],[-2.1,10.1],[-2.2,12.2],
-          [1.35,12.8],[1.52,12.2],[4.4,13.8],[3.22,10.0],[3.08,8.9],[1.92,8.55],[-.45,6.7],[.65,6.4],[2.8,7.4],
-          [2.5,6.5],[.85,5.6],[.7,0]],slate,0,base,-2.8,1.05);
-        kit.outline([[-2.05,10.08],[-2.12,12.08],[1.29,12.65],[1.39,11.95],[.45,10.6]],0x9b9d94,0,base,-1.81,.21);
-        kit.outline([[-.43,7.55],[1.47,12.06],[4.27,13.65],[3.05,9.05],[1.91,8.7]],0xa0a297,0,base,-1.82,.32);
-        A.statueFigure(T,kit,slate,0,base,-.65,6.95,{rightArm:[[-.16,.83,.02],[-.24,.89,.06],[-.29,.93,.07]]});
-        A.statueFigure(T,kit,0x82867e,-2.03,base,-.12,5.9,{yaw:-.21,headcloth:true});
-        A.statueFigure(T,kit,0x9b9e92,1.82,base,-.28,6.35,{yaw:.2,leftArm:[[.19,.74,.07],[.21,.86,.09],[.22,.9,.11]]});
-      },
-      title: 'XÔ VIẾT NGHỆ TĨNH 1930-1931'
-    });
+    const base=.94;
+    kit.box(0x777971,0,.18,0,25,.36,19);
+    kit.box(0xa4a69c,0,.51,-.4,19.5,.34,14.1);
+    kit.box(0x898d85,0,.81,-.95,9.5,.26,5.6);
+    A.steps(kit,0,6.9,12,1.4,4,.16,.39,0x9b9d95);
+    const slate = 0x92958d;
+    kit.palette({stone:[slate,0x9b9d94,0xa0a297,0x777971,0xa4a69c,0x898d85]});
+    // The Nghèn group rises against a tall, cantilevered stone banner.
+    kit.outline([[-3,0],[-3,5.3],[-4.1,6.3],[-4.35,10.2],[-3.4,9.7],[-2.1,10.1],[-2.2,12.2],
+      [1.35,12.8],[1.52,12.2],[4.4,13.8],[3.22,10.0],[3.08,8.9],[1.92,8.55],[-.45,6.7],[.65,6.4],[2.8,7.4],
+      [2.5,6.5],[.85,5.6],[.7,0]],slate,0,base,-2.8,1.05);
+    kit.outline([[-2.05,10.08],[-2.12,12.08],[1.29,12.65],[1.39,11.95],[.45,10.6]],0x9b9d94,0,base,-1.81,.21);
+    kit.outline([[-.43,7.55],[1.47,12.06],[4.27,13.65],[3.05,9.05],[1.91,8.7]],0xa0a297,0,base,-1.82,.32);
+    // Seven figures share the same stone as the banner, on three levels.
+    // The raised pair, woman in front and drummer overlap in the frontal view.
+    kit.box(slate,-2.78,base+.43,-.35,2.65,.86,2.1);
+    kit.box(slate,.03,base+1.22,-.95,4.1,2.44,2.45);
+    kit.box(slate,2.65,base+.55,-.65,1.54,1.1,2.1);
+    function woman(x,y,z,height,pose){
+      A.statueFigure(T,kit,slate,x,y,z,height,{...pose,headcloth:true});
+      const skirt=A.carving(T,kit,slate,x,y,z,height,pose.yaw);
+      skirt.sweep([[-.038,.135,.010,.133,.071],[-.036,.16,.006,.141,.075],
+        [-.017,.30,0,.123,.067],[0,.49,0,.101,.067],[0,.58,0,.091,.064]],.075,24);
+      skirt.finish();
+    }
+    woman(-.57,base+2.44,-.49,4.15,{rightArm:[[-.22,.89,.025],[-.30,.99,.04],[-.33,1.035,.05]],
+      leftArm:[[.148,.68,.035],[.16,.82,.085],[.14,.87,.093]]});
+    A.statueFigure(T,kit,slate,.78,base+2.44,-.56,4.42,{leftArm:[[.155,.92,.010],[.142,1.06,.024],[.138,1.12,.026]]});
+    A.statueFigure(T,kit,slate,2.68,base+1.1,-.27,4.30,{yaw:.12,
+      rightArm:[[-.18,.73,.03],[-.263,.849,.071],[-.288,.873,.079]],
+      leftArm:[[.19,.62,.046],[.156,.709,.139],[.136,.742,.145]]});
+    A.statueFigure(T,kit,slate,-3.04,base+.86,-.54,3.95,{
+      rightArm:[[-.19,.61,.028],[-.286,.711,.060],[-.309,.74,.068]]});
+    A.strut(T,kit,slate,-4.19,base+.20,-.26,-4.29,base+5.45,-.24,.070);
+    kit.outline([[-.11,0],[0,.38],[.105,.055],[.065,-.16],[-.053,-.14]],slate,-4.29,base+5.4,-.25,.13);
+    A.statueFigure(T,kit,slate,-2.15,base+.86,-.76,3.66,{
+      leftArm:[[.18,.77,.017],[.187,.913,.04],[.176,.95,.046]]});
+    woman(-2.47,base,.92,3.99,{yaw:-.061,
+      rightArm:[[-.142,.564,.038],[-.156,.420,.081]],leftArm:[[.137,.623,.045],[-.018,.471,.119],[-.078,.435,.114]]});
+    A.statueFigure(T,kit,slate,-.82,base,1.00,3.26,{stepUp:.13,yaw:-.12,
+      rightArm:[[-.185,.7,.033],[-.206,.875,.093],[-.208,.911,.097]],
+      leftArm:[[.127,.574,.079],[-.01,.409,.132],[-.032,.38,.143]]});
+    kit.stamp(kit.round,0x9b9d94,-1.21,base+.92,1.24,.49,.45,.49,0,.72);
   }
 
   // 5. Hải đăng Cửa Nhượng (Thiên Cầm, Cẩm Xuyên)
@@ -156,6 +180,7 @@
       lon: 105.776010, lat: 18.452689, yaw: 2.193, width: 26, depth: 20,
       start: [105.776153, 18.452787],
       map: 'https://www.openstreetmap.org/node/4409318890',
+      photo: 'https://hatinh.gov.vn/vi/bai-viet/am-vang-hao-khi-xo-viet-tren-que-huong-ha-tinh',
       source: 'https://sknc.qdnd.vn/dia-chi-do/vang-danh-nga-ba-nghen-501999',
       build: tuongDaiXoVietCanLoc
     }

@@ -561,7 +561,7 @@ https://dulichso.khanhhoa.gov.vn/article/chua-long-son-b4e
 
 Sân chùa và các tầng địa hình ở Bãi Bụt, Trại Thủy, Bánh Ít
 Vị trí tương đối, hướng và mặt bằng các công trình dựa theo OpenStreetMap. Độ cao nền lấy mẫu từ địa hình của cảnh. Chiều cao mái và chi tiết chạm khắc được ước lượng từ ảnh.
-Bãi Bụt — điện chính, nhà sau, cổng đá hai tầng, hai hàng La Hán và tháp Xá Lợi chín mái lục giác. Mười sáu chân tượng có tọa độ riêng trên bản đồ, cặp cuối ước theo bước hàng.
+Bãi Bụt — điện chính, nhà sau, cổng đá hai tầng và tháp Xá Lợi chín mái lục giác. Mười sáu vị trí tượng La Hán có tọa độ riêng trên bản đồ. Bản dựng ẩn các tượng trong sân vì các tọa độ này chưa xác định được danh tính của từng pho.
 https://www.openstreetmap.org/way/486703075
 https://www.openstreetmap.org/way/420947240
 https://www.openstreetmap.org/way/486703070
@@ -985,3 +985,90 @@ Hai ảnh “Hòn Phụ Tử” và “Hòn Phụ Tử ở Kiên Lương” củ
 https://commons.wikimedia.org/?curid=32748961
 https://commons.wikimedia.org/?curid=32749318
 https://creativecommons.org/licenses/by-sa/3.0/
+
+Chùa Som Rông, Sóc Trăng
+
+Ảnh “Tượng phật nằm tại Sóc Trăng 2” của Huynhdat1909, chụp ngày 27/5/2023, cung cấp góc nhìn từ trước đại tượng. Chất liệu som-rong-tuong-nam.webp cắt từ ảnh, xử lý các phần bị lan can và người tham quan che khuất, dùng giấy phép CC BY-SA 4.0. Hình dáng nhìn từ trước, bàn tay đỡ đầu, tay duỗi trên đùi và gối kê theo ảnh. Bề dày ra sau là ước dựng. Kích thước tượng là 63 × 22,5 m. Bên trong bảo tháp có một tượng Thích Ca ngồi thiền, hướng mặt về phía đông.
+https://commons.wikimedia.org/wiki/File:Tượng_phật_nằm_tại_Sóc_Trăng_2.jpg
+https://creativecommons.org/licenses/by-sa/4.0/
+https://baosoctrang.org.vn/van-hoa-the-thao-du-lich/202501/cau-hanh-phuc-cau-binh-an-cau-mot-nam-tot-lanh-tron-ven-98c10d5/
+https://congan.camau.gov.vn/ch28/1921-Dau-xuan-tham-ngoi-chua-co-tuong-Phat-nam-lon-nhat-Viet-Nam.html
+
+Tượng Phật Bốn Tay, Linh Sơn cổ tự, Ba Thê
+
+Dáng ngồi, hai tư thế tay phía trên, áo thếp vàng, mũ cao và tán rắn được đối chiếu với ảnh chụp hai bên tượng của Báo An Giang, ảnh Bùi Thụy Đào Nguyên năm 2007 và tư liệu của Sở Văn hóa, Thể thao và Du lịch An Giang. Chất liệu linh-son-mu-va-chan-dung.webp cắt từ ảnh “Tượng Phật bốn tay” của Bùi Thụy Đào Nguyên, chụp ngày 28/4/2007, có nâng sáng và chỉnh màu theo nước sơn trong ảnh khảo sát sau này, dùng giấy phép CC BY-SA 3.0. Ngũ quan hiện ở góc có ảnh chụp.
+https://baoangiang.com.vn/chiem-nguong-nhieu-canh-doc-la-o-chua-linh-son-a410918.html
+https://commons.wikimedia.org/wiki/File:Tượng_Phật_bốn_tay.jpg
+https://creativecommons.org/licenses/by-sa/3.0/
+https://media.angiang.gov.vn/SoVHTTDL-Portal/File-Dinh-Kem/thong_tin_du_lich_an_giang.pdf#page=50
+
+Tượng đài Mẹ Suốt ở Đồng Hới
+
+Dáng đầu ngẩng, tay nắm cán chèo, ống quần và đường bao mũi thuyền được đối chiếu ở ba góc chụp. Hai chất liệu me-suot-nguoi.webp và me-suot-mui-thuyen.webp được cắt, điều chỉnh sắc độ từ hai ảnh của Linhcandng, dùng giấy phép CC BY-SA 3.0. Mặt khuất dùng màu đá. Chiều sâu là ước lượng từ góc chéo.
+https://commons.wikimedia.org/?curid=93541902
+https://commons.wikimedia.org/?curid=93541901
+https://commons.wikimedia.org/?curid=88455578
+https://creativecommons.org/licenses/by-sa/3.0/
+https://dulichquangtri.vn/diem-du-lich/tuong-dai-me-suot/
+
+Tượng Đức Bà Hòa Bình tại Công trường Công xã Paris, TP. Hồ Chí Minh
+
+Chiều cao phần đá cẩm thạch 4,6 m theo Tổng Giáo phận Sài Gòn. Chất liệu duc-ba-cam-thach.webp và duc-ba-dia-cau.webp lấy từ ảnh chính diện của 源義信 ngày 10/12/2023. Chất liệu duc-ba-khan-choang.webp lấy từ ảnh mặt sau của Theodor. Hai góc được cắt biên, cân sắc độ và căn theo đường bao của pho tượng. Chất liệu duc-ba-minh-van.webp được cắt và chỉnh phối cảnh từ ảnh bảng đồng của Ign christian. Ba ảnh và các chất liệu chuyển thể dùng giấy phép CC BY-SA 4.0. Vị trí quả địa cầu phía trước ngực và độ rủ của tay áo được đối chiếu thêm với ảnh chụp nghiêng của Diego Delso.
+https://tgpsaigon.net/bai-viet/ky-niem-50-nam-cung-hien-vuong-cung-thanh-duong-chanh-toa-duc-ba-sai-gon-43841
+https://commons.wikimedia.org/?curid=142839580
+https://commons.wikimedia.org/?curid=147770341
+https://commons.wikimedia.org/?curid=47358337
+https://creativecommons.org/licenses/by-sa/4.0/
+https://commons.wikimedia.org/?curid=30082753
+Nhóm tượng tại Khu chứng tích Sơn Mỹ, Quảng Ngãi
+
+Dáng đứng, nắm tay giơ cao, trẻ được bế và các nạn nhân dưới chân tượng được dựng theo ảnh “Monument of the My Lai Massacre (2)” của -JvL-. Tệp son-my-memorial.webp cắt từ ảnh gốc dùng giấy phép CC BY 2.0. Phần trước dùng ảnh, phần sau và chiều sâu khối đá được ước dựng.
+https://commons.wikimedia.org/wiki/File:Monument_of_the_My_Lai_Massacre_(2).jpg
+https://creativecommons.org/licenses/by/2.0/
+
+Kim Thân Phật Tổ, chùa Long Sơn, Nha Trang
+
+Tệp long-son-kim-than.webp cắt từ ảnh “White Bouddha Nha Trang” của Edgar DURAND. Ảnh gốc và chất liệu chuyển thể dùng giấy phép CC BY-SA 2.0. Thân tượng cao 14 m. Ba chân dung nhìn thấy ở chính diện dùng ảnh của từng vị. Bốn vị còn lại chỉ thể hiện khung phù điêu. Hai bên và phía sau thân tượng được ước dựng.
+https://commons.wikimedia.org/wiki/File:White_Bouddha_Nha_Trang.jpg
+https://creativecommons.org/licenses/by-sa/2.0/
+https://khanhhoa.khanhhoagov.vnptweb.vn/du-khach/chua-long-son-863666
+https://dulichso.khanhhoa.gov.vn/article/chua-long-son-b4e
+
+Thiên Y A Na, gian thờ Tháp Nhạn, Tuy Hòa
+
+Tệp thap-nhan-thien-y-a-na.webp lấy từ ảnh “Nhan Tower 3” của Christophe95. ViVu3D cắt phần mão, mặt và trang phục để phủ lên mặt trước pho tượng. Phần áo khuất sau lư hương được giản lược. Ảnh và phần cắt dùng giấy phép CC BY-SA 4.0.
+https://commons.wikimedia.org/wiki/File:Nhan_Tower_3.jpg
+https://creativecommons.org/licenses/by-sa/4.0/
+
+Quan Âm Bãi Bụt, Sơn Trà, Đà Nẵng
+
+Tệp son-tra-quan-am.webp cắt từ ảnh “Tượng Bồ Tát tại Chùa Linh Ứng, Sơn Trà, Đà Nẵng, tháng 3 năm 2021 (3)” của Phương Huy. Tư thế tay, mão và nếp áo mặt trước theo ảnh. Bề dày và phần lưng được ước dựng. Ảnh và phần cắt dùng giấy phép CC BY-SA 4.0. Cục Du lịch Quốc gia Việt Nam ghi nhận 18 pho La Hán riêng trong sân chùa.
+https://commons.wikimedia.org/wiki/File:Tượng_Bồ_Tát_tại_Chùa_Linh_Ứng,_Sơn_Trà,_Đà_Nẵng,_tháng_3_năm_2021_(3).jpg
+https://creativecommons.org/licenses/by-sa/4.0/
+https://vietnamtourism.gov.vn/en/post/15941
+
+Tượng đài Mẹ Việt Nam Anh hùng, Tam Kỳ
+
+Hai cánh đá rộng 84,7 m, dài 117 m theo đường cong. Chiều cao 18,37 m và chiều dày từ 8 tới 24,3 m. Bố cục, dáng tóc, cổ áo và hồ phía trước đối chiếu ảnh tại Tam Kỳ. Khuôn mặt và các chân dung phụ trên vách được lược bỏ. Tọa độ tâm khối tượng và trục nhìn ra quảng trường được đối chiếu ảnh vệ tinh Esri.
+https://baochinhphu.vn/quang-nam-khanh-thanh-tuong-dai-me-viet-nam-anh-hung-102180934.htm
+https://baotanglichsu.vn/vi/Articles/3091/17862/khanh-thanh-tuong-djai-me-viet-nam-anh-hung-tai-quang-nam.html
+https://dltm.vnptit3.vn/vi/tuongdaimevietnam
+
+Tượng đồng Chủ tịch Hồ Chí Minh, Đài tưởng niệm Núi Nhạn, Tuy Hòa
+
+Bức tượng bán thân cao 83 cm, rộng 73 cm theo ghi nhận khi khánh thành năm 2009. Vai áo, râu, bệ thờ và ngôi sao đồng trên vách đối chiếu với ảnh toàn cảnh của tỉnh chụp trong nhà bia. Khuôn mặt để trơn.
+https://phuyen.baodaklak.vn/76/43006/dat-tuong-dong-bac-ho-tai-dai-tuong-niem-nui-nhan.html
+https://daklakvrtour.com/tour/42/index.html#node3
+
+Điện Biên Phủ, nhóm tượng đồng trên đỉnh D1 và hai nhóm mạ vàng tại nghĩa trang A1
+Tác phẩm trên đỉnh D1 của Nguyễn Hải cao 12,6 m. Ảnh chính diện của Ioe2015 (CC BY-SA 4.0) được cắt và cân sáng cho chất liệu dien-bien-d1-tuong-dong.webp. Các mặt cắt theo đường bao người, em bé và cờ trong ảnh. Các ảnh của Adam Jones và Pilip được dùng để đối chiếu góc bên và phía sau.
+https://vietnamtourism.vn/index.php/tourism/items/2073
+https://commons.wikimedia.org/?curid=63381109
+https://creativecommons.org/licenses/by-sa/4.0/
+https://commons.wikimedia.org/?curid=80522897
+https://commons.wikimedia.org/?curid=3101339
+Hai ảnh tại A1 do Adam Jones chụp (CC BY-SA 2.0) được xoay, cắt và tách màu nền để làm dien-bien-a1-dai-lua.webp và dien-bien-a1-chien-si.webp. Phần chân khuất ở nhóm hai chiến sĩ được giản lược. Các chất liệu chuyển thể dùng cùng giấy phép với từng ảnh gốc.
+https://commons.wikimedia.org/?curid=80522845
+https://commons.wikimedia.org/?curid=80522844
+https://creativecommons.org/licenses/by-sa/2.0/
+https://nvsk.vnanet.vn/nghia-trang-liet-sy-a1-nhan-chung-lich-su-ve-tinh-than-quat-cuong-cua-dan-toc-1-145620.vna

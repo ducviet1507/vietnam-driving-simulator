@@ -27,10 +27,11 @@
     return {name,offset:t,viewAngle:Math.atan2(dx,dz),viewRadius:Math.hypot(dx,dz,raise),
       viewElevation:Math.atan2(raise,Math.hypot(dx,dz)),height:height/.46,viewFov:fov,viewBase:'monument',photo:tour+'#node'+pano};
   }
-  const viewHeights=[13.9,13.6,2.28];
+  const viewHeights=[13.9,13.6,2.28,2.69];
   const views=[view('Từ sân ngôi sao nhìn lên tháp đài',0,4.8,-6.2,53,viewHeights[0],-3.3,55,2),
     view('Những lớp cánh nhạn bên sườn núi',0,1.4,25,45.2,viewHeights[1],-4.5,55,2),
-    view('Lối giữa các trụ ghi danh',0,-8.9,.05,6.65,2.28,.08,65,3)];
+    view('Lối giữa các trụ ghi danh',0,-8.9,.05,6.65,2.28,.08,65,3),
+    view('Bàn thờ trong nhà bia',0,-13.53,.02,-9.98,2.69,.04,46,3)];
   function plaque(T,k,lines,x,y,z,w,h,bg,fg){
     const canvas=document.createElement('canvas');canvas.width=768;canvas.height=216;
     const ctx=canvas.getContext('2d');ctx.fillStyle=bg;ctx.fillRect(0,0,768,216);
@@ -226,15 +227,29 @@
       for(let i=0;i<3;i++)k.box(granite,0,floor+.08+i*.135,-12.28-i*.35,3.95-i*.22,.16+i*.24,.78);
       elevation(T,k,[[-1.22,1.25],[1.22,1.25],[1.22,3.14],[.90,3.33],[.51,3.39],[0,3.63],[-.51,3.39],[-.90,3.33],[-1.22,3.14]],red,-14.16,.21);
       k.box(bronze,0,1.56,-13.1,2.18,.63,.79);k.box(0x845d49,0,1.94,-13.11,2.43,.14,.94);
-      const ring=new T.TorusGeometry(.44,.053,8,29);
-      k.stamp(ring,gold,0,2.73,-13.88);ring.dispose();
+      const emblem=[];
+      for(let i=0;i<10;i++){
+        const radius=i%2?.070:.175,angle=Math.PI*i/5;
+        emblem.push([radius*Math.sin(angle),radius*Math.cos(angle)]);
+      }
+      k.outline(emblem,gold,0,3.30,-13.91,.05);
       // Local reporting records the 0.83 × 0.73 m bronze bust installed in 2009.
       // https://phuyen.baodaklak.vn/76/43006/dat-tuong-dong-bac-ho-tai-dai-tuong-niem-nui-nhan.html
-      const metal=0x997343,oval=new T.SphereGeometry(1,14,10);
-      k.stamp(oval,metal,0,2.39,-13.70,.365,.189,.16);
-      k.stamp(oval,metal,0,2.69,-13.68,.156,.235,.152);
-      k.tapered(metal,0,2.52,-13.53,.025,.074,.12,1,9);
-      k.box(0x75513e,0,2.14,-13.67,.52,.155,.32);oval.dispose();
+      const bust=window.CentralArch.carving(T,k,0x997343,0,2.13,-13.65,1);
+      // The province's panorama shows the buttoned coat and narrow, tapering beard.
+      bust.sweep([[0,.02,0,.264,.108],[0,.070,0,.331,.123],[0,.15,-.005,.365,.135],
+        [0,.25,-.012,.342,.13],[0,.32,-.014,.281,.113],[0,.37,-.011,.173,.091],
+        [0,.405,-.002,.096,.078],[0,.494,-.003,.076,.067]],.035,26);
+      bust.sweep([[0,.461,.005,.047,.048],[0,.495,.015,.077,.071],[0,.544,.008,.101,.086],
+        [0,.604,0,.117,.098],[0,.666,-.001,.121,.100],[0,.733,-.005,.116,.096],
+        [0,.780,-.010,.099,.085],[0,.811,-.016,.065,.061],[0,.83,-.020,.018,.018]],0,30);
+      bust.sweep([[0,.405,.062,.018,.018],[0,.448,.074,.042,.026],
+        [0,.485,.078,.057,.031],[0,.507,.073,.063,.029]],.025,18);
+      for(const side of [-1,1])
+        bust.sweep([[side*.08,.43,.047,.019,.024],[side*.103,.383,.058,.027,.032],
+          [side*.052,.336,.093,.020,.021]],.018,14);
+      bust.finish();
+      k.box(0x75513e,0,2.115,-13.67,.53,.095,.32);
       for(const x of [-.62,.62]){k.tapered(gold,x,2.19,-13.10,.080,.096,.41,1,12);k.box(0xc5ab70,x,2.46,-13.10,.045,.19,.045);}
     });
     let geom,rest;

@@ -328,9 +328,10 @@
     stairs(road,lower,69.1,54.1,37,[[0,8.5]]);
     const court=landing(25.8,3.35,46.5,29,()=>{
       for(const side of [-1,1])for(const x of [8.5,11.3])for(let i=0;i<5;i++){
-        const px=side*x,z=14.2+i*1.92;
-        box(stone,px,.17,z,.72,.34,.72);tapered(stone,px,.91,z,.33,.25,1.25,.88,10);
-        stamp(round,stone,px,1.68,z,.21,.34,.21);box(dark,px,1.89,z,.46,.13,.42);
+        const px=side*x,z=14.2+i*1.92,role=x>10?'guard':i<2?'civil':'military';
+        box(dark,px,.06,z,.86,.12,.80);
+        box(stone,px,.155,z,.70,.07,.65);
+        window.CentralArch.courtAttendant(T,kit,stone,px,.19,z,1.75,-side*Math.PI/2,role);
       }
       const x=1,z=9.45;
       tapered(stone,x,.3,z,4.9,4.8,.60,.78,8);
@@ -418,8 +419,8 @@
     boundary:[[-23.7,54.9],[-23.5,-54.9],[23.7,-55],[23.5,54.8],[8,54.9],[5,69],[-5,69],[-8.6,54.9]],
     solids:[[-.65,-39.85,17.5,13],[1,9.45,4.3,3.3],[-17.2,41,4.3,8.5],[17.2,41,4.3,8.5]],
     modeledStairWays:[242940965,242940967,242940970,242940971,242940974,242940976,242943367,242943368,1205438744,1205438746],
-    description:'Từ chân núi Châu Chữ, các bậc đá dẫn lên Tả, Hữu tòng tự và sân Bái Đình. Qua hai hàng tượng chầu và nhà bia bát giác là những tầng sân cao dần tới cung Thiên Định.',
-    photo:'https://visithue.vn/lang-tam-hoang-gia-thoi-nguyen-tai-hue-phan-2/?pid=MjA3NTF8Y3NkbGRs0',
+    description:'Từ chân núi Châu Chữ, các bậc đá dẫn lên Tả, Hữu tòng tự và sân Bái Đình. Quan văn, quan võ và lính hầu bằng đá đứng chầu hai bên sân. Từ nhà bia bát giác, các tầng sân dẫn lên cung Thiên Định.',
+    photo:'https://artsandculture.google.com/story/the-unique-architecture-of-khai-dinh-tomb-quang-binh-tourism-department/bAWhhXL29g5ZIQ?hl=vi',
     source:'https://vietnamtourism.vn/index.php/tourism/items/462/4',
     map: 'https://www.openstreetmap.org/way/175035807',
     build: langKhaiDinh

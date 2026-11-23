@@ -224,8 +224,8 @@
       k.box(bronze,0,floor+3.11,-.41,2.22,.17,.29);
       k.box(crimson,0,floor+3.24,-.41,2.35,.12,.35);
       for(let j=0;j<8;j++)k.box(0xcbb372,-.83+j*.237,floor+3.05,-.245,.13,.108,.038,0,0,.40);
-      A.lotusSeat(T,k,0,floor+1.31,-.14,.30,.17,bronze,0x9b753c);
-      A.statueFigure(T,k,bronze,0,floor+1.48,-.14,.91,{robe:true});
+      // The survey labels this freestanding altar "Bàn thờ". The images of
+      // the Quan Âm and principal shrines do not identify a statue here.
     });
     // The photographs look past stone-faced piers and a black timber
     // transom towards the gilded shrine. The bell hangs in the bay at left.

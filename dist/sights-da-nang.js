@@ -260,16 +260,28 @@
       }
       kit.palette({stone:[marble,pureWhite,lotusPink]});
       CentralArch.lotusSeat(T,kit,gx,5.96,gz,16.43,3.62,pureWhite,lotusPink);
-      const base=10.2,h=(67-base)/1.048;
-      CentralArch.statueFigure(T,kit,pureWhite,gx,base,gz,h,{robe:true,
-        rightArm:[[-.153,.651,.045],[-.099,.729,.094],[-.077,.773,.108]],
-        leftArm:[[.148,.614,.018],[.090,.545,.082],[.055,.538,.10]]});
-      const vase=CentralArch.carving(T,kit,marble,gx,base,gz,h);
-      vase.sweep([[.047,.533,.103,.018,.018],[.047,.547,.103,.025,.026],[.046,.566,.103,.020,.019],
-        [.047,.582,.102,.009,.010],[.047,.591,.102,.013,.013]]);
-      vase.sweep([[0,.975,-.038,.055,.036],[.004,.915,-.048,.063,.039],[.007,.846,-.041,.080,.042],
-        [.013,.738,-.051,.105,.045],[.010,.644,-.055,.093,.039]],.09);
-      vase.finish();
+      // Phương Huy's frontal photograph records the crown, the raised right
+      // hand, the vessel and the floor-length folds together at this viewpoint.
+      const metres=56.8/(417-41);
+      A.photoCarving(T,kit,{photo:'sight-imagery/son-tra-quan-am.webp',width:500,height:610,
+        crop:[116,0,270,437],origin:[255,417],scale:metres,position:[gx,10.2,gz],tint:pureWhite,
+        forms:[
+          {z:-.33,rows:[[41,251,254,.20],[44,244,261,.80],[50,242,264,1.36],[55,241,266,1.54],
+            [60,238,270,1.79],[69,234,274,2.30],[81,232,277,2.60],[92,230,278,2.71],
+            [101,231,278,2.61],[109,232,279,2.46],[117,235,281,2.35],[123,240,282,2.17]]},
+          {z:-.62,rows:[[107,236,278,2.45],[113,231,284,2.74],[118,226,294,3.13],[126,220,302,3.46],
+            [136,211,308,3.82],[149,203,316,4.27],[159,196,323,4.61],[177,186,332,4.78],
+            [190,182,333,4.86],[201,184,329,4.71],[220,189,327,4.56],[235,183,328,4.48],
+            [244,183,339,4.44],[253,186,337,4.32],[267,191,328,4.23],[289,190,328,4.37],
+            [312,188,329,4.59],[339,184,333,4.90],[351,183,336,5.11],[365,181,340,5.27],
+            [377,175,347,5.54],[385,171,359,5.68],[392,179,357,5.77],[403,182,352,5.79],
+            [411,181,351,5.70],[415,190,347,5.53],[417,198,343,5.40]]},
+          {z:2.50,rows:[[101,227,229,.13],[107,226,229,.20],[109,225,230,.27],[115,223,232,.43],
+            [122,217,233,.69],[132,214,235,1.05],[141,213,231,.94],[148,210,225,.83],[154,210,223,.73]]},
+          {z:2.84,rows:[[103,220,222,.15],[108,219,222,.20],[114,217,223,.26],[123,216,225,.39],[131,215,226,.45]]},
+          {z:3.14,rows:[[141,249,253,.25],[146,247,255,.43],[152,245,258,.62],[157,242,260,.77],
+            [161,235,273,1.09],[166,225,279,1.29],[172,234,279,1.46],[177,244,277,1.26],[182,250,271,.96]]}
+        ]});
     });
 
     // The tam quan is a two-storey open stone arcade opposite the main hall.
@@ -302,27 +314,9 @@
         tile:jade,eave:0xb8a576,ridge:ivory,wall:0xdbd2b7,incense:false});
     });
 
-    // The two processional rows face across the courtyard. Sixteen statue
-    // positions are tagged in OSM; the last pair follows their spacing.
-    const rows=[[[46,-11],[48,-17],[51,-24],[53,-31],[55,-37],[57,-42],[59,-47],[61,-52],[63,-57]],
-      [[79,2],[82,-4],[84,-11],[87,-18],[89,-24],[91,-29],[93,-34],[95,-39],[97,-44]]];
-    rows.forEach((row,side)=>row.forEach(([x,z],i)=>{
-      building(x,z,side?-.37-Math.PI/2:-.37+Math.PI/2,1.62,1.50,()=>{
-        box(0xc1b7aa,0,.32,0,1.62,.64,1.50);
-        const monk=A.carving(T,kit,pureWhite,0,.60,0,1);
-        const lean=(i%3-1)*.09,raised=i%3===1;
-        monk.sweep([[0,.03,0,.59,.41],[-.04,.34,.01,.54,.36],[lean,.88,-.02,.35,.28],
-          [lean,1.35,0,.41,.28],[lean,1.46,0,.20,.17]],.13,12);
-        monk.sweep([[lean,1.36,.03,.15,.15],[lean,1.51,.04,.21,.19],[lean,1.74,.02,.19,.18],
-          [lean+.015,1.85,0,.06,.07]],0,12);
-        for(const dir of [-1,1]){
-          const high=raised&&dir===1;
-          monk.sweep([[lean+dir*.29,1.32,.01,.15,.16],[lean+dir*.42,1.02,.07,.15,.17],
-            [lean+dir*(high?.39:.20),high?1.46:.89,.25,.085,.09]],.06,10);
-        }
-        monk.finish();
-      });
-    }));
+    // Each of the eighteen arhats has its own posture, features and
+    // attributes. Leave the courtyard open until each sculpture can be
+    // identified at its surveyed plinth.
 
     // The separate eastern sanctuary carries nine hexagonal, grey stone roofs.
     const stupa=building(328,-23,-.71,18,18,()=>{
@@ -456,10 +450,10 @@
     solids:[[0,0,14.5,14.5],[90,-70,12,11],[98,-92,11,8],[328,-23,6.7,6.7],
       [53.4,2.5,.6,.6],[57.0,3.9,.6,.6],[63.0,6.1,.6,.6],[66.6,7.5,.6,.6]],
     views:[{name:'Quan Âm hướng vịnh Đà Nẵng',offset:[0,0],height:67,viewRadius:112,viewAngle:-.61},
-      {name:'Sân La Hán và chánh điện',offset:[75,-32],height:13,viewRadius:83,viewAngle:-.48,viewElevation:.34},
+      {name:'Sân chùa và chánh điện',offset:[75,-32],height:13,viewRadius:83,viewAngle:-.48,viewElevation:.34},
       {name:'Tháp Xá Lợi',offset:[328,-23],height:32,viewRadius:59,viewAngle:-.66},
       {name:'Toàn cảnh từ Quan Âm tới tháp Xá Lợi',offset:[144,-27],height:27,viewRadius:368,viewAngle:-.15,viewElevation:.42}],
-    description:'Trên sườn núi Sơn Trà, tượng Quan Âm hướng ra vịnh. Hai hàng La Hán nối tam quan với chánh điện. Tháp Xá Lợi chín tầng nằm ở phía đông khuôn viên.',
+    description:'Trên sườn núi Sơn Trà, tượng Quan Âm hướng ra vịnh. Mặt trước được dựng từ ảnh chụp tại chùa. Ngoài thực địa có 18 tượng La Hán giữa tam quan và chánh điện. Các tượng này đang ẩn trong mô hình.',
     photo:'https://danangfantasticity.com/en/kham-pha/chua-linh-ung-bai-but-da-nang',
     source:'https://csdl.vietnamtourism.gov.vn/dest/?item=954',
     map: 'https://www.openstreetmap.org/way/420947244',

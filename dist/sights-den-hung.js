@@ -63,6 +63,36 @@
     k.stamp(g,ivory,x,h+.97,z,.28,.35,.23);
     k.stamp(g,ivory,x+.12,h+1.25,z+.03,.18,.20,.18);g.dispose();
   }
+  function warriorRelief(T,k,gate,side,x,y,z,height){
+    const old=gate==='cong-cu', left=side<0;
+    const photoHeight=height*(old?.69:1);
+    const width=photoHeight*(old?(left?158/229:166/233):(left?171/365:186/375));
+    // At the old gate the incense burner obscures the boots and lower coat.
+    // Continue the photographed belt with a shallow green tunic and split hem.
+    if(old){
+      const shape=(points,color,depth)=>k.outline(points.map(([a,b])=>[a*height,b*height]),color,x,y,z+depth,.035);
+      for(const s of [-1,1]){
+        shape([[s*.035,.035],[s*.035,.23],[s*.091,.28],[s*.115,.06],[s*.09,.034]],0x593627,.016);
+        shape([[s*.035,.015],[s*.141,.015],[s*.146,.035],[s*.11,.060],[s*.039,.053]],0x442f28,.026);
+      }
+      shape([[-.108,.58],[.112,.58],[.15,.23],[.101,.15],[.052,.17],[0,.25],[-.065,.13],[-.148,.18]],0x3d713e,.038);
+      shape([[-.071,.56],[.085,.56],[.064,.24],[.008,.17],[-.050,.23]],0x9a7133,.049);
+      shape([[-.063,.55],[.077,.55],[.056,.25],[.009,.196],[-.044,.237]],0x693b2d,.053);
+    }
+    const geometry=new T.PlaneGeometry(width,photoHeight,8,12);
+    const vertices=geometry.attributes.position;
+    for(let i=0;i<vertices.count;i++){
+      const nx=vertices.getX(i)*2/width, ny=vertices.getY(i)*2/photoHeight;
+      vertices.setZ(i,.075*(1-nx*nx)*(1-ny*ny));
+    }
+    geometry.computeVertexNormals();
+    const file='sight-imagery/den-hung-'+gate+'-'+(left?'trai':'phai')+'.webp';
+    const map=new T.TextureLoader().load(file);
+    map.colorSpace=T.SRGBColorSpace;map.anisotropy=4;
+    const mesh=new T.Mesh(geometry,new T.MeshBasicMaterial({map,alphaTest:.45}));
+    mesh.position.set(x,y+height-photoHeight*.5,z+(old?.096:.012));
+    k.group.add(mesh);
+  }
   function oldGate(T,k,f){
     const base=f.building(0,0,0,7.55,2.48,()=>{
       A.vaultedBay(T,k,0,0,4.5,5.44,1.50,2.48,1.54,red,0x994e43,0xa95849);
@@ -81,8 +111,8 @@
       for(const side of [-1,1]){
         k.box(ivory,side*1.99,2.65,.817,.29,4.76,.07);
         k.box(red,side*2.89,1.46,0,1.22,2.9,.49);
-        k.box(ivory,side*2.89,1.44,.27,1.03,2.58,.05);
-        A.statueFigure(T,k,side<0?0x879e79:0xaf8067,side*2.89,.15,.32,2.34,{robe:true});
+        k.box(ivory,side*2.89,1.44,.27,1.18,2.58,.05);
+        warriorRelief(T,k,'cong-cu',side,side*2.89,.18,.302,2.34);
         guardian(T,k,side*3.63,0,3.56);
       }
     });
@@ -203,9 +233,9 @@
       phoenix(T,k,x,h+.65,0,inner?.56:.39);
     }
     for(const side of [-1,1]){
-      k.box(ash,side*1.80,1.67,.47,.76,2.71,.19);
-      k.box(ivory,side*1.80,1.67,.59,.61,2.52,.11);
-      A.statueFigure(T,k,side<0?0x67827b:0x778985,side*1.81,.45,.70,1.94,{robe:true});
+      k.box(ash,side*1.80,1.67,.47,1.23,2.71,.19);
+      k.box(ivory,side*1.80,1.67,.59,1.15,2.52,.11);
+      warriorRelief(T,k,'den-thuong',side,side*1.80,.48,.65,2.32);
       for(let j=0;j<4;j++)k.box(stone,side*2.27,.89+j*.85,.321,.22,.24,.08);
     }
     A.plaque(T,k,'南 越 肇 祖',0,3.55,.477,2.48,.44,{bg:'#c5bc9c',fg:'#594e3e',border:0x928c73});
@@ -346,7 +376,8 @@
   register('osm-node-11395352269','cong-cu-den-hung','Cổng Đền Hùng dưới chân núi Nghĩa Lĩnh',local,
     'Cổng son xây năm 1917 ở đầu lối bậc đá. Qua vòm cửa độc đạo, nhìn lên thấy bốn chữ “Cao sơn cảnh hành”, hai bên là đôi trụ có nghê chầu.',
     [-13.1,-14.3,-1.10],[7.55,2.48],[['Từ chân bậc đá',0,0,7.15,16,.12,.13],['Bức đại tự của cổng cũ',0,0,9.51,8.60,-.15,.12]],
-    oldGate,{solids:[...A.archPiers(0,0,4.5,1.50,1.54),[-3.15,0,.86,.43],[3.15,0,.86,.43]]});
+    oldGate,{solids:[...A.archPiers(0,0,4.5,1.50,1.54),[-3.15,0,.86,.43],[3.15,0,.86,.43]],
+      photoCreditUrl:'landmark-scans/CREDITS.txt',photoCredit:'Phù điêu võ sĩ từ ảnh của Bùi Thụy Đào Nguyên · CC BY-SA 3.0'});
   register('osm-node-11395352270','den-ha-nghia-linh','Đền Hạ núi Nghĩa Lĩnh',local,
     'Hai tòa ba gian đứng song song, cách nhau khoảng sân hẹp. Ở bậc lên đền có nhà bia sáu mái.',
     [-1,-9.7,-.87],[12.4,12.9],[['Hai nếp nhà Đền Hạ',0,0,6.4,23,-.42,.25],['Nhà bia sáu mái',-9.61,6.80,3.95,9.3,-.26,.17]],
@@ -357,8 +388,9 @@
     middleTemple,{modeledBuildings:['w1504768248']});
   register('osm-node-11395352271','den-thuong-nghia-linh','Đền Thượng – Kính Thiên Lĩnh Điện',local,
     'Nghi môn ba vòm mở vào các nếp thờ trên đỉnh Nghĩa Lĩnh. Bức đại tự “Nam Việt Triệu Tổ” nằm trên cửa giữa, còn cột đá thề ở bên sân.',
-    [3.9,-4.9,-.02],[18.0,19.1],[['Nghi môn đền Thượng',0,5.7,7.7,29,.16,.18],['Các lớp điện trên đỉnh núi',0,0,10,35,-.65,.43],['Cột đá thề',-7.49,7.21,3.85,8.6,-.56,.20]],
-    upperTemple,{modeledBuildings:['w1504768247']});
+    [3.9,-4.9,-.02],[18.0,19.1],[['Nghi môn đền Thượng',0,10.14,6.3,12.7,.04,.08],['Các lớp điện trên đỉnh núi',0,0,10,35,-.65,.43],['Cột đá thề',-7.49,7.21,3.85,8.6,-.56,.20]],
+    upperTemple,{modeledBuildings:['w1504768247'],photoCreditUrl:'landmark-scans/CREDITS.txt',
+      photoCredit:'Phù điêu nghi môn từ ảnh do Khương Việt Hà hiến tặng vào phạm vi công cộng'});
   register('osm-node-11395352369','den-gieng-ngoc-tinh','Đền Giếng – Ngọc Tỉnh',heritage,
     'Đền hướng đông nam. Qua tiền bái và phương đình là giếng tròn nằm ngay trước ban thờ hai công chúa Tiên Dung, Ngọc Hoa.',
     [-17.3,2.4,.39],[11.7,14.4],[['Cửa núi vào đền Giếng',0,6,6.2,23,.22,.16],['Giếng Ngọc trước ban thờ',0,-2.73,2.90,3.90,-.13,.32]],
