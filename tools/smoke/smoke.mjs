@@ -4,6 +4,7 @@ import {createServer} from 'node:http';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {chromium} from 'playwright-core';
+import {checkLearnerQuiz} from './learner-quiz.mjs';
 
 const client = fileURLToPath(new URL('../../dist/client/', import.meta.url));
 const types = {'.js':'text/javascript', '.mjs':'text/javascript', '.css':'text/css', '.json':'application/json',
@@ -209,10 +210,12 @@ try {
     assert.deepEqual(training,{model:'family-sedan',speed:40});
     const nitroPedal=page.locator('#touch [data-key~="shift"]');
     assert.equal(await nitroPedal.isVisible(),false);
+    await checkLearnerQuiz(page);
     await page.locator('#pause').click();
     const position=await page.evaluate(()=>[car.x,car.z,distance]);
     await page.getByRole('button',{name:'Chuyển sang lái tự do'}).click();
     await page.locator('#learnerLimit').waitFor({state:'hidden'});
+    assert.equal(await page.locator('#practiceQuestion').getAttribute('hidden'),'');
     assert.equal(await nitroPedal.isVisible(),true);
     assert.deepEqual(await page.evaluate(()=>[car.x,car.z,distance]),position);
     assert.equal(await page.evaluate(()=>car.model),'compact-mpv');

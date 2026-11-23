@@ -142,8 +142,15 @@
   <div class="planActions"><button id="planDrive" class="hot" disabled>Tìm đường</button><button id="planRanking" hidden>Xem bảng hạng</button></div>
 </dialog>
 <dialog id="guidedArrival" aria-labelledby="arrivalTitle"><h2 id="arrivalTitle">Đã đến hồ Tam Chúc</h2><p id="arrivalResult"></p><button class="hot" id="arrivalBoard">Xem hạng và gửi thành tích</button><button id="arrivalTour">Ngắm Tam Chúc</button><button id="arrivalDrive">Lái tiếp</button><button id="arrivalRetry">Lái lại tuyến này</button></dialog>
-<dialog id="pit"><small>GARA CHÚ TƯ</small><h2 id="remark"></h2><p id="prompt"></p><img id="pitImage" hidden alt=""><div id="choices"></div><p id="reply" role="status"></p><button id="repair" class="hot" hidden>Nhận xe và lái tiếp</button></dialog>
-<dialog id="rest"><small>XUYÊN VIỆT</small><h2>Dừng chân</h2><p id="positionLabel"></p><button id="resume" class="hot">Lái tiếp</button><button type="button" id="leaveLearner" hidden>Chuyển sang lái tự do</button><button type="button" data-postcard aria-haspopup="dialog">Viết bưu thiếp từ đây</button><button id="scoreBoard">Xem hạng và gửi thành tích</button><button class="layoutButton" data-cockpit-settings aria-haspopup="dialog">Bố trí buồng lái</button><button id="raceMode">Đua xuyên Việt</button><button id="reverse">Đặt xe về đường</button><button id="pausedPlanner">Chọn lộ trình</button><button id="relocate">Đổi điểm xuất phát</button><a href="#duong-deo" id="pausedPasses">Chọn đường đèo</a><a href="cup.html">Đua Cúp Bánh Mì</a></dialog>
+<dialog id="pit" aria-labelledby="remark">
+  <small>GARA CHÚ TƯ</small><h2 id="remark"></h2><p id="prompt" tabindex="-1"></p><img id="pitImage" hidden alt="">
+  <div id="choices"></div><p id="reply" role="status"></p>
+  <button type="button" id="repair" class="hot" hidden>Lái tiếp</button>
+  <button type="button" id="anotherQuestion" hidden>Làm thêm một câu</button>
+</dialog>
+<dialog id="rest"><small>XUYÊN VIỆT</small><h2>Dừng chân</h2><p id="positionLabel"></p><button id="resume" class="hot">Lái tiếp</button>
+  <button type="button" id="practiceQuestion" aria-haspopup="dialog" hidden>Ôn một câu với Chú Tư</button>
+  <button type="button" id="leaveLearner" hidden>Chuyển sang lái tự do</button><button type="button" data-postcard aria-haspopup="dialog">Viết bưu thiếp từ đây</button><button id="scoreBoard">Xem hạng và gửi thành tích</button><button class="layoutButton" data-cockpit-settings aria-haspopup="dialog">Bố trí buồng lái</button><button id="raceMode">Đua xuyên Việt</button><button id="reverse">Đặt xe về đường</button><button id="pausedPlanner">Chọn lộ trình</button><button id="relocate">Đổi điểm xuất phát</button><a href="#duong-deo" id="pausedPasses">Chọn đường đèo</a><a href="cup.html">Đua Cúp Bánh Mì</a></dialog>
 <dialog id="postcard" aria-labelledby="postcardTitle">
   <div class="postcardHead"><h2 id="postcardTitle">Bưu thiếp Xuyên Việt</h2><button type="button" id="closePostcard" autofocus>Đóng</button></div>
   <img id="postcardPrint" alt="" hidden>

@@ -25,7 +25,7 @@ function selectVehicle(model,learner=false){
  car.model=model;car.spec=learner?learnerSedan:worldGarage[model];gfx?.preloadVehicle(model);
  openingGarage.value=setupGarage.value=model;
  $('garagePreview').src='streetscape/previews/'+model+'.webp';
- $('learnerLimit').hidden=$('leaveLearner').hidden=!learner;
+ $('learnerLimit').hidden=$('leaveLearner').hidden=$('practiceQuestion').hidden=!learner;
  document.body.toggleAttribute('data-learner',learner);
 }
 try{
@@ -401,6 +401,7 @@ function hitVehicle(n){
  }
 }
 const pit=createPitQuiz($('pit'),()=>'Chú Tư lắc đầu. Chọn lại đáp án nhé.',()=>{
+ if(mode==='paused'){mode='drive';keySet.clear();return;}
  if(car.flood)recover();
  hp=100;DriveBody.reset(car);cooldown=2;mode='drive';keySet.clear();updateHud();save();inform('Máy lại giòn. Lên đường!');
 });
@@ -694,7 +695,7 @@ function frame(now){
      }
    }else if(mode==='sinking'){
      advanceFlood(car,dt);
-     if(car.flood.age>=4.1){mode='pit';pit('water');}
+     if(car.flood.age>=4.1){mode='pit';pit('water',car.spec===learnerSedan);}
    }else if(mode==='crash'){
      DriveBody.settle(car,dt);
      for(const actor of duel?[duel.actor,...npcs]:npcs){
@@ -704,7 +705,7 @@ function frame(now){
        if(r.fallen)wreckContact(actor);
        landingFx(actor,landing);
      }
-     crashTime-=dt;if(crashTime<=0){mode='pit';pit(crashKind);}
+     crashTime-=dt;if(crashTime<=0){mode='pit';pit(crashKind,car.spec===learnerSedan);}
    }
    if(mode!=='loading'&&roads&&!document.hidden&&now>=nextWeatherCheck){nextWeatherCheck=now+2000;gfx.weather.locate(...roads.geo(car.x,car.z));}
    car.driving=mode==='drive';car.showroom=mode==='grid';
@@ -1067,6 +1068,10 @@ $('raceMode').onclick=()=>{
  $('resume').click();updateHud();
 };
 $('resume').onclick=()=>{$('rest').close();mode='drive';keySet.clear();};
+$('practiceQuestion').onclick=()=>{
+ if(mode!=='paused'||car.spec!==learnerSedan)return;
+ $('rest').close();pit('practice',true);
+};
 $('leaveLearner').onclick=()=>{
  selectVehicle(garageVehicle);
  document.body.removeAttribute('data-awaiting-motion');
