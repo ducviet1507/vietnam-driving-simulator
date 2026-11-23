@@ -11,6 +11,7 @@ let viewX=Infinity,viewZ=Infinity,loadX=Infinity,loadZ=Infinity,busy=false,loadT
 let hp=100,nitro=100,cooldown=0,distance=0,snapshot=0,toastTime=0,crashTime=0,crashKind='car',passes=0,duel=null;
 let car={model:'supercar',spec:worldGarage.supercar,x:0,z:0,yaw:0,speed:0,steer:0,brake:false},last=performance.now(),uiTick=0,spawnTick=0;
 let scenicTrace=null;
+let throttleHint=null;
 let activeTrip=false,loadRequest=null,openingCameraTime=0;
 const reduceMotion=matchMedia('(prefers-reduced-motion: reduce)');
 const vehicleLook=createVehicleLook($('lookAround'),$('world'),()=>mode==='drive');
@@ -488,6 +489,10 @@ function tick(dt){
  if(mode==='drive')waterStep(dt);
  const moved=Math.hypot(car.x-x,car.z-z);distance+=moved;
  if(mode!=='drive')return;
+ if(throttleHint&&gas&&!car.brake&&car.speed>0){
+   if(throttleHint.isConnected)inform('',0);
+   throttleHint=null;
+ }
  if(guide && guide.timeMs===null && guide.update(player,!car.offroad&&!car.accessLane&&!car.flood)){
    guide.timeMs=Math.max(1,Math.round(performance.now()-guideStarted));
    if(guide.route.id)boardFor(guide.route).arrive();
@@ -832,7 +837,11 @@ async function begin(){
  $('scoreBoard').hidden=Boolean(guide&&!guide.route.id);
  $('scoreBoard').textContent=guide?'Bảng hạng · '+guide.route.title:'Xem hạng và gửi thành tích';
  mode='drive';document.body.dataset.phase='drive';$('grid').hidden=true;$('hud').hidden=false;$('touch').hidden=false;$('camera').hidden=false;$('pause').hidden=false;updateHud();
- if(!guide&&!duel)inform(matchMedia('(pointer:coarse)').matches?'Giữ Ga để lăn bánh · chạm ◀ hoặc ▶ để đánh lái':'Giữ W hoặc ↑ để lên ga · A/D để đánh lái',4);
+ if(!guide&&!duel){
+   inform(matchMedia('(pointer:coarse)').matches?'Giữ Ga để lăn bánh · chạm ◀ hoặc ▶ để đánh lái':'Giữ W hoặc ↑ để lên ga · A/D để đánh lái',4);
+   // Only dismiss this hint if another message hasn't replaced it.
+   throttleHint=$('callout').firstChild;
+ }
  if(car.opening){
    document.body.setAttribute('data-awaiting-motion','');
    driveAudio.ignition(car.spec.electric);

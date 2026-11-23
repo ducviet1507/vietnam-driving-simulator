@@ -206,6 +206,11 @@ try {
     assert.equal(await page.locator('#garage').inputValue(),'supercar');
     await page.getByRole('button',{name:'Cầm lái',exact:true}).click();
     await page.locator('body[data-phase="drive"]').waitFor();
+    assert.match(await page.locator('#callout').textContent(),/Giữ W/);
+    await page.keyboard.down('ArrowUp');
+    try {
+      await page.waitForFunction(()=>car.speed>0 && !$('callout').textContent && toastTime===0);
+    } finally { await page.keyboard.up('ArrowUp'); }
     await checkPhoneRotation(page,true);
     await page.setViewportSize({width:390,height:844});
     await page.locator('#tourView').click();
