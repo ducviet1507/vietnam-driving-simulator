@@ -203,14 +203,16 @@ window.createDrivingFX = function (T, scene, renderer) {
     flameMaterial.uniforms.time.value=reduced.matches?0:clock;
     flameMaterial.uniforms.power.value=boostLevel;
     glow.material.uniforms.power.value=boostLevel;
-    const ax=x-s*1.35,az=z+c*1.35;
+    const rear=car.spec?.rearAxle??(car.model==='motorcycle'?.72:1.35);
+    const track=car.model==='motorcycle'?0:car.model==='box-truck'?1.03:.78;
+    const ax=x-s*rear,az=z+c*rear;
     const travel=lastCar?Math.hypot(lastCar.x-x,lastCar.z-z):0;
     if(travel>7||dt===0){previousAxle=null;skidDistance=0;}
     const rubber=skid*dry;
     if(rubber>.05&&dt>0){
       if(previousAxle)skidDistance+=travel;
       if(!previousAxle||skidDistance>=.28){
-        if(previousAxle)for(const side of [-.78,.78]){
+        if(previousAxle)for(const side of track?[-track,track]:[0]){
           mark(previousAxle.x+previousAxle.c*side,previousAxle.y,previousAxle.z+previousAxle.s*side,ax+c*side,y,az+s*side,rubber);
         }
         previousAxle={x:ax,y,z:az,s,c};skidDistance=0;
@@ -219,7 +221,7 @@ window.createDrivingFX = function (T, scene, renderer) {
     const smokeRate=(dust?Math.min(22,speed*1.3):24*skid)*dry*dry;
     smokeFraction=smokeRate?smokeFraction+dt*smokeRate:0;
     while(smokeFraction>=1){
-      const side=Math.random()>.5?.78:-.78;
+      const side=Math.random()>.5?track:-track;
       const size=dust?.32:.24+skid*.21,alpha=dry*(dust?.44:.22+skid*.28);
       puff(ax+c*side,y+.13,az+s*side,s*car.speed*.09+(Math.random()-.5)*.6,.4+Math.random()*.68,-c*car.speed*.09,
         size,dust?1.1:.88,dust?[.64,.53,.38]:[.74,.76,.78],alpha);
@@ -230,7 +232,7 @@ window.createDrivingFX = function (T, scene, renderer) {
     sprayFraction=spray?sprayFraction+dt*spray*22:0;
     while(sprayFraction>=1){
       for(const wheel of [-1,1]){
-        const side=wheel*.78,out=wheel*(.55+spray+Math.random()*.45),back=car.speed*.17;
+        const side=wheel*track,out=wheel*(.55+spray+Math.random()*.45),back=car.speed*.17;
         puff(ax+c*side,y+.09,az+s*side,c*out-s*back,.23+spray*.48,s*out+c*back,.16+spray*.11,.32+spray*.20,[.68,.78,.84],.25+spray*.20);
       }
       sprayFraction--;

@@ -1,6 +1,14 @@
 'use strict';
 // Player cars. Dimensions are in metres and speeds in m/s.
 const worldGarage={
+  motorcycle:{
+    worldOnly:true,license:'A',length:2.10,width:.80,height:1.64,paint:0x24686b,
+    power:6.1,top:35,braking:8.6,wheelbase:1.43,steerLock:.48,mass:254,wheelRadius:.32
+  },
+  'box-truck':{
+    worldOnly:true,license:'C',length:7.60,width:2.46,height:3.45,paint:0xc46938,
+    power:2.8,top:27,braking:6.5,wheelbase:4.26,rearAxle:1.76,steerLock:.58,mass:9200,wheelRadius:.48
+  },
   supercar:{asset:'streetscape/race-car.glb',length:4.6,paint:0xc63322,power:8.4,top:48},
   gt:{asset:'streetscape/electric-gt.glb',length:4.67,paint:0x305955,power:7.8,top:43,wheelbase:2.85,electric:true},
   'muscle-car':{asset:'streetscape/muscle-car.glb',length:4.90,paint:0x841619,power:7.1,top:45,wheelbase:2.75,mass:1680},

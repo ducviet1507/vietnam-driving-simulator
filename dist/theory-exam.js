@@ -3,33 +3,19 @@
   const $ = id => document.getElementById(id);
   const params = new URLSearchParams(location.search);
   const exam = params.get('mode') === 'exam';
-  const sessionName = 'taylai.theory.b.2026.' + (exam ? 'exam' : 'practice') + '.' + (params.get('run') || 'standalone');
   const bank = new Map(window.driveBank.map(question => [question.id, question]));
-  // Phụ lục III, Công văn 2262/CSGT-P5.
-  const critical = new Set([19,20,21,22,23,24,25,26,27,28,30,32,34,35,47,48,52,53,55,58,63,64,65,66,67,68,70,71,72,73,74,85,86,87,88,89,90,91,92,93,97,98,102,117,163,165,167,197,198,206,215,226,234,245,246,252,253,254,255,260]);
-  const groups = [[1,180,8],[181,205,1],[206,263,1],[264,300,1],[301,485,9],[486,600,9]];
-  const duration = 20 * 60 * 1000;
-  let state = null;
-  function shuffled(items) {
-    const array = [...items];
-    for (let i = array.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [array[i], array[j]] = [array[j], array[i]];
-    }
-    return array;
-  }
+  let license, sessionName, state;
   function save() { try { localStorage.setItem(sessionName, JSON.stringify(state)); } catch {} }
   function valid(s) {
-    return s && Array.isArray(s.ids) && s.ids.length === 30 && new Set(s.ids).size === 30 &&
-      s.ids.every(id => bank.has(id)) && s.ids.filter(id => critical.has(id)).length === 1 &&
-      Array.isArray(s.answers) && s.answers.length === 30 && s.answers.every((a,i) => a === null || (Number.isInteger(a) && a >= 0 && a < bank.get(s.ids[i]).choices.length)) &&
-      Array.isArray(s.flags) && s.flags.length === 30 && Number.isInteger(s.index) && s.index >= 0 && s.index < 30 &&
+    return s && Array.isArray(s.ids) && s.ids.length === license.count && new Set(s.ids).size === license.count &&
+      s.ids.every(id => license.ids.has(id)&&bank.has(id)) && s.ids.filter(id => license.critical.has(id)).length === 1 &&
+      Array.isArray(s.answers) && s.answers.length === license.count && s.answers.every((a,i) => a === null || (Number.isInteger(a) && a >= 0 && a < bank.get(s.ids[i]).choices.length)) &&
+      Array.isArray(s.flags) && s.flags.length === license.count && Number.isInteger(s.index) && s.index >= 0 && s.index < license.count &&
       Number.isFinite(s.deadline) && ['running','done'].includes(s.status);
   }
   function start() {
-    const picked = groups.flatMap(([lo,hi,count]) => shuffled([...bank.keys()].filter(id => id >= lo && id <= hi && !critical.has(id))).slice(0,count));
-    picked.push(shuffled(critical)[0]);
-    state = {ids:shuffled(picked),answers:Array(30).fill(null),flags:Array(30).fill(false),index:0,status:'running',deadline:Date.now()+duration};
+    const ids=driveLicenses.drawExam(license.code);
+    state = {ids,answers:Array(ids.length).fill(null),flags:Array(ids.length).fill(false),index:0,status:'running',deadline:Date.now()+license.minutes*60000};
     save(); display(); tick();
   }
   function grade() {
@@ -37,17 +23,18 @@
     state.ids.forEach((id,i) => {
       const ok = state.answers[i] === bank.get(id).correct;
       if (ok) score++;
-      if (critical.has(id) && !ok) criticalOK = false;
+      if (license.critical.has(id) && !ok) criticalOK = false;
     });
-    return {score,criticalOK,passed:score >= 27 && criticalOK};
+    return {score,criticalOK,passed:score >= license.pass && criticalOK};
   }
   function finish(expired) {
     if (!state || state.status !== 'running') return;
     state.status='done'; state.expired=expired; state.index=0; save();
     if ($('confirm').open) $('confirm').close();
     const result=grade();
+    driveLicenses.rememberAnswers(license.code,state.ids.map((id,i)=>[id,state.answers[i]]));
     if (exam && parent !== window && location.origin !== 'null') {
-      parent.postMessage({type:'drive-exam-result',part:'theory',passed:result.passed,score:result.score,maxScore:30}, location.origin);
+      parent.postMessage({type:'drive-exam-result',part:'theory',passed:result.passed,score:result.score,maxScore:license.count}, location.origin);
     }
     display();
   }
@@ -66,16 +53,16 @@
     const done = state.status === 'done', q = bank.get(state.ids[state.index]), choice = state.answers[state.index];
     const reveal = done || (!exam && choice !== null);
     $('welcome').hidden = true; $('workspace').hidden = false;
-    $('heading').textContent= done ? 'Kết quả lý thuyết' : 'Lý thuyết hạng B';
+    $('heading').textContent=(done?'Kết quả lý thuyết hạng ':'Lý thuyết hạng ')+license.code;
     $('clock').hidden=done;
     $('result').hidden=!done;
     if(done) {
       const {score,criticalOK,passed}=grade();
-      const title=document.createElement('strong'); title.textContent=(passed?'Đạt':'Chưa đạt')+' · '+score+'/30';
-      const detail=document.createElement('p');detail.textContent=(state.expired?'Hết giờ. ':'')+(criticalOK?'Đúng câu điểm liệt.':'Câu điểm liệt chưa được trả lời đúng.')+(score<27?' Cần đúng ít nhất 27 câu.':'');
+      const title=document.createElement('strong'); title.textContent=(passed?'Đạt':'Chưa đạt')+' · '+score+'/'+license.count;
+      const detail=document.createElement('p');detail.textContent=(state.expired?'Hết giờ. ':'')+(criticalOK?'Đúng câu điểm liệt.':'Câu điểm liệt chưa được trả lời đúng.')+(score<license.pass?' Cần đúng ít nhất '+license.pass+' câu.':'');
       $('result').replaceChildren(title,detail);
     }
-    $('counter').textContent='CÂU '+String(state.index+1).padStart(2,'0')+' / 30'+(done?' · NGÂN HÀNG #'+q.id+(critical.has(q.id)?' · ĐIỂM LIỆT':''):'');
+    $('counter').textContent='CÂU '+String(state.index+1).padStart(2,'0')+' / '+license.count+(done?' · NGÂN HÀNG #'+q.id+(license.critical.has(q.id)?' · ĐIỂM LIỆT':''):'');
     $('prompt').textContent=q.prompt; const image=$('diagram'); image.hidden=!q.image;
     image.alt=q.imageAlt||'';
     if(q.image)image.src=q.image;else image.removeAttribute('src');
@@ -97,26 +84,40 @@
       if(i===state.index)button.setAttribute('aria-current','step');button.onclick=()=>go(i);return button;
     }));
     const count=state.answers.filter(a=>a!==null).length;
-    $('progress').textContent=count+'/30 câu đã trả lời';
-    $('prev').disabled=state.index===0;$('next').disabled=state.index===29;
+    $('progress').textContent=count+'/'+license.count+' câu đã trả lời';
+    $('prev').disabled=state.index===0;$('next').disabled=state.index===license.count-1;
     $('mark').hidden=done;$('mark').setAttribute('aria-pressed',String(state.flags[state.index]));
     $('mark').textContent=state.flags[state.index]?'Bỏ đánh dấu':'Đánh dấu';
     $('submit').hidden=done;$('newPaper').hidden=!done||(exam&&window!==parent);
     $('legend').textContent=done?'Xanh là câu đúng · đỏ là câu cần ôn':'Ô sáng đã trả lời · góc vàng đã đánh dấu';
   }
-  $('modeLabel').textContent=exam?'Kỳ thi thử · Phần lý thuyết':'Luyện đề hạng B';
+  function selectLicense(code) {
+    license=driveLicenses.get(code);
+    sessionName='taylai.theory.'+license.code.toLowerCase()+'.2026.'+(exam?'exam':'practice')+'.'+(params.get('run')||'standalone');
+    state=null;
+    try {const stored=JSON.parse(localStorage.getItem(sessionName));if(valid(stored))state=stored;}catch{}
+    $('examLicense').value=license.code;
+    $('classPicker').hidden=exam;
+    $('modeLabel').textContent=exam?'Thi liên hoàn · Hạng B':'Luyện đề hạng '+license.code;
+    $('licenseLabel').textContent='HẠNG '+license.code;
+    $('paperCount').textContent=license.count;$('paperMinutes').textContent=license.minutes;
+    $('paperPass').textContent=license.pass+'/'+license.count;$('poolCount').textContent=license.ids.size;
+    $('studyLink').href='library.html?hang='+license.code;
+    $('workspace').hidden=true;$('welcome').hidden=false;
+    if(state){display();tick();}
+  }
+  $('examLicense').onchange=e=>{driveLicenses.setStudyClass(e.target.value);selectLicense(e.target.value);};
   $('begin').onclick=$('newPaper').onclick=start;
   $('prev').onclick=()=>go(state.index-1);$('next').onclick=()=>go(state.index+1);
   $('mark').onclick=()=>{state.flags[state.index]=!state.flags[state.index];save();display();};
   $('submit').onclick=()=>{
     tick();if(state.status==='done')return;
     const blanks=state.answers.filter(a=>a===null).length;
-    $('confirmText').textContent=blanks?'Còn '+blanks+' câu chưa trả lời. Bạn muốn nộp bài ngay?':'Bạn đã chọn đáp án cho cả 30 câu.';
+    $('confirmText').textContent=blanks?'Còn '+blanks+' câu chưa trả lời. Bạn muốn nộp bài ngay?':'Bạn đã chọn đáp án cho cả '+license.count+' câu.';
     $('confirm').showModal();
   };
   $('cancel').onclick=()=>$('confirm').close();$('send').onclick=()=>finish(Date.now()>=state.deadline);
-  try {const stored=JSON.parse(localStorage.getItem(sessionName));if(valid(stored))state=stored;}catch{}
-  if(state){display();tick();}
+  selectLicense(exam?'B':driveLicenses.studyClass());
   setInterval(tick,350);
   document.addEventListener('visibilitychange',tick);
 })();

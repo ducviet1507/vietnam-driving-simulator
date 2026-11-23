@@ -4,7 +4,7 @@ const practice = document.getElementById('practice');
 practice.hidden = false;
 practice.addEventListener('click', () => window.openQuiz());
 const chapterNumber = Number(new URLSearchParams(location.search).get('chuong'));
-if (parent !== window || (chapterNumber >= 1 && chapterNumber <= window.driveChapters.length)) {
+if (parent !== window || new URLSearchParams(location.search).has('hang') || (chapterNumber >= 1 && chapterNumber <= window.driveChapters.length)) {
   window.openQuiz(chapterNumber);
 }
 document.getElementById('quiz').addEventListener('close', () => {

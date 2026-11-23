@@ -16,7 +16,7 @@ ViVu3D là game lái xe 3D trên trình duyệt. Bạn có thể khám phá Vi�
 | [Cúp Bánh Mì](https://vivu3d.com/cup) | Vượt đối thủ ở chặng Ven sông, Đèo trà hoặc một trong sáu cung đèo. Mỗi chặng có bảng thành tích riêng. |
 | [Sân tập và thi thử](https://vivu3d.com/hall) | Ôn lý thuyết hạng B, tập sa hình rồi thử lái đường trường và đường phố. |
 
-Trên màn hình xuất phát, nhập tên đường hoặc địa danh vào ô **Bạn muốn xuất phát ở đâu?** rồi chọn kết quả trên bản đồ. Bấm **Lái tự do** để dùng xe đang chọn hoặc **Tập lái · Tối đa 40 km/h** để tập bằng sedan với ga nhẹ và không dùng nitro. Bấm **Tạm dừng → Chuyển sang lái tự do** để đổi chế độ ngay tại chỗ. Trong **Tùy chọn → Mật độ giao thông**, chọn **Đường thoáng** để tập thao tác hoặc **Phố đông** để luyện quan sát xe máy và ô tô ở giao lộ.
+Trên màn hình xuất phát, nhập tên đường hoặc địa danh vào ô **Bạn muốn xuất phát ở đâu?** rồi chọn kết quả trên bản đồ. Bấm **Lái tự do** để dùng xe đang chọn hoặc **Tập lái · Tối đa 40 km/h** để tập bằng mô tô, xe tải đang chọn hoặc sedan hạng B với ga nhẹ và giới hạn tốc độ. Bấm **Tạm dừng → Chuyển sang lái tự do** để đổi chế độ ngay tại chỗ. Trong **Tùy chọn → Mật độ giao thông**, chọn **Đường thoáng** để tập thao tác hoặc **Phố đông** để luyện quan sát xe máy và ô tô ở giao lộ.
 
 ## Bưu thiếp Xuyên Việt
 
@@ -67,7 +67,9 @@ Mỗi **Tuyến nổi bật** có bảng xếp hạng riêng. Thời gian tính 
 
 </details>
 
-Các bài tập hạng B và điểm số trong game dùng để luyện tập. Khi chuẩn bị thi thật, hãy đối chiếu với tài liệu của cơ quan sát hạch.
+Trong **Chọn xe**, mô tô 250 cm³ dùng quiz hạng A, ô tô con dùng hạng B và xe tải thùng dùng hạng C. Khi đang lái, chọn **Tạm dừng → Ôn một câu với Chú Tư**. Ở [thư viện lý thuyết](https://vivu3d.com/library) và [trang thi thử](https://vivu3d.com/theory-exam), bạn có thể chọn hạng độc lập với xe và xem lại câu đã làm sai theo từng hạng.
+
+Các bài tập và điểm số trong game dùng để luyện tập. Khi chuẩn bị thi thật, hãy đối chiếu với tài liệu của cơ quan sát hạch.
 
 ## Chạy trên máy
 

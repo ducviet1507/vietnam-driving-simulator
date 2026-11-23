@@ -3,15 +3,15 @@
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 
-  <title>Thi thử lý thuyết lái xe hạng B trực tuyến · ViVu3D</title>
-  <meta name="description" content="Làm đề thi thử lý thuyết ô tô hạng B với 30 câu trong 20 phút. Luyện từ ngân hàng 600 câu và xem kết quả sau khi nộp bài.">
+  <title>Thi thử lý thuyết lái xe hạng A, B, C · ViVu3D</title>
+  <meta name="description" content="Chọn hạng A, B hoặc C để luyện đề theo thời gian và điểm đạt của từng hạng. Xem lại đáp án sau khi nộp bài.">
   <link rel="canonical" href="https://vivu3d.com/theory-exam">
   <link rel="icon" type="image/png" sizes="96x96" href="favicon.png">
   <meta property="og:type" content="website">
   <meta property="og:locale" content="vi_VN">
   <meta property="og:site_name" content="ViVu3D">
-  <meta property="og:title" content="Thi thử lý thuyết lái xe hạng B trực tuyến · ViVu3D">
-  <meta property="og:description" content="Làm đề thi thử lý thuyết ô tô hạng B với 30 câu trong 20 phút. Luyện từ ngân hàng 600 câu và xem kết quả sau khi nộp bài.">
+  <meta property="og:title" content="Thi thử lý thuyết lái xe hạng A, B, C · ViVu3D">
+  <meta property="og:description" content="Chọn hạng A, B hoặc C để luyện đề theo thời gian và điểm đạt của từng hạng. Xem lại đáp án sau khi nộp bài.">
   <meta property="og:url" content="https://vivu3d.com/theory-exam">
   <meta property="og:image" content="https://vivu3d.com/social-preview.jpg">
   <meta property="og:image:type" content="image/jpeg">
@@ -24,14 +24,16 @@
 </head>
 <body>
 <main>
-  <header><span>ViVu3D</span><b id="modeLabel"></b></header>
+  <header><span>ViVu3D</span><b id="modeLabel"></b><label id="classPicker">Hạng thi
+    <select id="examLicense"><option value="A">A · Mô tô</option><option value="B" selected>B · Ô tô con</option><option value="C">C · Xe tải</option></select>
+  </label></header>
   <section id="welcome">
-    <p class="eyebrow">Ô TÔ HẠNG B</p>
+    <p class="eyebrow" id="licenseLabel"></p>
     <h1>Sát hạch lý thuyết</h1>
-    <div class="facts"><span><strong>30</strong> câu</span><span><strong>20</strong> phút</span><span><strong>27/30</strong> điểm đạt</span></div>
-    <p>Đề rút ngẫu nhiên từ bộ 600 câu của Cục CSGT. Bạn cần trả lời đúng câu về tình huống mất an toàn giao thông nghiêm trọng. Có thể quay lại sửa đáp án trước khi nộp.</p>
+    <div class="facts"><span><strong id="paperCount"></strong> câu</span><span><strong id="paperMinutes"></strong> phút</span><span><strong id="paperPass"></strong> điểm đạt</span></div>
+    <p>Đề rút ngẫu nhiên từ <span id="poolCount"></span> câu của Cục CSGT. Bạn cần trả lời đúng câu điểm liệt. Có thể quay lại sửa đáp án trước khi nộp.</p>
     <button id="begin" class="primary">Bắt đầu làm bài</button>
-    <p class="source"><a href="library.html">Ôn 600 câu hỏi theo chương</a></p>
+    <p class="source"><a id="studyLink" href="library.html">Ôn câu hỏi theo chương</a></p>
     <p class="source">Áp dụng đến hết 28/02/2027 theo quy định chuyển tiếp. <a href="https://vanban.chinhphu.vn/?classid=1&amp;docid=218725&amp;pageid=27160&amp;typegroupid=6" target="_blank" rel="noopener">Thông tư 108/2026/TT-BCA</a></p>
   </section>
   <section id="workspace" hidden>
@@ -47,5 +49,5 @@
   </section>
 </main>
 <dialog id="confirm"><h2>Nộp bài thi?</h2><p id="confirmText"></p><div class="paging"><button id="cancel">Tiếp tục làm</button><button id="send" class="primary">Nộp và chấm điểm</button></div></dialog>
-<script src="bank.js"></script><script src="answer-feedback.js"></script><script src="theory-exam.js"></script>
+<script src="bank.js"></script><script src="license-classes.js"></script><script src="answer-feedback.js"></script><script src="theory-exam.js"></script>
 </body></html>

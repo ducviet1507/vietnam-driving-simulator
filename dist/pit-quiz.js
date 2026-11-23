@@ -1,13 +1,13 @@
 ﻿'use strict';
-window.createPitQuiz=function(dialog,onWrong,onReady){
+window.createPitQuiz=function(dialog,onWrong,onReady,getLicense=()=>'B'){
   const $=selector=>dialog.querySelector(selector);
   const resume=$('#repair'),another=$('#anotherQuestion'),prompt=$('#prompt');
-  let deck=[],last,round=0;
-  function draw(){
+  let deck=[],last,deckLicense,round=0;
+  function draw(code){
+    if(deckLicense!==code){deck=[];last=null;deckLicense=code;}
     if(!deck.length){
-      deck=[...window.driveBank];
-      for(let i=deck.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[deck[i],deck[j]]=[deck[j],deck[i]];}
-      if(deck.at(-1).id===last)deck.reverse();
+      deck=driveLicenses.roadDeck(code);
+      if(deck.at(-1).id===last)deck.unshift(deck.pop());
     }
     const q=deck.pop();last=q.id;return q;
   }
@@ -35,13 +35,16 @@ window.createPitQuiz=function(dialog,onWrong,onReady){
       }
     }
     if(currentRound!==round)return;
-    const q=draw();
+    const code=getLicense(),q=draw(code);
+    $('#remark').textContent+=' · Hạng '+code;
+    let firstAnswer=true;
     prompt.textContent=q.prompt;img.hidden=!q.image;
     img.alt=q.imageAlt||'';
     if(q.image)img.src=q.image;else img.removeAttribute('src');
-    $('#reply').textContent=practice?'':'Chú Tư đang mở nắp ca-pô. Trả lời câu này để chú ráp xe.';
+    $('#reply').textContent=practice?'':'Trả lời câu này trong lúc Chú Tư sửa xe.';
     q.choices.forEach((text,i)=>{
       const b=document.createElement('button');b.textContent=String.fromCharCode(65+i)+'. '+text;b.onclick=()=>{
+        if(firstAnswer){driveLicenses.rememberAnswers(code,[[q.id,i]]);firstAnswer=false;}
         markQuizAnswer(choices.children[q.correct],true);
         if(i!==q.correct){
           markQuizAnswer(b,false);b.disabled=true;
@@ -49,7 +52,7 @@ window.createPitQuiz=function(dialog,onWrong,onReady){
           choices.children[q.correct].focus();return;
         }
         for(const item of choices.children)item.disabled=true;
-        $('#reply').textContent=practice?'Chú Tư gật đầu. Đúng rồi!':'Chuẩn bài! Cản trước đã về với chính chủ.';
+        $('#reply').textContent=practice?'Chú Tư gật đầu. Đúng rồi!':'Đúng rồi! Xe đã sẵn sàng lên đường.';
         resume.hidden=false;
         if(another)another.hidden=!allowMore;
         resume.focus();

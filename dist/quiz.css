@@ -1,5 +1,6 @@
 ﻿#quiz{--accent:#ffa265;--line:#465056;--surface:#283136;box-sizing:border-box;position:fixed;inset:0;margin:auto;width:min(620px,94vw);height:fit-content;max-height:90dvh;overflow:auto;overscroll-behavior:contain;background:#1c2327;color:#f7f6f2;border:1px solid #556268;border-radius:15px;padding:clamp(16px,3vw,28px);font:inherit;text-align:left;box-shadow:0 24px 85px #070f1480;color-scheme:dark}
 #quiz::backdrop{background:#090d10af;backdrop-filter:blur(2px)}
+.q-license{display:flex;align-items:center;gap:.65rem;margin-top:1rem}.q-license select{font:inherit;background:var(--surface);color:inherit;border:1px solid var(--line);border-radius:6px;padding:.4rem .65rem}
 #quiz.q-road{width:min(440px,94vw);inset:auto 3vw 4vh auto;margin:0;max-height:84dvh;border-top:3px solid var(--accent);padding:18px 21px;background:#162025fa}
 #quiz.q-road::backdrop{background:#050d121f;backdrop-filter:none}
 #quiz h2{font-size:clamp(20px,3vw,26px);line-height:1.35;margin:12px 0 16px;letter-spacing:-.5px}

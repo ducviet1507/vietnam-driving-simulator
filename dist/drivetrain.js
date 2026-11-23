@@ -125,22 +125,27 @@ window.DriveBody={
    const yawRate=Math.max(-1.8,Math.min(1.8,next*Math.tan(wheel)/(c.spec?.wheelbase??2.68)));
    const settle=1-Math.exp(-dt*5);
    c.pitch+=(Math.max(-.065,Math.min(.045,(next-forward)/dt*.003))-c.pitch)*settle;
-   c.roll+=(Math.max(-.072,Math.min(.072,yawRate*next*.004))-c.roll)*settle;
+   const targetRoll=c.model==='motorcycle'?-Math.max(-.58,Math.min(.58,Math.atan(yawRate*next/9.81))):Math.max(-.072,Math.min(.072,yawRate*next*.004));
+   c.roll+=(targetRoll-c.roll)*settle;
    c.spin*=Math.exp(-dt*3.6);c.yaw+=(yawRate+c.spin)*dt;
    const sin=Math.sin(c.yaw),cos=Math.cos(c.yaw);
    // Tyres gain grip progressively. Hard braking in a turn lets the tail step out.
-   const lateral=(side-Math.sin(yawRate*dt)*forward)*Math.exp(-dt*grip*(c.brake?.65:1));
+   // On the rigid truck the rear axle follows the curve. The cab sweeps out
+   // relative to it, giving the vehicle centre a lateral velocity in a turn.
+   const axleOffset=c.spec?.rearAxle??0,axleSide=yawRate*axleOffset;
+   const lateral=axleSide+(side-Math.sin(yawRate*dt)*forward-axleSide)*Math.exp(-dt*grip*(c.brake?.65:1));
    c.vx=sin*next+cos*lateral;c.vz=-cos*next+sin*lateral;c.speed=next;
    c.x+=c.vx*dt;c.z+=c.vz*dt;
    // Scrub follows sideways tyre motion. Braking already reduces grip above.
-   c.slip=Math.min(1,Math.abs(lateral)*.19);
+   c.slip=Math.min(1,Math.abs(lateral-axleSide)*.19);
  },
  // Separating-axis contact between two oriented car footprints.
  contact(c,other,halfWidth=.91,halfLength=1.98){
    const dx=c.x-other.x,dz=c.z-other.z;
-   if(Math.abs(dx)>5.5||Math.abs(dz)>5.5)return null;
    const side=[Math.cos(c.yaw),Math.sin(c.yaw)],front=[side[1],-side[0]];
    const bodyWidth=c.spec?.width?c.spec.width/2:.91,bodyLength=c.spec?.width?c.spec.length/2:1.98;
+   const reach=bodyWidth+bodyLength+halfWidth+halfLength;
+   if(Math.abs(dx)>reach||Math.abs(dz)>reach)return null;
    const os=[Math.cos(other.yaw),Math.sin(other.yaw)],of=[os[1],-os[0]];
    const dot=(a,b)=>a[0]*b[0]+a[1]*b[1];let hit;
    for(const a of [side,front,os,of]){
@@ -148,7 +153,7 @@ window.DriveBody={
      if(depth<=0)return null;
      if(!hit||depth<hit.depth){const s=center<0?-1:1;hit={nx:a[0]*s,nz:a[1]*s,depth};}
    }
-   hit.axle=Math.max(-1.8,Math.min(1.8,-dx*front[0]-dz*front[1]));
+   hit.axle=Math.max(-bodyLength,Math.min(bodyLength,-dx*front[0]-dz*front[1]));
    return hit;
  },
  resolve(c,hit,otherVX=0,otherVZ=0,target=null){

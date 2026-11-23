@@ -3,3 +3,5 @@
  #grid{grid-template-columns:repeat(auto-fit,minmax(43px,1fr))}
  #grid button,.paging button,#choices button{min-height:44px}
 }
+
+#classPicker{display:flex;align-items:center;gap:.45rem;font-size:.9rem}#examLicense{font:inherit;color:var(--text);background:var(--panel);padding:.5rem;border:1px solid var(--edge);border-radius:7px}

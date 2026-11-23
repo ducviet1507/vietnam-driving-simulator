@@ -1285,7 +1285,10 @@
     function loadModel(kind){
       if(cache.has(kind))return cache.get(kind);
       const spec=worldGarage[kind]||trafficModels[kind];
-      const request=kind==='family-sedan'?loadWorldFamilySedan(T,spec.asset):TrafficModels.load.loadAsync(spec.asset).then(gltf=>gltf.scene);
+      let request;
+      if(spec.license)request=Promise.resolve(WorldSpecialVehicles.buildModel(T,kind));
+      else if(kind==='family-sedan')request=loadWorldFamilySedan(T,spec.asset);
+      else request=TrafficModels.load.loadAsync(spec.asset).then(gltf=>gltf.scene);
       cache.set(kind,request.then(model=>{
         const b=new T.Box3().setFromObject(model,true),center=b.getCenter(new T.Vector3()),scale=spec.length/(b.max.z-b.min.z);
         model.scale.multiplyScalar(scale);model.position.set(-center.x*scale,-b.min.y*scale,-center.z*scale);
@@ -1373,7 +1376,7 @@
             atmosphere.registerFinish(n.material);
           });
           item.wheels=['FL','FR','RL','RR','F','R'].map(id=>({n:model.getObjectByName('wheel_'+id),id})).filter(i=>i.n);
-          item.front=['FL','FR'].map(id=>model.getObjectByName('steer_'+id)).filter(Boolean);
+          item.front=['FL','FR','F'].map(id=>model.getObjectByName('steer_'+id)).filter(Boolean);
           const detail=new T.Group();detail.add(model);if(kind==='scooter')scooterRider(detail);
           outside.add(detail);detail.visible=false;
           for(const {n} of item.wheels){
@@ -1393,10 +1396,11 @@
     headlight.position.set(0,.73,-2.27);headlight.target.position.set(0,.08,-23);
     playerRig.add(headlight,headlight.target);
     let cabin;
-    function refreshMap(){cabin?.refreshMap();}
+    const cabins=new Map();
+    function refreshMap(){cabin?.refreshMap?.();}
     const mapRay=new T.Raycaster(),mapPointer=new T.Vector2();
     function hitDashboardMap(clientX,clientY){
-      if(!cabin)return false;
+      if(!cabin?.mapScreen)return false;
       const rect=canvas.getBoundingClientRect();
       mapPointer.set((clientX-rect.left)/rect.width*2-1,1-(clientY-rect.top)/rect.height*2);
       mapRay.setFromCamera(mapPointer,camera);
@@ -1420,7 +1424,7 @@
       const detailed=near&&!!item.detail;item.low.visible=!detailed;
       if(item.detail)item.detail.visible=detailed;
       if(detailed){
-        item.wheels.forEach(({n,id})=>n.rotateX((id.endsWith('R')&&id.length===2?-1:1)*car.speed*dt/.33));
+        item.wheels.forEach(({n,id})=>n.rotateX((id.endsWith('R')&&id.length===2?-1:1)*car.speed*dt/(car.spec?.wheelRadius??.33)));
         for(const steer of item.front)steer.rotation.y=-(car.steer||0)*.34;
         if(item.light)item.light.emissiveIntensity=car.brake||car.showroom&&car.opening||car.recoil?.braking?4.2:.55+atmosphere.lamps.value*1.15;
         updateBodywork(T,item.detail,car.dent,car.yaw);
@@ -1442,6 +1446,8 @@
       waterSurface.setWake(x,z,car.yaw+(car.speed<0?Math.PI:0),wake,car.flood?.age||0);
       const kind=car.model;
       if(!player||player.kind!==kind){
+        cabin?.update(false,0,0);
+        cabin=cabins.get(car.spec.license?kind:'car');
         if(player)player.root.visible=false;
         if(!players.has(kind))players.set(kind,makeVehicle(kind,0,true));
         player=players.get(kind);
@@ -1456,7 +1462,10 @@
       playerRig.position.y+=car.spec.seatLift??0;
       playerRig.rotation.set(-player.root.rotation.x,-car.yaw,-player.root.rotation.z,'YXZ');
       mirrorRotation.copy(playerRig.quaternion);
-      if(inside)cabin??=window.buildDriverCabin(T,playerRig,document.getElementById('map'));
+      if(inside&&!cabin){
+        cabin=car.spec.license?WorldSpecialVehicles.buildCabin(T,playerRig,kind):window.buildDriverCabin(T,playerRig,document.getElementById('map'));
+        cabins.set(car.spec.license?kind:'car',cabin);
+      }
       cabin?.update(inside,(car.speed||0)*3.6,car.steer||0);
       const visibleTraffic=car.sightView?.data.memorialVisit?[]:traffic||[];
       const lightTraffic=small&&graphics.profile.id==='low';
@@ -1489,14 +1498,18 @@
         const portrait=camera.aspect<.85;
         eye.set(portrait?-5.6:-4.3,portrait?1.9:1.6,portrait?8.0:5.5);
         look.set(portrait?0:-1.38,.72,-.38);
+      }else if(inside&&cabin.seatView){
+        cabin.seatView(eye,look,camera.aspect);
       }else if(inside){
         const inset=cabin.seatInset(camera.aspect),seatX=-.31+inset*.72;
         eye.set(seatX,1.1,.58+inset*2.35);look.set(seatX,.46,-13);
+      }else if(kind==='box-truck'){
+        eye.set(0,4.35,(camera.aspect<.85?12.5:10.5)+speed*.018);look.set(0,1.35,-7);
       }else{
         const back=(camera.aspect<.85?7.55:6.35)+speed*.018;
         eye.set(-(car.steer||0)*.32,2.08+speed*.007,back);look.set(0,.9,-10);
       }
-      if(car.openingPose&&!inside&&!car.sightView){
+      if(car.openingPose&&!inside&&!car.sightView&&kind!=='box-truck'){
         const p=car.openingPose,portrait=camera.aspect<.85;
         eye.x+=(3.2-eye.x)*p;eye.y+=(1.22-eye.y)*p;eye.z+=((portrait?9.5:6.2)-eye.z)*p;
         look.x+=((portrait?-1.55:-2.7)-look.x)*p;look.y+=(1.12-look.y)*p;look.z+=(-3.1-look.z)*p;
@@ -1536,6 +1549,7 @@
       }
       if(car.flood){eye.y=Math.max(eye.y,car.flood.level+2.2);look.set(x,car.flood.level-.25,z);}
       camera.position.copy(eye);camera.lookAt(look);
+      if(inside&&kind==='motorcycle'&&!car.sightView)camera.rotateZ((car.roll||0)*.40);
       const viewport=car.sightView?.viewport;
       const tourAspect=viewport?viewport.width/viewport.visibleHeight:camera.aspect;
       if(car.sightView){
@@ -1593,9 +1607,10 @@
       }
       updateTreeDetail(camera.position.x,camera.position.z,graphics.profile);
       if(prepareOnly)return warmScene();
-      if(car.showroom&&player.modelReady)cabin?.prepare(renderer,scene,camera);
+      if(car.showroom&&player.modelReady)cabin?.prepare?.(renderer,scene,camera);
       const mirrorUpdated=inside&&cabin&&!waterSurface.capturePending&&
-        cabin.reflect(mirrorAdapter,scene,cabin.interior,0,0,graphics.profile.mirrorMs,now);
+        (cabin.drawMirrors?cabin.drawMirrors(renderer,scene,graphics.profile.mirrorMs,now,player.outside):
+          cabin.reflect(mirrorAdapter,scene,cabin.interior,0,0,graphics.profile.mirrorMs,now));
       roadsideImpact.update(dt);driveFx.update(car,dt,originX,originZ,inside,camera,atmosphere.wetness.value);
       landmarkSource?.weather(weather.rainfall);
       const waterLevel=graphics.profile.waterWidth?nearbyWaterLevel(viewpoint.x-originX,viewpoint.z-originZ):null;

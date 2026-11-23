@@ -215,7 +215,7 @@ try {
     const position=await page.evaluate(()=>[car.x,car.z,distance]);
     await page.getByRole('button',{name:'Chuyển sang lái tự do'}).click();
     await page.locator('#learnerLimit').waitFor({state:'hidden'});
-    assert.equal(await page.locator('#practiceQuestion').getAttribute('hidden'),'');
+    assert.equal(await page.locator('#practiceQuestion').getAttribute('hidden'),null);
     assert.equal(await nitroPedal.isVisible(),true);
     assert.deepEqual(await page.evaluate(()=>[car.x,car.z,distance]),position);
     assert.equal(await page.evaluate(()=>car.model),'compact-mpv');

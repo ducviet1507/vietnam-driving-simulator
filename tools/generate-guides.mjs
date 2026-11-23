@@ -76,11 +76,11 @@ page({...library, title:'Ngân hàng 600 câu hỏi lý thuyết lái xe', descr
   extraHead:'<link rel="stylesheet" href="quiz.css"><link rel="stylesheet" href="answer-feedback.css">',
   body:`<h1>Ngân hàng 600 câu hỏi lý thuyết lái xe</h1>
   <p class="intro">Chọn một chương để đọc câu hỏi, xem hình minh họa và đối chiếu đáp án. Khi tự luyện, bạn có thể làm lại các câu đã trả lời sai.</p>
-  <div class="actions"><button id="practice" class="primary" hidden>Luyện câu hỏi</button><a href="theory-exam.html">Thi thử lý thuyết hạng B</a></div>
+  <div class="actions"><button id="practice" class="primary" hidden>Luyện câu hỏi</button><a href="theory-exam.html">Thi thử hạng A, B, C</a></div>
   <h2>Tra cứu theo chương</h2><ol class="chapters">${chapterLinks}</ol>
   <footer>Nguồn câu hỏi và đáp án · ${bankCredit}</footer>`,
   scripts:`<dialog id="quiz" aria-labelledby="quiz-title"></dialog>
-<script src="bank.js" defer></script><script src="answer-feedback.js" defer></script><script src="quiz.js" defer></script><script src="library.js" defer></script>`
+<script src="bank.js" defer></script><script src="license-classes.js" defer></script><script src="answer-feedback.js" defer></script><script src="quiz.js" defer></script><script src="library.js" defer></script>`
 });
 
 function questionMarkup(q) {
@@ -108,7 +108,7 @@ for (const [i, [first, last, title, slug, intro]] of driveChapters.entries()) {
     <h2>Đi đến nhóm câu hỏi</h2><nav class="jumps" aria-label="Nhóm câu hỏi">${jumps}</nav>
     <h2>Câu hỏi và đáp án</h2>
     ${questions.map(questionMarkup).join('\n')}
-    <footer><a href="library.html">Mục lục 600 câu hỏi</a> · <a href="theory-exam.html">Thi thử lý thuyết hạng B</a></footer>`});
+    <footer><a href="library.html">Mục lục 600 câu hỏi</a> · <a href="theory-exam.html">Thi thử hạng A, B, C</a></footer>`});
 }
 
 const format = (n, digits) => n.toLocaleString('vi-VN', {maximumFractionDigits:digits});

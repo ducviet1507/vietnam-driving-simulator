@@ -19,10 +19,11 @@ car.look=vehicleLook.view;
 let garageVehicle='supercar';
 const openingGarage=$('openingGarage'),setupGarage=$('garage');
 setupGarage.replaceChildren(...Array.from(openingGarage.children,group=>group.cloneNode(true)));
-const learnerSedan={...worldGarage['family-sedan'],power:2.5,top:40/3.6,speedGovernor:true};
 function selectVehicle(model,learner=false){
  if(!Object.hasOwn(worldGarage,model))return;
- car.model=model;car.spec=learner?learnerSedan:worldGarage[model];gfx?.preloadVehicle(model);
+ const spec=worldGarage[model];car.model=model;
+ car.spec=learner?{...spec,power:Math.min(spec.power,2.5),top:40/3.6,speedGovernor:true}:spec;
+ gfx?.preloadVehicle(model);
  openingGarage.value=setupGarage.value=model;
  $('garagePreview').src='streetscape/previews/'+model+'.webp';
  $('learnerLimit').hidden=$('leaveLearner').hidden=$('practiceQuestion').hidden=!learner;
@@ -381,7 +382,7 @@ function trafficStep(dt){
    const parallel=Math.abs(car.deckLift-n.deckLift)<=2.5&&Math.cos(car.yaw-n.yaw)>.88&&Math.abs(across)<9;
    if(parallel&&along< -4&&along> -18)n.armed=true;
    if(!parallel||Math.abs(along)>32)n.armed=false;
-   if(car.spec!==learnerSedan&&n.armed&&parallel&&along>4&&car.speed>n.speed&&cooldown<=0&&!n.passed){
+   if(!car.spec.speedGovernor&&n.armed&&parallel&&along>4&&car.speed>n.speed&&cooldown<=0&&!n.passed){
      n.passed=true;passes++;nitro=Math.min(100,nitro+(n.kind==='rival'?20:7));inform(n.kind==='rival'?'Vượt tay đua · +20 nitro':'Vượt sạch · +7 nitro',1.6);
    }
    hitVehicle(n);if(mode!=='drive')return;
@@ -404,7 +405,7 @@ const pit=createPitQuiz($('pit'),()=>'Chú Tư lắc đầu. Chọn lại đáp 
  if(mode==='paused'){mode='drive';keySet.clear();return;}
  if(car.flood)recover();
  hp=100;DriveBody.reset(car);cooldown=2;mode='drive';keySet.clear();updateHud();save();inform('Máy lại giòn. Lên đường!');
-});
+},()=>car.spec.license||'B');
 function wreckContact(n){
  const r=n.recoil;
  if(Math.hypot(r.vx,r.vz)<.08)return;
@@ -473,13 +474,14 @@ function tick(dt){
  cooldown=Math.max(0,cooldown-dt);streamRetry=Math.max(0,streamRetry-dt);
  const gas=held('w','arrowup'),reverse=held('s','arrowdown');
  if(gas||reverse)car.parked=false;
- const brake=car.parked||held(' '),boost=car.spec!==learnerSedan&&!car.wading&&held('shift')&&nitro>1&&!reverse&&!brake;
+ const brake=car.parked||held(' '),boost=!car.spec.speedGovernor&&!car.wading&&held('shift')&&nitro>1&&!reverse&&!brake;
  nitro=clamp(nitro+(boost?-27:held('shift')?0:6)*dt,0,100);
  const x=car.x,z=car.z;
  DriveBody.step(car,{grade:gfx.grade(car.x,car.z,car.yaw,car.edge),gas,reverse,brake,boost,steer:Number(held('d','arrowright'))-Number(held('a','arrowleft')),power:car.spec.power,top:car.spec.top},dt);
  const radius=car.spec.width?car.spec.width/2:.88;
  const probeOffset=car.spec.width?car.spec.length/2-radius:1.2;
- for(const axle of [probeOffset,-probeOffset]){
+ const probes=car.spec.rearAxle?[probeOffset,0,-probeOffset]:[probeOffset,-probeOffset];
+ for(const axle of probes){
    const cx=car.x+Math.sin(car.yaw)*axle,cz=car.z-Math.cos(car.yaw)*axle,hit=gfx.contact(cx,cz,radius,gfx.ground(car.x,car.z,car.edge),car.edge);
    if(!hit)continue;
    hit.axle=axle;const impact=DriveBody.resolve(car,hit);
@@ -562,7 +564,7 @@ function updateHud(){
    info.push(label+' · '+Math.max(0,Math.round(control.distance))+' m');
  }
  $('roadFacts').hidden=!info.length;$('roadFacts').textContent=info.join(' · ');
- $('street').textContent=(car.accessLane?'Đường nội bộ':nameOf(player.edge))+(Math.abs(grade)>=2?' · '+(grade>0?'↑ ':'↓ ')+Math.abs(grade)+'%':'');$('speed').textContent=Math.round(Math.abs(car.speed)*3.6);$('trip').textContent=fmt(distance)+(car.spec===learnerSedan?'':' · '+passes+' lượt vượt');$('hp').value=hp;$('nitro').value=nitro;
+ $('street').textContent=(car.accessLane?'Đường nội bộ':nameOf(player.edge))+(Math.abs(grade)>=2?' · '+(grade>0?'↑ ':'↓ ')+Math.abs(grade)+'%':'');$('speed').textContent=Math.round(Math.abs(car.speed)*3.6);$('trip').textContent=fmt(distance)+(car.spec.speedGovernor?'':' · '+passes+' lượt vượt');$('hp').value=hp;$('nitro').value=nitro;
  const fork=onNetwork?branchAhead():null,plan=duel&&fork?duel.nextAt(fork.node):null;
  $('duelInfo').hidden=!duel;
  if(duel)$('duelInfo').textContent='CHẶNG '+duel.round+' · '+(duel.player>=duel.opponent?'1/2':'2/2')+' · CÒN '+Math.ceil(duel.gate-duel.player)+' M';
@@ -695,7 +697,7 @@ function frame(now){
      }
    }else if(mode==='sinking'){
      advanceFlood(car,dt);
-     if(car.flood.age>=4.1){mode='pit';pit('water',car.spec===learnerSedan);}
+     if(car.flood.age>=4.1){mode='pit';pit('water',car.spec.speedGovernor);}
    }else if(mode==='crash'){
      DriveBody.settle(car,dt);
      for(const actor of duel?[duel.actor,...npcs]:npcs){
@@ -705,7 +707,7 @@ function frame(now){
        if(r.fallen)wreckContact(actor);
        landingFx(actor,landing);
      }
-     crashTime-=dt;if(crashTime<=0){mode='pit';pit(crashKind,car.spec===learnerSedan);}
+     crashTime-=dt;if(crashTime<=0){mode='pit';pit(crashKind,car.spec.speedGovernor);}
    }
    if(mode!=='loading'&&roads&&!document.hidden&&now>=nextWeatherCheck){nextWeatherCheck=now+2000;gfx.weather.locate(...roads.geo(car.x,car.z));}
    car.driving=mode==='drive';car.showroom=mode==='grid';
@@ -1069,7 +1071,7 @@ $('raceMode').onclick=()=>{
 };
 $('resume').onclick=()=>{$('rest').close();mode='drive';keySet.clear();};
 $('practiceQuestion').onclick=()=>{
- if(mode!=='paused'||car.spec!==learnerSedan)return;
+ if(mode!=='paused')return;
  $('rest').close();pit('practice',true);
 };
 $('leaveLearner').onclick=()=>{
