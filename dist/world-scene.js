@@ -1286,12 +1286,18 @@
       if(cache.has(kind))return cache.get(kind);
       const spec=worldGarage[kind]||trafficModels[kind];
       let request;
-      if(spec.license)request=Promise.resolve(WorldSpecialVehicles.buildModel(T,kind));
+      if(kind==='motorcycle'){
+        request=TrafficModels.load.loadAsync(spec.asset).then(gltf=>gltf.scene,()=>null)
+          .then(body=>WorldSpecialVehicles.buildModel(T,kind,body));
+      }else if(spec.license)request=Promise.resolve(WorldSpecialVehicles.buildModel(T,kind));
       else if(kind==='family-sedan')request=loadWorldFamilySedan(T,spec.asset);
       else request=TrafficModels.load.loadAsync(spec.asset).then(gltf=>gltf.scene);
       cache.set(kind,request.then(model=>{
-        const b=new T.Box3().setFromObject(model,true),center=b.getCenter(new T.Vector3()),scale=spec.length/(b.max.z-b.min.z);
-        model.scale.multiplyScalar(scale);model.position.set(-center.x*scale,-b.min.y*scale,-center.z*scale);
+        // The motorcycle and its rider use metres measured from the midpoint of the axles.
+        if(kind!=='motorcycle'){
+          const b=new T.Box3().setFromObject(model,true),center=b.getCenter(new T.Vector3()),scale=spec.length/(b.max.z-b.min.z);
+          model.scale.multiplyScalar(scale);model.position.set(-center.x*scale,-b.min.y*scale,-center.z*scale);
+        }
         model.traverse(n=>{if(n.isMesh){n.castShadow=true;n.receiveShadow=true;}});
         return model;
       }).catch(()=>{cache.delete(kind);return null;}));return cache.get(kind);
@@ -1327,7 +1333,7 @@
       function block(x,y,z,w,h,l,m){
         const mesh=new T.Mesh(unitBox,m);mesh.position.set(x,y,z);mesh.scale.set(w,h,l);low.add(mesh);
       }
-      if(kind==='scooter'){
+      if(kind==='scooter'||kind==='motorcycle'){
         for(const z of [-.59,.59]){
           const wheel=new T.Mesh(unitPole,tires);wheel.rotation.z=Math.PI/2;wheel.scale.set(.52,.16,.52);wheel.position.set(0,.26,z);low.add(wheel);
         }
@@ -1377,6 +1383,10 @@
           });
           item.wheels=['FL','FR','RL','RR','F','R'].map(id=>({n:model.getObjectByName('wheel_'+id),id})).filter(i=>i.n);
           item.front=['FL','FR','F'].map(id=>model.getObjectByName('steer_'+id)).filter(Boolean);
+          if(kind==='motorcycle'){
+            item.helmet=model.getObjectByName('rider_helmet');
+            item.gripPivot=model.worldToLocal(item.front[0].getWorldPosition(new T.Vector3()));
+          }
           const detail=new T.Group();detail.add(model);if(kind==='scooter')scooterRider(detail);
           outside.add(detail);detail.visible=false;
           for(const {n} of item.wheels){
@@ -1426,6 +1436,10 @@
       if(detailed){
         item.wheels.forEach(({n,id})=>n.rotateX((id.endsWith('R')&&id.length===2?-1:1)*car.speed*dt/(car.spec?.wheelRadius??.33)));
         for(const steer of item.front)steer.rotation.y=-(car.steer||0)*.34;
+        if(item.helmet){
+          item.helmet.rotation.y=-(car.steer||0)*.19;
+          steerMotorcycleRider(item.detail.children[0],item.front[0].rotation.y,item.gripPivot.x,item.gripPivot.z);
+        }
         if(item.light)item.light.emissiveIntensity=car.brake||car.showroom&&car.opening||car.recoil?.braking?4.2:.55+atmosphere.lamps.value*1.15;
         updateBodywork(T,item.detail,car.dent,car.yaw);
       }
@@ -1448,6 +1462,8 @@
       if(!player||player.kind!==kind){
         cabin?.update(false,0,0);
         cabin=cabins.get(car.spec.license?kind:'car');
+        if(kind==='motorcycle')headlight.position.set(0,.85,-.65);
+        else headlight.position.set(0,.73,-2.27);
         if(player)player.root.visible=false;
         if(!players.has(kind))players.set(kind,makeVehicle(kind,0,true));
         player=players.get(kind);
@@ -1463,7 +1479,7 @@
       playerRig.rotation.set(-player.root.rotation.x,-car.yaw,-player.root.rotation.z,'YXZ');
       mirrorRotation.copy(playerRig.quaternion);
       if(inside&&!cabin){
-        cabin=car.spec.license?WorldSpecialVehicles.buildCabin(T,playerRig,kind):window.buildDriverCabin(T,playerRig,document.getElementById('map'));
+        cabin=car.spec.license?WorldSpecialVehicles.buildCabin(T,playerRig,kind,kind==='motorcycle'?loadModel(kind):null):window.buildDriverCabin(T,playerRig,document.getElementById('map'));
         cabins.set(car.spec.license?kind:'car',cabin);
       }
       cabin?.update(inside,(car.speed||0)*3.6,car.steer||0);
@@ -1505,6 +1521,9 @@
         eye.set(seatX,1.1,.58+inset*2.35);look.set(seatX,.46,-13);
       }else if(kind==='box-truck'){
         eye.set(0,4.35,(camera.aspect<.85?12.5:10.5)+speed*.018);look.set(0,1.35,-7);
+      }else if(kind==='motorcycle'){
+        eye.set(-.35-(car.steer||0)*.20,1.83+speed*.006,(camera.aspect<.85?5.75:4.85)+speed*.018);
+        look.set(0,.92,-8);
       }else{
         const back=(camera.aspect<.85?7.55:6.35)+speed*.018;
         eye.set(-(car.steer||0)*.32,2.08+speed*.007,back);look.set(0,.9,-10);
@@ -1571,8 +1590,9 @@
       // Fit the facade on a narrow screen without backing the eye into a tree.
       const fixedView=car.sightView?.data.viewRadius;
       const tourFov=car.sightView?.data.viewFov??57;
+      const seatFov=kind==='motorcycle'?64+T.MathUtils.clamp((.78-camera.aspect)*32,0,10):64;
       const fov=fixedView?T.MathUtils.radToDeg(2*Math.atan(Math.tan(T.MathUtils.degToRad(tourFov/2))/Math.min(1,tourAspect))):
-        (inside?64:car.openingPose?57+Math.min(15,speed*.28)-9*car.openingPose:car.showroom?47:57+Math.min(15,speed*.28))+driveFx.boostFov(car.driving&&car.boost,inside);
+        (inside?seatFov:car.openingPose?57+Math.min(15,speed*.28)-9*car.openingPose:car.showroom?47:57+Math.min(15,speed*.28))+driveFx.boostFov(car.driving&&car.boost,inside);
       if(Math.abs(fov-camera.fov)>.05){
         camera.fov=car.showroom||car.sightView?.data.views?fov:camera.fov+(fov-camera.fov)*(1-Math.exp(-dt*7));
         camera.updateProjectionMatrix();

@@ -2,7 +2,7 @@
 // Player cars. Dimensions are in metres and speeds in m/s.
 const worldGarage={
   motorcycle:{
-    worldOnly:true,license:'A',length:2.10,width:.80,height:1.64,paint:0x24686b,
+    worldOnly:true,license:'A',asset:'streetscape/street-motorcycle.glb',length:2.04,width:.83,height:1.64,paint:0x24686b,
     power:6.1,top:35,braking:8.6,wheelbase:1.43,steerLock:.48,mass:254,wheelRadius:.32
   },
   'box-truck':{

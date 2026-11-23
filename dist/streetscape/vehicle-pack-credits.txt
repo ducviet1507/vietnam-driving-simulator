@@ -44,4 +44,11 @@ SUV v1 LOD1 by tevy, CC0 1.0. https://tevy.dev/models/suv/v1/lod1.glb
 The new body has a longer cabin, a lower bonnet, revised roofline and side
 panels, and its own lights, grille and bumper trim.
 
+street-motorcycle.glb is adapted from "Street Motorcycle" by vinish.dev.
+Source: https://vinish.dev/free-3d-models/motorcycles
+License: Creative Commons Attribution 4.0 International (CC BY 4.0).
+https://creativecommons.org/licenses/by/4.0/
+ViVu3D repainted the tank, fenders and frame, removed the side stand, simplified
+geometry and textures, and adapted the wheel pivots, mirrors, lights and dash.
+
 The garage preview images are renders of the corresponding playable models.
