@@ -478,7 +478,8 @@ function tick(dt,stepEnd){
  const brake=car.parked||held(' '),boost=!car.spec.speedGovernor&&!car.wading&&held('shift')&&nitro>1&&!reverse&&!brake;
  nitro=clamp(nitro+(boost?-27:held('shift')?0:6)*dt,0,100);
  const x=car.x,z=car.z;
- DriveBody.step(car,{grade:gfx.grade(car.x,car.z,car.yaw,car.edge),gas,reverse,brake,boost,steer:keySet.steering(stepEnd,dt),power:car.spec.power,top:car.spec.top},dt);
+ const steeringProfile=window.driveSteeringProfile;
+ DriveBody.step(car,{grade:gfx.grade(car.x,car.z,car.yaw,car.edge),gas,reverse,brake,boost,steeringProfile,steer:keySet.steering(stepEnd,dt,steeringProfile),power:car.spec.power,top:car.spec.top},dt);
  const radius=car.spec.width?car.spec.width/2:.88;
  const probeOffset=car.spec.width?car.spec.length/2-radius:1.2;
  const probes=car.spec.rearAxle?[probeOffset,0,-probeOffset]:[probeOffset,-probeOffset];
@@ -1149,6 +1150,7 @@ function soundLabel(){
 soundLabel();$('sound').onclick=()=>{driveAudio.toggle();soundLabel();};
 $('rest').oncancel=e=>{e.preventDefault();$('resume').click();};
 window.addEventListener('keydown',e=>{
+ if($('cockpitSettings')?.open)return;
  const k=e.key.toLowerCase();
  if(k==='f'&&!e.ctrlKey&&!e.metaKey&&!e.altKey&&(mode==='drive'||mode==='tour')&&
     !e.target.closest?.('input,textarea,select,[contenteditable=true],dialog')){

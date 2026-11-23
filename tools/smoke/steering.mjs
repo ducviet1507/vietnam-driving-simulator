@@ -14,8 +14,8 @@ function start(kmh) {
   return car;
 }
 
-function drive(car,steer,seconds,hz) {
-  const input={steer,grade:0,gas:false,power:car.spec.power,top:car.spec.top};
+function drive(car,steer,seconds,hz,steeringProfile=3) {
+  const input={steer,steeringProfile,grade:0,gas:false,power:car.spec.power,top:car.spec.top};
   for(let remaining=seconds;remaining>1e-9;) {
     const frame=Math.min(1/hz,remaining);
     const steps=Math.ceil(frame*90);
@@ -23,6 +23,20 @@ function drive(car,steer,seconds,hz) {
     remaining-=frame;
   }
 }
+
+// Flat-road snapshots from the three published models, at 10 ms per step.
+const historical=[15.987719669,3.539481200,1.163400469];
+let lastDistance=Infinity;
+for(let notch=100;notch<=300;notch++){
+  const profile=notch/100,car=start(200);
+  drive(car,1,.2,100,profile);drive(car,0,.8,100,profile);
+  assert.ok(car.x<lastDistance,'This longer turn changes progressively between versions');
+  if(Number.isInteger(profile))assert.ok(Math.abs(car.x-historical[profile-1])<1e-6,'Published steering response');
+  lastDistance=car.x;
+}
+const original=start(200);
+for(let i=0;i<100;i++)body.step(original,{steer:i<20?1:0,top:48},.01);
+assert.ok(Math.abs(original.x-historical[0])<1e-6,'An absent preference uses the original steering');
 
 for(const hz of [30,60,100,144]) {
   for(const speed of [-10,0,10,20,40,60,100,150,200]) {
@@ -88,7 +102,7 @@ for(const hz of [30,60,100,144]) {
       const steps=Math.ceil(90/hz),dt=1/hz/steps;
       for(let i=0;i<steps;i++){
         const end=1000*(frame/hz-(steps-i-1)*dt);
-        duration+=input.steering(end,dt)*dt*1000;
+        duration+=input.steering(end,dt,3)*dt*1000;
       }
     }
     assert.ok(Math.abs(duration-95)<1e-6,'100 ms right, then a 5 ms left tap between frames');
@@ -96,4 +110,9 @@ for(const hz of [30,60,100,144]) {
     assert.equal(input.steering(1250,.01),0,'Clearing input discards pending turns');
   }
 }
-console.log('PASS progressive steering and timestamped button durations at 30–144 Hz');
+for(const profile of [1,1.5,2,2.5,3]){
+  const input=makeInput({timedSteering:true});
+  input.add('d',5);input.delete('d',15);
+  assert.ok(Math.abs(input.steering(20,.020,profile)-.5*Math.max(0,profile-2))<1e-10,'Each profile uses its original input timing');
+}
+console.log('PASS original steering, both published alternatives and intermediate slider positions');

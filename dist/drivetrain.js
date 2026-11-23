@@ -102,32 +102,46 @@ window.DriveBody={
    const next=rolling-Math.sign(rolling)*Math.min(Math.abs(rolling),drag*dt);
    return c.spec?.speedGovernor?Math.min(next,input.top):next;
  },
- step(c,input,dt){
-   if(!(dt>0))return;
-   const sx=Math.sin(c.yaw),cz=Math.cos(c.yaw),forward=c.vx*sx-c.vz*cz,side=c.vx*cz+c.vz*sx;
-   const grip=c.offroad?4.2:c.model==='rally'?9:7.2;
-   // Ease the digital input, then shape the wheel response around centre.
-   // Parking stays linear. A held key still reaches full lock at every speed.
+ wheelAngle(c,input,dt,forward,next,wheelbase){
+   const profile=input.steeringProfile??1;
+   const steeringLock=(c.spec?.steerLock??.52)/(1+Math.abs(next)*.056);
+   if(profile===1){
+     c.steer+=(input.steer-c.steer)*(1-Math.exp(-dt*8));
+     c.steerTravel=c.steer;
+     return c.steer*steeringLock;
+   }
+   const classic=Math.max(0,2-profile),revised=Math.max(0,profile-2);
+   const middle=1-classic-revised;
    const travel=c.steerTravel??c.steer;
    const speedKmh=Math.abs(forward)*3.6;
-   const curve=1+.3*Math.max(0,Math.min(1,(speedKmh-20)/80));
+   const middleCurve=3*Math.max(0,Math.min(1,(speedKmh-20)/120));
+   const revisedCurve=.3*Math.max(0,Math.min(1,(speedKmh-20)/80));
    // Reversing unwinds the previous turn faster, until the wheel crosses centre.
    let decay=dt*8;
    if(travel*input.steer<0){
-     const unwind=4*(curve-1);
+     const unwind=4*(middle*middleCurve+revised*revisedCurve);
      const toCentre=Math.log1p(Math.abs(travel/input.steer))/(8+unwind);
      decay+=unwind*Math.min(dt,toCentre);
    }
    c.steerTravel=travel+(input.steer-travel)*(1-Math.exp(-decay));
-   c.steer=Math.sign(c.steerTravel)*Math.abs(c.steerTravel)**curve;
-   const next=this.forwardSpeed(c,input,dt,forward);
-   const wheelbase=c.spec?.wheelbase??2.68;
-   const steeringLock=(c.spec?.steerLock??.52)/(1+Math.abs(next)*.056);
-   // Limit the available cornering angle at speed. Even a light input can use
-   // part of that range immediately; holding the button fills it progressively.
+   const sign=Math.sign(c.steerTravel),amount=Math.abs(c.steerTravel);
+   const uncapped=classic*c.steerTravel+(middle?middle*sign*amount**(1+middleCurve):0);
+   c.steer=uncapped;
+   if(!revised)return uncapped*steeringLock;
+   // Blend wheel angles after applying each version's own steering limit.
+   const capped=revised*sign*amount**(1+revisedCurve);
+   c.steer+=capped;
    const lateralLimit=Math.min(c.offroad?7:12,c.spec?.braking??12);
    const gripLock=Math.atan2(lateralLimit*wheelbase,next*next);
-   const wheel=c.steer*Math.min(steeringLock,gripLock);
+   return uncapped*steeringLock+capped*Math.min(steeringLock,gripLock);
+ },
+ step(c,input,dt){
+   if(!(dt>0))return;
+   const sx=Math.sin(c.yaw),cz=Math.cos(c.yaw),forward=c.vx*sx-c.vz*cz,side=c.vx*cz+c.vz*sx;
+   const grip=c.offroad?4.2:c.model==='rally'?9:7.2;
+   const next=this.forwardSpeed(c,input,dt,forward);
+   const wheelbase=c.spec?.wheelbase??2.68;
+   const wheel=this.wheelAngle(c,input,dt,forward,next,wheelbase);
    const yawRate=Math.max(-1.8,Math.min(1.8,next*Math.tan(wheel)/wheelbase));
    const settle=1-Math.exp(-dt*5);
    c.pitch+=(Math.max(-.065,Math.min(.045,(next-forward)/dt*.003))-c.pitch)*settle;

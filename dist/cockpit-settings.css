@@ -6,7 +6,12 @@
 #cockpitSettings label {position: relative; display: grid; flex: 1; min-height: 44px; place-items: center; border: 1px solid #667970; border-radius: 7px; background: #22362e; color: #dbe7dc; font-size: 15px; cursor: pointer}
 #cockpitSettings label:has(:checked) {background: #d7ebbc; color: #1b3024; border-color: #d7ebbc; font-weight: 700}
 #cockpitSettings label:has(:focus-visible) {outline: 3px solid #a7df58; outline-offset: 2px}
-#cockpitSettings input {position: absolute; opacity: 0; width: 1px; height: 1px}
+#cockpitSettings input[type=radio] {position: absolute; opacity: 0; width: 1px; height: 1px}
+#cockpitSettings .steeringProfile {display: block}
+#cockpitSettings .steeringProfile output {display: block; color: #d7ebbc; font-size: 14px}
+#cockpitSettings input[type=range] {display: block; width: 100%; height: 36px; margin: 0; accent-color: #d2f477; cursor: pointer}
+#cockpitSettings .steeringStops {display: flex; justify-content: space-between}
+#cockpitSettings .steeringStops button {min-height: 36px; padding: 0 5px; border: 0; background: transparent; color: #f4f6ed; font: inherit; cursor: pointer}
 #cockpitSettings .settingsDone {width: 100%; min-height: 44px; margin-top: 4px; background: #d2f477; border: 0; border-radius: 7px; color: #152c29; font: 700 15px system-ui; cursor: pointer}
 #cockpitSettings [data-device=touch] {display: none}
 

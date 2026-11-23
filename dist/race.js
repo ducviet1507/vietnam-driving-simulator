@@ -214,14 +214,14 @@ function raceUpdate(dt,stepEnd){
  const gas=held('w','arrowup'),brake=held('s','arrowdown',' ');
  const nitro=held('shift')&&s.charge>1&&!brake&&!s.airborne,setup=cupSetups[chosenCar];
  drafting=!s.airborne&&rivals.some(r=>inSlipstream(s,r));
- const steer=keys.steering(stepEnd,dt);
+ const steeringProfile=window.driveSteeringProfile,steer=keys.steering(stepEnd,dt,steeringProfile);
  if(route.stage)cupBody.offroad=Math.abs(s.offset)>roadHalfWidth;
  if(s.airborne){
    cupBody.x+=cupBody.vx*dt;cupBody.z+=cupBody.vz*dt;
    cupBody.boost=false;cupBody.brake=false;cupBody.slip=0;
  }else{
    s.charge=nitroCharge(s.charge,nitro,held('shift'),drafting,dt);
-   DriveBody.step(cupBody,{grade:roadGrade(s.d,cupBody.yaw),gas,brake:held(' '),reverse:held('s','arrowdown'),steer,boost:nitro,power:setup.power+(drafting?1.6:0),top:setup.top},dt);
+   DriveBody.step(cupBody,{grade:roadGrade(s.d,cupBody.yaw),gas,brake:held(' '),reverse:held('s','arrowdown'),steeringProfile,steer,boost:nitro,power:setup.power+(drafting?1.6:0),top:setup.top},dt);
  }
  syncCup();
  updateCupFeatures(s,previousD,previousLane,dt);
