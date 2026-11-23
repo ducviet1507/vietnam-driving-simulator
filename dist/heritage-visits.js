@@ -2,8 +2,8 @@
 // Anchor a regional visit on an existing road arrival. Each stop keeps its own
 // coordinates and the camera can move out to an island while the car stays parked.
 const heritageVisits=[
-  ['chua-hang-san-chua-va-rung-cay','Chùa Hang – qua sân chùa và rừng cây cổ thụ',[
-    'osm-way-1352279406','chua-hang-mai-ngoi','chua-hang-nha-trung-bay','chua-hang-rung-cay',
+  ['chua-hang-san-chua-va-rung-cay','Chùa Hang – từ cổng vòm đến rừng cây cổ thụ',[
+    'chua-hang-cong-tay','chua-hang-long-vom','osm-way-1352279406','chua-hang-mai-ngoi','chua-hang-nha-trung-bay','chua-hang-rung-cay',
   ]],
   ['bao-tang-khmer-tra-vinh-tu-cong-den-dan-ngu-am','Bảo tàng Văn hóa dân tộc Khmer Trà Vinh – từ cổng đến dàn ngũ âm',[
     'bao-tang-khmer-cong-vao','osm-node-4793310552','bao-tang-khmer-phu-dieu','bao-tang-khmer-dan-ngu-am',

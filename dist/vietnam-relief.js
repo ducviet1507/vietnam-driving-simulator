@@ -97,11 +97,12 @@ function createVietnamRelief(T,scene,compact,landscapes,tunnelCut,landWidth,cave
   const ang=graph?.point?.(106.30346,9.91596);
   const museum=graph?.point?.(106.30479,9.9161553);
   const hang=graph?.point?.(106.3450733,9.8871507);
+  const hangGate=graph?.point?.(106.3440102,9.8880786);
   let pondStage,pondEdges;
-  let hangStage,hangEdges;
+  let hangStage,hangRoadStage,hangEdges;
   function localDatum(x,z,surface){
     if(!hoanKiem)return surface-base;
-    if(Math.abs(x-hang.x)<162&&Math.abs(z-hang.z)<162){
+    if(Math.abs(x-hang.x)<210&&Math.abs(z-hang.z)<210){
       // The canopy and roofs are high DSM returns. The overhead view shows
       // one continuous courtyard, open steps and a grove on the same low plain.
       if(!hangEdges){
@@ -114,6 +115,7 @@ function createVietnamRelief(T,scene,compact,landscapes,tunnelCut,landWidth,cave
         const open=[[106.3447702,9.8873013],[106.3453120,9.8871005],[106.3448238,9.8874070],
           [106.3439333,9.8880359],[106.3463151,9.8871216],[106.3462991,9.8876026],[106.3441104,9.8863606]];
         const levels=open.map(ll=>{const p=graph.point(...ll);return landscapes.elevation(p.x,p.z)??elevation(...uvAt(p.x,p.z,graph));});
+        hangRoadStage=levels[3]; // Open carriageway beside the western entrance.
         hangStage=levels.sort((a,b)=>a-b)[3];
       }
       const edge=Math.max(...hangEdges.map(e=>(x-e.x)*e.nx+(z-e.z)*e.nz));
@@ -121,6 +123,10 @@ function createVietnamRelief(T,scene,compact,landscapes,tunnelCut,landWidth,cave
         const formation=hangStage+T.MathUtils.clamp((surface-hangStage)*.013,-.13,.21);
         surface=formation+(surface-formation)*T.MathUtils.smoothstep(edge,-26,3);
       }
+      // The eight-metre passage opens at road level at both ends. Flatten the
+      // contributing 32 m grid vertices and blend into the approach and grove.
+      const gateDistance=Math.hypot(x-hangGate.x,z-hangGate.z);
+      if(gateDistance<82)surface=hangRoadStage+(surface-hangRoadStage)*T.MathUtils.smoothstep(gateDistance,48,82);
     }
     if(Math.abs(x-ao.x)<250&&z-ao.z>-215&&z-ao.z<320){
       // Copernicus measures the crowns around Ao Bà Om. Estimate the pond

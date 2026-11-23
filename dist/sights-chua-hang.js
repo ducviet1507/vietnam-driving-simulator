@@ -7,6 +7,20 @@
   const aerial='https://thanhnien.vn/can-canh-chua-hang-hang-tram-tuoi-giua-rung-cay-co-thu-o-vinh-long-185250717132218388.htm';
   const ivory=0xeee5ca,gold=0xd3b776,white=0xeee9da,dark=0x604a41,stone=0xaa9585;
   const red=0xa64d55,mint=0x9abfa9,blue=0x53687d,green=0x88a47a,tile=0xe5d690;
+  const gateX=123.49,gateZ=-94.49,gateYaw=3.0282;
+  function gatePoint(x,y,z){
+    const c=Math.cos(gateYaw),s=Math.sin(gateYaw);
+    return [gateX+c*x+s*z,y,gateZ-s*x+c*z];
+  }
+  const gatePath=[[gateX,gateZ],[123.0,-90.5],[121,-83],[111,-76],[92,-66],[74,-55],[54,-42],[34,-32],[20,-22]];
+  function onGatePath(x,z,margin){
+    for(let i=1;i<gatePath.length;i++){
+      const [ax,az]=gatePath[i-1],[bx,bz]=gatePath[i],dx=bx-ax,dz=bz-az;
+      const t=Math.max(0,Math.min(1,((x-ax)*dx+(z-az)*dz)/(dx*dx+dz*dz)));
+      if(Math.hypot(x-ax-t*dx,z-az-t*dz)<margin)return true;
+    }
+    return false;
+  }
   function view(name,target,eye,fov,ref,photoCatalogId,description){
     const [x,y,z]=target,[ex,ey,ez]=eye,dx=ex-x,dz=ez-z,dy=ey-y;
     return {name,description,photo:ref,photoCatalogId,height:y/.46,viewFov:fov,viewBase:'monument',
@@ -22,6 +36,10 @@
       'Bên kia sân phía tây là ngôi nhà hai tầng có hàng hiên màu vàng. Giữa những chậu kiểng, thân cột màu đỏ uốn xoắn vươn lên tới hình chim ở đỉnh.'),
     view('Rừng cây quanh khu chánh điện',[-15,7.0,13],[-69,86,94],54,aerial,'chua-hang-rung-cay',
       'Tán cây sao và dầu bao quanh các khoảng sân. Nhiều loài cò, diệc về trú trong khuôn viên chùa. Cây và chim trong cảnh mô phỏng sinh cảnh này.'),
+    view('Ba cửa vòm nhìn từ Quốc lộ 54',gatePoint(0,3.65,3.65),gatePoint(1.4,2.24,18.9),44,photo(25299316),'chua-hang-cong-tay',
+      'Cổng phụ phía tây quay ra Quốc lộ 54. Hai cửa nhỏ nằm hai bên vòm lớn, bên trên có biển chữ Khmer và các tháp nhỏ. Dáng cổng này đã cho ngôi chùa tên gọi Chùa Hang.'),
+    view('Dưới lòng vòm giữa',gatePoint(-1.12,1.58,-2.25),gatePoint(.78,1.56,3.45),63,photo(25299316),'chua-hang-long-vom',
+      'Đường qua cổng dài khoảng 8 m. Dưới vòm lớn, nhìn sang trái có thể thấy các cửa cuốn nhỏ thông sang lối bên cạnh. Đi hết vòm là lối cây dẫn vào sân.'),
   ];
   function turned(T,k,c,x,y,z,profile,sides=16){
     const g=new T.LatheGeometry(profile.map(([r,h])=>new T.Vector2(r,h)),sides);
@@ -312,6 +330,107 @@
       bird(T,k,xx,5.37,zz,.97,gold);
     }
   }
+  function barrelGate(T,k){
+    const masonry=0xb9b7a8,rim=0xcac7b8,shadow=0x8c8979,scale=.01875;
+    const u=x=>(x-320)*scale,h=y=>(460-y)*scale;
+    const arches=[[95,37,336,305],[321,113,359,275],[544,37,337,304]];
+    const pos=[],uv=[];
+    function mapped(points,pixels){
+      for(const i of [0,1,2,0,2,3]){pos.push(...points[i]);uv.push(pixels[i][0]/640,1-pixels[i][1]/460);}
+    }
+    function endWall(){
+      const s=new T.Shape(),line=(x,y)=>s.lineTo(u(x),h(y));s.moveTo(u(1),h(460));
+      for(const [cx,rx,spring,top] of arches){
+        line(cx-rx,460);line(cx-rx,spring);
+        for(let i=0;i<=32;i++){const a=pi*(1-i/32);line(cx+rx*Math.cos(a),spring-(spring-top)*Math.sin(a));}
+        line(cx+rx,460);
+      }
+      for(const p of [[639,460],[639,192],[600,192],[598,197],[491,197],[491,194],[451,194],[450,201],
+        [414,201],[408,190],[235,190],[224,201],[195,201],[190,194],[151,194],[149,197],[48,197],[46,193],[1,193]])line(...p);
+      s.closePath();
+      for(const [l,r] of [[50,150],[493,596]]){
+        const slot=new T.Path();slot.moveTo(u(l),h(207));slot.lineTo(u(r),h(207));slot.lineTo(u(r),h(231));slot.lineTo(u(l),h(231));slot.closePath();
+        s.holes.push(slot);
+      }
+      return s;
+    }
+    const shape=endWall();
+    k.profile(shape,masonry,0,0,3.64,.36);k.profile(shape,masonry,0,0,-4,.36);
+    const face=new T.ShapeGeometry(shape,28).toNonIndexed(),points=face.attributes.position;
+    for(let i=0;i<points.count;i++){
+      const x=points.getX(i),y=points.getY(i);pos.push(x,y,4.008);uv.push((x/scale+320)/640,y/(460*scale));
+    }
+    face.dispose();
+    for(const sign of [-1,1]){
+      const z=sign*3.82;
+      for(const [l,r] of [[50,150],[493,596]]){
+        for(let j=0;j<10;j++){
+          const x=u(l+(j+.5)*(r-l)/10);
+          turned(T,k,rim,x,h(231),z,[[.065,0],[.072,.06],[.041,.12],[.067,.22],[.047,.33],[.072,.40],[.066,.45]],8);
+        }
+      }
+      for(const x of [-5.52,5.52]){
+        turned(T,k,masonry,x,4.94,z,[[.37,0],[.42,.10],[.36,.18],[.26,.26],[.19,.49],[.23,.56],[.15,.63],[.09,.78],[0,.93]]);
+      }
+    }
+    for(const x of [-5.46,5.46]){
+      k.box(masonry,x,2.36,0,1.04,4.75,7.66);
+      k.box(rim,x,4.74,0,1.12,.15,7.82);
+    }
+    k.box(masonry,0,4.61,0,11.88,.27,7.65);
+    k.box(0xb4a99a,0,-.10,0,11.99,.30,8.18);
+    for(const [cx,rx,sy,ty] of arches){
+      const x=u(cx),r=rx*scale,spring=h(sy),rise=(sy-ty)*scale;
+      for(let j=0;j<32;j++){
+        const a=pi*j/32,b=pi*(j+1)/32,at=(th,z)=>[x+r*Math.cos(th),spring+rise*Math.sin(th),z];
+        mapped([at(b,-3.70),at(a,-3.70),at(a,3.70),at(b,3.70)],[[475+155*(j+1)/32,97],[475+155*j/32,97],
+          [475+155*j/32,19],[475+155*(j+1)/32,19]]);
+        // Two narrow mouldings follow the outer lip of each masonry arch.
+        for(const z of [-4.018,4.018]){
+          const curve=th=>[x+(r+.054)*Math.cos(th),spring+(rise+.054)*Math.sin(th),z];
+          A.strut(T,k,z>0?rim:shadow,...curve(a),...curve(b),.044);
+        }
+      }
+    }
+    // Three transverse openings on each side connect the central passage to
+    // its smaller neighbours. They can be seen through the front archway.
+    for(const x of [-2.80,2.78])k.place(x,0,pi/2,()=>{
+      const side=new T.Shape();side.moveTo(-3.82,0);
+      for(const cx of [-2.54,0,2.54]){
+        const r=.76,spring=.90;side.lineTo(cx-r,0);side.lineTo(cx-r,spring);
+        side.absellipse(cx,spring,r,1.23,pi,0,true);side.lineTo(cx+r,0);
+      }
+      side.lineTo(3.82,0);side.lineTo(3.82,4.57);side.lineTo(-3.82,4.57);side.closePath();
+      k.profile(side,0xb7b1a0,0,0,-.56,1.12);
+    });
+    // Front crest. Each pair of surveyed image rows forms a band of a
+    // stepped, tapering masonry volume with its own photographed front face.
+    const bands=[[230,412,199],[232,411,190],[240,403,186],[240,402,177],[246,397,174],[246,395,165],
+      [255,389,161],[266,380,155],[276,368,142],[287,361,124],[294,355,105],[299,351,91],[306,347,86],
+      [310,344,84],[308,346,78],[313,340,73],[310,342,66],[314,338,60],[317,335,57],[318,335,52],
+      [322,331,46],[322,330,39],[325,328,35]];
+    function section([l,r,y]){
+      const depth=(r-l)*scale*.41,front=2.56+depth,back=2.56-depth;
+      return [[u(l),h(y),front],[u(r),h(y),front],[u(r),h(y),back],[u(l),h(y),back]];
+    }
+    for(let j=1;j<bands.length;j++){
+      const p=bands[j-1],q=bands[j],low=section(p),high=section(q);
+      mapped([low[0],low[1],high[1],high[0]],[[p[0],p[2]],[p[1],p[2]],[q[1],q[2]],[q[0],q[2]]]);
+      const edges=[];
+      for(let i=1;i<4;i++){const n=(i+1)%4;for(const point of [low[i],low[n],high[n],low[i],high[n],high[i]])edges.push(...point);}
+      const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(edges,3));g.computeVertexNormals();
+      k.stamp(g,j%4===2?rim:masonry,0,0,0);g.dispose();
+    }
+    const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(pos,3));g.setAttribute('uv',new T.Float32BufferAttribute(uv,2));g.computeVertexNormals();
+    const tex=new T.TextureLoader().load('sight-imagery/chua-hang-cong-vom.webp');tex.colorSpace=T.SRGBColorSpace;tex.anisotropy=4;
+    const panels=new T.Mesh(g,new T.MeshStandardMaterial({map:tex,side:T.DoubleSide,alphaTest:.33,roughness:.98,emissive:0x0b0b09}));
+    panels.name='Mặt cổng và ba lòng vòm chùa Hang';k.group.add(panels);
+    for(const [x,y,z,s] of [[.11,7.92,2.56,.67],[-5.52,5.84,3.82,.53],[5.52,5.84,3.82,.53]]){
+      k.box(dark,x,y+s*.49,z,.025,s,.025);
+      const colours=[0x4b7fb4,0xe7c955,0xc96155,0xe4e2d3,0xd78c4c];
+      for(let i=0;i<5;i++)k.box(colours[i],x+s*(.035+i*.08),y+s*.78,z+.028*Math.sin(i*.9),s*.09,s*.43,.016,0,0,.07);
+    }
+  }
   function outbuildings(T,k){
     // The western exhibit building joins a red-roofed hall. The south and
     // west wings are visible from above, beyond the visitor courtyard.
@@ -344,6 +463,63 @@
       k.box(0xa29e98,58,5.99,-27.73+j*6.12,23.51,.27,.27);
     }
   }
+  function gateApproach(T,k){
+    const first=k.vertexCount();
+    for(let i=2;i<gatePath.length;i++){
+      const [ax,az]=gatePath[i-1],[bx,bz]=gatePath[i],dx=bx-ax,dz=bz-az,length=Math.hypot(dx,dz);
+      const n=Math.ceil(length/2.8),angle=Math.atan2(dx,dz);
+      for(let j=0;j<n;j++){
+        const t=(j+.5)/n;k.box(0xc1ad92,ax+dx*t,-.15,az+dz*t,3.60,.37,length/n+.035,angle);
+      }
+    }
+    const afterPath=k.vertexCount(),c=Math.cos(gateYaw),s=Math.sin(gateYaw);
+    k.place(gateX,gateZ,gateYaw,()=>{
+      const jade=0x8dac8e,edge=0xabc0a0;
+      const screen=new T.Shape();screen.moveTo(-1.25,.38);screen.lineTo(1.25,.38);screen.lineTo(1.25,1.29);screen.lineTo(-1.25,1.29);screen.closePath();
+      for(let i=0;i<6;i++){
+        const xx=-1.015+i*.407;
+        for(let j=0;j<4;j++){
+          const a=j*pi/2,p=new T.Path();
+          p.absellipse(xx+.104*Math.cos(a),.84+.15*Math.sin(a),.102,.079,0,pi*2,false,a);screen.holes.push(p);
+        }
+      }
+      const grille=new T.ExtrudeGeometry(screen,{depth:.24,bevelEnabled:false,curveSegments:4});
+      for(const side of [-1,1])for(let i=0;i<10;i++){
+        const x=side*(6.07+1.30+i*2.67),z=3.78;
+        k.box(jade,x,.20,z,2.68,.50,.32);k.box(edge,x,1.39,z,2.68,.19,.29);
+        k.stamp(grille,jade,x,0,z-.12);
+        const xp=x+side*1.29;k.box(jade,xp,.77,z,.30,1.57,.35);
+        turned(T,k,i%2?gold:0xc693a4,xp,1.50,z,[[.15,0],[.16,.12],[.13,.22],[.10,.28],[0,.44]],8);
+      }
+      grille.dispose();
+    });
+    const afterFence=k.vertexCount(),firstChild=k.group.children.length;
+    k.place(gateX,gateZ,gateYaw,()=>barrelGate(T,k));
+    const end=k.vertexCount(),photoMeshes=k.group.children.slice(firstChild),front=gatePoint(0,0,4);
+    let geom,rest;
+    return ground=>{
+      geom??=k.group.children.find(o=>o.geometry?.hasAttribute('finishKind'))?.geometry;if(!geom)return;
+      const a=geom.attributes.position;rest??=Float32Array.from({length:end-first},(_,i)=>a.getY(i+first));
+      const stage=ground(front[0],front[2]),fence=[];
+      for(let x=-36;x<=36;x+=2){const [u,,v]=gatePoint(x,0,3.78);fence.push(ground(u,v));}
+      for(let i=first;i<end;i++){
+        const u=a.getX(i),v=a.getZ(i);
+        let rise=stage;
+        if(i<afterPath){
+          const w=Math.min(1,Math.hypot(u-gateX,v-gateZ)/12);
+          rise=stage+(ground(u,v)-stage)*w;
+        }else if(i<afterFence){
+          const xx=(u-gateX)*c-(v-gateZ)*s,p=Math.min(35.99,Math.max(0,(xx+36)/2)),j=Math.floor(p);
+          const w=Math.min(1,Math.max(0,(Math.abs(xx)-6)/5));
+          rise=stage+(fence[j]+(fence[j+1]-fence[j])*(p-j)-stage)*w;
+        }
+        a.setY(i,rest[i-first]+rise);
+      }
+      for(const mesh of photoMeshes)mesh.position.y=stage;
+      views[4].height=(3.65+stage)/.46;views[5].height=(1.58+stage)/.46;
+      a.needsUpdate=true;geom.computeBoundingBox();geom.computeBoundingSphere();
+    };
+  }
   const boundary=[[-118,-109],[-128,-21],[-135,56],[-122,108],[-24,124],[86,137],[159,-91],[-9,-108]];
   function within(x,z){
     let inside=false;
@@ -359,7 +535,7 @@
     for(let i=0;i<700;i++){
       const x=-132+rand(i+0.01)*287,z=-106+rand(i+204.3)*239;
       if(!within(x-8,z-7)||!within(x+8,z+7)||!within(x+8,z-7)||!within(x-8,z+7))continue;
-      if(x>-27&&x<89&&z>-92&&z<34||x>-12&&x<13&&z>26&&z<64||Math.hypot(x+24,z-29)<22)continue;
+      if(x>-27&&x<89&&z>-92&&z<34||x>-12&&x<13&&z>26&&z<64||Math.hypot(x+24,z-29)<22||onGatePath(x,z,8.6))continue;
       const h=13+rand(i+17.13)*16,w=13+rand(i+31.18)*11;rows[i%4].push([x,z,h,w,rand(i+84)*6.28]);
     }
     for(let v=0;v<4;v++){
@@ -416,8 +592,9 @@
   (window.VietnamSights??=[]).push({...raw,id,catalogId,lon,lat,yaw,start,name:'Chùa Hang – Kompông Chrây',city:'Châu Thành',
     locality:'Trà Vinh',province:'Vĩnh Long',formerProvince:'Trà Vinh',region:'Nam Bộ',kind:'Chùa',source,photo:photo(25299321),
     width:25.1,depth:39.6,views,visitOnArrival:true,mappedEntrance:true,gardenRadius:1,solids:[[0,0,12.84,24.90]],
-    boundary,reserve:(x,z)=>within(x,z),
+    boundary,reserve:(x,z,r)=>within(x,z)||Math.hypot(x-gateX,z-gateZ)<12+r,
     description:'Chùa Kompông Chrây ở xã Châu Thành ra đời năm 1637, được tỉnh Trà Vinh xếp hạng di tích lịch sử năm 2025. Mô hình dựa trên mặt bằng, ảnh thực địa và ảnh nhìn từ trên cao. Chiều cao các công trình là ước lượng.',
-    arrivalNote:'Xe dừng trên đường 2 Tháng 9 (Quốc lộ 54), phía tây khuôn viên. Từ đó có thể chọn các góc ngắm trong sân chùa.',
-    build(T,k){k.palette({plaster:[ivory,white],glazedTile:[tile,blue,green],stone});hall(T,k);gardenHall(T,k);court(T,k);outbuildings(T,k);k.group.userData.fitGround=grove(T,k);}});
+    arrivalNote:'Xe dừng trên đường 2 Tháng 9 (Quốc lộ 54), trước cổng phụ phía tây. Tuyến tham quan đi qua cổng vòm, vào sân chánh điện rồi đến bìa rừng.',
+    build(T,k){k.palette({plaster:[ivory,white],glazedTile:[tile,blue,green],stone});hall(T,k);gardenHall(T,k);court(T,k);outbuildings(T,k);
+      const entrance=gateApproach(T,k),trees=grove(T,k);k.group.userData.fitGround=ground=>{entrance(ground);trees(ground);};}});
 })();

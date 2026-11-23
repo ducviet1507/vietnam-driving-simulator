@@ -450,6 +450,8 @@
       ['chua-hang-mai-ngoi','Mái ngói màu và tháp nóc chùa Hang',106.3450702,9.8871501,1],
       ['chua-hang-nha-trung-bay','Cột chim và nhà trưng bày chùa Hang',106.3446010,9.8871423,2],
       ['chua-hang-rung-cay','Rừng cây và sân chim chùa Hang',106.3452160,9.8870406,3],
+      ['chua-hang-cong-tay','Cổng phụ ba vòm chùa Hang trên Quốc lộ 54',106.3439771,9.8880759,4],
+      ['chua-hang-long-vom','Lối đi dưới vòm giữa cổng chùa Hang',106.3440299,9.8880903,5],
     ]){
       if(!existing.has(id))atlas.entries.push({...hang,id,name,lon,lat,kind:'Điểm ngắm cảnh',approachMeters:approach(lon,lat),
         source:'https://vinhlong.gov.vn/du-khach-old/diadanh_test',viewOf:['chua-hang-tra-vinh',index]});
