@@ -15,8 +15,8 @@ for(const name of scripts.slice(scripts.indexOf('sight-details.js'),scripts.inde
 const {VanMieuSurvey:survey,VietnamLandmarks,VietnamTourism,NatureFieldCaptures,VietnamHydrography}=context;
 const roadIndex=JSON.parse(readFileSync(file('vn-roads/index.json'),'utf8'));
 const access=roadIndex.sightAccess.stops;
-// The enclosure outline of Chùa Âng is not a single solid roof. The surveyed
-// four-metre moat must also leave the 24 by 36 metre temple terrace on dry land.
+// The overhead photograph shows different widths along the four sides of the
+// moat. Its two crossings and courtyard share the same georeferenced outline.
 const ang=VietnamLandmarks.entries.find(s=>s.catalogId==='osm-way-288574348');
 const moat=context.VietnamSightCoasts.find(s=>Math.hypot(s.lon-ang.lon,s.lat-ang.lat)<.001);
 assert.deepEqual([ang.width,ang.depth],[24,36]);
@@ -29,11 +29,26 @@ function insideRing(lon,lat,ring){
   }
   return inside;
 }
-assert.ok(insideRing(ang.lon,ang.lat,moat.holes[0]));
-for(let i=0;i<moat.ring.length;i++){
-  const a=moat.ring[i],b=moat.ring[(i+1)%4],c=moat.holes[0][i],d=moat.holes[0][(i+1)%4];
-  const width=Math.hypot((a[0]+b[0]-c[0]-d[0])*109650/2,(a[1]+b[1]-c[1]-d[1])*110900/2);
-  assert.ok(width>3.8&&width<4.2&&moat.bankSpacing<=width*.53,'Resolve both banks of the temple moat');
+function templePoint(x,z){
+  const c=Math.cos(ang.yaw),s=Math.sin(ang.yaw);
+  return [ang.lon+(x*c+z*s)/109650,ang.lat-(-x*s+z*c)/110900];
+}
+for(const x of [-12,12])for(const z of [-18,18]){
+  assert.ok(insideRing(...templePoint(x,z),moat.holes[0]),'The entire temple terrace stays dry');
+}
+for(const [label,x,z,endX,endZ,min,max] of [
+  ['west',12,-87,12,-51,9,13],['east',2,26,2,61,9,13],
+  ['north',40,-26,63,-26,3.5,5.5],['south',-40,-15,-17,-15,7,10],
+]){
+  const length=Math.hypot(endX-x,endZ-z);let width=0,intervals=0,previous=false;
+  for(let d=0;d<=length;d+=.25){
+    const p=templePoint(x+(endX-x)*d/length,z+(endZ-z)*d/length);
+    const wet=insideRing(...p,moat.ring)&&!insideRing(...p,moat.holes[0]);
+    if(wet){width+=.25;if(!previous)intervals++;}
+    previous=wet;
+  }
+  assert.equal(intervals,1,label+' transect crosses one channel');
+  assert.ok(width>=min&&width<=max&&moat.bankSpacing<=width*.58,label+' moat width is '+width+' m');
 }
 for(const site of [...VietnamLandmarks.entries,...VietnamTourism.entries]){
   if(site.mappedEntrance)assert.ok(!access[site.catalogId||site.id],site.name+' still has a generated access road');
