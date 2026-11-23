@@ -26,7 +26,8 @@ function selectVehicle(model,learner=false){
  gfx?.preloadVehicle(model);
  openingGarage.value=setupGarage.value=model;
  $('garagePreview').src='streetscape/previews/'+model+'.webp';
- $('learnerLimit').hidden=$('leaveLearner').hidden=$('practiceQuestion').hidden=!learner;
+ $('learnerLimit').hidden=$('leaveLearner').hidden=!learner;
+ $('practiceQuestion').hidden=false;
  document.body.toggleAttribute('data-learner',learner);
 }
 try{
@@ -814,7 +815,7 @@ async function begin(learner=false){
  if(mode==='error'){if(loadRequest&&indexData)startAt(loadRequest.place,loadRequest.restore,loadRequest.guided);else location.reload();return;}
  if(!player||mode!=='grid')return;
  if($('journeySetup').open)$('journeySetup').close();
- selectVehicle(learner?'family-sedan':garageVehicle,learner);
+ selectVehicle(learner&&!worldGarage[garageVehicle].license?'family-sedan':garageVehicle,learner);
  if(!gfx){
    const token=loadToken;mode='loading';
    $('launch').disabled=$('launchLearner').disabled=$('challenge').disabled=true;$('launch').textContent='Đang tải cảnh 3D…';
