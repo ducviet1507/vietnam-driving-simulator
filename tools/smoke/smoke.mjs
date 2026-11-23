@@ -35,17 +35,22 @@ const base = process.env.SMOKE_URL || 'http://127.0.0.1:' + server.address().por
 async function check(disabled, run) {
   const browser = await chromium.launch({args:disabled?['--disable-webgl']:['--enable-unsafe-swiftshader']});
   try {
-    const page = await browser.newPage({viewport:{width:640,height:480}});
-    await page.addInitScript(()=>localStorage.setItem('taylai.cockpit.v1',JSON.stringify({graphics:'low'})));
-    page.setDefaultTimeout(60000);
+    const context = await browser.newContext({viewport:{width:640,height:480}});
+    await context.addInitScript(origin=>{
+      if (window===window.top && location.origin===origin) {
+        localStorage.setItem('taylai.cockpit.v1',JSON.stringify({graphics:'low'}));
+      }
+    },new URL(base).origin);
+    context.setDefaultTimeout(60000);
     const errors = [];
-    page.on('pageerror', e=>errors.push(e.message));
-    await page.route('**/*', route=>{
+    context.on('weberror', event=>errors.push(event.error().message));
+    await context.route('**/*', route=>{
       const url=new URL(route.request().url());
       if (url.pathname==='/api/leaderboard/start') return route.fulfill({status:201,json:{runId:'00000000-0000-4000-8000-000000000000'}});
       if (url.origin!==new URL(base).origin && ['http:','https:'].includes(url.protocol)) return route.abort();
       return route.continue();
     });
+    const page = await context.newPage();
     try { await run(page); }
     catch (error) {
       console.error(page.url(),errors,await page.locator('#loadStatus').allTextContents());
