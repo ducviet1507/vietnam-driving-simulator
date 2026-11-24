@@ -16,13 +16,13 @@
   let slider,readout;
   function applySteering(value) {
     const n=typeof value==='number'||typeof value==='string'?Number(value):NaN;
-    const profile=Number.isFinite(n)&&n>=1&&n<=3?Math.round(n*100)/100:1;
+    const profile=Number.isFinite(n)&&n>=1&&n<=4?Math.round(n*100)/100:4;
     settings.steeringProfile=window.driveSteeringProfile=profile;
     if (!slider) return;
     slider.value=profile;
     const lower=Math.floor(profile),share=Math.round((profile-lower)*100);
-    const description=share?`${100-share}% bản ${lower} · ${share}% bản ${lower+1}`:
-      ['Bản 1 · Gốc','Bản 2 · Chỉnh nhẹ ở tốc độ cao','Bản 3 · Nhạy khi nhấp nhẹ'][lower-1];
+    const description=share?`${100-share}% bản ${lower} · ${share}% ${lower===3?'Êm':'bản '+(lower+1)}`:
+      ['Bản 1 · Gốc','Bản 2 · Chỉnh nhẹ ở tốc độ cao','Bản 3 · Nhạy khi nhấp nhẹ','Êm · Dễ căn làn (mặc định)'][lower-1];
     slider.setAttribute('aria-valuetext',description);
     readout.value=description;
   }
@@ -77,8 +77,8 @@
     field.className='steeringProfile';
     field.innerHTML='<legend id="steeringProfileTitle">Cảm giác lái</legend>'+
       '<output for="steeringProfile"></output>'+
-      '<input id="steeringProfile" name="steeringProfile" type="range" min="1" max="3" step="0.01" aria-labelledby="steeringProfileTitle">'+
-      '<div class="steeringStops"><button type="button" value="1">Bản 1</button><button type="button" value="2">Bản 2</button><button type="button" value="3">Bản 3</button></div>';
+      '<input id="steeringProfile" name="steeringProfile" type="range" min="1" max="4" step="0.01" aria-labelledby="steeringProfileTitle">'+
+      '<div class="steeringStops"><button type="button" value="1">Bản 1</button><button type="button" value="2">Bản 2</button><button type="button" value="3">Bản 3</button><button type="button" value="4">Êm</button></div>';
     slider=field.querySelector('input');
     readout=field.querySelector('output');
     if (!document.body.classList.contains('arcade')) field.querySelector('legend').textContent='Cảm giác lái · Xuyên Việt và Cúp';

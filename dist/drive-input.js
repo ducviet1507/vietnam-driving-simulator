@@ -21,7 +21,7 @@ function createDriveInput({timedSteering=false}={}) {
   }
   // Integrate only the part of each physics step for which a button was down.
   // A complete tap between two rendered frames still reaches the wheels.
-  function steering(end,dt,profile=1) {
+  function steering(end,dt,profile=4) {
     if (profile<=2) {
       edges.length=0;applied=latest;
       return latest;
@@ -35,7 +35,7 @@ function createDriveInput({timedSteering=false}={}) {
       cursor=time;applied=edge.direction;
     }
     const timed=cursor===start?applied:(area+(end-cursor)*applied)/(dt*1000);
-    return latest+(timed-latest)*(profile-2);
+    return profile>=3?timed:latest+(timed-latest)*(profile-2);
   }
   function setContact(id, button, time) {
     const previous = contacts.get(id);

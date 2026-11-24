@@ -34,9 +34,27 @@ for(let notch=100;notch<=300;notch++){
   if(Number.isInteger(profile))assert.ok(Math.abs(car.x-historical[profile-1])<1e-6,'Published steering response');
   lastDistance=car.x;
 }
-const original=start(200);
-for(let i=0;i<100;i++)body.step(original,{steer:i<20?1:0,top:48},.01);
-assert.ok(Math.abs(original.x-historical[0])<1e-6,'An absent preference uses the original steering');
+const gentle=start(200),unset=start(200);
+for(let i=0;i<100;i++){
+  const input={steer:i<20?1:0,top:48};
+  body.step(unset,input,.01);body.step(gentle,{...input,steeringProfile:4},.01);
+}
+assert.equal(unset.x,gentle.x,'An absent preference uses gentle steering');
+for(const hz of [30,60,100,144]){
+  for(const speed of [-10,20,40,60,100,200]){
+    const right=start(speed),left=start(speed),previous=start(speed);
+    for(const [car,dir,profile] of [[right,1,4],[left,-1,4],[previous,1,3]]){
+      drive(car,dir,.1,hz,profile);drive(car,0,.9,hz,profile);
+    }
+    assert.ok(Math.abs(right.x+left.x)<1e-8,'Gentle steering is symmetric');
+    assert.ok(right.x>0&&right.x<previous.x*.75,'A tap makes a smaller correction');
+    const held=start(speed);
+    drive(held,1,.65,hz,4);
+    assert.ok(held.steer>.98,'A held button still reaches full travel');
+    drive(held,-1,.1,hz,4);
+    assert.ok(held.steer<0,'Opposite input promptly crosses centre');
+  }
+}
 
 for(const hz of [30,60,100,144]) {
   for(const speed of [-10,0,10,20,40,60,100,150,200]) {
@@ -110,9 +128,10 @@ for(const hz of [30,60,100,144]) {
     assert.equal(input.steering(1250,.01),0,'Clearing input discards pending turns');
   }
 }
-for(const profile of [1,1.5,2,2.5,3]){
+for(const profile of [1,1.5,2,2.5,3,3.5,4,undefined]){
   const input=makeInput({timedSteering:true});
   input.add('d',5);input.delete('d',15);
-  assert.ok(Math.abs(input.steering(20,.020,profile)-.5*Math.max(0,profile-2))<1e-10,'Each profile uses its original input timing');
+  const timedShare=Math.max(0,Math.min(1,(profile??4)-2));
+  assert.ok(Math.abs(input.steering(20,.020,profile)-.5*timedShare)<1e-10,'A between-frame tap is counted once');
 }
-console.log('PASS original steering, both published alternatives and intermediate slider positions');
+console.log('PASS gentle steering, original profiles, slider blends and between-frame taps');

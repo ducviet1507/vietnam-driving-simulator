@@ -103,19 +103,22 @@ window.DriveBody={
    return c.spec?.speedGovernor?Math.min(next,input.top):next;
  },
  wheelAngle(c,input,dt,forward,next,wheelbase){
-   const profile=input.steeringProfile??1;
+   const profile=input.steeringProfile??4;
    const steeringLock=(c.spec?.steerLock??.52)/(1+Math.abs(next)*.056);
    if(profile===1){
      c.steer+=(input.steer-c.steer)*(1-Math.exp(-dt*8));
      c.steerTravel=c.steer;
      return c.steer*steeringLock;
    }
-   const classic=Math.max(0,2-profile),revised=Math.max(0,profile-2);
+   const classic=Math.max(0,2-profile),revised=Math.min(1,Math.max(0,profile-2));
    const middle=1-classic-revised;
    const travel=c.steerTravel??c.steer;
    const speedKmh=Math.abs(forward)*3.6;
    const middleCurve=3*Math.max(0,Math.min(1,(speedKmh-20)/120));
-   const revisedCurve=.3*Math.max(0,Math.min(1,(speedKmh-20)/80));
+   // Ease short taps near centre while a sustained press still reaches full travel.
+   const gentle=Math.max(0,profile-3);
+   const revisedCurve=.3*Math.max(0,Math.min(1,(speedKmh-20)/80))+
+     gentle*(.45+.30*Math.min(1,speedKmh/80));
    // Reversing unwinds the previous turn faster, until the wheel crosses centre.
    let decay=dt*8;
    if(travel*input.steer<0){
