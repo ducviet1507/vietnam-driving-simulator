@@ -6,7 +6,7 @@ import {runInNewContext} from 'node:vm';
 const T=createRequire(import.meta.url)('../../dist/three.min.js');
 const world={worldRoadHalfWidth:edge=>edge.traffic.lanes*1.6};
 world.window=world;
-for(const file of ['world-road-traffic','tunnel-mesh'])
+for(const file of ['world-road-traffic','tunnel-profiles','tunnel-mesh'])
   runInNewContext(readFileSync(new URL('../../dist/'+file+'.js',import.meta.url),'utf8'),world);
 const graph={nodes:new Map(),tunnels:{info:edge=>edge.profile}};
 const material={asphalt:new T.MeshLambertMaterial(),roadConcrete:new T.MeshLambertMaterial()};

@@ -4,22 +4,6 @@
   const motorRoad=edge=>/^(motorway|trunk|primary)(?:_link)?$/.test(edge.kind);
   const tunnel=edge=>Boolean(edge.traffic?.tunnel);
 
-  window.tunnelSection=function(edge,graph){
-    const w=worldRoadHalfWidth(edge),name=edge.name||'',info=graph.tunnels?.info(edge);
-    const immersed=/sông sài gòn|thủ thiêm/i.test(name),haiVan=/hải vân/i.test(name);
-    // Short urban and rural road underpasses generally have a box section. Use
-    // connected mapped bores to avoid changing profile at an internal way split.
-    const namedMountain=/hải vân|đèo |cù mông|cổ mã|núi |thần vũ|thung thi|phước tượng|phú gia|bình đê/i.test(name);
-    const long=edge.length>150||[edge.start,edge.end].some(node=>
-      (graph.nodes.get(node)||[]).some(next=>next!==edge&&tunnel(next)&&next.length>150));
-    const box=Boolean(info?.passage)||immersed||/chui|chìm|gầm/i.test(name)||!(namedMountain||long&&motorRoad(edge));
-    const wall=info?.clearance>0?info.clearance:immersed?4.5:motorRoad(edge)?4.95:3.95;
-    // Sài Gòn traffic operator: double-box immersed section, 4.5 m clearance.
-    // Đà Nẵng city, Hải Vân I project: its arched main bore is 7.5 m high.
-    const crown=box?wall+.27:haiVan?Math.max(wall+.5,7.5):wall+Math.min(2.85,1.1+w*.19);
-    const innerHalfWidth=w+(w<3.1?.35:motorRoad(edge)?.85:.62);
-    return {roadHalfWidth:w,innerHalfWidth,crown,wall,spring:box?wall:wall-.45,box};
-  };
   window.buildTunnelMeshes=function(T,{graph,edges,cx,cz,radius,group,height,ground,material,registerObstacle}){
     const ways=edges.filter(e=>graph.tunnels.info(e));
     if(!ways.length)return;

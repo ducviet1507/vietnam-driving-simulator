@@ -4,7 +4,7 @@ import {runInNewContext} from 'node:vm';
 import {createRequire} from 'node:module';
 import {gunzipSync} from 'node:zlib';
 
-const world={window:{},worldRoadHalfWidth:()=>4};
+const world={window:{},worldRoadHalfWidth:edge=>edge.testWidth??4};
 for(const file of ['bridge-profiles','world-roads']){
   runInNewContext(readFileSync(new URL('../../dist/'+file+'.js',import.meta.url),'utf8'),world);
 }
@@ -40,6 +40,21 @@ assert.equal(district.at(0,15,span),null);
 const ground=world.bridgeGroundEdges(graph,[incoming,span,outgoing,below,high]);
 assert.deepEqual(Array.from(ground,e=>e.id),[1,3,4]);
 assert.ok(Math.abs(ground[0].points.at(-1).x-incoming.points[0].x-graph.bridges.profiles.get(1).ranges[0][0])<1e-7);
+
+// At a shallow crossing, a car in either lane can be closer to the other
+// road's centreline. It stays on its own surface in both directions.
+graph.tunnels={info:()=>null};
+graph.bridges=world.buildBridgeProfiles(graph,{2:{terrainLift:.8}});
+assert.equal(graph.nearest(0,3,[span,below],.8).edge.id,below.id);
+assert.equal(graph.nearest(3,0,[span,below],0).edge.id,span.id);
+assert.equal(graph.drivingRoad(0,3,[span,below],span,.8).edge.id,span.id);
+assert.equal(graph.drivingRoad(3,0,[span,below],below,0).edge.id,below.id);
+assert.equal(graph.drivingRoad(0,4.4,[span,below],span,.8).edge.id,span.id);
+assert.equal(graph.drivingRoad(0,5,[span,below],span,.8).edge.id,below.id);
+assert.equal(graph.drivingRoad(31,0,[span,outgoing],span,.8).edge.id,outgoing.id);
+const narrow=edge(10,15,16,-50,22,50,22);narrow.testWidth=1;
+const wide=edge(11,17,18,-50,20,50,20);
+assert.equal(graph.drivingRoad(0,23.5,[narrow,wide],wide,0).edge.id,wide.id);
 // Multiple short approach edges ending at a real surface junction stay
 // continuous even when that junction is too close to reach nominal clearance.
 const short=edge(6,4,9,190,0,205,0,true),next=edge(7,9,10,205,0,214,0);

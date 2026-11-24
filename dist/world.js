@@ -66,9 +66,9 @@ function parkOnRoad(){
 }
 function trackRoad(){
  const around=roads.nearby(car.x,car.z,22);
- const nearest=roads.nearest(car.x,car.z,around,car.deckLift||0);
- const halfWidth=nearest&&(roads.tunnels.info(nearest.edge)?.bore?tunnelSection(nearest.edge,roads).innerHalfWidth:worldRoadHalfWidth(nearest.edge));
- const onNetwork=nearest&&nearest.error<=halfWidth**2;
+ const level=car.deckLift||0;
+ const onNetwork=roads.drivingRoad(car.x,car.z,around,car.edge,level);
+ const nearest=onNetwork||roads.nearest(car.x,car.z,around,level);
  car.accessLane=!onNetwork&&districtView?.graph===roads&&gfx.accessLane(car.x,car.z);
  car.offroad=!onNetwork&&!car.accessLane;
  car.edge=onNetwork?nearest.edge:null;
@@ -306,7 +306,9 @@ function branchAhead(){
 function branchText(a){return a<-.38?'Trái':a>.38?'Phải':'Thẳng';}
 function recover(){
  if(!player)return;
- const nearest=roads.nearest(car.x,car.z,roads.nearby(car.x,car.z,60),car.deckLift||0);if(nearest)player=nearest;
+ const around=roads.nearby(car.x,car.z,60),level=car.deckLift||0;
+ const nearest=roads.drivingRoad(car.x,car.z,around,car.edge,level)||roads.nearest(car.x,car.z,around,level);
+ if(nearest)player=nearest;
  parkOnRoad();inform('Đã đặt xe trở lại mặt đường.');
 }
 function spawnAhead(ahead,index){

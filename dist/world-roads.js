@@ -141,7 +141,7 @@ class VietnamRoads {
  roadLevel(edge,s){
    return this.tunnels?.info(edge)?this.tunnels.lift(edge,s):this.bridges.lift(edge,s);
  }
- nearest(x,z,candidates=this.edges.values(),level=null){
+ nearest(x,z,candidates=this.edges.values(),level=null,accept=null){
    let best=null,bestScore=Infinity;
    for(const edge of candidates){
      const dx=Math.max(0,edge.minX-x,x-edge.maxX),dz=Math.max(0,edge.minZ-z,z-edge.maxZ);
@@ -154,10 +154,37 @@ class VietnamRoads {
        const s=edge.dist[i-1]+f*(edge.dist[i]-edge.dist[i-1]);
        const vertical=level===null?0:this.roadLevel(edge,s)-level;
        if(level!==null&&Math.abs(vertical)>2.5)continue;
+       if(accept&&!accept(edge,s,error,vertical))continue;
        const score=error+vertical*vertical*4;
        if(score<bestScore){bestScore=score;best={edge,s,dir:1,error};}
      }
    }return best;
+ }
+ drivingWidth(edge,s){
+   const tunnel=this.tunnels.info(edge);
+   if(tunnel?.bore||tunnel&&this.tunnels.lift(edge,s)<-.001)return tunnelSection(edge,this).innerHalfWidth+.6;
+   const bridge=this.bridges.profiles.get(edge.id);
+   const deck=bridge&&(bridge.bridge||this.bridges.lift(edge,s)>.001);
+   return worldRoadHalfWidth(edge)+(deck ? .65 : 0);
+ }
+ drivingRoad(x,z,candidates,previous,level){
+   const current=previous&&this.edges.get(previous.id);
+   const underCar=current&&this.nearest(x,z,[current]);
+   const width=underCar&&this.drivingWidth(current,underCar.s);
+   const supported=underCar&&underCar.error<=width**2;
+   if(supported)level=this.roadLevel(current,underCar.s);
+   return this.nearest(x,z,candidates,level,(edge,s,error,vertical)=>{
+     const nextWidth=this.drivingWidth(edge,s);
+     if(error>nextWidth**2)return false;
+     if(!supported||edge.id===current.id||Math.abs(vertical)<=.2)return true;
+     // While the current surface is still under the car, a change of height
+     // needs a nearby graph junction. Projected crossings have no shared node.
+     const reach=width+nextWidth;
+     return underCar.s<=reach&&((current.start===edge.start&&s<=reach)||
+       (current.start===edge.end&&edge.length-s<=reach))||
+       current.length-underCar.s<=reach&&((current.end===edge.start&&s<=reach)||
+       (current.end===edge.end&&edge.length-s<=reach));
+   });
  }
  sample(c,lane=0){
    const {edge,s,dir}=c,d=Math.max(0,Math.min(s,edge.length));
