@@ -21,7 +21,7 @@ function measure(){
     if(o.geometry.hasAttribute('carriageway')&&!/bridge/i.test(o.name))asphalt.push(o);
     const map=o.material?.map?.image?.currentSrc||'';
     if(/\/verge-color\.webp(?:\?|$)/.test(map))soil.push(o);
-    if(o.name==='Exposed rock cuttings')cuttings.push(o);
+    if(o.name==='Exposed rock cuttings'||o.name==='Pass drainage and rock toes')cuttings.push(o);
   });
   if(!asphalt.length||!ground)throw Error('Missing asphalt or visible land mesh');
   const ray=new THREE.Raycaster(),eye=new THREE.Vector3(),down=new THREE.Vector3(0,-1,0);

@@ -40,8 +40,10 @@ function createWorldLandCover(T,environment){
       vec4 landClass=texture2D(coverMap,(groundMetres-coverOrigin)/2048.);
       vec3 groundTint=pow(landClass.rgb,vec3(2.2));
       float grain=clamp(dot(diffuseColor.rgb,vec3(.21,.72,.07))*4.,.58,1.32);
-      float furrow=cos(dot(groundMetres,vec2(.36,.69)));
-      grain*=1.+.07*furrow*smoothstep(.85,.99,landClass.a);
+      // Outside surveyed parcels, keep crop texture continuous and subdued.
+      // Bend its direction slowly over the plain without drawing property lines.
+      float rowPhase=dot(groundMetres,vec2(1.41,.92))+18.*sin(groundMetres.y*.027)+13.*sin(groundMetres.x*.021);
+      grain*=1.+.08*cos(rowPhase)*smoothstep(.85,.99,landClass.a)*(1.-smoothstep(.5,2.5,fwidth(rowPhase)));
       diffuseColor.rgb=mix(diffuseColor.rgb,groundTint*grain,.74*smoothstep(0.,.65,landClass.a)*(1.-bankWet));
       #include <color_fragment>`);
   }

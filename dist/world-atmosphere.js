@@ -76,7 +76,7 @@ function createWorldAtmosphere(T, scene, sun, loader, bearing=0, clearFog=.00078
   function setLocation(lon,lat) {
     longitude=lon; latitude=lat; lastMinute=-1;
   }
-  function update(dawn,cloud,wet,fog,blend) {
+  function update(dawn,cloud,wet,fog,blend,pavement=wet) {
     const minute=Math.floor(Date.now()/60000);
     if(minute!==lastMinute){
       lastMinute=minute;
@@ -101,11 +101,11 @@ function createWorldAtmosphere(T, scene, sun, loader, bearing=0, clearFog=.00078
       for(const mat of finishes)mat.envMapIntensity=mat.userData.dayReflection*intensity;
     }
     uniforms.dusk.value=dusk; uniforms.daylight.value=day;
-    wetness.value+=(wet-wetness.value)*blend;
+    wetness.value=pavement;
     lamps.value=Math.max(1-day,T.MathUtils.smoothstep(cover,.65,.98)*.24);
     mixColour.copy(clearAir).lerp(warmAir,dusk*.88).lerp(greyAir,cover).lerp(nightAir,1-day);
     scene.fog.color.copy(mixColour).multiplyScalar(1-.48*eclipse);
-    scene.fog.density=Math.max(clearFog*(1.+dusk*.55+cover*.92),.010*fog,.0032*wetness.value);
+    scene.fog.density=Math.max(clearFog*(1.+dusk*.55+cover*.92),.010*fog,.0032*wet);
     sun.color.copy(daySun).lerp(warmSun,dusk).lerp(greyAir,cover*.65).lerp(moon,1-day);
     sun.intensity=(.29+day*(3.25-.54*dusk))*(1.-.79*cover);
     fill.color.copy(skyFill).lerp(lowFill,dusk*.60).lerp(nightFill,1-day);

@@ -1,0 +1,44 @@
+Ruộng, mương và lối vào đồng trong Xuyên Việt
+
+Đường bao vùng canh tác và vườn, tim kênh mương, đường nội đồng và cầu nhỏ
+lấy từ bản Việt Nam của OpenStreetMap do Geofabrik phân phối. Bản trích
+ngày 23/11/2026 bao phủ cả nước. Mức độ chi tiết tùy thuộc vào các đối tượng
+đã được lập bản đồ từng nơi. Một vùng canh tác có thể gồm nhiều thửa nhỏ.
+© OpenStreetMap contributors. Dữ liệu phái sinh được phân phối theo ODbL 1.0.
+https://www.openstreetmap.org/copyright
+https://opendatacommons.org/licenses/odbl/1-0/
+https://download.geofabrik.de/asia/vietnam/vietnam-261123.osm.pbf
+
+Lớp phủ WorldCover đã nạp trong trò chơi giúp chọn những đường, cầu và
+dòng nước nằm bên đất canh tác. Kênh có thẻ xác nhận tưới tiêu cũng được
+chọn. Trình tạo lọc dòng chảy ngầm, có mái che hoặc theo mùa. Đường track
+có thể phục vụ việc đi rừng và vận chuyển nông sản. Vị trí và hình dáng
+theo OSM. Bề rộng vệt đất, kết cấu bờ, mặt nước và mật độ cây là phần mô phỏng.
+© ESA WorldCover project 2021 / Contains modified Copernicus Sentinel data
+(2021) processed by ESA WorldCover consortium. CC BY 4.0.
+https://doi.org/10.5281/zenodo.7254221
+https://creativecommons.org/licenses/by/4.0/
+
+Ở Cờ Đỏ, Cần Thơ, cạnh vị trí 10.069672 N, 105.405622 E, OSM ghi nhận
+vùng trồng trọt w1123471995, kênh w225755936 và cầu nhỏ w1576300681.
+Bài ghi nhận thực địa của Báo Cần Thơ mô tả đồng lúa dọc kênh xáng ở Cờ Đỏ.
+https://www.openstreetmap.org/way/1123471995
+https://www.openstreetmap.org/way/225755936
+https://www.openstreetmap.org/way/1576300681
+https://baocantho.com.vn/lua-thu-dong-vao-mua-thu-hoach-duoc-gia-a102552.html
+
+Ở Lao Chải, Sa Pa, các vùng w1453073042, w1453073052 và w1453073054 có
+thẻ crop=rice. Ảnh thực địa dưới đây cho thấy ruộng bậc thang dọc triền
+thung lũng Mường Hoa. Các ranh ruộng ngoài lấy theo OSM. Kiểu ruộng bậc
+thang được suy ra từ ảnh địa phương và độ dốc. Vị trí từng bậc bên trong
+là ước lượng. Mường Hoa Valley 10 và 11 do Christophe95 chụp tháng 8/2018.
+Ảnh chỉ dùng để đối chiếu. Độ chênh cao kiểm tra từ Mapzen Terrain Tiles.
+https://www.openstreetmap.org/way/1453073054
+https://commons.wikimedia.org/wiki/File:M%C6%B0%E1%BB%9Dng_Hoa_Valley_10.jpg
+https://commons.wikimedia.org/wiki/File:M%C6%B0%E1%BB%9Dng_Hoa_Valley_11.jpg
+https://visitsapa.com.vn/vi/kham-pha-ban-lao-chai-ta-van-noi-thu-hut-hang-tram-du-khach-8978
+https://registry.opendata.aws/terrain-tiles/
+
+tools/build_vn_farmland.py tái tạo dữ liệu từ tệp PBF. index.json ghi thời điểm
+bản đồ, SHA-256 của nguồn, số đối tượng và danh mục ô nén. Các tọa độ được
+giản lược khoảng 2,5 m và làm tròn đến 0,00001 độ.

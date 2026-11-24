@@ -38,18 +38,19 @@ function createRoadSurfaces(T,renderer){
       tex.repeat.set(repeatX,repeatY);tex.offset.set(offsetX,offsetY);
     }
   }
-  function weatheredAsphalt(mat,wetness,origin,reflection){
+  function weatheredAsphalt(mat,moisture,origin,reflection){
     mat.envMapIntensity=.67;
     mat.onBeforeCompile=shader=>{
-      shader.uniforms.roadWetness=wetness;
+      shader.uniforms.roadWetness=moisture.asphalt;
+      shader.uniforms.standingWater=moisture.pools;
       shader.uniforms.roadOrigin={value:origin};
       Object.assign(shader.uniforms,reflection);
-      const varyings='varying vec4 roadSample; varying vec4 roadMirrorUV; varying float roadHeight;\n';
-      shader.vertexShader=varyings+'attribute vec2 carriageway; uniform vec2 roadOrigin; uniform mat4 mirrorMatrix;\n'+
+      const varyings='varying vec4 roadSample; varying vec4 roadMirrorUV; varying vec2 roadProfile;\n';
+      shader.vertexShader=varyings+'attribute vec3 carriageway; uniform vec2 roadOrigin; uniform mat4 mirrorMatrix;\n'+
         shader.vertexShader.replace('#include <begin_vertex>',
-          '#include <begin_vertex>\n roadSample=vec4(position.xz+roadOrigin,carriageway); vec4 roadWorld=modelMatrix*vec4(position,1.); roadHeight=roadWorld.y; roadMirrorUV=mirrorMatrix*roadWorld;');
+          '#include <begin_vertex>\n roadSample=vec4(position.xz+roadOrigin,carriageway.xy); vec4 roadWorld=modelMatrix*vec4(position,1.); roadProfile=vec2(roadWorld.y,carriageway.z); roadMirrorUV=mirrorMatrix*roadWorld;');
       shader.fragmentShader=varyings+`
-        uniform float roadWetness, mirrorStrength, mirrorLevel;
+        uniform float roadWetness, standingWater, mirrorStrength, mirrorLevel;
         uniform sampler2D mirrorMap;
         float roadHash(vec2 p){
           vec3 h=fract(p.xyx*vec3(.1031,.11369,.13787));
@@ -72,13 +73,18 @@ function createRoadSurfaces(T,renderer){
           float tracks=(1.-smoothstep(.14,.50,abs(offset-.82)))*step(.01,halfWidth);
           float edge=smoothstep(halfWidth-.85,halfWidth,lateral)*step(.01,halfWidth);
           float film=0.;
-          if(roadWetness>.004){
-            float basin=.72*depressions(metres*.32)+.28*variation+.10*edge-.08*tracks;
-            film=roadWetness*(.21+.79*smoothstep(.32,.69,basin));
+          float exposed=step(-.5,roadProfile.y);
+          if(exposed>.5 && (roadWetness>.004 || standingWater>.004)){
+            float basin=.72*depressions(metres*.32)+.28*variation+.16*edge-.08*tracks+.22*roadProfile.y;
+            vec3 roadPoint=vec3(metres.x,roadProfile.x,metres.y);
+            vec3 face=cross(dFdx(roadPoint),dFdy(roadPoint));
+            float grade=length(face.xz)/max(.000001,abs(face.y));
+            float pool=smoothstep(.40,.73,basin)*(1.-smoothstep(.025,.115,grade));
+            film=clamp(roadWetness*.24+standingWater*pool*.92,0.,1.);
           }
           diffuseColor.rgb*=mix(.83,1.18,variation)*(1.-.16*tracks);
           diffuseColor.rgb=mix(diffuseColor.rgb,vec3(.17,.122,.084),edge*.26);
-          diffuseColor.rgb*=1.-.53*film-.13*roadWetness;`)
+          diffuseColor.rgb*=1.-.53*film-.13*roadWetness*exposed;`)
         .replace('#include <roughnessmap_fragment>',`#include <roughnessmap_fragment>
           roughnessFactor=mix(clamp(roughnessFactor-.07*tracks,.52,.97),.085,film);`)
         .replace('#include <normal_fragment_maps>',`#include <normal_fragment_maps>
@@ -87,7 +93,7 @@ function createRoadSurfaces(T,renderer){
           if(film>.08 && mirrorStrength>.5 && roadMirrorUV.w>0.){
             vec2 uv=roadMirrorUV.xy/roadMirrorUV.w*.5+.5;
             float border=min(min(uv.x,uv.y),min(1.-uv.x,1.-uv.y));
-            float levelFit=1.-smoothstep(.12,1.5,abs(roadHeight-mirrorLevel));
+            float levelFit=1.-smoothstep(.12,1.5,abs(roadProfile.x-mirrorLevel));
             float grazing=1.-max(0.,dot(normal,normalize(vViewPosition)));
             float reflectance=(.04+.71*pow(grazing,3.))*film*film*levelFit*smoothstep(0.,.045,border);
             vec2 ripple=(normal.xy-nonPerturbedNormal.xy)*.038;

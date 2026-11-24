@@ -239,6 +239,8 @@ window.QuocTuGiamStreet=(()=>{
         }
         for(const side of [-1,1])block(u+side*w*.28,v-.055,.06,.08,y+.20,y+2.55,0xa7a397);
         block(u,v-.46,w*.95,.88,y+2.66,y+2.78,paint);
+        const [lipX,lipZ]=at(u,v-.90);
+        group.userData.eaves?.push([lipX,y+2.66,lipZ,fx,fz,w*.95]);
         if(sign!==undefined)instance(assets.signs.panels[sign],assets.signs.material,u,v-.4,y+3.1,w*.93,1.35,1,white,Math.PI);
         collision('shop:'+east,u,v+2.4,w,4.8,h);
       }

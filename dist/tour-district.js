@@ -355,10 +355,9 @@ function createTourDistrict(T,scene,plaster,structures,osmBuildings,nightLights)
   const roof=new T.MeshStandardMaterial({vertexColors:true,side:T.DoubleSide,roughness:.9});
   const grain={value:null},stelePhoto={value:null},photoReady={value:0};
   function loadMonumentSurfaces(){
-    if(grain.value||typeof document==='undefined')return;
+    if(stelePhoto.value||typeof document==='undefined')return;
     const loader=new T.TextureLoader();
-    grain.value=(typeof landmarkGrain!=='undefined'&&landmarkGrain)||loader.load('streetscape/surfaces/landmark-grain.webp');
-    grain.value.wrapS=grain.value.wrapT=T.RepeatWrapping;grain.value.anisotropy=4;
+    grain.value=getLandmarkGrain(T);
     stelePhoto.value=loader.load('landmark-scans/van-mieu-1442-face.webp',()=>{photoReady.value=1;});
     stelePhoto.value.colorSpace=T.SRGBColorSpace;stelePhoto.value.anisotropy=4;
   }
@@ -632,7 +631,7 @@ function createTourDistrict(T,scene,plaster,structures,osmBuildings,nightLights)
       if((++roadSegments&63)===0)yield;
       const a=edge.points[n-1],b=edge.points[n],w=worldRoadHalfWidth(edge),dx=b.x-a.x,dz=b.z-a.z;
       const length2=dx*dx+dz*dz;if(!length2)continue;
-      const segment={a,dx,dz,length2,w};
+      const segment={a,dx,dz,length2,w,name:edge.name,id:edge.id};
       const margin=w+18;
       const left=Math.max(cx-850,Math.min(a.x,b.x)-margin),right=Math.min(cx+850,Math.max(a.x,b.x)+margin);
       const top=Math.max(cz-850,Math.min(a.z,b.z)-margin),bottom=Math.min(cz+850,Math.max(a.z,b.z)+margin);
@@ -678,7 +677,7 @@ function createTourDistrict(T,scene,plaster,structures,osmBuildings,nightLights)
       b.used+=b.stride;
     }
     function quad(b,a,c,lo,hi,tint,count,floors){
-      const u=a.distanceTo(c)/5,lowFloor=Math.max(0,lo)/hi*floors;
+      const u=a.distanceTo(c)/5,lowFloor=hi>0?Math.max(0,lo)/hi*floors:0;
       const left=count?0:-1,right=count||-1;
       vertex(b,a.x,lo,a.y,0,lo/4,tint,0,left,lowFloor);
       vertex(b,c.x,lo,c.y,u,lo/4,tint,0,right,lowFloor);
@@ -810,11 +809,13 @@ function createTourDistrict(T,scene,plaster,structures,osmBuildings,nightLights)
         /church|cathedral|chapel/.test(use)||faith==='christian'||/^nhà thờ\s/iu.test(label)?2:use==='mosque'||faith==='muslim'?3:0;
       // A mapped outline establishes that a building exists. In visitor grounds
       // an unclassified outline is insufficient evidence for a house or a shop.
-      const unclassified=visitorArea&&!opening&&!part&&(use==='yes'||use==='building');
+      const [bLon,bLat]=graph.geo(x,z);
+      const streetSurvey=original&&!part&&!opening&&window.SurveyedStreetFronts?.profile(id,bLon,bLat);
+      const unclassified=visitorArea&&!opening&&!part&&!streetSurvey?.street&&(use==='yes'||use==='building');
       const bottom=part?.min_height||part?.['building:min_level']*3.3||0;
       const rise=parseFloat(detail?.['roof:height'])||detail?.['roof:levels']*3.3;
       const fallbackHeight=warehouse?5.4:3.7+(unclassified?0:seed%3*3);
-      const h=Math.min(850,Math.max(bottom+.3,2,tagH||parseFloat(detail?.height)||(levels&&levels*3.3+(part&&rise||0))||structures.heightAt(graph,x,z)||fallbackHeight));
+      const h=Math.min(850,Math.max(bottom+.3,2,tagH||parseFloat(detail?.height)||(levels&&levels*3.3+(part&&rise||0))||streetSurvey?.height||structures.heightAt(graph,x,z)||fallbackHeight));
       const nearRoads=roadsAt(box);
       // Elevated rooms, open canopies and surveyed gate piers have their own clearance.
       const custom=survey&&(survey.steleRows||vanMieuArchitectureRefs.has(id));
@@ -847,23 +848,34 @@ function createTourDistrict(T,scene,plaster,structures,osmBuildings,nightLights)
             shore?.intersects(minX,minZ,maxX,maxZ)?shore.step:undefined);
           b.h=built.height;b.solids=built.solids;b.stelae=built.stelae;continue;
         }
-        const [bLon,bLat]=graph.geo(x,z),zone=window.CentralStreetscapes?.zoneAt(bLon,bLat);
+        const zone=window.CentralStreetscapes?.zoneAt(bLon,bLat);
         const zWalls=zone?zone.walls:null,zRoofs=zone?zone.roofs:null;
         const roofTint=surveyTint(detail?.['roof:colour'],detail?.['roof:material']);
         const wallTint=surveyTint(detail?.['building:colour'],detail?.['building:material']);
-        const roofColor=roofTint||(zRoofs?new T.Color(zRoofs[opening===1?0:seed%zRoofs.length]):roofs[opening===1?0:seed%roofs.length]);
-        const base=wallTint||(zWalls?new T.Color(zWalls[seed%zWalls.length]):palette[seed%palette.length]);
+        let roofColor=roofTint||(zRoofs?new T.Color(zRoofs[opening===1?0:seed%zRoofs.length]):roofs[opening===1?0:seed%roofs.length]);
+        let base=wallTint||(zWalls?new T.Color(zWalls[seed%zWalls.length]):palette[seed%palette.length]);
+        let frontage=null;
         if(!part&&!opening&&!unclassified&&Math.hypot(x-cx,z-cz)<185&&h>=3&&h<17&&maxX-minX<32&&maxZ-minZ<32&&
-          /^(yes|residential|house|terrace|apartments|retail|commercial|building)$/.test(kind))streetFront(outer,h,roofColor,seed,zone);
+          (/^(yes|residential|house|terrace|apartments|retail|commercial|building)$/.test(kind)||kind==='hotel'&&streetSurvey?.kind==='hotel')){
+          if(streetSurvey&&h<10.5)frontage=window.SurveyedStreetFronts.select(streetSurvey,outer,nearRoads,graph,(px,pz)=>insideBuilding(px,pz,rings));
+          if(!frontage)streetFront(outer,h,roofColor,seed,zone);
+        }
+        const colour=frontage&&window.SurveyedStreetFronts.wallColour(frontage.surveyKind,seed);
+        if(colour&&!wallTint)base=new T.Color(colour);
+        if(frontage&&!roofTint&&['stone','ochre'].includes(frontage.surveyKind))
+          roofColor=new T.Color(frontage.surveyKind==='stone'?0x655c50:0x78614f);
         let eave=h;
         const lowRiseRoof=!part&&!unclassified&&h<(zone?.forcePitched?10.5:7.2)&&(warehouse||zone?.forcePitched||seed%5<2)?'gabled':null;
-        const roofShape=shape||detail?.['roof:shape']||(opening===1?'hipped':opening===2?'gabled':lowRiseRoof);
+        const roofShape=shape||detail?.['roof:shape']||(opening===1?'hipped':opening===2||frontage?'gabled':lowRiseRoof);
         const pitched=['hipped','gabled','pyramidal','hipped-and-gabled','side_hipped','round','skillion','onion','dome','saltbox','mansard'].includes(roofShape);
-        const visitorRoof=original&&(site||opening||part||shape)&&pitched&&buildVisitorRoof(T,rings,roofShape,h,
-          rise,roofColor,base,([px,py,pz],[u,v],tint,tiles)=>{
-            const finish=tiles&&(/metal/.test(detail?.['roof:material'])?2:opening===1||detail?.['roof:material']==='roof_tiles'?1:0);
+        const roofDetail=frontage?.surveyKind==='hotel'&&!detail?.['roof:direction']?
+          {...detail,'roof:direction':Math.atan2(frontage.uz,frontage.ux)*180/Math.PI}:detail;
+        const visitorRoof=original&&(site||opening||part||shape||frontage)&&pitched&&buildVisitorRoof(T,rings,roofShape,h,
+          rise||(frontage?Math.min(1.65,h*.18):0),roofColor,base,([px,py,pz],[u,v],tint,tiles)=>{
+            const roofMaterial=detail?.['roof:material'];
+            const finish=tiles&&(/metal/.test(roofMaterial)?2:opening===1||!roofMaterial&&frontage||roofMaterial==='roof_tiles'?1:0);
             vertex(batches[1],px,py,pz,u,v,tint,Number(finish));
-          },opening===1,detail,bottom);
+          },opening===1,roofDetail,bottom);
         if(visitorRoof){
           eave=visitorRoof;
         }else if(rings.length===1&&outer.length===4&&pitched){
@@ -881,6 +893,15 @@ function createTourDistrict(T,scene,plaster,structures,osmBuildings,nightLights)
           for(const tri of outline.triangles)for(const index of [tri[0],tri[2],tri[1]]){
             const p=flat[index];vertex(batches[1],p.x,h,p.y,0,0,roofColor);
           }
+        }
+        if(frontage){
+          const f=frontage;
+          if(typeof document!=='undefined')grain.value??=getLandmarkGrain(T);
+          const gallery=window.SurveyedStreetFronts.draw(T,f,eave,base,roofColor,(...args)=>vertex(batches[1],...args));
+          if(f.surveyKind==='hotel')b.authoredBusinessKind='hotel';
+          streetFronts.push({x:f.x-cx-f.nx*f.inset,z:f.z-cz-f.nz*f.inset,y:baseY,nx:f.nx,nz:f.nz,ux:f.ux,uz:f.uz,
+            half:f.half,top:gallery.top,h,seed,zone,canopy:f.inset,balcony:gallery.balcony,
+            named:true,surveyKind:f.surveyKind,buildingId:id});
         }
         if(bottom>0){
           outline.triangles??=T.ShapeUtils.triangulateShape(outer,rings.slice(1));
@@ -918,11 +939,12 @@ function createTourDistrict(T,scene,plaster,structures,osmBuildings,nightLights)
           const count=warehouse||unclassified?0:Math.floor(length/(opening?3.8:2.85)),floors=opening?Math.max(1,levels||1):Math.max(1,Math.round(h/3.3));
           const samples=profile[j],next=profile[(j+1)%ring.length][0],wallBatch=batches[0];
           if(bottom>0){quad(wallBatch,a,c,bottom,Math.max(bottom,eave),base,count,floors);continue;}
+          const recessed=ri===0&&frontage?.edges.has(j);
           // On nearly level blocks the wall itself can reach beneath the grass.
           if(samples.every(p=>baseY-p.h<.16)&&baseY-next.h<.16){
-            quad(wallBatch,a,c,-.39,eave,base,count,floors);continue;
+            quad(wallBatch,a,c,-.39,recessed?0:eave,base,recessed?0:count,floors);continue;
           }
-          quad(wallBatch,a,c,0,eave,base,count,floors);
+          if(!recessed)quad(wallBatch,a,c,0,eave,base,count,floors);
           for(let k=0;k<samples.length;k++){
             const l=samples[k],r=samples[k+1]||profile[(j+1)%ring.length][0];
             // The grass mesh sits 17 cm below the nominal ground.
@@ -988,7 +1010,7 @@ function createTourDistrict(T,scene,plaster,structures,osmBuildings,nightLights)
         const distance=Math.hypot(rx,rz),fromPoint=Math.hypot(fx-x,fz-z);
         if(distance<1||fromPoint>28||rx*nx+rz*nz<.62*distance)continue;
         const rank=distance+fromPoint*.32;
-        if(rank<score){score=rank;best={x:fx,z:fz,nx,nz,width:2*margin,base:b.baseY,h:b.h,id:b.id};}
+        if(rank<score){score=rank;best={x:fx,z:fz,nx,nz,width:2*margin,base:b.baseY,h:b.h,id:b.id,authoredBusinessKind:b.authoredBusinessKind};}
       }
     }
     return best;

@@ -6,7 +6,17 @@ function createDrivingWeather(THREE,scene,sun,pavement,reference=''){
   const base={light:sun.intensity,fog:scene.fog.density,color:scene.fog.color.clone(),road:pavement.color.clone(),rough:pavement.roughness};
   const fogColor=new THREE.Color(),stormColor=new THREE.Color();
   const cacheKey='taylai.weather.v1';
-  const rainDemo=new URLSearchParams(location.search).get('weather')==='rain';
+  const scenario=new URLSearchParams(location.search).get('weather');
+  const rainDemo=scenario==='rain',afterRain=scenario==='after-rain';
+  const moisture={asphalt:{value:afterRain ? .64 : 0},pools:{value:afterRain ? .86 : 0},
+    soil:{value:afterRain ? .93 : 0},eaves:{value:afterRain ? .88 : 0}};
+  // Incoming rain wets exposed surfaces quickly. After a shower their stores
+  // drain independently, even when a tab has been in the background.
+  function retain(store,rain,elapsed,fill,drain){
+    const seconds=rain>store.value?fill:drain;
+    store.value=rain+(store.value-rain)*Math.exp(-elapsed/seconds);
+    if(store.value<.001)store.value=0;
+  }
   let cache=[];
   try{const data=JSON.parse(localStorage.getItem(cacheKey));if(Array.isArray(data))cache=data.slice(-20);}catch{}
   let point=null,due=0,request=null,current=null,lastFrame=0,opacity=0;
@@ -24,15 +34,19 @@ function createDrivingWeather(THREE,scene,sun,pavement,reference=''){
     const text=c?describe(c)+' · '+Math.round(c.temperature_2m)+' °C · '+(source==='cache'?'Bản lưu ':'')+formatter.format(c.time*1000):source;
     for(const el of labels){el.textContent=(reference?reference+' · ':'')+text;el.title='Thời tiết Open-Meteo · Giờ Việt Nam';}
   }
-  if(rainDemo)for(const el of labels){
-    el.textContent=(reference?reference+' · ':'')+'Mưa mô phỏng';
-    el.title='Chuyến lái dưới mưa mô phỏng';
+  if(rainDemo||afterRain)for(const el of labels){
+    el.textContent=(reference?reference+' · ':'')+(afterRain?'Sau mưa mô phỏng':'Mưa mô phỏng');
+    el.title=afterRain?'Chuyến lái sau cơn mưa mô phỏng':'Chuyến lái dưới mưa mô phỏng';
   }
   async function locate(lon,lat){
-    if(rainDemo)return;
+    if(rainDemo||afterRain)return;
     const now=Date.now(),moved=!point||Math.hypot((point.lon-lon)*Math.cos(lat*Math.PI/180),point.lat-lat)>.04;
     if(!moved&&now<due)return;
     if(request)request.abort();
+    if(point&&Math.hypot((point.lon-lon)*Math.cos(lat*Math.PI/180),point.lat-lat)>.20){
+      for(const store of Object.values(moisture))store.value=0;
+      opacity=0;
+    }
     point={lon,lat};due=now+interval;
     const id=Math.round(lat*25)+','+Math.round(lon*25);
     const record=cache.find(entry=>entry?.id===id&&fresh(entry.c));
@@ -65,22 +79,27 @@ function createDrivingWeather(THREE,scene,sun,pavement,reference=''){
   const dawnHaze=new THREE.Color(0xe6c9a4);
   const windscreens=new WeakMap();
   function render(camera,now,dawn=0,worldLighting,sheltered=false,cabin=null,truck=false,speed=0){
-    const mix=1-Math.exp(-Math.min(.2,(now-lastFrame)/1000)*2);lastFrame=now;
+    const elapsed=lastFrame?Math.max(0,(now-lastFrame)/1000):0;
+    const mix=1-Math.exp(-Math.min(.2,elapsed)*2);lastFrame=now;
     const c=current,code=c?.weather_code||0,night=c&&c.is_day===0;
     const wet=rainDemo ? .84 : c?(1-dawn)*Math.min(1,Math.max(c.precipitation*1.8,code>=51?.24:0)):0;
-    const cloud=rainDemo ? .88 : (c?.cloud_cover||0)/100*(1-dawn),fog=(code===45||code===48)?1-dawn:0;
+    const cloud=rainDemo ? .88 : afterRain ? .42 : (c?.cloud_cover||0)/100*(1-dawn),fog=(code===45||code===48)?1-dawn:0;
+    const snow=[71,73,75,77,85,86].includes(code),liquid=snow?0:wet;
+    retain(moisture.asphalt,wet,elapsed,.9,85);
+    retain(moisture.soil,wet,elapsed,6,440);
+    retain(moisture.pools,liquid,elapsed,8,220);
+    retain(moisture.eaves,liquid,elapsed,3,36);
     if(worldLighting){
-      worldLighting(dawn,cloud,wet,fog,mix);
+      worldLighting(dawn,cloud,wet,fog,mix,moisture.asphalt.value);
     }else{
       sun.intensity+=(base.light*(night?.13+.87*dawn:1-.65*cloud)-sun.intensity)*mix;
       scene.backgroundIntensity+=((night?.09+.91*dawn:1-.46*cloud)-scene.backgroundIntensity)*mix;
       scene.fog.density+=(Math.max(base.fog+dawn*.00036,.012*fog,wet*.004+cloud*.0005)-scene.fog.density)*mix;
       fogColor.copy(base.color).lerp(stormColor.setHex(night?0x374650:0xa0acb1),night?.95:Math.max(cloud,wet,fog)).lerp(dawnHaze,dawn);scene.fog.color.lerp(fogColor,mix);
-      pavement.roughness+=(base.rough*(1-.58*wet)-pavement.roughness)*mix;
-      pavement.color.lerp(fogColor.copy(base.road).multiplyScalar(1-.36*wet),mix);
+      pavement.roughness=base.rough*(1-.58*moisture.asphalt.value);
+      pavement.color.copy(base.road).multiplyScalar(1-.36*moisture.asphalt.value);
     }
     opacity+=(wet-opacity)*mix;
-    const snow=[71,73,75,77,85,86].includes(code);
     if(cabin){
       const rain=sheltered||snow?0:opacity;
       let update=windscreens.get(cabin);
@@ -105,5 +124,5 @@ function createDrivingWeather(THREE,scene,sun,pavement,reference=''){
     }
     positions.needsUpdate=true;
   }
-  return {locate,render,get rainfall(){return opacity;}};
+  return {locate,render,moisture,get rainfall(){return opacity;}};
 }

@@ -1,16 +1,46 @@
 """Bake short mountain stages from the bundled OSM road centre lines and terrain raster."""
+import base64
 import gzip
 import json
 import math
 import unicodedata
 from bisect import bisect_right
 from collections import defaultdict
+from functools import lru_cache
 from pathlib import Path
 
 from PIL import Image
 
 ROOT = Path(__file__).resolve().parents[1] / "dist"
 STEP = 20
+
+
+@lru_cache(maxsize=12)
+def cover_tile(x, y):
+    source = ROOT/'vn-environment'/f'{x}_{y}.gz'
+    return gzip.decompress(source.read_bytes()) if source.exists() else None
+
+
+def forest_mask(stage, manifest):
+    """64 x 64 cells of 120 m in the same rotated frame as the stage DEM."""
+    lon, lat = stage['start']
+    grid, size = manifest['grid'], manifest['coverSize']
+    offset = manifest['populationSize']**2
+    rad = math.radians(stage['bearing'])
+    cs, sn = math.cos(rad), math.sin(rad)
+    mx = 111320*math.cos(math.radians(lat))
+    packed = bytearray(1024)
+    for j in range(64):
+        for i in range(64):
+            x, z = (i-31.5)*120, (j-31.5)*120
+            u, v = (lon+(cs*x-sn*z)/mx)*grid, (lat-(sn*x+cs*z)/110900)*grid
+            ix, iy = math.floor(u), math.floor(v)
+            raw = cover_tile(ix, iy)
+            code = raw[offset+(size-1-int((v-iy)*size))*size+int((u-ix)*size)] if raw else 0
+            cover = 2 if code in (10,95) else 1 if code==20 else 0 if code else 3
+            cell = j*64+i
+            packed[cell//4] |= cover << (2*(cell%4))
+    return base64.b64encode(packed).decode('ascii')
 
 
 def longest_chain(edges):
@@ -114,6 +144,9 @@ def main():
         if s["id"] in seen:
             s["id"] += "-" + str(min(groups[s["name"]]))
         seen.add(s["id"])
+    manifest = json.loads((ROOT/'vn-environment/index.json').read_bytes())
+    for s in stages:
+        s['forestMask'] = forest_mask(s, manifest)
     rows = [json.dumps(s,ensure_ascii=False,separators=(',',':')) for s in stages]
     (ROOT/'mountain-stages.js').write_text("// Centre lines: OpenStreetMap contributors, ODbL. Elevations: bundled Vietnam DEM.\nwindow.mountainStages=[\n"+",\n".join(rows)+"\n];\n",encoding='utf8')
     print(len(stages), 'stages')

@@ -45,7 +45,7 @@
         if(w){
           if(mat===material.roadSlabs||mat===material.roadWood)batch.uv.push(p.s,p.o);
           else batch.uv.push(x*.25+(cx*.25)%1,z*.25+(cz*.25)%1);
-          batch.road.push(p.o,w);
+          batch.road.push(p.o,w,-1);
         }
         else{
           const wash=mat===materials.lining&&p.lit ? .88+.12*Math.cos((p.s-5)*Math.PI/7) : 1;
@@ -233,7 +233,7 @@
     for(const [mat,batch] of batches){
       const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(batch.pos,3));
       if(batch.painted)g.setAttribute('color',new T.Float32BufferAttribute(batch.col,3));
-      else{g.setAttribute('uv',new T.Float32BufferAttribute(batch.uv,2));g.setAttribute('carriageway',new T.Float32BufferAttribute(batch.road,2));}
+      else{g.setAttribute('uv',new T.Float32BufferAttribute(batch.uv,2));g.setAttribute('carriageway',new T.Float32BufferAttribute(batch.road,3));}
       g.computeVertexNormals();
       const mesh=new T.Mesh(g,mat);
       mesh.name=mat===materials.lining?'Tunnel inner lining':mat===materials.exterior?'Tunnel portals and approaches':

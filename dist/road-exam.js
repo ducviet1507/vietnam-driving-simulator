@@ -380,7 +380,14 @@ const hills=mountainField?mountainHorizon(nearTerrain,mountainField):distantHill
 const foliage={};
 const courseTrees=createTreeModels(T);
 const distantTrees=new Map();
+const courseWoodland=coursePassCover(route.stage),seaOpening=courseHaiVanOpening(route.stage);
 function scatterTree(kind,x,y,z,w,h,angle,compact=false){
+ if(seaOpening?.(x,z))return;
+ if(courseWoodland){
+   const cover=courseWoodland(x,z);
+   if(cover===0)return;
+   if(cover===1){h*=.39;w*=.69;}
+ }
  const variant=courseTrees.variantAt(x,z),key=kind+variant+(compact?'Grove':'');
  if(!geom[key]){
    geom[key]=courseTrees.geometry(kind,compact,variant);

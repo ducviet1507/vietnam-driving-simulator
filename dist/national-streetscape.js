@@ -60,7 +60,7 @@ function* buildNationalStreetscape(T,ctx){
     const name=bus?p.detail[0]||p.detail[1]||'Điểm dừng xe buýt':p.detail;
     const front=!bus&&district.businessFront(cx+x,cz+z,cx+rx,cz+rz);
     if(front){
-      if(usedBuildings.has(front.id))continue;
+      if(usedBuildings.has(front.id)||p.kind===front.authoredBusinessKind)continue;
       nx=front.nx;nz=front.nz;
       // Mount above the shop canopy and just in front of the wall. Keep low
       // buildings below the eave, and tall buildings at ground-floor level.
@@ -131,6 +131,7 @@ function* buildNationalStreetscape(T,ctx){
         // A short fabric canopy fits between the real wall and the carriageway.
         const canopy=Math.min(1.05,(rx-x)*nx+(rz-z)*nz-s.w-.65);
         if(canopy>.36&&clearFace(width*.51,canopy)&&['restaurant','cafe','shop'].includes(p.kind)){
+          group.userData.eaves?.push([x+nx*canopy,base+doorHeight-.13,z+nz*canopy,ux,uz,width]);
           const stripes=7,colour=p.kind==='cafe'?0x946543:p.kind==='restaurant'?0xb36a4c:0x617a6e;
           for(let i=0;i<stripes;i++){
             const u=width*((i+.5)/stripes-.5),cloth=i%2?0xd4c8a8:colour;
@@ -150,6 +151,7 @@ function* buildNationalStreetscape(T,ctx){
           x:x+ux*u,z:z+uz*u,radius:.06,height:y,parts:[]});
       }
       if(shelter){
+        group.userData.eaves?.push([x-nx*.45,base+2.60,z-nz*.45,ux,uz,3.75]);
         box(0,-1.33,2.67,3.75,.14,1.76,0xa7b1ad);
         for(const u of [-1.55,1.55]){
           box(u,-1.92,1.34,.095,2.68,.095,0x898d88);

@@ -1,0 +1,21 @@
+Đèo Hải Vân, khúc cua nhìn về Lăng Cô
+
+Steffen Schmitz chụp ba ảnh từ lề đường ngày 24 tháng 1 năm 2020.
+CN-01 cho thấy chỗ dừng bên đường, hai nhánh của khúc cua và sườn cây phía sau.
+CN-03 và CN-04 cho thấy biển, bờ Lăng Cô và những lớp tán cây thấp dần trong thung lũng. Cây vẫn che hai mép ảnh CN-03.
+
+https://commons.wikimedia.org/wiki/File:L%C4%83ng_C%C3%B4,_H%E1%BA%A3i_V%C3%A2n_Pass,_2020-01_CN-01.jpg
+https://commons.wikimedia.org/wiki/File:L%C4%83ng_C%C3%B4,_H%E1%BA%A3i_V%C3%A2n_Pass,_2020-01_CN-03.jpg
+https://commons.wikimedia.org/wiki/File:L%C4%83ng_C%C3%B4,_H%E1%BA%A3i_V%C3%A2n_Pass,_2020-01_CN-04.jpg
+
+Tâm cụm vị trí chụp xấp xỉ 16.19396° Bắc, 108.13155° Đông. Điểm gần nhất trên tim đường QL.1 của OpenStreetMap trong game cách đó 34 m. Khúc cua nằm khoảng 1,32 km từ vạch xuất phát chặng Cúp Hải Vân. Mô hình dùng ảnh làm tư liệu xác định hướng nhìn và giới hạn tán cây sinh thêm ngay ngoài lề. Địa hình, biển và thảm cây ở xa tiếp tục theo dữ liệu bản đồ. Game không phân phối điểm ảnh của các ảnh tham khảo này.
+
+Dữ liệu cây của các chặng Cúp lấy từ lớp ESA WorldCover 2021 đã ghi công tại /vn-environment/CREDITS.txt. Game lấy mẫu ô 120 m để đặt các cụm cây trong vùng rừng, cây bụi trong vùng cây bụi và bỏ các cụm cây khỏi ruộng, nước và khu xây dựng đã phân loại. Kích thước và vị trí từng cây trong ô là mô phỏng.
+
+Các dải đá lộ và rãnh chân taluy được mô phỏng từ cao độ phía sườn dốc, bề rộng mặt đường và vị trí các nhánh đường lân cận. Vị trí từng viên đá và từng rãnh chưa được khảo sát tại hiện trường.
+
+Đèo Mã Pí Lèng
+
+Ảnh đèo của Khánh Hmoong năm 2014 cho thấy các dải đá xám lộ ra trên sườn dốc, xen giữa cây thấp, ruộng và những vạt cây sẫm. Chặng dùng ảnh để đối chiếu màu đá và độ phân tán của tán cây. Mô hình đặt cây theo lớp phủ và lấy cao độ chân cây trực tiếp trên lưới địa hình hiển thị.
+
+https://commons.wikimedia.org/wiki/File:Ma_Pi_Leng_Pass_winding_road_Ha_Giang_Vietnam.jpg

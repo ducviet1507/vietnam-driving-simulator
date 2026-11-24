@@ -8,15 +8,18 @@ const landmarkFinish = Object.freeze({
   thatch: 6, brick: 7, metal: 8, glass: 9
 });
 let landmarkGrain;
-function createLandmarkMaterial(T, id, stainStrength) {
+function getLandmarkGrain(T) {
   if (!landmarkGrain) {
     landmarkGrain = new T.TextureLoader().load('streetscape/surfaces/landmark-grain.webp');
     landmarkGrain.wrapS = landmarkGrain.wrapT = T.RepeatWrapping;
     landmarkGrain.anisotropy = 4;
     landmarkGrain.userData.sightShared = true;
   }
+  return landmarkGrain;
+}
+function createLandmarkMaterial(T, id, stainStrength) {
   const material = new T.MeshStandardMaterial({
-    map: landmarkGrain, vertexColors: true,
+    map: getLandmarkGrain(T), vertexColors: true,
     roughness: id === 'coal' ? .23 : .87, metalness: id === 'coal' ? .38 : 0
   });
   material.customProgramCacheKey = () => 'landmark-scan-v1';

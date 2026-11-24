@@ -1,0 +1,48 @@
+Trần Phú and Cẩm Kim, Hội An
+
+Building outlines and carriageway alignments are from OpenStreetMap contributors
+(ODbL 1.0, https://www.openstreetmap.org/copyright). The procedural walls, entry
+steps, woodwork, shutter slats, lanterns and roof edges are original geometry.
+The reference photographs are linked here for comparison. No photograph is
+embedded, cropped, traced into a texture, or bundled with these models.
+
+Trần Phú
+
+Vĩnh Hưng Hotel at 143 Trần Phú is represented on way 626704907, which contains
+the mapped hotel node. Its frontage faces the pedestrian block of Trần Phú.
+The 2015 view shows an ochre two-storey elevation, three ground-floor bays, a
+timber gallery, four round red lanterns and a name board over the centre door.
+The model interprets these features; detail and height are visual estimates.
+
+https://www.openstreetmap.org/way/626704907
+https://www.openstreetmap.org/node/2076856055
+https://www.openstreetmap.org/way/35952560
+https://www.hoianworldheritage.org.vn/vi/news/Khach-san-Nha-nghi/Khach-San-2-sao-457.hwh
+https://commons.wikimedia.org/wiki/File:Vinh_Hung_Hotel_of_Tran_Phu_street_in_2015_01.jpg
+
+Nearby eligible houses on the driveable stretch of Trần Phú use shuttered
+timber bays, shaded entries and tile eaves observed in street-level photographs.
+The mapped wall widths and street setbacks control the geometry. The treatment
+represents the street's architecture; undocumented individual shop fronts and
+current tenants are not identified. The separately modelled heritage buildings
+retain their own outlines and elevations.
+
+https://commons.wikimedia.org/wiki/File:Tran_Phu_street_of_Hoi_An_in_2015_1.jpg
+https://commons.wikimedia.org/wiki/File:Tran_Phu_street_of_Hoi_An_in_2015_3.jpg
+
+Cẩm Kim
+
+Christophe95's July 2018 image from 15.870650 N, 108.311714 E looks west
+(bearing 277.6 degrees) toward a dark masonry house with a stepped cornice
+and an ochre house with a columned veranda. Their positions relative to the
+camera and their shared lane are consistent with ways 632392120 and 632392119.
+This association is by sightline; the photograph does not establish addresses.
+A second photograph from 15.867500 N, 108.322097 E shows plastered houses
+on the edge of cultivated land. On nearby eligible mapped homes the model
+uses these examples for recessed porches, raised sills, piers and capped
+columns. Colours, roof heights and fittings are interpretations of the views.
+
+https://www.openstreetmap.org/way/632392120
+https://www.openstreetmap.org/way/632392119
+https://commons.wikimedia.org/wiki/File:Houses_on_C%E1%BA%A9m_Kim_Island.jpg
+https://commons.wikimedia.org/wiki/File:Houses_on_Cam_Kim_Island.jpg
