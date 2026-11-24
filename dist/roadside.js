@@ -104,7 +104,7 @@ function buildRoadside(){
     }
     scatter('box',0x817d6e,p.x,(y+low-.24)/2,p.z,depth+.23,y-low+.24,wide+.23,-p.h);
     part(0,0,'box',0xbdb39a,depth,h,wide,0);
-    scatter('box',variant%2?0x806458:0x637779,p.x,y+h+.115,p.z,depth+.42,.23,wide+.58,-p.h);
+    scatter('shopSheet',variant%2?0x806458:0x637779,p.x,y+h+.115,p.z,wide+.58,.23,depth+.42,-p.h+Math.PI/2);
     const f=localPoint(p,-side*(depth/2+.022),0);
     temp.position.set(f.x,y+h/2,f.z);temp.rotation.set(0,-p.h-side*Math.PI/2,0);temp.scale.set(wide,h,1);temp.updateMatrix();
     facades[variant].matrices.push(temp.matrix.clone());
@@ -112,8 +112,7 @@ function buildRoadside(){
     const span=Math.min(wide*.26,Math.abs(l)-depth/2-roadHalfWidth-1.2);
     const awning=-side*(depth+span)/2,porch=localPoint(p,awning,0),lintel=h*lintels[variant];
     const porchFloor=Math.min(y-.1,footing({...porch,h:p.h},span+.3,wide+.5).low-.12);
-    part(0,awning,'box',variant%2?0x796758:0x68807b,span,.12,wide+.32,lintel);
-    for(let dz=-wide/2;dz<wide/2;dz+=.22)part(dz,awning,'box',0x89918a,span,.05,.044,lintel+.10);
+    scatter('shopSheet',variant%2?0x796758:0x68807b,porch.x,y+lintel+.06,porch.z,wide+.32,.12,span,-p.h+Math.PI/2);
     for(const dz of [-1,1])part(dz*(wide*.48),awning-side*(span/2-.09),'pole',0x596864,.082,lintel,.082,0);
     part(0,awning,'box',0xada89a,span+.3,y+.04-porchFloor,wide+.5,porchFloor-y);
     part(wide*.28,side*.35,'pole',0x98aaab,1.05,.95,1.05,h+.23);

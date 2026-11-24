@@ -353,6 +353,36 @@ function createTourDistrict(T,scene,plaster,structures,osmBuildings,nightLights)
   const parts=createVietnamOsmBuildings('sight-building-parts/',Infinity);
   const wall=plaster.clone();wall.vertexColors=true;wall.side=T.DoubleSide;
   const roof=new T.MeshStandardMaterial({vertexColors:true,side:T.DoubleSide,roughness:.9});
+  const entranceMap={value:null},entranceReady={value:0};
+  function loadEntrances(){
+    if(entranceMap.value||typeof document==='undefined')return;
+    const map=new T.TextureLoader().load('streetscape/surfaces/vn-house-entrances.webp',()=>{entranceReady.value=1;});
+    map.colorSpace=T.SRGBColorSpace;entranceMap.value=map;
+  }
+  // Express the eye ray in the wall's horizontal/vertical frame. The inset
+  // shifts behind its frame as the car passes, within the same district draw.
+  const eyeVary='varying vec3 facadeEye;\n';
+  const wallEye=`
+    vec3 eye=cameraPosition-(modelMatrix*vec4(position,1.)).xyz;
+    vec3 facing=mat3(modelMatrix)*normal;
+    vec2 outwards=facing.xz/max(length(facing.xz),.001);
+    facadeEye=vec3(dot(eye.xz,vec2(-outwards.y,outwards.x)),eye.y,abs(dot(eye.xz,outwards)));`;
+  const paneShader=eyeVary+`
+    vec3 streetPane(vec2 p,float variation){
+      vec2 ray=facadeEye.xy/max(facadeEye.z,length(facadeEye)*.26+.001);
+      vec2 back=p-.13*ray;
+      vec2 border=min(back,1.-back);
+      float recess=smoothstep(-.018,.044,min(border.x,border.y));
+      float curtain=smoothstep(.47,.52,variation)*(1.-smoothstep(.19,.24,back.x));
+      float pleat=.91+.09*cos(back.x*112.)*(1.-smoothstep(.004,.036,fwidth(back.x)));
+      vec3 room=mix(vec3(.045,.039,.032),vec3(.125,.131,.115),clamp(back.y,0.,1.));
+      room=mix(room,vec3(.33,.285,.208)*pleat,curtain);
+      vec3 recessWall=mix(vec3(.12,.12,.107),vec3(.063,.062,.053),smoothstep(.2,.9,p.y));
+      float sky=smoothstep(.26,.94,p.y-ray.y*.12);
+      vec3 reflection=mix(vec3(.10,.13,.125),vec3(.34,.46,.52),sky);
+      float grazing=1.-facadeEye.z/max(length(facadeEye),.001);
+      return mix(mix(recessWall,room,recess),reflection,.17+.59*grazing*grazing);
+    }\n`;
   const grain={value:null},stelePhoto={value:null},photoReady={value:0};
   function loadMonumentSurfaces(){
     if(stelePhoto.value||typeof document==='undefined')return;
@@ -362,14 +392,31 @@ function createTourDistrict(T,scene,plaster,structures,osmBuildings,nightLights)
     stelePhoto.value.colorSpace=T.SRGBColorSpace;stelePhoto.value.anisotropy=4;
   }
   roof.onBeforeCompile=shader=>{
-    Object.assign(shader.uniforms,{monumentGrain:grain,stelePhoto,photoReady});
+    Object.assign(shader.uniforms,{monumentGrain:grain,stelePhoto,photoReady,entranceMap,entranceReady});
     const vary='varying vec2 visitorRoofUv; varying float visitorRoofFinish;\n';
-    shader.vertexShader=vary+'attribute float roofFinish;\n'+shader.vertexShader.replace('#include <begin_vertex>',
-      '#include <begin_vertex>\n visitorRoofUv=uv;visitorRoofFinish=roofFinish;');
-    shader.fragmentShader=vary+'uniform sampler2D monumentGrain,stelePhoto; uniform float photoReady;\n'+
+    shader.vertexShader=eyeVary+vary+'attribute float roofFinish;\n'+shader.vertexShader.replace('#include <begin_vertex>',
+      '#include <begin_vertex>\n visitorRoofUv=uv;visitorRoofFinish=roofFinish;'+wallEye);
+    shader.fragmentShader=paneShader+vary+'uniform sampler2D monumentGrain,stelePhoto,entranceMap; uniform float photoReady,entranceReady;\n'+
       shader.fragmentShader.replace('#include <color_fragment>',`#include <color_fragment>
       float naturalRelief=0.;
-      if(visitorRoofFinish>2.5){
+      float storefrontRough=.9;
+      if(visitorRoofFinish>10.5 && entranceReady>.5){
+        float kind=floor(visitorRoofFinish-11.+.5);
+        vec2 cell=vec2(mod(kind,2.),1.-floor(kind*.5));
+        vec2 atlasUV=(cell+clamp(visitorRoofUv,vec2(.004),vec2(.996)))*.5;
+        diffuseColor.rgb=texture2D(entranceMap,atlasUV).rgb;
+        storefrontRough=.72;
+      }else if(abs(visitorRoofFinish-7.)<.2){
+        vec2 pane=fract(visitorRoofUv);
+        diffuseColor.rgb=streetPane(pane,.31);
+        storefrontRough=.16;
+      }else if(abs(visitorRoofFinish-8.)<.2){
+        float phase=visitorRoofUv.y/.079;
+        float rolls=(1.-smoothstep(.15,.75,fwidth(phase)));
+        float slat=fract(phase);
+        diffuseColor.rgb*=1.+rolls*(.15*cos(slat*6.283)-.41*smoothstep(.74,.94,slat));
+        storefrontRough=.57;
+      }else if(visitorRoofFinish>2.5 && visitorRoofFinish<6.5){
         vec2 metres=visitorRoofUv;
         vec3 grain=texture2D(monumentGrain,metres*.56).rgb-.5;
         if(abs(visitorRoofFinish-4.)<.25 && photoReady>.5){
@@ -387,29 +434,41 @@ function createTourDistrict(T,scene,plaster,structures,osmBuildings,nightLights)
           diffuseColor.rgb*=vec3(1.+.41*grain.r+.24*deposit);
           naturalRelief=.0035*grain.r;
         }
-      }else if(visitorRoofFinish>.5){
+      }else if(visitorRoofFinish>.5 && visitorRoofFinish<2.5){
         vec2 tile=visitorRoofUv*vec2(5.8,3.6);
         vec2 aa=max(vec2(.001),fwidth(tile));float fade=1.-smoothstep(.14,.8,max(aa.x,aa.y));
         float crest=.5+.5*cos(tile.x*6.283);
         float lip=smoothstep(.71,.95,fract(tile.y));
         if(visitorRoofFinish>1.5)lip=0.;
         diffuseColor.rgb*=1.+fade*(.24*(crest-.5)-.16*lip);
-      }`).replace('#include <normal_fragment_maps>',`#include <normal_fragment_maps>
-        if(visitorRoofFinish>2.5 && abs(visitorRoofFinish-4.)>.25){
+      }`).replace('#include <roughnessmap_fragment>',`#include <roughnessmap_fragment>
+        if((visitorRoofFinish>6.5 && visitorRoofFinish<8.5)||visitorRoofFinish>10.5)roughnessFactor=storefrontRough;`)
+      .replace('#include <normal_fragment_maps>',`#include <normal_fragment_maps>
+        if(visitorRoofFinish>2.5 && visitorRoofFinish<6.5 && abs(visitorRoofFinish-4.)>.25){
           vec3 dx=dFdx(-vViewPosition),dy=dFdy(-vViewPosition);
           vec3 across=cross(dy,normal),along=cross(normal,dx);
           float area=dot(dx,across);
           normal=normalize(normal-sign(area)*(across*dFdx(naturalRelief)+along*dFdy(naturalRelief))/max(abs(area),1.e-9));
         }`);
+    shadeStreetRoof(T,shader,'roofFinish-9.','uv','normal');
   };
   // Window bays follow the measured edge length and the floor count. Shade them
   // in the wall pass, so a dense city block costs the same two draws on a phone.
   wall.onBeforeCompile=shader=>{
     shader.uniforms.nightLights=nightLights;
-    shader.vertexShader='attribute vec2 bays; attribute float openingStyle; varying float opening; varying vec2 vBays;\n'+shader.vertexShader.replace('#include <begin_vertex>','#include <begin_vertex>\n vBays=bays;opening=openingStyle;');
-    shader.fragmentShader='uniform float nightLights; varying float opening; varying vec2 vBays;\n'+shader.fragmentShader.replace('#include <map_fragment>',`#include <map_fragment>
+    const vary='varying float opening; varying vec2 vBays,wallMetres;\n';
+    shader.vertexShader=eyeVary+vary+'attribute vec2 bays; attribute float openingStyle;\n'+shader.vertexShader.replace('#include <begin_vertex>','#include <begin_vertex>\n vBays=bays;opening=openingStyle;wallMetres=uv*vec2(5.,4.);'+wallEye);
+    shader.fragmentShader=paneShader+vary+'uniform float nightLights;\n'+shader.fragmentShader.replace('#include <map_fragment>',`#include <map_fragment>
       vec3 roomLight=vec3(0.);
-      if(opening<.5)diffuseColor.rgb=mix(vec3(.72),diffuseColor.rgb,.59);
+      float windowGlass=0.;
+      if(opening<.5){
+        diffuseColor.rgb=mix(vec3(.68),diffuseColor.rgb,.69);
+        #ifdef USE_MAP
+          float mineral=texture2D(map,wallMetres*vec2(.36,.19)+vec2(opening*9.,.31)).g;
+          float splash=(1.-smoothstep(.02,.29+.64*mineral,wallMetres.y))*(.16+.17*mineral);
+          diffuseColor.rgb*=mix(vec3(1.),vec3(.54,.56,.51),splash);
+        #endif
+      }
       if(vBays.x>=0.){
         vec2 p=fract(vBays),aa=clamp(fwidth(vBays),vec2(.008),vec2(.18));
         vec2 pane=smoothstep(vec2(.2,.25)-aa,vec2(.2,.25)+aa,p)*(1.-smoothstep(vec2(.8,.78)-aa,vec2(.8,.78)+aa,p));
@@ -427,6 +486,11 @@ function createTourDistrict(T,scene,plaster,structures,osmBuildings,nightLights)
           pane.y*=1.-smoothstep(.55+arch*.23-aa.y,.55+arch*.23+aa.y,p.y);
         }
         float openingMask=pane.x*pane.y;
+        if(opening<.5){
+          float variant=fract(opening*17.+dot(floor(vBays),vec2(.37,.61)));
+          glazing=streetPane((p-vec2(.20,.25))/vec2(.60,.53),variant);
+          windowGlass=openingMask*(1.-frame);
+        }
         float sill=smoothstep(.17,.20,p.x)*(1.-smoothstep(.80,.83,p.x));
         sill*=smoothstep(.19-aa.y,.22,p.y)*(1.-smoothstep(.227,.25+aa.y,p.y));
         diffuseColor.rgb*=1.-.24*sill;
@@ -436,7 +500,9 @@ function createTourDistrict(T,scene,plaster,structures,osmBuildings,nightLights)
           roomLight=mix(vec3(.48,.19,.059),vec3(.62,.47,.29),room)
                     *nightLights*smoothstep(.55,.64,room)*openingMask*reveal*(1.-.9*frame);
         }
-      }`).replace('#include <emissivemap_fragment>','#include <emissivemap_fragment>\n totalEmissiveRadiance+=roomLight;');
+      }`).replace('#include <roughnessmap_fragment>','#include <roughnessmap_fragment>\n roughnessFactor=mix(roughnessFactor,.19,windowGlass);')
+        .replace('#include <normal_fragment_maps>','#include <normal_fragment_maps>\n normal=normalize(mix(normal,nonPerturbedNormal,windowGlass));')
+        .replace('#include <emissivemap_fragment>','#include <emissivemap_fragment>\n totalEmissiveRadiance+=roomLight;');
   };
   const palette=[0xf3e1c6,0xd3d9cc,0xe9d0bb,0xf0d9a7,0xb9c6c9,0xeae6db].map(v=>new T.Color(v));
   const roofs=[0x9f6757,0xa09a8e,0x798d92,0xaca69c].map(v=>new T.Color(v));
@@ -688,8 +754,9 @@ function createTourDistrict(T,scene,plaster,structures,osmBuildings,nightLights)
     }
     // Fit a shaded doorway to the street-facing wall of a narrow low-rise.
     // The outline and height are mapped; the shutter and canopy are scenery.
-    function streetFront(outer,h,tint,seed,zone){
+    function streetFront(outer,h,tint,seed,zone,residential){
       let best=null,bestGap=18;
+      const minGap=residential&&zone?.id!=='hoi-an' ? .12 : 1.1;
       for(let i=0;i<outer.length;i++){
         const a=outer[i],b=outer[(i+1)%outer.length],dx=b.x-a.x,dz=b.y-a.y,len=Math.hypot(dx,dz);
         if(len<2.5||len>15)continue;
@@ -698,7 +765,7 @@ function createTourDistrict(T,scene,plaster,structures,osmBuildings,nightLights)
           if(!s.length2)continue;
           const t=Math.max(0,Math.min(1,((x-s.a.x)*s.dx+(z-s.a.z)*s.dz)/s.length2));
           const rx=s.a.x+t*s.dx-x,rz=s.a.z+t*s.dz-z,dist=Math.hypot(rx,rz),gap=dist-s.w;
-          if(gap<1.1||gap>=bestGap||Math.abs(dx*rx+dz*rz)>.45*len*dist)continue;
+          if(gap<minGap||gap>=bestGap||Math.abs(dx*rx+dz*rz)>.45*len*dist)continue;
           let nx=-dz/len,nz=dx/len;
           if(nx*rx+nz*rz<0){nx=-nx;nz=-nz;}
           if(insideRing(x+nx*.2,z+nz*.2,outer))continue;
@@ -707,9 +774,13 @@ function createTourDistrict(T,scene,plaster,structures,osmBuildings,nightLights)
       }
       if(!best)return;
       const {x,z,nx,nz,ux,uz,half}=best,top=Math.min(2.8,h*.77);
-      const panel=(lo,hi,back,front,col,left=-half,right=half)=>{
+      const flush=bestGap<1.1;
+      const panel=(lo,hi,back,front,col,left=-half,right=half,finish=0)=>{
+        const fitted=finish===7||finish>=11;
+        if(flush){back*=.17;front*=.17;}
         for(const [u,y,d] of [[left,lo,back],[right,lo,back],[right,hi,front],[left,lo,back],[right,hi,front],[left,hi,front]])
-          vertex(batches[1],x+ux*u+nx*d,y,z+uz*u+nz*d,0,0,col);
+          vertex(batches[1],x+ux*u+nx*d,y,z+uz*u+nz*d,
+            fitted?(u-left)/(right-left):u,fitted?(y-lo)/(hi-lo):y,col,finish);
       };
       if(zone?.id==='hoi-an'){
         // The heritage inventory describes a side entrance on narrow bays
@@ -722,14 +793,32 @@ function createTourDistrict(T,scene,plaster,structures,osmBuildings,nightLights)
         };
         if(half<2)counter(-half,half-.95);
         else{counter(-half,-.66);counter(.66,half);}
+      }else if(residential&&seed%5<3){
+        loadEntrances();
+        const jamb=Math.min(half,top*.84);
+        // These illustrative entrances live between the physical jambs, above
+        // the plinth. Named and surveyed elevations have their own geometry.
+        panel(.12,top,.065,.065,doorway,-jamb,jamb,11+Math.floor(seed/5)%4);
+        for(const u of [-jamb,jamb-.085])panel(.11,top+.08,.135,.135,concrete,u,u+.085);
+        panel(top,top+.085,.07,.135,concrete,-jamb,jamb);
       }else if(seed%3===0){
-        panel(.12,top,.06,.06,concrete);
-        for(let y=.25;y<top;y+=.22)panel(y,y+.028,.075,.075,tint);
+        panel(.12,top,.06,.06,concrete,-half,half,8);
+        for(const u of [-half,half-.085])panel(.10,top,.085,.085,doorway,u,u+.085);
+        panel(top-.16,top+.05,.14,.14,tint);
       }else{
-        panel(.12,top,.06,.06,doorway);
-        for(let u=-half+.4;u<half-.1;u+=1.3)panel(.12,top,.08,.08,concrete,u,u+.055);
+        const leaves=Math.max(2,Math.round(2*half/1.13)),step=2*half/leaves,transom=top*.78;
+        for(let i=0;i<leaves;i++){
+          const left=-half+i*step,right=left+step;
+          panel(.12,transom,.06,.06,doorway,left,right,7);
+          panel(transom,top,.06,.06,doorway,left,right,7);
+          panel(.12,top,.09,.09,concrete,left,left+.052);
+        }
+        panel(.12,top,.09,.09,concrete,half-.052,half);
         panel(top*.78,top*.78+.065,.08,.08,concrete);
       }
+      // Where the mapped wall meets the road, keep just the door on the wall.
+      // Projecting fittings and street furniture need their normal setback.
+      if(flush)return;
       const canopy=Math.min(1.6,half*.52,bestGap-.65);
       const balcony=Math.min(1.28,canopy+.1,bestGap-.5),rail=balcony-.04;
       panel(top+.22,top,.07,canopy,tint);
@@ -737,6 +826,13 @@ function createTourDistrict(T,scene,plaster,structures,osmBuildings,nightLights)
         panel(3.25,3.25,.06,balcony,concrete);panel(3.13,3.25,balcony,balcony,concrete);
         panel(3.28,3.60,rail,rail,concrete);panel(4.09,4.15,rail,rail,tint);
         for(const u of [-half,0,half-.055])panel(3.55,4.12,rail,rail,tint,u,u+.055);
+        // Close each exposed side of the slab and return the handrail to the wall.
+        for(const u of [-half,half]){
+          for(const [lo,hi,col] of [[3.13,3.25,concrete],[3.28,3.60,concrete],[4.09,4.15,tint]]){
+            for(const [d,y] of [[.06,lo],[rail,lo],[rail,hi],[.06,lo],[rail,hi],[.06,hi]])
+              vertex(batches[1],x+ux*u+nx*d,y,z+uz*u+nz*d,d,y,col);
+          }
+        }
       }
       streetFronts.push({x:x-cx,y:baseY,z:z-cz,nx,nz,ux,uz,half,top,h,seed,zone,canopy,balcony});
     }
@@ -858,7 +954,8 @@ function createTourDistrict(T,scene,plaster,structures,osmBuildings,nightLights)
         if(!part&&!opening&&!unclassified&&Math.hypot(x-cx,z-cz)<185&&h>=3&&h<17&&maxX-minX<32&&maxZ-minZ<32&&
           (/^(yes|residential|house|terrace|apartments|retail|commercial|building)$/.test(kind)||kind==='hotel'&&streetSurvey?.kind==='hotel')){
           if(streetSurvey&&h<10.5)frontage=window.SurveyedStreetFronts.select(streetSurvey,outer,nearRoads,graph,(px,pz)=>insideBuilding(px,pz,rings));
-          if(!frontage)streetFront(outer,h,roofColor,seed,zone);
+          if(!frontage)streetFront(outer,h,roofColor,seed,zone,
+            !site&&!streetSurvey&&!/^(retail|commercial|hotel)$/.test(kind));
         }
         const colour=frontage&&window.SurveyedStreetFronts.wallColour(frontage.surveyKind,seed);
         if(colour&&!wallTint)base=new T.Color(colour);
@@ -868,13 +965,19 @@ function createTourDistrict(T,scene,plaster,structures,osmBuildings,nightLights)
         const lowRiseRoof=!part&&!unclassified&&h<(zone?.forcePitched?10.5:7.2)&&(warehouse||zone?.forcePitched||seed%5<2)?'gabled':null;
         const roofShape=shape||detail?.['roof:shape']||(opening===1?'hipped':opening===2||frontage?'gabled':lowRiseRoof);
         const pitched=['hipped','gabled','pyramidal','hipped-and-gabled','side_hipped','round','skillion','onion','dome','saltbox','mansard'].includes(roofShape);
+        const roofMaterial=detail?.['roof:material'];
+        const metal=/^(metal|sheet_metal|corrugated_metal|zinc|steel|tin|metal_sheet)$/i.test(roofMaterial);
+        const tile=/^(tiles|tile|roof_tiles|clay_tiles|ceramic|terracotta)$/i.test(roofMaterial);
+        // Keep architectural surveys' own material channels. For ordinary roofs
+        // without a material tag, only the pitched surface receives an illustrative finish.
+        const ordinary=!opening&&!unclassified&&!survey&&!frontage&&!site;
+        const streetFinish=ordinary?(metal?9:tile?10:!roofMaterial&&pitched?(warehouse||seed%3===0?9:10):0):0;
         const roofDetail=frontage?.surveyKind==='hotel'&&!detail?.['roof:direction']?
           {...detail,'roof:direction':Math.atan2(frontage.uz,frontage.ux)*180/Math.PI}:detail;
         const visitorRoof=original&&(site||opening||part||shape||frontage)&&pitched&&buildVisitorRoof(T,rings,roofShape,h,
           rise||(frontage?Math.min(1.65,h*.18):0),roofColor,base,([px,py,pz],[u,v],tint,tiles)=>{
-            const roofMaterial=detail?.['roof:material'];
-            const finish=tiles&&(/metal/.test(roofMaterial)?2:opening===1||!roofMaterial&&frontage||roofMaterial==='roof_tiles'?1:0);
-            vertex(batches[1],px,py,pz,u,v,tint,Number(finish));
+            const finish=tiles?(streetFinish||(metal?2:opening===1||!roofMaterial&&frontage||tile?1:0)):0;
+            vertex(batches[1],px,py,pz,finish>=9?px-x:u,finish>=9?pz-z:v,tint,finish);
           },opening===1,roofDetail,bottom);
         if(visitorRoof){
           eave=visitorRoof;
@@ -886,12 +989,12 @@ function createTourDistrict(T,scene,plaster,structures,osmBuildings,nightLights)
           const inset=roofShape==='gabled'?0:roofShape==='pyramidal'?.5:.2;
           const highL=l.clone().lerp(r,inset),highR=r.clone().lerp(l,inset);
           for(const tri of [[a,c,highR],[a,highR,highL],[f,highL,highR],[f,highR,d],[f,a,highL],[c,d,highR]]){
-            for(const p of tri)vertex(batches[1],p.x,p===highL||p===highR?h:eave,p.y,0,0,roofColor);
+            for(const p of tri)vertex(batches[1],p.x,p===highL||p===highR?h:eave,p.y,p.x-x,p.y-z,roofColor,streetFinish);
           }
         }else{
           outline.triangles??=T.ShapeUtils.triangulateShape(outer,rings.slice(1));
           for(const tri of outline.triangles)for(const index of [tri[0],tri[2],tri[1]]){
-            const p=flat[index];vertex(batches[1],p.x,h,p.y,0,0,roofColor);
+            const p=flat[index];vertex(batches[1],p.x,h,p.y,p.x-x,p.y-z,roofColor,metal||tile?streetFinish:0);
           }
         }
         if(frontage){

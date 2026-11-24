@@ -20,7 +20,76 @@ function setFlatNormals(T,geometry){
   geometry.setAttribute('normal',new T.BufferAttribute(normals,3));
 }
 
-// Scanned material channels share a UV transform, including after an origin rebase.
+// Each renderer shares one pair of atlases across building districts and shops.
+const streetRoofAtlases=new WeakMap();
+function shadeStreetRoof(T,shader,kind,plan,face){
+  let atlas=streetRoofAtlases.get(T);
+  if(!atlas){
+    const loader=new T.TextureLoader(),ready={value:0};
+    let loaded=0;
+    const read=name=>loader.load('streetscape/surfaces/vn-roof-'+name+'.webp',()=>{if(++loaded===2)ready.value=1;});
+    const colour=read('color');colour.colorSpace=T.SRGBColorSpace;
+    atlas={roofPhoto:{value:colour},roofSurface:{value:read('surface')},roofReady:ready};
+    streetRoofAtlases.set(T,atlas);
+  }
+  Object.assign(shader.uniforms,atlas);
+  const vary='varying vec2 roofMetres; varying float roofKind;\n';
+  shader.vertexShader=vary+shader.vertexShader.replace('#include <begin_vertex>',`#include <begin_vertex>
+    roofKind=${kind};
+    vec3 pitchNormal=${face};vec2 roofPlan=${plan};
+    #ifdef USE_INSTANCING
+      vec3 roofSize=vec3(length(instanceMatrix[0].xyz),length(instanceMatrix[1].xyz),length(instanceMatrix[2].xyz));
+      pitchNormal/=max(roofSize,vec3(.001));roofPlan*=roofSize.xz;
+    #endif
+    pitchNormal=normalize(pitchNormal);
+    if(abs(pitchNormal.y)<.12)roofKind=-1.;
+    if(pitchNormal.y<0.)pitchNormal=-pitchNormal;
+    vec2 upslope=length(pitchNormal.xz)>.001?-normalize(pitchNormal.xz):vec2(0.,1.);
+    roofMetres=vec2(dot(roofPlan,vec2(upslope.y,-upslope.x)),dot(roofPlan,upslope)/max(.12,pitchNormal.y));`);
+  shader.fragmentShader=vary+`uniform sampler2D roofPhoto,roofSurface;uniform float roofReady;
+    vec4 roofTexel(sampler2D atlas,vec2 uv,vec2 dx,vec2 dy){
+      #if __VERSION__ >= 300
+        return textureGrad(atlas,uv,dx,dy);
+      #else
+        return texture2D(atlas,uv);
+      #endif
+    }\n`+shader.fragmentShader.replace('#include <color_fragment>',`#include <color_fragment>
+    float roofAmount=0.,roofRough=.9;vec2 roofBump=vec2(0.);
+    if(roofReady>.5&&roofKind>-.1&&roofKind<1.1){
+      float clay=step(.5,roofKind);
+      vec2 repeated=roofMetres/mix(2.70,2.50,clay);
+      vec2 cell=vec2(960./2048.,960./1024.);
+      vec2 uv=vec2(clay*.5+32./2048.,32./1024.)+cell*fract(repeated);
+      vec2 dx=dFdx(repeated)*cell,dy=dFdy(repeated)*cell;
+      vec3 rgb=roofTexel(roofPhoto,uv,dx,dy).rgb;
+      vec3 props=roofTexel(roofSurface,uv,dx,dy).rgb;
+      roofAmount=1.-smoothstep(.045,.18,max(length(dx),length(dy)));
+      vec3 mean=mix(vec3(.09849,.09787,.08221),vec3(.31087,.08641,.02647),clay);
+      diffuseColor.rgb*=mix(vec3(1.),clamp(rgb/mean,vec3(.24),vec3(2.6)),roofAmount*.84);
+      roofRough=props.b;roofBump=props.rg*2.-1.;
+    }`).replace('#include <roughnessmap_fragment>',`#include <roughnessmap_fragment>
+      roughnessFactor=mix(roughnessFactor,clamp(roofRough,.26,.98),roofAmount);`)
+    .replace('#include <normal_fragment_maps>',`#include <normal_fragment_maps>
+      if(roofAmount>.001){
+        vec3 dx=dFdx(-vViewPosition),dy=dFdy(-vViewPosition);
+        vec2 du=dFdx(roofMetres),dv=dFdy(roofMetres);
+        vec3 ax=cross(dy,normal),ay=cross(normal,dx);
+        vec3 tangent=ax*du.x+ay*dv.x,bitangent=ax*du.y+ay*dv.y;
+        float scale=inversesqrt(max(max(dot(tangent,tangent),dot(bitangent,bitangent)),1.e-12));
+        vec2 slope=roofBump*(.68*roofAmount);
+        normal=normalize(normal*sqrt(max(.02,1.-dot(slope,slope)))+scale*(tangent*slope.x+bitangent*slope.y));
+      }`);
+}
+
+function streetRoofMaterial(T,colour,clay){
+  const mat=new T.MeshStandardMaterial({color:colour,side:T.DoubleSide,roughness:clay?.9:.62});
+  mat.name=clay?'Fired clay roof':'Corrugated steel roof';
+  mat.onBeforeCompile=shader=>shadeStreetRoof(T,shader,clay?'1.':'0.','position.xz','normal');
+  mat.customProgramCacheKey=()=>mat.name;
+  return mat;
+}
+
+// Scanned road material channels share a UV transform across district changes.
 function createRoadSurfaces(T,renderer){
   const loader=new T.TextureLoader(),anisotropy=Math.min(8,renderer.capabilities.getMaxAnisotropy());
   function scanned(name,tint,strength){
@@ -106,5 +175,23 @@ function createRoadSurfaces(T,renderer){
           #include <opaque_fragment>`);
     };
   }
-  return {scanned,transform,weatheredAsphalt};
+  function roadPaint(tint,asphalt,wet,origin=new T.Vector2()){
+    const paint=new T.MeshStandardMaterial({name:'Road marking',color:tint,side:T.DoubleSide,roughness:.81});
+    paint.onBeforeCompile=shader=>{
+      Object.assign(shader.uniforms,{paintGrain:{value:asphalt.map},paintOrigin:{value:origin},paintWet:wet});
+      shader.vertexShader='uniform vec2 paintOrigin; varying vec2 paintMetres;\n'+shader.vertexShader.replace('#include <begin_vertex>',
+        '#include <begin_vertex>\n paintMetres=position.xz+paintOrigin;');
+      shader.fragmentShader='uniform sampler2D paintGrain;uniform float paintWet;varying vec2 paintMetres;\n'+
+        shader.fragmentShader.replace('#include <color_fragment>',`#include <color_fragment>
+          vec3 aggregate=texture2D(paintGrain,paintMetres*.91).rgb;
+          float pits=1.-smoothstep(.023,.115,dot(aggregate,vec3(.21,.72,.07)));
+          float coarseGrain=texture2D(paintGrain,paintMetres*.071).g;
+          float wear=pits*(.15+.42*(1.-smoothstep(.035,.19,coarseGrain)));
+          diffuseColor.rgb=mix(diffuseColor.rgb,aggregate,wear)*(1.-.13*paintWet);`)
+        .replace('#include <roughnessmap_fragment>',`#include <roughnessmap_fragment>
+          roughnessFactor=mix(.71+.19*wear,.30+.20*wear,paintWet);`);
+    };
+    return paint;
+  }
+  return {scanned,transform,weatheredAsphalt,roadPaint};
 }

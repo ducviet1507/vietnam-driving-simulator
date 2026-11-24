@@ -110,6 +110,7 @@ sun.shadow.normalBias=.025;sun.shadow.bias=-.00022;
 const camera=new T.PerspectiveCamera(62,1,.08,3300);
 const graphics=createDrivingGraphics(renderer,camera,sun);
 const geom={box:new T.BoxGeometry(1,1,1),leaf:new T.PlaneGeometry(1,1),houseRoof:new T.ConeGeometry(Math.SQRT1_2,1,4).rotateY(Math.PI/4),pole:new T.CylinderGeometry(.5,.5,1,8)};
+geom.shopSheet=geom.box;
 const batches=new Map(),temp=new T.Object3D();
 function scatter(kind,color,x,y,z,w,h,l,angle=0,pitch=0,cell=''){
   const key=kind+color+cell;let batch=batches.get(key);
@@ -132,7 +133,7 @@ function ribbon(left,right,color,raise,roadMaterial,dashed=false){
   }
   const geo=new T.BufferGeometry();geo.setAttribute('position',new T.Float32BufferAttribute(verts,3));geo.setAttribute('uv',new T.Float32BufferAttribute(uv,2));geo.setIndex(indices);geo.computeVertexNormals();
   const material=roadMaterial||new T.MeshLambertMaterial({color,side:T.DoubleSide});
-  if(roadMaterial)material.onBeforeCompile=shader=>{
+  if(roadMaterial===roadSurface)material.onBeforeCompile=shader=>{
     shader.vertexShader='varying vec2 roadUv;\n'+shader.vertexShader.replace('#include <begin_vertex>','#include <begin_vertex>\n roadUv=uv;');
     shader.fragmentShader='varying vec2 roadUv;\n'+shader.fragmentShader.replace('#include <map_fragment>',`
       #include <map_fragment>
@@ -167,8 +168,6 @@ roadSurface.side=T.DoubleSide;surfaces.transform(roadSurface,3,2.25);
 const asphalt=roadSurface.map;
 if(route.id==='river')ribbon(-roadHalfWidth-.7,roadHalfWidth+.7,0x8a856e,-.06);
 ribbon(-roadHalfWidth,roadHalfWidth,0xb4b8b8,0,roadSurface);
-for(const side of [-1,1])ribbon(side*roadHalfWidth-.22*side-.055,side*roadHalfWidth-.22*side+.055,0xc8c6ad,.012);
-ribbon(-.068,.068,0xc8a75b,.014,null,true);
 const river=route.id==='river', [bridgeStart,bridgeEnd]=route.bridge;
 const smooth=(a,b,x)=>{const t=clamp((x-a)/(b-a),0,1);return t*t*(3-2*t);};
 function nearest(x,z){
@@ -223,6 +222,10 @@ if(mountainField){
 const weatherOrigin=route.stage?.start||(river?[105.785,10.034]:[107.808,11.547]);
 const weatherBearing=(route.stage?.bearing||0)*Math.PI/180;
 const courseWeather=createDrivingWeather(T,scene,sun,roadSurface,route.stage?'':river?'Cần Thơ':'Bảo Lộc');
+const whitePaint=surfaces.roadPaint(0xc8c6ad,roadSurface,courseWeather.moisture.asphalt);
+const yellowPaint=surfaces.roadPaint(0xc8a75b,roadSurface,courseWeather.moisture.asphalt);
+for(const side of [-1,1])ribbon(side*roadHalfWidth-.22*side-.055,side*roadHalfWidth-.22*side+.055,0xc8c6ad,.012,whitePaint);
+ribbon(-.068,.068,0xc8a75b,.014,yellowPaint,true);
 let nextWeatherCheck=0;
 const waterLevel=river?-3:height((bridgeStart+bridgeEnd)/2)-8;
 function naturalSurface(x,z,n){
@@ -574,7 +577,9 @@ if(arcade){
 const loadCourseFronts=buildRoadside();
 if(!river)buildMountainVerges();
 for(const b of batches.values()){
- const m=new T.InstancedMesh(geom[b.kind],foliage[b.kind]||new T.MeshLambertMaterial({color:b.color}),b.matrices.length);
+ const roof=b.kind==='houseRoof'||b.kind==='shopSheet';
+ const mat=foliage[b.kind]||(roof?streetRoofMaterial(T,b.color,b.kind==='houseRoof'):new T.MeshLambertMaterial({color:b.color}));
+ const m=new T.InstancedMesh(geom[b.kind],mat,b.matrices.length);
  b.matrices.forEach((mat,i)=>m.setMatrixAt(i,mat));
  m.castShadow=m.receiveShadow=b.kind!=='undergrowth';
  const distant=distantTrees.get(b.kind);

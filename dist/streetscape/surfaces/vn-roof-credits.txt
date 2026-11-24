@@ -1,0 +1,24 @@
+ViVu3D roof material atlas
+
+Corrugated Iron 02 by Sergej Majboroda (photography) and Jenelle van Heerden (processing), Poly Haven, CC0.
+https://polyhaven.com/a/corrugated_iron_02
+Clay Roof Tiles 02 by Amal Kumar, Poly Haven, CC0.
+https://polyhaven.com/a/clay_roof_tiles_02
+https://polyhaven.com/license
+https://creativecommons.org/publicdomain/zero/1.0/
+
+The two 2048 x 1024 WebP atlases share the same layout. The left half is a 2.70 m square of galvanized sheet, the right half a 2.50 m square of terracotta. Each half has a 960 x 960 interior and a 32 px periodic gutter on all sides. Each full repeat represents the corresponding measured square on the roof plane.
+
+vn-roof-color.webp stores sRGB diffuse colour. The linear RGB means of the decoded interiors are (0.09849, 0.09787, 0.08221) for metal and (0.31087, 0.08641, 0.02647) for clay.
+vn-roof-surface.webp stores linear data. Red and green contain the OpenGL tangent normal X and Y mapped from [-1,1] to [0,1]. Blue contains roughness. Both images are opaque. The two decoded mean roughness values are 0.520 and 0.913.
+
+U follows the eave. Positive V runs from the eave up the slope to the ridge, parallel to the corrugations and tile channels. In Three.js use flipY = true for both textures. With kind 0 for metal or 1 for clay, repeat the local coordinates inside one padded cell:
+  vec2 repeatUV = vec2(eaveMetres, upslopeMetres) / repeatMetres;
+  vec2 uv = (vec2(1024.0 * kind + 32.0, 32.0) + 960.0 * fract(repeatUV)) / vec2(2048.0, 1024.0);
+  vec2 xy = 2.0 * surfaceSample.rg - 1.0;
+  vec3 normalTS = normalize(vec3(xy, sqrt(max(0.0, 1.0 - dot(xy, xy)))));
+For explicit mip gradients, apply dFdx/dFdy to the unwrapped repeatUV and multiply by vec2(960.0 / 2048.0, 960.0 / 1024.0).
+
+Rebuild from the repository with Python and Pillow:
+  python tools/build_vn_roof_surfaces.py
+The builder verifies the original 1K diffuse, OpenGL normal and 16-bit roughness PNGs by SHA-256 before resampling.

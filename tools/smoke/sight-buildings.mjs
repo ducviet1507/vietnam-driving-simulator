@@ -224,3 +224,22 @@ assert.ok(bed<-.5);
 const deck=new T.PlaneGeometry(8,8);deck.rotateX(-Math.PI/2);deck.translate(4,.75,0);patch.addCover(deck);
 assert.equal(patch.sample(4,0,true).bed,.75);
 assert.equal(patch.sample(4,0,true,false).bed,bed);
+
+// A house flush with the road gets a fitted doorway, with room for projecting
+// fittings only on the set-back version of the same surveyed footprint.
+inferred=[];pieces=[];surveyed=[row('w250','house',160,0)];
+district.build(graph,0,0,null,()=>0);
+const house=district.footprint({map:'https://www.openstreetmap.org/way/250'},160,0);
+for(const gap of [.35,2.5]){
+  const z=house.maxZ+3+gap;
+  district.build(graph,0,0,null,()=>0,[{id:18,width:3,points:[{x:135,z},{x:185,z}]}]);
+  const mesh=scene.getObjectByName('OSM building footprints').children.find(m=>m.geometry.attributes.roofFinish);
+  const {position,roofFinish,uv}=mesh.geometry.attributes;
+  const doors=[];
+  for(let i=0;i<position.count;i++)if(roofFinish.getX(i)>=11){
+    doors.push([uv.getX(i),uv.getY(i)]);
+    assert.ok(position.getZ(i)>house.maxZ&&position.getZ(i)<z-3,'door stays behind the road edge');
+  }
+  assert.equal(new Set(doors.map(pair=>pair.join(','))).size,4,'full entrance fits the wall');
+  assert.equal(district.streetFronts.length,gap>1?1:0,'projecting fittings need clearance');
+}

@@ -61,6 +61,9 @@ Zanaga et al. (2022), ESA WorldCover 10 m 2021 v200 (CC BY 4.0).
 The simulator crops and resamples the annual Sentinel-2 RGBNIR composite, derives the vegetation index from red and near-infrared reflectance and extracts permanent water from the 10 m classification.
 The sight-imagery atlas retains local detail from the 10 m source around destinations and their road approaches. Transparent areas have no observation in that source.
 The national terrain layer uses a north-up 750-pixel-per-degree composite around the car in both driving modes. Full attribution and processing details: ../vn-satellite/CREDITS.txt
+
+The clay and galvanized steel roof materials use CC0 photographic PBR scans from Poly Haven. Surface sources and atlas layout: surfaces/vn-roof-credits.txt
+The four anonymous residential doorways in surfaces/vn-house-entrances.webp are illustrative textures generated with OpenAI ImageGen for ViVu3D. Location-specific surveyed elevations are documented separately.
 https://esa-worldcover.org/en/data-access
 https://doi.org/10.5281/zenodo.7254221
 https://creativecommons.org/licenses/by/4.0/

@@ -78,15 +78,17 @@
     const material={
       asphalt:surfaces.scanned('asphalt',0xaeb2b3,.41),
       earth:surfaces.scanned('verge',0xd7d1bc,.65),
-      white:basic(0xe8e8d7),yellow:basic(0xf0ca63),wall:surfaces.scanned('plaster',0xfff9e9,.6),roof:basic(0x748585),
-      gable:new T.MeshStandardMaterial({color:0xf6e2c6,roughness:.84}),
+      white:basic(0xe8e8d7),wall:surfaces.scanned('plaster',0xfff9e9,.6),roof:basic(0x748585),
+      gable:streetRoofMaterial(T,0xf6e2c6,true),sheet:streetRoofMaterial(T,0xf0f2ee,false),
       pavement:basic(0xc2b8a3),steel:basic(0x687877),concrete:basic(0xb0afa3),glass:new T.MeshStandardMaterial({color:0x5c7979,roughness:.19,metalness:.53,envMapIntensity:.86}),
-      awning:basic(0x9c9f92),tree:treeModels.material,pine:treeModels.material,palm:treeModels.palmMaterial
+      awning:streetRoofMaterial(T,0xb6b9a9,false),tree:treeModels.material,pine:treeModels.material,palm:treeModels.palmMaterial
     };
     material.lantern=new T.MeshStandardMaterial({color:0xd0cbb9,roughness:.43,emissive:0xffc786,emissiveIntensity:0});
     const asphaltOrigin=new T.Vector2();
     material.glass.emissive.setHex(0xda9e60);material.glass.emissiveIntensity=0;
     const weather=createDrivingWeather(T,scene,sun,material.asphalt);
+    const whitePaint=surfaces.roadPaint(0xe8e8d7,material.asphalt,weather.moisture.asphalt,asphaltOrigin);
+    const yellowPaint=surfaces.roadPaint(0xf0ca63,material.asphalt,weather.moisture.asphalt,asphaltOrigin);
     const eaveMaterial=createEaveMaterial(T,weather.moisture.eaves);
     material.cut=new T.MeshStandardMaterial({normalScale:new T.Vector2(.62,.62),roughness:.96,side:T.DoubleSide,color:0xbcb5a6});
     material.fern=new T.MeshLambertMaterial({map:texture('surfaces/bank-fern.webp'),alphaTest:.38,side:T.DoubleSide,color:0xd6dfd1});
@@ -1037,7 +1039,7 @@
                   instance('concrete',unitBox,wx+s.fx*side*.10,floor-.57,wz+s.fz*side*.10,.28,.09,1.75,rot);
                 }
               }
-              instance('roof',unitBox,hx,h+.07,hz,width+.46,.19,depth+.52,rot,roofPal[type%roofPal.length]);
+              instance('sheet',unitBox,hx,h+.07,hz,width+.46,.19,depth+.52,rot,roofPal[type%roofPal.length]);
               const pitched=(rZone?.forcePitched?h<8:h<5)&&c.priority<(rZone?.forcePitched?.95:.7);
               if(pitched)instance('gable',gable,hx,h+.14,hz,width+.5,width*(rZone?.forcePitched?.29:.24),depth+.59,rot,gablePal[type%gablePal.length]);
               const projection=Math.min(1.9,width*.27,c.setback-1.2);
@@ -1262,11 +1264,11 @@
         const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(verts,3));g.setAttribute('uv',new T.Float32BufferAttribute(uv,2));setFlatNormals(T,g);
         if(asphalt)g.setAttribute('carriageway',new T.Float32BufferAttribute(crossSection,3));
         const mesh=new T.Mesh(g,mat);mesh.receiveShadow=true;
-        if(mat!==material.white&&mat!==material.yellow)shorePatch?.addCover(g);
+        if(mat!==whitePaint&&mat!==yellowPaint)shorePatch?.addCover(g);
         if(mat.transparent&&mat.userData.templeSurface)mesh.renderOrder=1;
         roadGroup.add(mesh);
       }
-      material.white.side=material.yellow.side=T.DoubleSide;
+      material.white.side=T.DoubleSide;
       // Full-scale lights require a recorded height. Locations without a
       // physical measurement remain on the close-range driving map.
       for(const f of grounds.streetFurniture){
@@ -1329,7 +1331,7 @@
       for(const [finish,data] of Object.entries(roadSurfaces))
         yield* surface(data,material[finish],.002,finish==='earth' ? .48 : finish==='pavers' ? 1 : .25);
       for(const [mat,data] of aprons)yield* surface(data,mat,.001,mat===material.earth ? .48 : mat===material.pavers ? 1 : .25);
-      yield* surface(yellow,material.yellow,.026,1);yield* surface(white,material.white,.026,1);
+      yield* surface(yellow,yellowPaint,.026,1);yield* surface(white,whitePaint,.026,1);
       yield* walks.buildSteps(roadGroup,surface,material.pavers,curbStone);const pavementLift=walks.liftAt;
       const lightScenery=small&&graphics.profile.id==='low';
       const grass=lightScenery?sparseGrass:grassClump;
