@@ -17,7 +17,7 @@ from pathlib import Path
 import osmium
 from shapely import STRtree, LineString, Polygon, from_wkb
 
-from build_vn_roads import compact, permitted, short_runs, simplify, tiles_touched
+from build_vn_roads import compact, driving_shape, permitted, short_runs, simplify, tiles_touched
 from build_vn_traffic import fingerprint
 
 
@@ -274,7 +274,7 @@ def build(source, roads, traffic, output):
         if way.tags.get("oneway:motorcar", way.tags.get("oneway")) in {"-1", "reverse"}:
             refs.reverse()
         for run, _ in short_runs(refs, junctions, itertools.count(-1, -1)):
-            line = simplify([(x, y) for _, x, y in run], 1 if kind == "service" else 3)
+            line = driving_shape(way.id, kind, [(x, y) for _, x, y in run])
             edge = edges.get(fingerprint(kind, run[0][0], run[-1][0], line))
             if edge is not None:
                 enriched[edge] = attributes.copy()

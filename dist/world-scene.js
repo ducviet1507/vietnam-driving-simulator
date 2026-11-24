@@ -5,6 +5,7 @@
   window.worldRoadHalfWidth=edge=>{
     if(edge?.authoredHalfWidth)return edge.authoredHalfWidth;
     if(edge?.traffic?.width)return Math.max(1.1,Math.min(40,edge.traffic.width/2));
+    if(edge?.traffic?.way===37933540)return 3.9; // Quốc Tử Giám, between the photographed curbs.
     if(edge?.traffic?.lanes)return edge.traffic.lanes*(edge.kind.startsWith('motorway')?1.8:1.6);
     const kind=typeof edge==='string'?edge:edge?.kind;
     const w=String(kind).endsWith('_link')?3.8:widths[kind]||4.2;
@@ -822,7 +823,7 @@
         });
         if(end<=start)continue;
         const mid=(start+end)/2,mx=s.ax+s.fx*mid,mz=s.az+s.fz*mid;
-        const street=s.kind==='residential'||s.kind==='living_street'||district.builtUp(mx+cx,mz+cz);
+        const street=s.traffic?.way===37933540||s.kind==='residential'||s.kind==='living_street'||district.builtUp(mx+cx,mz+cz);
         if(!street && !s.kind.startsWith('motorway') && s.rank<420 && s.len>12){
           // Red-topped marker posts follow exposed verges, including the outside of bends.
           for(let d=8+s.seed%17;d<end-5;d+=48)for(const side of [-1,1]){

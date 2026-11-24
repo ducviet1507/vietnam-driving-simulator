@@ -85,6 +85,8 @@ python -m http.server 8000 --bind 127.0.0.1 --directory dist
 
 ## Dữ liệu bản đồ và cảnh quan
 
+[Lái qua phố Quốc Tử Giám, Hà Nội](https://vivu3d.com/?drive=pho-quoc-tu-giam). Chặng 262 m đi về hướng Tôn Đức Thắng, qua Hồ Văn, tứ trụ và điểm dừng xe buýt trước Văn Miếu. Mặt phố được đối chiếu với ảnh chụp năm 2022 và 2026. Một số biển cửa hàng giữ hình ảnh năm 2022.
+
 Mạng đường, mặt bằng nhà, làn xe và vị trí đèn giao thông dựa trên OpenStreetMap. Game dựng mặt tiền và mô phỏng chu kỳ đèn. Google Open Buildings bổ sung dữ liệu công trình từ ảnh vệ tinh. [Dữ liệu nhà OSM](dist/vn-osm-buildings/CREDITS.txt) · [Dữ liệu công trình vệ tinh](dist/vn-structures/CREDITS.txt) · [Dữ liệu giao thông](dist/vn-traffic/CREDITS.txt).
 
 Mật độ dân cư từ WorldPop, loại đường và giờ Việt Nam ảnh hưởng đến số xe và người đi bộ. Dữ liệu lớp phủ từ ESA WorldCover giúp phân bố rừng, đồng ruộng và mặt nước. [Dữ liệu dân cư và lớp phủ](dist/vn-environment/CREDITS.txt) · [Địa điểm trên bản đồ](dist/vn-amenities/CREDITS.txt) · [Dữ liệu tìm kiếm](dist/vn-search/CREDITS.txt).

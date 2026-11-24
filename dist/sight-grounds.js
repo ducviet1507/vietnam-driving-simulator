@@ -54,6 +54,7 @@ function createSightGrounds(T,small,source){
   const occupiedCells=new Map();
   let mask,fixtures=[],streetFurniture=[],originX=0,originZ=0;
   let memorialAt=()=>false;
+  let street=null;
   let fenceModels=[],wallModels=[],cityWallModels=[];
   async function loadLayer(layer,graph,x,z){
     const {base,states,cache}=layer;
@@ -151,10 +152,16 @@ function createSightGrounds(T,small,source){
     let work=0;
     originX=cx;originZ=cz;fixtures=[];mask=null;uniforms.visitorActive.value=0;
     memorialAt=memorialGroundsNear(graph,cx,cz);
+    street=window.QuocTuGiamStreet?.near(graph,cx,cz);
+    if(street){
+      const otherGrounds=memorialAt,frontage=street;
+      memorialAt=(x,z)=>frontage.reserved(x-cx,z-cz)||otherGrounds(x,z);
+    }
     fenceModels=(landmarks?.active||[]).filter(site=>site.data.replacesFence);
     wallModels=(landmarks?.active||[]).filter(site=>site.data.replacesWall);
     cityWallModels=(landmarks?.active||[]).filter(site=>site.data.replacesCityWall);
     occupiedCells.clear();streetFurniture=[];
+    street?.reserveFixtures(occupy);
     for(const [kind,id,lon,lat,height,diameter,tags] of datasets[1].states.get(graph)?.rows||[]){
       if((++work & 127)===0)yield;
       const point=graph.point(lon/1e7,lat/1e7),x=point.x-cx,z=point.z-cz;
@@ -351,6 +358,7 @@ function createSightGrounds(T,small,source){
       const u=Math.hypot(xx-x,zz-z)/(style==='bars'?.16:.115),v=(top-lo)/(style==='bars'?1:.15);
       panel.uv.push(0,0,u,0,u,v,0,0,u,v,0,v);
     }
+    street?.build(T,group,ground,plant,obstacle);
     const close=small?145:225,reach=small?230:350;
     function inside(x,z,ring){
       let hit=false;
@@ -452,6 +460,7 @@ function createSightGrounds(T,small,source){
         const fx=dx/len,fz=dz/len;
         for(let j=0;j<n;j++){
           const t=j/n,u=(j+1)/n,x=ax+dx*t,z=az+dz*t,xx=ax+dx*u,zz=az+dz*u,mx=(x+xx)/2,mz=(z+zz)/2;
+          if(kind==='wall'&&street?.replacesWall(mx,mz,fx,fz))continue;
           if(replacements?.some(site=>{
             const dx=mx+originX-site.x,dz=mz+originZ-site.z;
             const replaces=fence?site.data.replacesFence:kind==='city_wall'?site.data.replacesCityWall:site.data.replacesWall;

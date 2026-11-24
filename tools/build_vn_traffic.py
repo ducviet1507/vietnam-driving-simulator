@@ -14,7 +14,7 @@ from pathlib import Path
 
 import osmium
 
-from build_vn_roads import VISITOR_LANES, MAIN, compact, driving_runs, permitted, simplify
+from build_vn_roads import VISITOR_LANES, MAIN, compact, driving_runs, driving_shape, permitted
 
 
 def number(text, maximum, unit=""):
@@ -163,7 +163,7 @@ def build(source, roads, output):
             if turns:
                 details["turns"] = turns
             if details:
-                simple = simplify(line, 1 if kind == "service" else 3)
+                simple = driving_shape(way.id, kind, line)
                 source_rows[fingerprint(kind, run[0][0], run[-1][0], simple)] = details
     del junctions
     print("Writing traffic tiles", flush=True)

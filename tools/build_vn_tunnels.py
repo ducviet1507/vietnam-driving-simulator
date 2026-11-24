@@ -14,7 +14,7 @@ from pathlib import Path
 
 import osmium
 
-from build_vn_roads import compact, permitted, short_runs, simplify
+from build_vn_roads import compact, driving_shape, permitted, short_runs
 from build_vn_traffic import fingerprint, number
 
 
@@ -83,7 +83,7 @@ def build(source, roads, traffic):
             refs.reverse()
         kind = w.tags.get("highway")
         for run, _ in short_runs(refs, network, itertools.count(-1, -1)):
-            line = simplify([(x, y) for _, x, y in run], 1 if kind == "service" else 3)
+            line = driving_shape(w.id, kind, [(x, y) for _, x, y in run])
             edge = fingerprints.get(fingerprint(kind, run[0][0], run[-1][0], line))
             if edge is not None:
                 if passage:

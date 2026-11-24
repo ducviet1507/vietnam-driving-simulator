@@ -94,6 +94,12 @@ class VietnamRoads {
          const s=node===start?0:node===end?edge.length:this.nearest(p.x,p.z,[edge]).s;
          return {node,s,flags,direction};
        });
+       if(traffic.way===37933540){
+         // Road-level photo 02 shows a marked crossing west of the Văn Miếu junction.
+         const p=this.point(105.83558,21.02725),s=this.nearest(p.x,p.z,[edge]).s;
+         if(!controls.some(c=>(c.flags&1)&&Math.abs(c.s-s)<8))
+           controls.push({node:'quoc-tu-giam-frontage',s,flags:3,direction:0});
+       }
        if(this.edges.has(id))updatedTags.push({edge,traffic,controls});
        else Object.assign(edge,{traffic,controls});
      }

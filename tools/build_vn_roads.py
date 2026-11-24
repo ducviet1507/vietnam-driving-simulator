@@ -94,6 +94,11 @@ def simplify(points, tolerance_m):
     return [points[i] for i in sorted(kept)]
 
 
+def driving_shape(way_id, kind, points):
+    # A few metres of simplification would put the Văn Miếu bus stop in the road.
+    return points if way_id == 37933540 else simplify(points, 1 if kind == 'service' else 3)
+
+
 def tiles_touched(line, grid=TILE):
     """Cross grid lines exactly and include the tiles containing both endpoints."""
     keys = {(x//grid, y//grid) for x, y in line}
@@ -270,7 +275,7 @@ def build(source, output, residential):
             if max(abs(line[-1][0]-line[0][0]),abs(line[-1][1]-line[0][1])) >= 700:
                 overview.append([v for pt in line for v in pt])
         for run, travelled, extra_id in driving_runs(w.id,refs,junctions,virtual_ids):
-            line = simplify([(a,b) for _,a,b in run],1 if kind == 'service' else 3)
+            line = driving_shape(w.id, kind, [(a,b) for _,a,b in run])
             if len(set(line)) >= 2:
                 coords = [v for pt in line for v in pt]
                 if extra_id is None:

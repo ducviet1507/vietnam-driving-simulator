@@ -66,6 +66,18 @@ assert.ok(!birdReserveRoads.some(row=>row.slice(1,3).includes(4770759122)));
 // At Bãi Môn, the parking lane meets both directions of QL29. Visitors leave
 // the car at the ticket area and continue toward the cape on foot.
 const routeNetwork=createRequire(import.meta.url)('../../dist/route-network-core.js');
+// The bend beside the Văn Miếu bus stop and the east-to-west approach use
+// the same centreline in the planner, collision checks and driving renderer.
+const streetRoute=JSON.parse(readFileSync(file('featured-drives.json'))).find(r=>r.id==='pho-quoc-tu-giam');
+const streetKey=streetRoute.tiles[0],streetRows=JSON.parse(gunzipSync(readFileSync(file('vn-roads/'+streetKey+'.gz'))));
+const streetGraph=new routeNetwork.Tile(roadIndex,streetKey,streetRows,JSON.parse(gunzipSync(readFileSync(file('vn-traffic/'+streetKey+'.gz')))));
+const [approach,frontage]=streetRoute.edges.map(id=>streetGraph.arcs[streetGraph.byId.get(id)]);
+assert.ok(approach.next.includes(frontage.n)&&!streetGraph.byId.has(-frontage.id));
+const departure=routeNetwork.nearest(streetRoute.start,streetRows),finish=routeNetwork.nearest(streetRoute.finish,streetRows);
+assert.deepEqual([departure.id,finish.id],streetRoute.edges);
+assert.equal(Math.round((1-departure.fraction)*approach.length+finish.fraction*frontage.length),streetRoute.metres);
+const busGap=Math.sqrt(routeNetwork.nearest([105.8351719,21.0274357],streetRows).error);
+assert.ok(Math.abs(busGap-3.9)<.35,'The mapped boarding point stays at the curb');
 const capeTile='437_51',capeRoads=JSON.parse(gunzipSync(readFileSync(file('vn-roads/'+capeTile+'.gz'))));
 const capeTraffic=JSON.parse(gunzipSync(readFileSync(file('vn-traffic/'+capeTile+'.gz'))));
 const capeGraph=new routeNetwork.Tile(roadIndex,capeTile,capeRoads,capeTraffic);

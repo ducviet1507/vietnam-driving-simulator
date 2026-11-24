@@ -13,6 +13,19 @@
     "landmarkId": "tam-chuc"
   },
   {
+    "id": "pho-quoc-tu-giam",
+    "title": "Phố Quốc Tử Giám · Hà Nội",
+    "description": "Đi về phía Tôn Đức Thắng, qua cổng Hồ Văn bên trái và tứ trụ Văn Miếu bên phải.",
+    "startLabel": "Phố Quốc Tử Giám",
+    "finishLabel": "Quốc Tử Giám · gần Tôn Đức Thắng",
+    "start": [105.8367302,21.0266954],
+    "finish": [105.834442,21.0276718],
+    "metres": 262,
+    "edges": [4,19626],
+    "tiles": ["423_84_1_0"],
+    "landmarkId": "van-mieu-quoc-tu-giam"
+  },
+  {
     "id": "thac-bac-sa-pa",
     "title": "Thác Bạc → Nhà thờ đá Sa Pa",
     "description": "Từ đường núi ở Thác Bạc, lái về phố dốc và quảng trường trước nhà thờ đá Sa Pa.",
