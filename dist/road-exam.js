@@ -24,6 +24,7 @@ function sampleStage(values,station,spacing){
  return values[i]+((values[i+1]??values[i])-values[i])*(pos-i);
 }
 const route=(Object.hasOwn(routes,query.get('route')) && routes[query.get('route')]) || (exam&&crypto.getRandomValues(new Uint8Array(1))[0]%2?routes.pass:routes.river);
+if(arcade)DriveSteering.useMode(route.stage||route.id==='pass'?'mountain':'cup');
 $('route').value=route.id;$('route').disabled=exam;$('routeName').textContent=route.name;
 $('route').onchange=e=>{const u=new URL(location.href);u.searchParams.set('route',e.target.value);location.href=u.href;};
 const roadHalfWidth=route.stage?4.15:6;

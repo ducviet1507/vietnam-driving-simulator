@@ -149,6 +149,7 @@ const cupBoard=createLeaderboard(route.id,route.name);
 $('showBoard').onclick=()=>cupBoard.open();
 $('scoreBoard').onclick=()=>cupBoard.open((state.time+penalty)*1000);
 function startCountdown(){
+ DriveSteering.start();
  cupBoard.start();
  $('grid').hidden=true;$('hud').hidden=false;$('touch').hidden=false;$('pause').hidden=false;
  setMode('countdown');keys.clear();$('count').textContent='3';driveAudio.cue(false);

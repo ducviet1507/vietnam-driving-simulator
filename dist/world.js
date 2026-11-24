@@ -836,6 +836,7 @@ async function begin(learner=false){
      return;
    }
  }
+ DriveSteering.start();
  $('openingStill').hidden=true;
  activeTrip=true;tripStart=distance;
  if(guide?.route.id){guideStarted=performance.now();boardFor(guide.route).start(tripVehicleChoice(car.model));}
