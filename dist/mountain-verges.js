@@ -2,6 +2,7 @@
 
 // Terrain and route coordinates here are metres in the course frame.
 const mountainRails=new Map();
+const haiVanWallSpans=new Map();
 function railSetback(station,start,end){
   return 1.05+.46*(1-Math.min(1,(station-start)/4,(end-station)/4));
 }
@@ -92,6 +93,7 @@ function buildMountainVerges(){
     for(let d=4;d<route.finish-4;d+=4){
       const p=at(d),far=at(d,side*16),turn=(heading(d+12)-heading(d-12))/24;
       const interrupted=!route.stage&&(Math.abs(d-route.junction)<18||d>bridgeStart-12&&d<bridgeEnd+12);
+      if(haiVanCourse&&replacesHaiVanBeam(d+2)){run=null;continue;}
       if(interrupted){run=null;continue;}
       if(d<48||turn*side>=-.0035&&renderedGround(far.x,far.z)>=p.y-1.45)continue;
       if(!run||d-run.end>16){run={start:d,end:d};spans.push(run);}
@@ -176,6 +178,7 @@ function buildMountainVerges(){
       const turn=heading(d+16)-heading(d-16);
       if(Math.abs(turn)<.13)continue;
       const side=-Math.sign(turn),p=at(d,side*(roadHalfWidth+1.85)),n=nearest(p.x,p.z);
+      if(haiVanCourse&&replacesHaiVanBeam(d))continue;
       const y=renderedGround(p.x,p.z);
       if(n.dist<roadHalfWidth+1||Math.abs(y-p.y)>.6)continue;
       scatter('box',0xdedcc8,p.x,y+.43,p.z,.21,.86,.22,-p.h);
@@ -229,6 +232,12 @@ function buildMountainVerges(){
   // Conifers occur in pockets. Retain broadleaf vegetation on low coastal stages.
   const conifers=!route.stage||/o-quy-ho|khanh-le|prenn|mimosa|dran|dai-ninh|sacom|pha-din|khau-pha/.test(route.id);
   const compact=matchMedia('(pointer:coarse)').matches;
+  if(haiVanCourse)buildHaiVanPilot(T,{
+    group:scene,compact,trees:courseTrees,opening:seaOpening,ground:renderedGround,
+    sample:(d,side,gap)=>at(d,side*(roadHalfWidth+gap)),roadHeight:p=>p.y,
+    clear:(x,z,r)=>nearest(x,z).dist>roadHalfWidth+r&&!(mountainField?.depth(x,z)>0),
+    barrier(a,b,d,side){haiVanWallSpans.set(d,side);}
+  });
   // Scatter irregular stands beyond the verge, with staggered crowns and a low understory.
   for(let d=18;d<route.finish-12;d+=compact?39:28){
     const side=random()<.5?-1:1,centre=at(d,side*(24+random()*97));

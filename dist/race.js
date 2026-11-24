@@ -231,7 +231,10 @@ function raceUpdate(dt,stepEnd){
  updateCupFeatures(s,previousD,previousLane,dt);
  const angle=at(s.d).h;
  const rail=route.stage&&mountainRails.get(Math.sign(s.offset))?.find(span=>s.d>=span.start&&s.d<=span.end);
- const boundary=route.stage?roadHalfWidth+(rail?railSetback(s.d,rail.start,rail.end)-.95:1.45):
+ const sideOfRoad=Math.sign(s.offset);
+ const turnout=haiVanCourse&&sideOfRoad===-1?haiVanTurnout(s.d):0;
+ const wall=haiVanCourse&&haiVanWallSpans.get(Math.ceil(s.d/2)*2)===sideOfRoad;
+ const boundary=route.stage?roadHalfWidth+(wall?1-.22-.95:rail?railSetback(s.d,rail.start,rail.end)-.95:Math.max(1.45,turnout-.95)):
    roadHalfWidth-.65+(s.offset<0?cupSpurWidth(s.d):0);
  const edge=Math.abs(s.offset)-boundary;
  if(edge>0){

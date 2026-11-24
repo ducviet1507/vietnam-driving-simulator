@@ -91,6 +91,8 @@ python -m http.server 8000 --bind 127.0.0.1 --directory dist
 
 Ở đèo Hải Vân, nhìn về phía bắc tây bắc từ khúc cua để thấy biển phía Lăng Cô. Trong Cúp Bánh Mì, khúc cua cách vạch xuất phát khoảng 1,32 km. Lớp phủ thực vật theo bản đồ được dùng cho cả 58 chặng đèo. [Khúc cua Hải Vân](https://vivu3d.com/?pin=16.19394,108.13155) · [Ảnh đối chiếu đèo](dist/pass-surfaces/REFERENCES.txt).
 
+Từ km 0,82 đến km 1,82 của chặng Hải Vân, vạch vàng liền dẫn xe qua khúc cua phải. Tường chắn thấp bên trái ngắt ở bãi tấp xe, rồi xuất hiện phía bên phải khi xe lên nhánh trên. Cả Xuyên Việt và Cúp đều dựng đoạn này theo ảnh tại bãi và video hành trình lên Hải Vân Quan. [Lái từ trước khúc cua](https://vivu3d.com/?pin=16.19380,108.13085) · [Góc cabin tại km 1,22 trước và sau khi dựng lại](tools/smoke/results/hai-van-cockpit-before-after.jpg).
+
 Mặt tiền nhà trên phố Trần Phú và ở làng Cẩm Kim được dựng theo ảnh đường phố. Ở chế độ sau mưa, có thể nhìn nước nhỏ từ mép mái, vũng nước còn trên mặt đường và đất hai bên đường khô dần. [Phố Trần Phú](https://vivu3d.com/?pin=15.87710,108.32929) · [Làng Cẩm Kim](https://vivu3d.com/?pin=15.870650,108.311714) · [Phố Quốc Tử Giám sau mưa](https://vivu3d.com/?drive=pho-quoc-tu-giam&weather=after-rain) · [Ảnh đối chiếu Hội An](dist/streetscape/hoi-an-frontages.txt).
 
 [Lái qua phố Quốc Tử Giám, Hà Nội](https://vivu3d.com/?drive=pho-quoc-tu-giam). Chặng 262 m đi về hướng Tôn Đức Thắng, qua Hồ Văn, tứ trụ và điểm dừng xe buýt trước Văn Miếu. Mặt phố được đối chiếu với ảnh chụp năm 2022 và 2026. Một số biển cửa hàng giữ hình ảnh năm 2022.

@@ -28,6 +28,7 @@ $('route').value=route.id;$('route').disabled=exam;$('routeName').textContent=ro
 $('route').onchange=e=>{const u=new URL(location.href);u.searchParams.set('route',e.target.value);location.href=u.href;};
 const roadHalfWidth=route.stage?4.15:6;
 const featuredPass=scenicPasses.has(route.id);
+const haiVanCourse=route.id==='deo-hai-van';
 const step=4,points=[];
 const carriagewayHeights=smoothRoadProfile(route.stage);
 function heading(d){
@@ -80,6 +81,9 @@ function roadCoordinates(x,z,near){
   return {d,offset};
 }
 const scene=new T.Scene(), renderer=DrivingRenderer.get($('world'));
+// ANGLE can translate every newly visible traffic shader again just to
+// produce its debug log, especially on the first rear-view draw.
+if(arcade)renderer.debug.checkShaderErrors=false;
 scene.background=new T.Color(0xbcd7de);scene.fog=new T.FogExp2(0xc8dbd4,.00205);
 if(!featuredPass)new T.TextureLoader().load('streetscape/sky.jpg',tex=>{tex.mapping=T.EquirectangularReflectionMapping;tex.colorSpace=T.SRGBColorSpace;scene.background=tex;if(!scene.environment)scene.environment=tex;});
 if(arcade)new T.TextureLoader().load('streetscape/'+(route.stage?'pass':route.id)+'-reflection.jpg',tex=>{
@@ -115,7 +119,9 @@ function ribbon(left,right,color,raise,roadMaterial,dashed=false){
   for(let i=0;i<points.length;i++){
     for(const [edge,u] of [[left,0],[right,1]]){const p=at(i*step,edge);verts.push(p.x,p.y+raise,p.z);uv.push(u,i*step/9);}
     const branchOpening=!route.stage&&Math.abs(right-left)<.12&&Math.sign(left)===-route.sign&&Math.abs((i-.5)*step-route.junction)<7;
-    if(i&&!branchOpening&&(!dashed||i%3===1)){const n=i*2;indices.push(n-2,n-1,n,n-1,n+1,n);}
+    const station=(i-.5)*step;
+    const solid=haiVanCourse&&station>=haiVanPilot.start&&station<=haiVanPilot.end;
+    if(i&&!branchOpening&&(!dashed||solid||i%3===1)){const n=i*2;indices.push(n-2,n-1,n,n-1,n+1,n);}
   }
   const geo=new T.BufferGeometry();geo.setAttribute('position',new T.Float32BufferAttribute(verts,3));geo.setAttribute('uv',new T.Float32BufferAttribute(uv,2));geo.setIndex(indices);geo.computeVertexNormals();
   const material=roadMaterial||new T.MeshLambertMaterial({color,side:T.DoubleSide});
@@ -135,6 +141,15 @@ function ribbon(left,right,color,raise,roadMaterial,dashed=false){
       shader.fragmentShader='uniform float wetPavement;\n'+shader.fragmentShader
         .replace('#include <color_fragment>','#include <color_fragment>\n diffuseColor.rgb*=1.-.35*wetPavement;')
         .replace('#include <roughnessmap_fragment>','#include <roughnessmap_fragment>\n roughnessFactor=mix(roughnessFactor,.17,wetPavement*(.5+.5*mottle));');
+      if(haiVanCourse)shader.fragmentShader=shader.fragmentShader.replace('#include <color_fragment>',`
+        #include <color_fragment>
+        float station=roadUv.y*9.;
+        float pilot=smoothstep(${haiVanPilot.start.toFixed(1)},${(haiVanPilot.start+20).toFixed(1)},station)
+          *(1.-smoothstep(${(haiVanPilot.end-20).toFixed(1)},${haiVanPilot.end.toFixed(1)},station));
+        float edge=smoothstep(.78,.99,abs(roadUv.x*2.-1.));
+        diffuseColor.rgb=mix(diffuseColor.rgb,diffuseColor.rgb*vec3(.89,.92,.94)+edge*vec3(.018,.010,.004),pilot);
+      `).replace('#include <roughnessmap_fragment>',`#include <roughnessmap_fragment>
+        roughnessFactor=mix(roughnessFactor,max(.84,roughnessFactor),pilot);`);
     }
   };
   const surface=new T.Mesh(geo,material);surface.receiveShadow=true;scene.add(surface);
@@ -254,6 +269,13 @@ if(!route.stage)for(let u=4;u<=branchLength;u+=4){
 }
 function surface(x,z,n){
   const natural=naturalSurface(x,z,n);
+  if(haiVanCourse&&n.side<0){
+    const width=haiVanTurnout(n.d);
+    if(width>0){
+      const gap=n.dist-roadHalfWidth,edge=smooth(width+2,width+9,gap);
+      return T.MathUtils.lerp(Math.min(natural,n.y-.25-.018*Math.max(0,gap)),natural,edge);
+    }
+  }
   if(!onBranch(x,z,36))return natural;
   const {u,v}=branchCoords(x,z),grade=sampleStage(branchHeights,u,4)-.12;
   // Keep a complete terrain cell of graded shoulder around the lane and turning head.

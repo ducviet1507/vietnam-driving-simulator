@@ -12,6 +12,10 @@ Tâm cụm vị trí chụp xấp xỉ 16.19396° Bắc, 108.13155° Đông. Đi
 
 Dữ liệu cây của các chặng Cúp lấy từ lớp ESA WorldCover 2021 đã ghi công tại /vn-environment/CREDITS.txt. Game lấy mẫu ô 120 m để đặt các cụm cây trong vùng rừng, cây bụi trong vùng cây bụi và bỏ các cụm cây khỏi ruộng, nước và khu xây dựng đã phân loại. Kích thước và vị trí từng cây trong ô là mô phỏng.
 
+Đoạn mẫu từ km 0,82 đến km 1,82 theo chiều từ Lăng Cô lên Hải Vân Quan dùng thêm video hành trình của Scenic Rides Asia. Từ 25:50 đến 26:20, xe tiếp cận vạch vàng liền, qua tường chắn sáng màu rồi ôm cua phải. Ảnh CN-01 cho thấy khoảng mặt đường sáng màu ở bãi tấp xe và bụi cây giữa hai nhánh cua. Vị trí đầu cuối tường, bề rộng bãi và từng khóm cây trong game là ước lượng theo hình ảnh. Hai chế độ Xuyên Việt và Cúp dùng cùng các mốc dọc tuyến. Video và ảnh dùng để đối chiếu hình dáng, màu sắc và trình tự cảnh quan.
+
+https://www.youtube.com/watch?v=AbCVm4XXlOE&t=1550s
+
 Các dải đá lộ và rãnh chân taluy được mô phỏng từ cao độ phía sườn dốc, bề rộng mặt đường và vị trí các nhánh đường lân cận. Vị trí từng viên đá và từng rãnh chưa được khảo sát tại hiện trường.
 
 Đèo Mã Pí Lèng

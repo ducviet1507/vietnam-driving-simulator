@@ -48,6 +48,31 @@ for(const [lon,lat,clear] of [
 assert.equal(ctx.worldHaiVanOpening(graph,0,0),null);
 assert.equal(ctx.courseHaiVanOpening(stages.find(s=>s.id==='deo-ma-pi-leng')),null);
 
+// A reversed OSM way must put the turnout on the same geographic shoulder
+// as the increasing course stations, including after a render-origin change.
+function pilotSegment(d,reverse,cx,cz){
+  const model=ctx.worldHaiVanPilot(graph,cx,cz,bend);
+  const p=[d,d+bend.step].map(station=>{
+    const [u,v]=bend.trace[station/bend.step];
+    const q=graph.point(bend.start[0]+u/1e6,bend.start[1]+v/1e6);
+    return {x:q.x-cx,z:q.z-cz};
+  });
+  if(reverse)p.reverse();
+  const [a,b]=p,dx=b.x-a.x,dz=b.z-a.z,len=Math.hypot(dx,dz),fx=dx/len,fz=dz/len;
+  const s={ax:a.x,az:a.z,bx:b.x,bz:b.z,fx,fz,nx:-fz,nz:fx,len,w:4,kind:'trunk'};
+  assert.equal(model.match({...s,kind:'service'}),undefined);
+  assert.equal(model.match({...s,oneway:true}),undefined);
+  const run=model.match(s);assert.ok(run&&model.visible);
+  assert.equal(Math.sign(run.b-run.a),reverse?-1:1);
+  assert.equal(model.sample(d-40,-1,0),null);
+  const outer=model.sample(d+10,-1,ctx.haiVanTurnout(d+10));
+  return [outer.x+cx,outer.z+cz];
+}
+const apron=pilotSegment(1320,false,0,0),reversed=pilotSegment(1320,true,district.x,district.z);
+assert.ok(Math.hypot(apron[0]-reversed[0],apron[1]-reversed[1])<1e-6);
+assert.equal(ctx.haiVanTurnout(1308),0);assert.equal(ctx.haiVanTurnout(1352),0);
+assert.equal(ctx.haiVanTurnout(1330),19);
+
 const own={ax:-35,az:0,bx:35,bz:0,fx:1,fz:0,nx:0,nz:1,station:0,len:70,w:4,
   rank:5,graded:true,profiled:true,kind:'primary'};
 const crossing={ax:0,az:-20,bx:0,bz:20,fx:0,fz:1,len:40,w:3};

@@ -385,6 +385,7 @@
       positions.needsUpdate=true;yield* updateTerrainNormals(T,land.geometry);land.geometry.computeBoundingSphere();
       const natural=localGround;
       const seaOpening=worldHaiVanOpening(graph,cx,cz);
+      const haiVan=seaOpening&&worldHaiVanPilot(graph,cx,cz,mountainStages.find(stage=>stage.id==='deo-hai-van'));
       const complexCenter=graph?.point(105.7956,20.5528);
       const innerPrecinct=complexCenter&&Math.hypot(complexCenter.x-cx,complexCenter.z-cz)<1500;
       const cover=complexCenter&&Math.hypot(complexCenter.x-cx,complexCenter.z-cz)<2200?(window.tamChucGroundCover||[]).map(([kind,coords])=>{
@@ -623,6 +624,7 @@
           const sourceLength=Math.hypot(dx*mx,dz);
           const s={ax,az,bx,bz,fx,fz,nx,nz,len:length,sourceLength,w:width,kind:e.kind,oneway:e.oneway,rank:perp,seed};
           s.traffic=e.traffic;s.station=station;s.source=source;s.roadMaterial=material[finish];
+          if(haiVan)s.haiVan=haiVan.match(s);
           s.profiled=formation&&(formation.roadHeight(source,station)!=null||formation.roadHeight(source,station+length)!=null);
           s.priority=s.profiled&&(namedPass(e)||/^(motorway|trunk|primary)/.test(e.kind))?2:
             s.profiled&&/^(secondary|tertiary)/.test(e.kind)?1:0;
@@ -641,7 +643,7 @@
           s.authoredPavement=Boolean(e.authoredHalfWidth);
           if(!s.authoredPavement&&perp<detailRadius+30&&!e.kind.startsWith('motorway')&&!e.kind.endsWith('_link')&&!e.traffic?.tunnel){
             const x=(a.x+b.x)/2,z=(a.z+b.z)/2;
-            if(cityStreet||district.builtUp(x,z)||graph&&environment.sample(graph,x,z).cover===50)
+            if(!s.haiVan&&(cityStreet||district.builtUp(x,z)||graph&&environment.sample(graph,x,z).cover===50))
               s.walkWidth=width<4?1.2:1.85;
             const sides=grounds.pavementEdges?.get(source.id);
             if(sides||s.walkWidth){
@@ -901,7 +903,13 @@
             instance('white',unitBox,x,y+.72,z,.18,.16,.18,0,0xc13f31);
           }
         }
-        roadPaint(s.source,s.laneLayout,s.w,s.station+start,s.station+end,(lo,hi,l,r,color)=>
+        const pilot=s.haiVan,midStation=pilot&&(pilot.a+pilot.b)/2;
+        if(pilot&&midStation>=haiVanPilot.start&&midStation<=haiVanPilot.end){
+          strip(yellow,s,start,end,-.068,.068);
+          for(const side of [-1,1]){
+            const offset=side*(s.w-.22);strip(white,s,start,end,offset-.055,offset+.055);
+          }
+        }else roadPaint(s.source,s.laneLayout,s.w,s.station+start,s.station+end,(lo,hi,l,r,color)=>
           strip(color==='yellow'?yellow:white,s,lo-s.station,hi-s.station,l,r),{controls:false});
         if(s.rank>detailRadius||s.len<3)continue;
         if(!s.graded&&s.w>=4.2&&s.len>=24){
@@ -1088,6 +1096,16 @@
         surface:(x,z,s)=>Math.max(s.profiled?vergeHeight(x,z):roadway(cx+x,cz+z)-.065,localGround(x,z)-.17),
         natural:(x,z)=>raw.ground(cx+x,cz+z),nearby:(x,z)=>cells.get(nearbyCell(x,z))||[],
         exclude:(x,z)=>(wetMask&&wet(x,z))||district.builtUp(cx+x,cz+z)});
+      if(haiVan?.visible)buildHaiVanPilot(T,{
+        group:roadGroup,compact:small,trees:treeModels,opening:seaOpening,ground:localGround,
+        sample:haiVan.sample,roadHeight:p=>roadway(cx+p.x,cz+p.z),
+        clear:(x,z,r)=>!blocked(x,z,r),
+        barrier(a,b,d,side){
+          const dx=b.x-a.x,dz=b.z-a.z,len=Math.hypot(dx,dz);
+          if(len>.01)registerObstacle({id:'hai-van-wall:'+side+':'+d,kind:'barrier',
+            x:(a.x+b.x)/2,z:(a.z+b.z)/2,fx:dx/len,fz:dz/len,w:len*.5,d:.22,height:.69,parts:[]});
+        }
+      });
       if(cutVerts.length){
         const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(cutVerts,3));
         g.setAttribute('uv',new T.Float32BufferAttribute(cutUv,2));g.setIndex(cutIndices);g.computeVertexNormals();
@@ -1120,6 +1138,10 @@
         let previousRow=-1;
         for(let j=0;j<count;j++){
           const d=start+span*j,px=s.ax+s.fx*d+s.nx*off,pz=s.az+s.fz*d+s.nz*off;
+          if(s.haiVan){
+            const {a,b}=s.haiVan,station=a+(b-a)*(d+span*.5)/s.len;
+            if(replacesHaiVanBeam(station)){previousRow=-1;continue;}
+          }
           const ex=px+s.fx*span,ez=pz+s.fz*span,mx=(px+ex)*.5,mz=(pz+ez)*.5;
           // A side road or the return leg of a hairpin can overlap a shoulder
           // well beyond the node itself. Open the rail and its collider together.
