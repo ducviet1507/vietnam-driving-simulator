@@ -48,13 +48,22 @@ function createSightGrounds(T,small,source){
   const surfaces={asphalt:1,concrete:2,'concrete:plates':2,gravel:3,wood:4,brick:5,
     sett:6,cobblestone:6,stone:6};
   const projections=source?.projections||new WeakMap();
-  const datasets=source?.datasets||['sight-grounds/','sight-furniture/'].map(base=>({
+  const datasets=source?.datasets||['sight-grounds/','sight-furniture/','vn-roadside/'].map(base=>({
     base,states:new WeakMap(),cache:new Map(),manifest:null
   }));
   const occupiedCells=new Map();
+  let maxFixtureRadius=3;
+  const pavementSource=source?.pavementSource||{edges:null,job:null};
+  function loadPavements(){
+    if(pavementSource.edges)return false;
+    return pavementSource.job??=fetchMapTile('vn-roadside/pavements.gz').then(rows=>{
+      pavementSource.edges=new Map(rows.map(([id,left,right])=>[id,[left,right]]));return true;
+    }).catch(()=>{pavementSource.job=null;return false;});
+  }
   let mask,fixtures=[],streetFurniture=[],originX=0,originZ=0;
   let memorialAt=()=>false;
   let street=null;
+  let roadside=[],finishes=new Map();
   let fenceModels=[],wallModels=[],cityWallModels=[];
   async function loadLayer(layer,graph,x,z){
     const {base,states,cache}=layer;
@@ -87,17 +96,18 @@ function createSightGrounds(T,small,source){
     return state.job;
   }
   async function load(graph,x,z){
-    return (await Promise.all(datasets.map(layer=>loadLayer(layer,graph,x,z)))).some(Boolean);
+    return (await Promise.all([...datasets.map(layer=>loadLayer(layer,graph,x,z)),loadPavements()])).some(Boolean);
   }
   // Index surveyed points before generating buildings or vegetation. All
   // coordinates in this index are relative to this district's render origin.
   function occupy(x,z,radius,kind){
+    maxFixtureRadius=Math.max(maxFixtureRadius,radius);
     const key=Math.floor(x/20)+','+Math.floor(z/20);
     if(!occupiedCells.has(key))occupiedCells.set(key,[]);
     occupiedCells.get(key).push({x,z,radius,kind});
   }
   function nearFixture(x,z,radius,kind){
-    const reach=radius+3;
+    const reach=radius+maxFixtureRadius;
     for(let i=Math.floor((x-reach)/20);i<=Math.floor((x+reach)/20);i++){
       for(let j=Math.floor((z-reach)/20);j<=Math.floor((z+reach)/20);j++){
         for(const p of occupiedCells.get(i+','+j)||[]){
@@ -160,7 +170,7 @@ function createSightGrounds(T,small,source){
     fenceModels=(landmarks?.active||[]).filter(site=>site.data.replacesFence);
     wallModels=(landmarks?.active||[]).filter(site=>site.data.replacesWall);
     cityWallModels=(landmarks?.active||[]).filter(site=>site.data.replacesCityWall);
-    occupiedCells.clear();streetFurniture=[];
+    occupiedCells.clear();maxFixtureRadius=3;streetFurniture=[];roadside=[];finishes=new Map();
     street?.reserveFixtures(occupy);
     for(const [kind,id,lon,lat,height,diameter,tags] of datasets[1].states.get(graph)?.rows||[]){
       if((++work & 127)===0)yield;
@@ -231,6 +241,13 @@ function createSightGrounds(T,small,source){
       if(code)layers.push({kind,code,rings,size,finish});
       if((!code||['steps','orchard','tea'].includes(kind))&&!(kind==='steps'&&modeledSteps.has(wayId)))
         fixtures.push({kind,size,ring,rings,finish,detail});
+    }
+    for(const [kind,lon,lat,id,detail] of datasets[2].states.get(graph)?.rows||[]){
+      if((++work & 127)===0)yield;
+      if(kind==='finish'){finishes.set(id,detail);continue;}
+      const point=graph.point(lon/1e6,lat/1e6),x=point.x-cx,z=point.z-cz;
+      if(Math.hypot(x,z)>400||memorialAt(point.x,point.z))continue;
+      roadside.push({kind,id,detail,x,z});
     }
     window.BaDinhLandscape?.prepareGround(layers,graph,cx,cz);
     if(!layers.length)return;
@@ -528,8 +545,11 @@ function createSightGrounds(T,small,source){
       infill.castShadow=infill.receiveShadow=true;group.add(infill);
     }
   }
-  return {load,prepare,shade,nearFixture,get memorialAt(){return memorialAt;},get streetFurniture(){return streetFurniture;},
-    createView:()=>createSightGrounds(T,small,{datasets,projections,fenceMaterials,grain}),uniforms,
+  return {load,prepare,shade,nearFixture,occupy,get roadside(){return roadside;},get finishes(){return finishes;},
+    get memorialAt(){return memorialAt;},get streetFurniture(){return streetFurniture;},
+    get pavementEdges(){return pavementSource.edges;},
+    createView:()=>createSightGrounds(T,small,{datasets,projections,fenceMaterials,grain,pavementSource}),uniforms,
     display(view){displayed.visitorMap.value=view.uniforms.visitorMap.value;displayed.visitorOrigin.value.copy(view.uniforms.visitorOrigin.value);displayed.visitorActive.value=view.uniforms.visitorActive.value;},
-    mapped:(x,z)=>groundCode(x,z)>0,accessLane:(x,z)=>groundCode(x,z)===codes.drive,build};
+    mapped:(x,z)=>groundCode(x,z)>0,plantable:(x,z)=>[0,codes.lawn].includes(groundCode(x,z)),
+    accessLane:(x,z)=>groundCode(x,z)===codes.drive,build};
 }

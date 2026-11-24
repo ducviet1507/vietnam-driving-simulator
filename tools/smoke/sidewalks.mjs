@@ -30,6 +30,13 @@ function layout(roads,wet=()=>false){
   return walks.liftAt;
 }
 const main=road(-40,0,40,0,5),spur=road(0,0,0,38,3,1.2);
+for(const reverse of [false,true]){
+  const signed=reverse?road(40,0,-40,0,5,3):road(-40,0,40,0,5,3);
+  signed.walkSides=reverse?[3,0]:[0,3];
+  const measured=layout([signed]);
+  assert.ok(measured(0,7.6)>0,'surveyed three-metre walk');
+  assert.equal(measured(0,-5.6),0,'opposite verge stays open in either drawing direction');
+}
 const tee=layout([main,spur]);
 for(let x=-37;x<=37;x+=.25)assert.ok(tee(x,-5.8)>0,'continuous opposite side of T');
 for(let z=0;z<=35;z+=.25)assert.equal(tee(0,z),0,'open branch');

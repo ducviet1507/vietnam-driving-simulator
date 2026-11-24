@@ -306,6 +306,7 @@
     function contact(...args){return regionContact(obstacleCells,originX,originZ,sceneGraph,tunnels,landmarks,district,...args);}
     function discardRoads(roadGroup){
       if(!roadGroup)return;roadGroup.removeFromParent();
+      roadGroup.userData.disposeSurvey?.();
       roadGroup.traverse(obj=>{if(obj.isInstancedMesh)obj.dispose();else if(obj.geometry)obj.geometry.dispose();});
     }
     function makeSpare(){
@@ -530,7 +531,7 @@
         return grounds.memorialAt(x,z)||grounds.mapped(x,z)||Boolean(wetMask&&wet(x-cx,z-cz));
       }
       const groundEdges=graph?bridgeGroundEdges(graph,edges):edges;
-      yield* district.buildSteps(graph,cx,cz,landmarks,terrain.ground,groundEdges,openGround,Math.min(620,cutoff),terrain.revision,grounds.memorialAt,shoreFootings);
+      yield* district.buildSteps(graph,cx,cz,landmarks,terrain.ground,groundEdges,openGround,Math.min(620,cutoff),terrain.revision,grounds.memorialAt,shoreFootings,grounds.finishes);
       const contact=(...args)=>regionContact(obstacleCells,cx,cz,graph,tunnels,landmarks,district,...args);
       function nearbyCell(x,z){return Math.floor(x/cellSize)+','+Math.floor(z/cellSize);}
       function bounds(seg,pad,fn){
@@ -627,6 +628,11 @@
             const x=(a.x+b.x)/2,z=(a.z+b.z)/2;
             if(cityStreet||district.builtUp(x,z)||graph&&environment.sample(graph,x,z).cover===50)
               s.walkWidth=width<4?1.2:1.85;
+            const sides=grounds.pavementEdges?.get(source.id);
+            if(sides){
+              s.walkSides=sides.map(value=>value===-1?s.walkWidth||0:value===-2?(width<4?1.2:1.85):value/100);
+              s.walkWidth=Math.max(...s.walkSides);
+            }
           }
           segments.push(s);
           if(!s.authoredPavement){
@@ -814,6 +820,20 @@
           return shore&&shore.level-shore.bed>.65;
         }});
       const aprons=new Map(),walkRoads=new Set();
+      function cellRoads(x,z,reach){
+        const found=new Set();
+        for(let i=Math.floor((x-reach)/cellSize);i<=Math.floor((x+reach)/cellSize);i++)
+          for(let j=Math.floor((z-reach)/cellSize);j<=Math.floor((z+reach)/cellSize);j++)
+            for(const s of cells.get(i+','+j)||[])found.add(s);
+        return found;
+      }
+      yield* buildNationalStreetscape(T,{points:grounds.roadside,district,grounds,cx,cz,cellRoads,
+        blocked:(x,z,r)=>onApproach(cx+x,cz+z)||blocked(x,z,r),ground:localGround,
+        plantable:(x,z)=>grounds.plantable(cx+x,cz+z)&&!onApproach(cx+x,cz+z)&&!obstruction(x,z,.24),
+        builtLand:(x,z)=>environment.sample(graph,cx+x,cz+z).cover===50,
+        placeBox:(mat,...args)=>instance(mat,unitBox,...args),register:registerObstacle,
+        plant:(kind,x,z,h,w,a,owner)=>plantTree(kind,x,z,h,w,a,null,owner),group:roadGroup,
+        radius:detailRadius,compact:graphics.profile.id==='low'});
       for(const s of segments){
         if((++work & 15)===0)yield;
         const start=openNearEnd(s,s.ax,s.az),end=s.len-openNearEnd(s,s.bx,s.bz);
@@ -1897,6 +1917,7 @@
         water:wet?Math.max(0,1-waterDistance/72):0,waterPan:(dx*right[0]+dz*right[2])/Math.max(1,waterDistance)};
     }
     return {ambience,get sceneryChanged(){return districtRadius!==graphics.profile.districtRadius;},get mappedFurniture(){return grounds.streetFurniture;},
+      get roadsideSurvey(){return roadGroup?.userData.roadsideSurvey;},
       capturePhoto,hitDashboardMap,refreshMap,prepareShaders,projectSummit,weather,streetLife,accessLane:(x,z)=>grounds.accessLane(x,z),loadStructures:structures.load,preloadVehicle:loadModel,waterAt:(x,z,edge)=>{if(edge&&sceneGraph.tunnels.info(edge)?.bore&&tunnels.at(x,z,edge)!=null)return null;const wet=waterAt(x,z),deck=wet&&bridges?.at(x,z,edge);return wet&&deck!=null&&deck>=wet.level?null:wet;},terrainReady:relief.ready,grade:driveGrade,ground:driveGround,setRoads,queueRoads,loadRoads,advanceRoads,cancelRoads,districtDistance:(x,z)=>Math.hypot(x-originX,z-originZ),render,resize:graphics.resize,contact,loadDistrict:async(g,x,z)=>(await Promise.all([buildingSource.load(g,x,z),osmBuildings.load(g,x,z),relief.loadLocal(g,x,z),passGrades.load(g,x,z),landscapeSource.load(g,x,z),groundSource.load(g,x,z),environment.load(g,x,z),amenities.load(g,x,z)])).some(Boolean),splash:(x,z,nx,nz,strength,level)=>driveFx.impact(x,z,nx,nz,strength,'water',level,.3),sightFootprint:(...args)=>district.footprint(...args),footprintViews:(...args)=>district.footprintViews(...args,relief.ground),nearLandmark:(x,z,id)=>landmarks?.nearest(x,z,650,id),reactToContact:roadsideImpact.react,impact:(x,z,nx,nz,s,k,h=0,g,edge)=>driveFx.impact(x,z,nx,nz,s,k,driveGround(x,z,edge)+h,g),scrape:(x,y,z,vx,vz,edge)=>driveFx.scrape(x,driveGround(x,z,edge)+y,z,vx,vz),resetFx(){driveFx.reset();roadsideImpact.reset();sightings.reset();}};
   };
 })();

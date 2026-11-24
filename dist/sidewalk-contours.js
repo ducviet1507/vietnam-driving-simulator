@@ -49,6 +49,7 @@ function* traceSidewalkSteps(segments,nearby,emit,fill,worker){
     rings=task.rings;
   }
   rings??=sidewalkRings(segments);
+  const sideViews=new WeakMap();
   function owner(x,z){
     let nearest=null,gap=Infinity;
     for(const s of nearby(x,z)){
@@ -56,7 +57,10 @@ function* traceSidewalkSteps(segments,nearby,emit,fill,worker){
       const d=Math.hypot(x-s.ax-along*s.fx,z-s.az-along*s.fz)-s.w;
       if(d<gap){nearest=s;gap=d;}
     }
-    return nearest;
+    if(!nearest?.walkSides)return nearest;
+    const side=(x-nearest.ax)*nearest.nx+(z-nearest.az)*nearest.nz>=0?1:0;
+    if(!sideViews.has(nearest))sideViews.set(nearest,nearest.walkSides.map(walkWidth=>({...nearest,walkWidth})));
+    return sideViews.get(nearest)[side];
   }
   for(const outline of rings){
     yield;

@@ -718,7 +718,7 @@
     function decorateDistrictFronts(fronts, clearFn, compact) {
       if (!fronts || !fronts.length) return;
       const nearest = fronts
-        .filter(f => f.zone && f.half >= 1.35 && Math.hypot(f.x, f.z) <= 155)
+        .filter(f => f.zone && !f.named && f.half >= 1.35 && Math.hypot(f.x, f.z) <= 155)
         .sort((a, b) => Math.hypot(a.x, a.z) - Math.hypot(b.x, b.z));
       const mounted = [];
       let count = 0;

@@ -1,0 +1,24 @@
+Cảnh vật ven đường trên ViVu3D
+
+© OpenStreetMap contributors, ODbL 1.0
+https://www.openstreetmap.org/copyright
+https://opendatacommons.org/licenses/odbl/1-0/
+
+Tên và tọa độ của cửa hàng, quán, trường, chợ, cơ sở y tế, khách sạn và trạm
+xăng lấy từ chỉ mục địa điểm Việt Nam của trò chơi, bản ngày 18/11/2026.
+Cây, hàng cây, điểm dừng buýt, vỉa hè và thuộc tính vật liệu tòa nhà lấy từ
+bản Việt Nam của Geofabrik ngày 23/11/2026.
+https://download.geofabrik.de/asia/vietnam.html
+
+Biển hiệu dùng tên tại tọa độ được ghi nhận. Game gắn biển vào mặt hướng ra
+đường của tòa nhà chứa địa điểm. Ở khu dân cư có cửa hàng nhưng thiếu đường
+bao nhà, kích thước cửa hàng nhỏ được ước lượng theo khoảng đất trống.
+Mẫu chữ, màu biển, cửa kính, mái hiên và hình dáng nhà chờ là phần mô phỏng.
+
+Vị trí cây đơn theo điểm trên bản đồ. Với hàng cây chỉ có đường trục, game
+ước lượng khoảng cách giữa các thân. Vỉa hè theo bên trái/phải của đoạn
+đường có ghi nhận. Chiều rộng được ước lượng khi bản đồ chỉ ghi có vỉa hè.
+Phần mô hình thực địa riêng ở các di tích được ưu tiên.
+
+Danh mục từng gói, số liệu theo loại, thời điểm và mã kiểm tra của nguồn nằm
+trong index.json cùng thư mục.
