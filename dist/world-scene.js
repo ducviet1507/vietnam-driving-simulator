@@ -1578,6 +1578,37 @@
     }
     const driveFx=createDrivingFX(T,scene,renderer);
     const lookAxis=new T.Vector3(0,1,0),headTurn=new T.Euler(0,0,0,'YXZ');
+    const reducedCameraMotion=matchMedia('(prefers-reduced-motion: reduce)');
+    let chaseYaw=null,chaseBack=0,anchorX=0,anchorZ=0;
+    function followVehicle(car,dt){
+      // eye and look are still in vehicle space. Only the trailing view gets inertia.
+      const speedRatio=T.MathUtils.smoothstep(Math.abs(car.speed||0),0,36);
+      const targetBack=3.4*speedRatio;
+      if(chaseYaw===null||Math.hypot(car.x-anchorX,car.z-anchorZ)>20){
+        chaseYaw=car.yaw;chaseBack=targetBack;anchorX=car.x;anchorZ=car.z;
+      }
+      chaseBack+=(targetBack-chaseBack)*(1-Math.exp(-dt*(targetBack<chaseBack?3.4:2.2)));
+      eye.z+=chaseBack;eye.y+=chaseBack*.10;
+
+      // Follow the short arc across +/-pi and catch up faster through tight bends.
+      const turn=car.yaw-chaseYaw,error=Math.atan2(Math.sin(turn),Math.cos(turn));
+      const rate=2.6+3*T.MathUtils.smoothstep(Math.abs(error),.12,.48);
+      const lag=T.MathUtils.clamp(error*Math.exp(-rate*dt),-.36,.36);
+      chaseYaw=car.yaw-lag;
+
+      // Follow forward travel immediately. Across the road, let the vehicle move
+      // within the middle 18% of the view, accounting for narrow phone screens.
+      const rightX=Math.cos(chaseYaw),rightZ=Math.sin(chaseYaw);
+      const lateral=(car.x-anchorX)*rightX+(car.z-anchorZ)*rightZ;
+      const halfWidth=eye.z*Math.tan(camera.fov*Math.PI/360)*camera.aspect;
+      const limit=Math.min(1.15,halfWidth*.18);
+      // The motorcycle's over-the-shoulder view already uses part of that space.
+      const viewCenter=T.MathUtils.lerp(eye.x,look.x,eye.z/(eye.z-look.z));
+      const offset=T.MathUtils.clamp(lateral*Math.exp(-2.3*dt),viewCenter-limit,viewCenter+limit);
+      anchorX=car.x-rightX*offset;anchorZ=car.z-rightZ*offset;
+      eye.x-=offset;look.x-=offset;
+      eye.applyAxisAngle(lookAxis,lag);look.applyAxisAngle(lookAxis,lag);
+    }
     function render(car,traffic,dt,inside=false,now=performance.now(),prepareOnly=false){
       caveOpenings.update(car.sightView?.monument,originX,originZ);
       foliageEye.set(car.x-originX,car.z-originZ,car.sightView?0:1);
@@ -1592,6 +1623,7 @@
       waterSurface.setWake(x,z,car.yaw+(car.speed<0?Math.PI:0),wake,car.flood?.age||0);
       const kind=car.model;
       if(!player||player.kind!==kind){
+        chaseYaw=null;
         cabin?.update(false,0,0);
         cabin=cabins.get(car.spec.license?kind:'car');
         if(kind==='motorcycle')headlight.position.set(0,.85,-.65);
@@ -1642,6 +1674,8 @@
       if(now-shadowStamp>graphics.profile.shadowMs){renderer.shadowMap.needsUpdate=true;shadowStamp=now;}
       const viewpoint=car.sightView||car;
       land.material=car.region==='highlands'?upland:meadow;relief.update(viewpoint.x,viewpoint.z);
+      const chase=!inside&&!car.showroom&&!car.sightView&&!car.flood&&!car.openingPose&&!reducedCameraMotion.matches;
+      const backFromSpeed=chase?0:speed*.018,steerShift=chase?0:(car.steer||0);
       if(car.showroom&&!inside&&!car.opening){
         const portrait=camera.aspect<.85;
         eye.set(portrait?-5.6:-4.3,portrait?1.9:1.6,portrait?8.0:5.5);
@@ -1652,14 +1686,16 @@
         const inset=cabin.seatInset(camera.aspect),seatX=-.31+inset*.72;
         eye.set(seatX,1.1,.58+inset*2.35);look.set(seatX,.46,-13);
       }else if(kind==='box-truck'){
-        eye.set(0,4.35,(camera.aspect<.85?12.5:10.5)+speed*.018);look.set(0,1.35,-7);
+        eye.set(0,4.35,(camera.aspect<.85?12.5:10.5)+backFromSpeed);look.set(0,1.35,-7);
       }else if(kind==='motorcycle'){
-        eye.set(-.35-(car.steer||0)*.20,1.83+speed*.006,(camera.aspect<.85?5.75:4.85)+speed*.018);
+        eye.set(-.35-steerShift*.20,1.83+speed*.006,(camera.aspect<.85?5.75:4.85)+backFromSpeed);
         look.set(0,.92,-8);
       }else{
-        const back=(camera.aspect<.85?7.55:6.35)+speed*.018;
-        eye.set(-(car.steer||0)*.32,2.08+speed*.007,back);look.set(0,.9,-10);
+        const back=(camera.aspect<.85?7.55:6.35)+backFromSpeed;
+        eye.set(-steerShift*.32,2.08+speed*.007,back);look.set(0,.9,-10);
       }
+      if(chase)followVehicle(car,dt);
+      else chaseYaw=null;
       if(car.openingPose&&!inside&&!car.sightView&&kind!=='box-truck'){
         const p=car.openingPose,portrait=camera.aspect<.85;
         eye.x+=(3.2-eye.x)*p;eye.y+=(1.22-eye.y)*p;eye.z+=((portrait?9.5:6.2)-eye.z)*p;
