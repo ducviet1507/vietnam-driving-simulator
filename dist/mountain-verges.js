@@ -254,7 +254,10 @@ function buildMountainVerges(){
       const p=at(d+random()*22,side*(9+random()*15)),y=renderedGround(p.x,p.z);
       if(nearest(p.x,p.z).dist<8||besideWater(d)&&y<waterLevel+.6)continue;
       const h=.7+random()*1.05,w=h*(2.05+random()*.34),a=random()*Math.PI;
-      for(let k=0;k<2;k++)scatter('undergrowth',0xffffff,p.x,y+h*.47,p.z,w,h,1,a+k*Math.PI/2);
+      const cover=courseWoodland?.(p.x,p.z);
+      if(cover===0||seaOpening?.(p.x,p.z)||mountainField?.depth(p.x,p.z)>0)continue;
+      const scale=cover===1?.62:1;
+      for(let k=0;k<2;k++)scatter('undergrowth',0xffffff,p.x,y+h*scale*.47,p.z,w*scale,h*scale,1,a+k*Math.PI/2);
     }
   }
   // Near trees already describe the road. Step out across the measured

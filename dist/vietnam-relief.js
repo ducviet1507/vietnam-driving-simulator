@@ -17,7 +17,7 @@ function createVietnamRelief(T,scene,compact,landscapes,tunnelCut,landWidth,cave
   imagery.colorSpace=T.SRGBColorSpace;
   const nearCentre={value:new T.Vector2()},eye={value:new T.Vector2()},anchor={value:new T.Vector2()};
   const datum={value:0};
-  const passSurface=createPassSurface(T),urban=createUrbanTerrain();
+  const passSurface=createPassSurface(T),nationalColour=createNationalTerrainColour(T),urban=createUrbanTerrain();
   const mat=new T.MeshLambertMaterial({name:'Vietnam relief',map:imagery,side:T.DoubleSide,color:0xc9d5bc});
   mat.onBeforeCompile=shader=>{
     shader.uniforms.terrainEye=eye;shader.uniforms.terrainAnchor=anchor;shader.uniforms.nearCentre=nearCentre;shader.uniforms.terrainDatum=datum;
@@ -47,6 +47,7 @@ function createVietnamRelief(T,scene,compact,landscapes,tunnelCut,landWidth,cave
         #endif
         gl_FragColor.rgb=mix(gl_FragColor.rgb,fogColor,haze);
       #endif`);
+    nationalColour.shade(shader,'canopy','.79');
     landscapes.shade(shader,'canopy','1.');
     passSurface.shade(shader,'canopy','.86');
     tunnelCut?.shade(shader,'canopy');
@@ -297,6 +298,11 @@ function createVietnamRelief(T,scene,compact,landscapes,tunnelCut,landWidth,cave
   }
   function activate(next,x,z){
     datum.value=next.base;
+    if(next.graph){
+      const g=next.graph;
+      nationalColour.setFrame(g,g.lon,g.lat,g.mx,g.my);
+      nationalColour.follow(x,z);
+    }
     if(next!==terrain){
       terrain=next;graph=next.graph;activePass=next.pass;
       building=null;
@@ -334,5 +340,5 @@ function createVietnamRelief(T,scene,compact,landscapes,tunnelCut,landWidth,cave
     }
     mesh.position.set(anchorX-originX,0,anchorZ-originZ);eye.value.set(x-anchorX,z-anchorZ);
   }
-  return {prepare,activate,update,loadLocal,ready,ground,step,passSurface};
+  return {prepare,activate,update,loadLocal,ready,ground,step,passSurface,nationalColour};
 }

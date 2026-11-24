@@ -97,6 +97,12 @@ if(!featuredPass)scene.add(new T.HemisphereLight(0xcde4ff,0x887d64,1.05));
 const sun=new T.DirectionalLight(0xffdfaf,2.8);sun.castShadow=true;sun.position.set(-38,45,22);scene.add(sun,sun.target);
 const passSky=featuredPass?createWorldAtmosphere(T,scene,sun,new T.TextureLoader(),route.stage.bearing*Math.PI/180,.00016):null;
 const passSurface=featuredPass?createPassSurface(T):null;
+const nationalColour=route.stage?createNationalTerrainColour(T):null;
+if(nationalColour){
+ const [lon,lat]=route.stage.start;
+ nationalColour.setFrame(route.stage,lon,lat,111320*Math.cos(lat*Math.PI/180),110900,route.stage.bearing*Math.PI/180);
+ nationalColour.follow(0,0);
+}
 if(passSky){passSky.setLocation(...route.stage.start);passSky.setHour(scenicHour());passSurface.select(route.id);}
 renderer.shadowMap.autoUpdate=false;
 Object.assign(sun.shadow.camera,{left:-43,right:43,top:43,bottom:-43,near:1,far:170});sun.shadow.camera.updateProjectionMatrix();
@@ -394,6 +400,7 @@ function terrain(){
     }
     shader.fragmentShader=vars+'uniform sampler2D earthMap; uniform sampler2D cutStone; uniform sampler2D cutNormal;\n'
       +shader.fragmentShader.replace('#include <map_fragment>',colour);
+    nationalColour?.shade(shader,'hillside.xz','(.29+.52*smoothstep(35.,420.,length(vViewPosition)))*(1.-exposed)*(1.-soilWeight)*(1.-smoothstep(.05,.4,seaDepth))');
     passSurface?.shade(shader,'hillside.xz','(.32+.56*smoothstep(22.,190.,length(vViewPosition)))*(1.-exposed)*(1.-soilWeight)');
   };
   const field=new T.Mesh(g,land);field.receiveShadow=true;scene.add(field);
@@ -801,6 +808,7 @@ function render(now){
    for(let i=0;i<steps;i++)raceUpdate(step,now-(steps-i-1)*step*1000);
  }else update(dt);
  const s=state,ground=at(s.d);
+ nationalColour?.follow(s.x,s.z);
  loadCourseFronts(s.d,now);
  rig.position.set(s.x,ground.y+(arcade?s.lift:0),s.z);
  rig.rotation.set(Math.atan(roadGrade(s.d,s.h))+(arcade?s.jumpPitch:0),-s.h,0,'YXZ');yawQ.copy(rig.quaternion);

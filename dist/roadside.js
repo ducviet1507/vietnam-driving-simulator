@@ -71,6 +71,7 @@ function mountainHorizon(near,relief){
       diffuseColor.rgb*=.59+dot(canopy,vec3(.36,.49,.15))*.85+dot(finer,vec3(.29,.44,.27))*.45+thickets*.11;
       diffuseColor.rgb=mix(diffuseColor.rgb,vec3(.078,.13,.14),.18);
       diffuseColor.rgb=mix(diffuseColor.rgb,vec3(.047,.134,.139),smoothstep(.3,2.,seaDepth));`);
+    nationalColour?.shade(shader,'vistaPoint.xz','.79*(1.-smoothstep(.05,.4,seaDepth))');
     passSurface?.shade(shader,'vistaPoint.xz','.87');
   };
   if(route.stage&&marine.some(d=>d>0)){

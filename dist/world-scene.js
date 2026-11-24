@@ -130,17 +130,29 @@
     material.vergeGrass=new T.MeshLambertMaterial({vertexColors:true,side:T.DoubleSide});
     let temple;
     const curbStone=new T.MeshStandardMaterial({color:0x979388,roughness:.94,side:T.DoubleSide});
-    material.pavers.onBeforeCompile=shader=>{
-      shader.vertexShader='varying vec2 paving;\n'+shader.vertexShader.replace('#include <begin_vertex>',
-        '#include <begin_vertex>\n paving=uv;');
-      shader.fragmentShader='varying vec2 paving;\n'+shader.fragmentShader.replace('#include <color_fragment>',
-        `#include <color_fragment>
-         vec2 p=paving/vec2(.49,.25);p.x+=.5*mod(floor(p.y),2.);
-         vec2 edge=min(fract(p),1.-fract(p)),aa=max(fwidth(p),vec2(.01));
-         vec2 face=smoothstep(vec2(.01)-aa*.5,vec2(.044)+aa*.5,edge);
-         float detail=1.-smoothstep(.35,1.6,max(aa.x,aa.y));
-         diffuseColor.rgb*=mix(.94,mix(.57,1.,face.x*face.y),detail);`);
-    };
+    for(const finish of [material.pavers,curbStone]){
+      const blocks=finish===material.pavers;
+      finish.onBeforeCompile=shader=>{
+        Object.assign(shader.uniforms,{pavingOrigin:{value:asphaltOrigin},pavingGrain:{value:material.wall.roughnessMap},pavingRain:weather.moisture.soil});
+        shader.vertexShader='uniform vec2 pavingOrigin; varying vec2 paving;\n'+shader.vertexShader.replace('#include <begin_vertex>',
+          `#include <begin_vertex>
+           vec2 metres=position.xz+pavingOrigin;
+           paving=abs(normal.y)>.5?metres:vec2(metres.x+metres.y,position.y);`);
+        shader.fragmentShader='uniform sampler2D pavingGrain;uniform float pavingRain;varying vec2 paving;\n'+
+          shader.fragmentShader.replace('#include <color_fragment>',`#include <color_fragment>
+            float grain=texture2D(pavingGrain,paving*.85).g;
+            float damp=pavingRain*clamp(1.15-.65*grain,0.,1.);
+            diffuseColor.rgb*=(.82+.28*grain)*(1.-.31*damp);
+            ${blocks?`vec2 p=paving/vec2(.49,.25);p.x+=.5*mod(floor(p.y),2.);
+              vec2 edge=min(fract(p),1.-fract(p)),aa=max(fwidth(paving/vec2(.49,.25)),vec2(.01));
+              vec2 face=smoothstep(vec2(.01)-aa*.5,vec2(.044)+aa*.5,edge);
+              float detail=1.-smoothstep(.35,1.6,max(aa.x,aa.y));
+              float slab=fract(sin(dot(mod(floor(p),vec2(251.)),vec2(.733,1.932)))*391.46);
+              diffuseColor.rgb*=mix(.94,mix(.54-.10*damp,.89+.19*slab,face.x*face.y),detail);`:''}`)
+          .replace('#include <roughnessmap_fragment>','#include <roughnessmap_fragment>\n roughnessFactor=mix(roughnessFactor,.39+.16*grain,damp);');
+      };
+      finish.customProgramCacheKey=()=>blocks?'paving blocks':'curb stone';
+    }
     surfaces.transform(material.wall,2,2);
     const shopTypes=['cafe','bakery','grocer','pho','garage','pharmacy'];
     const upstairs=new Set(['cafe','grocer','pharmacy']);
@@ -192,7 +204,9 @@
         shader.fragmentShader='varying vec2 groundMetres; varying float bankWet; uniform sampler2D shoreEarth;\n'+shader.fragmentShader.replace('#include <map_fragment>',
           '#include <map_fragment>\n float patchiness=sin(dot(groundMetres,vec2(.035,.019)))+.55*cos(dot(groundMetres,vec2(-.015,.047))); diffuseColor.rgb*=vec3(.96,.98,.95)+patchiness*vec3(.08,.035,.05); vec3 silt=texture2D(shoreEarth,groundMetres*.58).rgb; float bank=clamp(bankWet+(silt.g-.17)*.7,0.,1.)*smoothstep(0.,.2,bankWet); diffuseColor.rgb=mix(diffuseColor.rgb,silt*mix(vec3(.84,.78,.66),vec3(.34,.31,.25),bankWet),bank);');
         farmland.shade(shader,weather.moisture.soil);
-        coverMap.shade(shader);landscapeSource.shade(shader);landscapeSource.shadeWaterBoundary(shader,false);groundSource.shade(shader);
+        coverMap.shade(shader);
+        relief.nationalColour.shade(shader,'groundMetres','(.26+.53*smoothstep(35.,700.,length(vViewPosition)))*(1.-bankWet)');
+        landscapeSource.shade(shader);landscapeSource.shadeWaterBoundary(shader,false);groundSource.shade(shader);
         relief.passSurface.shade(shader,'groundMetres','(.40+.46*smoothstep(35.,450.,length(vViewPosition)))*(1.-bankWet)');
         tunnelCut.shade(shader,'groundMetres');caveOpenings.shade(shader);
         // The satellite texels span several metres. Restore ground-scale contrast
@@ -1319,9 +1333,14 @@
       yield* walks.buildSteps(roadGroup,surface,material.pavers,curbStone);const pavementLift=walks.liftAt;
       const lightScenery=small&&graphics.profile.id==='low';
       const grass=lightScenery?sparseGrass:grassClump;
-      scatterVergeGrass(segments,Math.min(lightScenery?155:320,detailRadius),
-        (x,z)=>!walks.liftAt(x,z)&&!blocked(x,z,.8),
-        (x,z,size,angle)=>instance('vergeGrass',grass,x,-.18,z,size,size,size,angle));
+      if(graph)yield* scatterVergeGrass(segments,Math.min(lightScenery?155:320,detailRadius),
+        (x,z)=>environment.sample(graph,cx+x,cz+z).cover,
+        (x,z,r)=>!walks.liftAt(x,z)&&!seaOpening?.(x,z)&&!farms.parcelAt(cx+x,cz+z)&&!blocked(x,z,r),
+        (cover,x,z,size,angle)=>{
+          if(cover===30){instance('vergeGrass',grass,x,-.18,z,size,size,size,angle);return;}
+          const h=size*(cover===10?.95:.64),w=h*1.9;
+          for(const turn of [0,Math.PI*.5])instance('fern',unitPlane,x,h*.49-.17,z,w,h,1,angle+turn);
+        });
       if(wires.length){
         for(let i=0;i<wires.length;i+=3)wires[i+1]+=localGround(wires[i],wires[i+2]);
         const lines=new T.BufferGeometry();lines.setAttribute('position',new T.Float32BufferAttribute(wires,3));

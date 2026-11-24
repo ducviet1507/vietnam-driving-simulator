@@ -1,0 +1,12 @@
+ViVu3D nationwide terrain colour
+
+© ESA WorldCover project 2021 / Contains modified Copernicus Sentinel data (2021) processed by ESA WorldCover consortium.
+Source imagery: ESA WorldCover Sentinel-2 annual RGBNIR median composite, 2021, v200 (CC BY 4.0).
+https://esa-worldcover.org/en/data-access
+https://registry.opendata.aws/esa-worldcover-vito-composites/
+https://creativecommons.org/licenses/by/4.0/
+
+ViVu3D averages groups of 2×2 observed pixels from the 8× reduced-resolution overview of the 10 m composite.
+The red, green and blue reflectance bands are exposure-adjusted and encoded as sRGB WebP.
+Each image covers one degree in WGS84 with 750 north-up rows. Pixels without a source observation are transparent.
+The coverage follows the road atlas, including mapped islands. Each pixel represents a 2021 annual composite, about 137–148 m per side across Vietnam.

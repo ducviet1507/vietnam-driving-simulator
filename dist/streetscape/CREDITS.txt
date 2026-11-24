@@ -60,6 +60,7 @@ Visitor atlas and featured mountain passes: satellite imagery, land cover, veget
 Zanaga et al. (2022), ESA WorldCover 10 m 2021 v200 (CC BY 4.0).
 The simulator crops and resamples the annual Sentinel-2 RGBNIR composite, derives the vegetation index from red and near-infrared reflectance and extracts permanent water from the 10 m classification.
 The sight-imagery atlas retains local detail from the 10 m source around destinations and their road approaches. Transparent areas have no observation in that source.
+The national terrain layer uses a north-up 750-pixel-per-degree composite around the car in both driving modes. Full attribution and processing details: ../vn-satellite/CREDITS.txt
 https://esa-worldcover.org/en/data-access
 https://doi.org/10.5281/zenodo.7254221
 https://creativecommons.org/licenses/by/4.0/

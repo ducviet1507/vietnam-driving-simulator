@@ -44,11 +44,11 @@ function createEaveMaterial(T,store){
         float period=duration+.18+fall.y*.51;
         float cycle=seconds/period+fall.y*12.;
         float age=fract(cycle)*period;
-        float active=step(fract(floor(cycle)*.618+fall.y*23.),waterLeft);
+        float dripping=step(fract(floor(cycle)*.618+fall.y*23.),waterLeft);
         float depth=min(fall.x,4.905*age*age);
         vec3 p=position-vec3(0.,max(0.,depth-fall.z*min(.16,.016+.085*age)),0.);
         vec4 mv=modelViewMatrix*vec4(p,1.);
-        opacity=active*step(age,duration)*(1.-smoothstep(22.,70.,length(mv.xyz)));
+        opacity=dripping*step(age,duration)*(1.-smoothstep(22.,70.,length(mv.xyz)));
         gl_Position=projectionMatrix*mv;
       }`,
     fragmentShader:`

@@ -25,21 +25,27 @@ function createVergeGrass(T,blades=21){
   return geometry;
 }
 
-function scatterVergeGrass(segments, reach, clear, plant){
+function* scatterVergeGrass(segments,reach,landClass,clear,plant){
+  let visited=0;
   for(const s of segments){
-    if(s.rank>reach||s.authoredPavement||s.graded||s.len<7)continue;
+    if((++visited&31)===0)yield;
+    if(s.rank>reach||s.authoredPavement||s.elevated||s.traffic?.tunnel||s.len<7)continue;
     let seed=s.seed;
     const random=()=>{seed=(Math.imul(seed,1664525)+1013904223)>>>0;return seed/4294967296;};
     for(const sign of [-1,1]){
       for(let d=2+random()*5;d<s.len-1;d+=4+random()*7){
-        const beyond=s.w+1.05+random()**2*5;
+        // On a mountain road, root the plant beyond the formed shoulder and cut.
+        const beyond=s.w+(s.graded?6.4:1.3)+random()**2*5;
         const x=s.ax+s.fx*d+sign*s.nx*beyond,z=s.az+s.fz*d+sign*s.nz*beyond;
         const size=.40+random()*.65,angle=random()*Math.PI*2;
-        if(x*x+z*z>reach*reach||!clear(x,z))continue;
-        for(let i=-1;i<=1;i++){
-          const px=x+s.fx*i*.7,pz=z+s.fz*i*.7;
-          plant(px,pz,size*(1-.24*Math.abs(i)),angle+i*1.75);
-        }
+        if(x*x+z*z>reach*reach)continue;
+        const cover=landClass(x,z);
+        if(cover!==10&&cover!==20&&cover!==30)continue;
+        if(!clear(x,z,1.35))continue;
+        if(cover===30){
+          for(let i=-1;i<=1;i++)
+            plant(cover,x+s.fx*i*.6,z+s.fz*i*.6,size*(1-.24*Math.abs(i)),angle+i*1.75);
+        }else plant(cover,x,z,size,angle);
       }
     }
   }
