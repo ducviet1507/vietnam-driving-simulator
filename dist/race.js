@@ -38,6 +38,8 @@ async function fitCoupe(parent,paint,isPlayer,kind,driver){
    part.material=finish.get(src);passSky?.registerFinish(part.material);
  });
  model.rotation.y=Math.PI;
+ await courseEnvironment;
+ await cabin.prepare(renderer,scene,camera,model);
  parent.add(model);
  if(isPlayer)cupFx.mountExhaust(model,chosenCar);
  animatedCars.push({model,isPlayer,driver,wheels:['FL','FR','RL','RR'].map(id=>model.getObjectByName('wheel_'+id)),front:['FL','FR'].map(id=>model.getObjectByName('steer_'+id)),rear:[...finish.values()].find(m=>m.name==='light_rear')});
@@ -69,7 +71,15 @@ const civilianAssets=new Map();
 for(let i=0;i<12;i++){
  const oncoming=i%3===1,kind=['city-taxi','kei-van','hatchback','motor-scooter'][i%4];
  const path=kind==='city-taxi'?'streetscape/city-taxi.glb':'traffic/'+kind+'.glb';
- if(!civilianAssets.has(path))civilianAssets.set(path,TrafficModels.load.loadAsync(path));
+ if(!civilianAssets.has(path)){
+   const ready=TrafficModels.load.loadAsync(path).then(async asset=>{
+     // The environment can be ready before a traffic model arrives. Submit
+     // both shader variants before the first clone enters either mirror.
+     await courseEnvironment;
+     await cabin.prepare(renderer,scene,camera,asset.scene);return asset;
+   });
+   civilianAssets.set(path,ready);
+ }
  const cruise=oncoming?-13:9+i%4;
  civilianAssets.get(path).then(({scene:base})=>{
    const d=95+i*174+cruise*(state?.time||0);

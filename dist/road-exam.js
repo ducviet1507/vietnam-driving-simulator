@@ -86,9 +86,9 @@ const scene=new T.Scene(), renderer=DrivingRenderer.get($('world'));
 if(arcade)renderer.debug.checkShaderErrors=false;
 scene.background=new T.Color(0xbcd7de);scene.fog=new T.FogExp2(0xc8dbd4,.00205);
 if(!featuredPass)new T.TextureLoader().load('streetscape/sky.jpg',tex=>{tex.mapping=T.EquirectangularReflectionMapping;tex.colorSpace=T.SRGBColorSpace;scene.background=tex;if(!scene.environment)scene.environment=tex;});
-if(arcade)new T.TextureLoader().load('streetscape/'+(route.stage?'pass':route.id)+'-reflection.jpg',tex=>{
+const courseEnvironment=arcade?new T.TextureLoader().loadAsync('streetscape/'+(route.stage?'pass':route.id)+'-reflection.jpg').then(tex=>{
  tex.mapping=T.EquirectangularReflectionMapping;tex.colorSpace=T.SRGBColorSpace;scene.environment=tex;
-});
+}).catch(()=>{}):null;
 renderer.toneMapping=T.ACESFilmicToneMapping;renderer.toneMappingExposure=1.04;
 renderer.shadowMap.enabled=true;renderer.shadowMap.type=T.PCFShadowMap;
 scene.fog=new T.FogExp2(0xb4c6c5,.00135);

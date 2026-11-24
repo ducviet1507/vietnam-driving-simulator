@@ -410,19 +410,37 @@ window.buildDriverCabin = function(T, rig, mapCanvas) {
     refreshMap(){mapDirty=true;},
     // On narrow screens, sit a little farther back to keep the wheel and console in view.
     seatInset(aspect){return T.MathUtils.clamp((1-aspect)*.40,0,.24);},
-    prepare(renderer,scene,camera){
-      if(!scene.environment||preparedEnvironment===scene.environment)return;
-      preparedEnvironment=scene.environment;
-      if(!renderer.extensions.has('KHR_parallel_shader_compile'))return;
+    async prepare(renderer,scene,camera,object=scene){
+      if(!scene.environment)return;
+      if(object===scene){
+        if(preparedEnvironment===scene.environment)return;
+        preparedEnvironment=scene.environment;
+        if(!renderer.extensions.has('KHR_parallel_shader_compile'))return;
+      }
       // The display and the linear mirror texture use different shader programs.
       // Submit both batches while the starting scene is visible, before a mirror
       // draw has to wait for the driver to link each material in turn.
-      renderer.compile(scene,camera);
+      const materials=renderer.compile(object,camera,scene);
       const previous=renderer.getRenderTarget();
       try{
         renderer.setRenderTarget(target);
-        renderer.compile(scene,rearCamera);
+        renderer.compile(object,rearCamera,scene);
       }finally{renderer.setRenderTarget(previous);}
+      if(object!==scene){
+        const pending=new Set();
+        for(const mat of materials)for(const program of renderer.properties.get(mat).programs.values())pending.add(program);
+        while(pending.size){
+          const until=performance.now()+3;
+          for(const program of pending){
+            if(!program.program){pending.delete(program);continue;}
+            if(program.isReady()){
+              program.getUniforms();program.getAttributes();pending.delete(program);
+            }
+            if(performance.now()>=until)break;
+          }
+          if(pending.size)await new Promise(resolve=>setTimeout(resolve,8));
+        }
+      }
     },
     update(interior,speed,steering,distance,course,selectedGear){
       if(cabin.visible!==interior)document.body.toggleAttribute('data-dashboard-map',interior);
