@@ -11,7 +11,7 @@ function createDriveInput({timedSteering=false}={}) {
   const keyboard = new Set(), contacts = new Map(), active = new Set();
   const edges=[];
   const has=key=>keyboard.has(key)||active.has(key);
-  let applied=0, latest=0;
+  let applied=0, latest=0, compressedFrame=false;
   function recordSteering(time) {
     if (!timedSteering) return;
     const direction=Number(has('d')||has('arrowright'))-Number(has('a')||has('arrowleft'));
@@ -19,10 +19,37 @@ function createDriveInput({timedSteering=false}={}) {
     latest=direction;
     edges.push({time:Math.max(time??performance.now(),edges.at(-1)?.time??0),direction});
   }
+  function prepareSteeringFrame(end,elapsed,dt) {
+    const budget=dt*1000, start=end-budget;
+    const wallStart=Math.min(end-elapsed,edges[0]?.time??end);
+    compressedFrame=budget>0&&start-wallStart>.001;
+    if (!compressedFrame||!edges.length||edges[0].time>end) return;
+    if (!applied&&edges[0].time>=start) return;
+    // Fit the queued presses into the physics time available after a stall.
+    // Shorten gaps first. If the turns alone exceed the budget, keep their proportions.
+    let cursor=wallStart,direction=applied,heldMs=0;
+    for (const edge of edges) {
+      if (edge.time>end) break;
+      if (direction) heldMs+=edge.time-cursor;
+      cursor=edge.time;direction=edge.direction;
+    }
+    if (direction) heldMs+=end-cursor;
+    const idleMs=end-wallStart-heldMs;
+    const heldScale=heldMs>budget?budget/heldMs:1;
+    const idleScale=idleMs>0?Math.max(0,budget-heldMs)/idleMs:0;
+    cursor=wallStart;direction=applied;
+    let mapped=start;
+    for (const edge of edges) {
+      if (edge.time>end) break;
+      mapped+=(edge.time-cursor)*(direction?heldScale:idleScale);
+      cursor=edge.time;direction=edge.direction;
+      edge.time=Math.min(end,mapped);
+    }
+  }
   // Integrate only the part of each physics step for which a button was down.
   // A complete tap between two rendered frames still reaches the wheels.
   function steering(end,dt,profile=4) {
-    if (profile<=2) {
+    if (profile<=2&&!compressedFrame) {
       edges.length=0;applied=latest;
       return latest;
     }
@@ -35,7 +62,7 @@ function createDriveInput({timedSteering=false}={}) {
       cursor=time;applied=edge.direction;
     }
     const timed=cursor===start?applied:(area+(end-cursor)*applied)/(dt*1000);
-    return profile>=3?timed:latest+(timed-latest)*(profile-2);
+    return compressedFrame||profile>=3?timed:latest+(timed-latest)*(profile-2);
   }
   function setContact(id, button, time) {
     const previous = contacts.get(id);
@@ -54,7 +81,7 @@ function createDriveInput({timedSteering=false}={}) {
   function clear() {
     keyboard.clear();
     for (const id of contacts.keys()) setContact(id);
-    edges.length=0;applied=latest=0;
+    edges.length=0;applied=latest=0;compressedFrame=false;
   }
   for (const button of document.querySelectorAll('[data-key]')) {
     button.addEventListener('pointerdown', event => {
@@ -71,6 +98,15 @@ function createDriveInput({timedSteering=false}={}) {
         if (pedal) setContact(event.pointerId, pedal,event.timeStamp);
       });
     }
+    if (timedSteering&&(button.dataset.key==='a'||button.dataset.key==='d')) {
+      button.addEventListener('pointermove', event => {
+        if (event.pointerType==='mouse'||!contacts.has(event.pointerId)) return;
+        const target=document.elementFromPoint(event.clientX,event.clientY)?.closest('button[data-key="a"],button[data-key="d"]');
+        if (!target||target.parentElement!==button.parentElement||target===contacts.get(event.pointerId)) return;
+        const rect=target.getBoundingClientRect(),inset=Math.min(8,rect.width*.15);
+        if (event.clientX>=rect.left+inset&&event.clientX<=rect.right-inset) setContact(event.pointerId,target,event.timeStamp);
+      });
+    }
     for (const type of ['pointerup', 'pointercancel', 'lostpointercapture']) {
       button.addEventListener(type, event => setContact(event.pointerId,null,event.timeStamp));
     }
@@ -80,7 +116,7 @@ function createDriveInput({timedSteering=false}={}) {
   window.addEventListener('pagehide', clear);
   matchMedia('(orientation: landscape)').addEventListener('change', clear);
   document.addEventListener('visibilitychange', () => { if (document.hidden) clear(); });
-  return {has,steering,clear,
+  return {has,steering,prepareSteeringFrame,clear,
     add(key,time){keyboard.add(key);recordSteering(time);},
     delete(key,time){keyboard.delete(key);recordSteering(time);}
   };

@@ -773,6 +773,7 @@ function render(now){
  const elapsed=now-lastFrame,dt=clamp(elapsed/1000,0,.1);lastFrame=now;
  graphics.frame(now,state.mode==='drive');
  if(arcade){
+   if(state.mode==='drive')keys.prepareSteeringFrame(now,elapsed,dt);
    const steps=Math.max(1,Math.ceil(dt*90)),step=dt/steps;
    for(let i=0;i<steps;i++)raceUpdate(step,now-(steps-i-1)*step*1000);
  }else update(dt);

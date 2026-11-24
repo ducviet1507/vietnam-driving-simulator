@@ -686,9 +686,10 @@ function drawMini(landmark){
 let nextWeatherCheck=0;
 function journeyAmbience(){return gfx.ambience(car,npcs,inside&&!car.sightView);}
 function frame(now){
- const dt=clamp((now-last)/1000,0,.1);last=now;
+ const elapsed=now-last,dt=clamp(elapsed/1000,0,.1);last=now;
  if(gfx&&player){
    if(mode==='drive'){
+     keySet.prepareSteeringFrame(now,elapsed,dt);
      const steps=Math.max(1,Math.ceil(dt*90));
      const step=dt/steps;
      for(let i=0;i<steps&&mode==='drive';i++)tick(step,now-(steps-i-1)*step*1000);

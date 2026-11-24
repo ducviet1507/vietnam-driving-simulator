@@ -114,17 +114,25 @@ async function checkTouchPedals(page) {
     return {id,x:box.x+box.width/2,y:box.y+box.height/2};
   };
   const steer = await point('[data-key=a]',1);
+  const right = await point('[data-key=d]',1);
   const gas = await point('[data-key=w]',2);
   const nitro = await point('[data-key~=shift]',2);
   const touch = (type,...touchPoints) => client.send('Input.dispatchTouchEvent',{type,touchPoints});
   const expectInputs = (...keys) => page.waitForFunction(
-    expected=>['a','w','s','shift'].every(key=>held(key)===expected.includes(key)),keys,{timeout:10000});
+    expected=>['a','d','w','s','shift'].every(key=>held(key)===expected.includes(key)),keys,{timeout:10000});
   // Slide straight up and back with one thumb while the other thumb steers.
   const aboveGas = {...nitro,x:gas.x};
   // Hold the service brake while checking the thumb transitions. Otherwise the
   // time spent delivering touch events can steer the car off the lakeside road.
   await page.keyboard.down('Space');
   await touch('touchStart',steer,gas);
+  await expectInputs('a','w');
+  const rightBox=await page.locator('#touch [data-key=d]').boundingBox();
+  await touch('touchMove',{...right,x:rightBox.x+1},gas);
+  await expectInputs('a','w');
+  await touch('touchMove',right,gas);
+  await expectInputs('d','w');
+  await touch('touchMove',steer,gas);
   await expectInputs('a','w');
   await touch('touchMove',steer,aboveGas);
   await expectInputs('a','w','shift');

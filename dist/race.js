@@ -207,6 +207,8 @@ function raceUpdate(dt,stepEnd){
    for(const r of rivals)DriveBody.advanceRecoil(r,dt);placeRivals();
    DriveBody.settle(cupBody,dt);syncCup();crashTime-=dt;if(crashTime<=0)openPit(crashKind);return;}
  if(state.mode==='countdown'){
+   // Consume pre-start taps while keeping a wheel button held at the green light.
+   keys.steering(stepEnd,dt);
    const before=Math.ceil(countdown);countdown-=dt;
    if(Math.ceil(countdown)!==before)driveAudio.cue(countdown<=0);$('count').textContent=countdown>0?Math.ceil(countdown):'';
    if(countdown<=0){setMode('drive');tellRace('Bánh nóng ra lò!');}return;

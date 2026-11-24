@@ -134,4 +134,35 @@ for(const profile of [1,1.5,2,2.5,3,3.5,4,undefined]){
   const timedShare=Math.max(0,Math.min(1,(profile??4)-2));
   assert.ok(Math.abs(input.steering(20,.020,profile)-.5*timedShare)<1e-10,'A between-frame tap is counted once');
 }
-console.log('PASS gentle steering, original profiles, slider blends and between-frame taps');
+// Reproduce capped frames using the same clock and substeps as both game loops.
+function frameSteering(input,start,end,profile){
+  const dt=Math.min(.1,(end-start)/1000),steps=Math.ceil(dt*90),step=dt/steps;
+  input.prepareSteeringFrame(end,end-start,dt);
+  let right=0,left=0;
+  for(let i=0;i<steps;i++){
+    const value=input.steering(end-(steps-i-1)*step*1000,step,profile);
+    assert.ok(Math.abs(value)<=1.000001);
+    right+=Math.max(0,value)*step*1000;left+=Math.max(0,-value)*step*1000;
+  }
+  return [right,left].map(Math.round);
+}
+for(const profile of [1,2,2.5,3,4]){
+  const input=makeInput({timedSteering:true});
+  input.add('a',20);input.delete('a',120);
+  input.add('d',255);input.delete('d',265);
+  assert.deepEqual(frameSteering(input,0,250,profile),[0,100],'A 100 ms tap survives a 250 ms stall');
+  assert.deepEqual(frameSteering(input,250,270,4),[10,0],'Future input keeps its timestamp');
+  assert.deepEqual(frameSteering(input,270,290,profile),[0,0],'Released input is consumed once');
+  input.add('d',300);input.delete('d',400);input.add('a',400);input.delete('a',500);
+  const reversal=frameSteering(input,290,540,profile);
+  // Opposite directions can cancel within their one shared physics substep.
+  assert.ok(reversal[0]>=44&&reversal[0]<=50&&reversal[0]===reversal[1]);
+  input.clear();input.add('d',550);input.delete('d',650);input.clear();
+  assert.deepEqual(frameSteering(input,540,790,profile),[0,0],'Clearing cancels buffered taps');
+  input.add('d',800);
+  frameSteering(input,790,810,profile);
+  input.delete('d',990);
+  assert.deepEqual(frameSteering(input,810,1060,profile),[100,0],'A held turn is counted up to the simulation cap');
+  assert.deepEqual(frameSteering(input,1060,1080,profile),[0,0],'The release survives compression');
+}
+console.log('PASS gentle steering, legacy profiles and taps across ordinary and stalled frames');
