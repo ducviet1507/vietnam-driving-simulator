@@ -2,6 +2,6 @@
   "name": "vivu3d-browser-checks",
   "private": true,
   "type": "module",
-  "scripts": {"test": "node license-classes.mjs && node steering.mjs && node driving-graphics.mjs && node bridges.mjs && node tunnel-profiles.mjs && node tunnel-mesh.mjs && node crossing-water.mjs && node road-paint.mjs && node sidewalks.mjs && node landmark-relief.mjs && node pass-road-grades.mjs && node sight-buildings.mjs && node sight-stamps.mjs && node field-surveys.mjs && node memorial-scenes.mjs && node pedestrians.mjs && node smoke.mjs"},
+  "scripts": {"test": "node license-classes.mjs && node steering.mjs && node driving-graphics.mjs && node windscreen.mjs && node bridges.mjs && node tunnel-profiles.mjs && node tunnel-mesh.mjs && node crossing-water.mjs && node road-paint.mjs && node sidewalks.mjs && node landmark-relief.mjs && node pass-road-grades.mjs && node sight-buildings.mjs && node sight-stamps.mjs && node field-surveys.mjs && node memorial-scenes.mjs && node pedestrians.mjs && node smoke.mjs"},
   "dependencies": {"playwright-core": "1.64.1"}
 }

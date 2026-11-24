@@ -1739,7 +1739,8 @@
       atmosphere.setHour(car.sightView?.hour??car.scenicHour);
       const sheltered=!car.sightView&&car.edge&&sceneGraph?.tunnels.info(car.edge)?.bore;
       atmosphere.eclipse.value=sightings.update(dt,car,originX,originZ,camera.aspect,sheltered);
-      weather.render(camera,now,car.dawn||0,atmosphere.update,sheltered);
+      const frontGlass=inside&&kind!=='motorcycle'?cabin?.interior:null;
+      weather.render(camera,now,car.dawn||0,atmosphere.update,sheltered,frontGlass,kind==='box-truck',car.speed);
       headlight.intensity=car.flood?0:(sheltered?1:atmosphere.lamps.value)*2600;
       material.glass.emissiveIntensity=atmosphere.lamps.value*.37;
       material.lantern.emissiveIntensity=atmosphere.lamps.value*3.2;

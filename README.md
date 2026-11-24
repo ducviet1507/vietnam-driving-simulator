@@ -38,6 +38,8 @@ Atlas có hơn 11.000 điểm tham quan trên 34 tỉnh, thành. Bạn có thể
 
 ## Hướng dẫn chơi
 
+Để lái thử dưới mưa, mở chuyến đi bên dưới, bấm **Lái tự do** rồi chuyển sang **Góc tài xế**. Giọt mưa bám lên kính trước và cần gạt tự đổi nhịp theo lượng mưa. Các chuyến đi thông thường dùng thời tiết tại vị trí xe. [Lái dưới mưa trên phố Quốc Tử Giám](https://vivu3d.com/?drive=pho-quoc-tu-giam&weather=rain).
+
 | Trong Xuyên Việt | Thao tác |
 | --- | --- |
 | Tăng ga, phanh và lùi | **W** để tăng ga, **S** để phanh hoặc lùi |

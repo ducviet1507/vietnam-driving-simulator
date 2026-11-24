@@ -788,7 +788,7 @@ function render(now){
    const north=-s.x*Math.sin(weatherBearing)-s.z*Math.cos(weatherBearing);
    courseWeather.locate(weatherOrigin[0]+east/(111320*Math.cos(weatherOrigin[1]*Math.PI/180)),weatherOrigin[1]+north/111320);
  }
- courseWeather.render(camera,now,0,passSky?.update);
+ courseWeather.render(camera,now,0,passSky?.update,false,inside?cabin.interior:null,false,s.v);
  if(passHeadlights)passHeadlights.intensity=passSky.lamps.value*2600;
  courseWater.update(now*.001,courseWeather.rainfall);
  if(s.mode==='ready'||s.mode==='grid')cabin.prepare(renderer,scene,camera);

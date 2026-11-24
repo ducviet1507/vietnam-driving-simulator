@@ -6,6 +6,7 @@ function createDrivingWeather(THREE,scene,sun,pavement,reference=''){
   const base={light:sun.intensity,fog:scene.fog.density,color:scene.fog.color.clone(),road:pavement.color.clone(),rough:pavement.roughness};
   const fogColor=new THREE.Color(),stormColor=new THREE.Color();
   const cacheKey='taylai.weather.v1';
+  const rainDemo=new URLSearchParams(location.search).get('weather')==='rain';
   let cache=[];
   try{const data=JSON.parse(localStorage.getItem(cacheKey));if(Array.isArray(data))cache=data.slice(-20);}catch{}
   let point=null,due=0,request=null,current=null,lastFrame=0,opacity=0;
@@ -23,7 +24,12 @@ function createDrivingWeather(THREE,scene,sun,pavement,reference=''){
     const text=c?describe(c)+' · '+Math.round(c.temperature_2m)+' °C · '+(source==='cache'?'Bản lưu ':'')+formatter.format(c.time*1000):source;
     for(const el of labels){el.textContent=(reference?reference+' · ':'')+text;el.title='Thời tiết Open-Meteo · Giờ Việt Nam';}
   }
+  if(rainDemo)for(const el of labels){
+    el.textContent=(reference?reference+' · ':'')+'Mưa mô phỏng';
+    el.title='Chuyến lái dưới mưa mô phỏng';
+  }
   async function locate(lon,lat){
+    if(rainDemo)return;
     const now=Date.now(),moved=!point||Math.hypot((point.lon-lon)*Math.cos(lat*Math.PI/180),point.lat-lat)>.04;
     if(!moved&&now<due)return;
     if(request)request.abort();
@@ -57,11 +63,12 @@ function createDrivingWeather(THREE,scene,sun,pavement,reference=''){
   const mat=new THREE.LineBasicMaterial({color:0xc4d5df,transparent:true,depthWrite:false});
   const drops=new THREE.LineSegments(geom,mat);drops.frustumCulled=false;drops.visible=false;scene.add(drops);
   const dawnHaze=new THREE.Color(0xe6c9a4);
-  function render(camera,now,dawn=0,worldLighting,sheltered=false){
+  const windscreens=new WeakMap();
+  function render(camera,now,dawn=0,worldLighting,sheltered=false,cabin=null,truck=false,speed=0){
     const mix=1-Math.exp(-Math.min(.2,(now-lastFrame)/1000)*2);lastFrame=now;
     const c=current,code=c?.weather_code||0,night=c&&c.is_day===0;
-    const wet=c?(1-dawn)*Math.min(1,Math.max(c.precipitation*1.8,code>=51?.24:0)):0;
-    const cloud=(c?.cloud_cover||0)/100*(1-dawn),fog=(code===45||code===48)?1-dawn:0;
+    const wet=rainDemo ? .84 : c?(1-dawn)*Math.min(1,Math.max(c.precipitation*1.8,code>=51?.24:0)):0;
+    const cloud=rainDemo ? .88 : (c?.cloud_cover||0)/100*(1-dawn),fog=(code===45||code===48)?1-dawn:0;
     if(worldLighting){
       worldLighting(dawn,cloud,wet,fog,mix);
     }else{
@@ -72,8 +79,19 @@ function createDrivingWeather(THREE,scene,sun,pavement,reference=''){
       pavement.roughness+=(base.rough*(1-.58*wet)-pavement.roughness)*mix;
       pavement.color.lerp(fogColor.copy(base.road).multiplyScalar(1-.36*wet),mix);
     }
-    opacity+=(wet-opacity)*mix;drops.visible=!sheltered&&opacity>.015;if(!drops.visible)return;
-    const n=Math.ceil(count*opacity),snow=[71,73,75,77,85,86].includes(code);
+    opacity+=(wet-opacity)*mix;
+    const snow=[71,73,75,77,85,86].includes(code);
+    if(cabin){
+      const rain=sheltered||snow?0:opacity;
+      let update=windscreens.get(cabin);
+      if(!update&&rain>.015){
+        update=createDrivingWindscreen(THREE,cabin,truck);
+        windscreens.set(cabin,update);
+      }
+      update?.(rain,Math.abs(speed),sun.intensity,now);
+    }
+    drops.visible=!sheltered&&opacity>.015;if(!drops.visible)return;
+    const n=Math.ceil(count*opacity);
     geom.setDrawRange(0,n*2);mat.opacity=.22+opacity*.42;drops.position.copy(camera.position);
     const wrap=(v,size)=>v-size*Math.floor(v/size);
     const t=now*.001;
@@ -82,7 +100,8 @@ function createDrivingWeather(THREE,scene,sun,pavement,reference=''){
       const y=wrap(seeds[k+1]*19-t*(snow?2:15)-camera.position.y,19)-8;
       const z=wrap(seeds[k+2]*42-camera.position.z,42)-21;
       vertices[j]=x;vertices[j+1]=y;vertices[j+2]=z;
-      vertices[j+3]=x+.025;vertices[j+4]=y-(snow?.05:.6);vertices[j+5]=z;
+      const inCabin=cabin&&x*x+z*z<3.24&&y<1.4&&y>-1.8;
+      vertices[j+3]=inCabin?x:x+.025;vertices[j+4]=inCabin?y:y-(snow?.05:.6);vertices[j+5]=z;
     }
     positions.needsUpdate=true;
   }
