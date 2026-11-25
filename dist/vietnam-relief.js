@@ -62,6 +62,7 @@ function createVietnamRelief(T,scene,compact,landscapes,tunnelCut,landWidth,cave
     const tail=(i-40)/(cells/2-40),size=i<=40?vietnamReliefStep:tail<=.25?64:tail<=.50?128:tail<=.75?384:1024;
     axis[cells/2+i]=axis[cells/2+i-1]+size;axis[cells/2-i]=-axis[cells/2+i];
   }
+  const axisIndex=new Map(Array.from(axis,(offset,index)=>[offset,index]));
   const count=stride*stride,indices=[];
   for(let j=0;j<cells;j++)for(let k=0;k<cells;k++){
     const a=j*stride+k,b=a+stride;indices.push(a,b,a+1,a+1,b,b+1);
@@ -316,12 +317,17 @@ function createVietnamRelief(T,scene,compact,landscapes,tunnelCut,landWidth,cave
   function* buildHorizon(ax,az,elevation){
     const target=spare??=horizonGeometry(),attrs=target.attributes;
     const pos=attrs.position.array,uv=attrs.uv.array;
+    // Only reuse world positions sampled from the identical DEM and vertical datum.
+    const previous=displayedTerrain===elevation?mesh.geometry.attributes.position.array:null;
+    const columns=previous?Int16Array.from(axis,dx=>axisIndex.get(ax-anchorX+dx)??-1):null;
     const us=Float64Array.from(axis,dx=>uvAt(ax+dx,az)[0]);
     for(let j=0,i=0;j<=cells;j++){
       const dz=axis[j],v=uvAt(ax,az+dz)[1];
+      const row=previous?axisIndex.get(az-anchorZ+dz):undefined;
       for(let k=0;k<=cells;k++,i++){
         const dx=axis[k],u=us[k];
-        pos[i*3]=dx;pos[i*3+1]=elevation.height(ax+dx,az+dz,u,v)-.17;pos[i*3+2]=dz;
+        pos[i*3]=dx;pos[i*3+2]=dz;
+        pos[i*3+1]=row!==undefined&&columns[k]>=0?previous[(row*stride+columns[k])*3+1]:elevation.height(ax+dx,az+dz,u,v)-.17;
         uv[i*2]=u;uv[i*2+1]=1-v;
       }
       if((j&3)===3)yield;

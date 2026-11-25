@@ -127,15 +127,25 @@ window.createDrivingWater = function(T, mapped) {
       #include <opaque_fragment>
     `);
   };
-  function setField(pixels,size,x,z,scale,cx,cz) {
-    if(!field.value||field.value.image.width!==size){
-      field.value?.dispose();
-      field.value=new T.DataTexture(pixels,size,size);
-      field.value.minFilter=field.value.magFilter=T.LinearFilter;
-    }else field.value.image.data=pixels;
-    field.value.needsUpdate=true;
-    bounds.value.set(x,z,scale/size);
-    origin.value.set(cx,cz);lastReflection=-Infinity;mirrorStrength.value=0;
+  let spareField=null;
+  function prepareField(pixels,size,x,z,scale,cx,cz,renderer) {
+    if(spareField?.image.width!==size){
+      spareField?.dispose();
+      spareField=new T.DataTexture(pixels,size,size);
+      spareField.minFilter=spareField.magFilter=T.LinearFilter;
+    }else spareField.image.data=pixels;
+    const next=spareField;
+    next.needsUpdate=true;
+    renderer?.initTexture(next);
+    // Keep drawing the old banks until their replacement mesh and map are both ready.
+    return ()=>{
+      spareField=field.value;field.value=next;
+      bounds.value.set(x,z,scale/size);
+      origin.value.set(cx,cz);lastReflection=-Infinity;mirrorStrength.value=0;
+    };
+  }
+  function setField(...args) {
+    prepareField(...args)();
   }
   function sizeTarget(profile){
     // Low disables water captures, but the cabin mirrors still need linear
@@ -193,7 +203,7 @@ window.createDrivingWater = function(T, mapped) {
     finally{renderer.setRenderTarget(previous);mirrorMap.value=target.texture;material.visible=true;renderer.shadowMap.needsUpdate=shadow;}
     mirrorStrength.value=1;
   }
-  return {material,setField,prepare,reflect,get capturePending(){return capturePending;},reflection:{mirrorMap,mirrorMatrix,mirrorStrength,mirrorLevel},setWake(x,z,yaw,strength,age){wake.value.set(x,z,yaw,strength);wakeAge.value=age;},update(seconds,rain=0){time.value=seconds;rainfall.value=rain;}};
+  return {material,setField,prepareField,prepare,reflect,get capturePending(){return capturePending;},reflection:{mirrorMap,mirrorMatrix,mirrorStrength,mirrorLevel},setWake(x,z,yaw,strength,age){wake.value.set(x,z,yaw,strength);wakeAge.value=age;},update(seconds,rain=0){time.value=seconds;rainfall.value=rain;}};
 };
 
 // Two chamfer passes estimate the distance to the dry bank on the merged mask.

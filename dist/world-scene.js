@@ -391,7 +391,7 @@
       roadGroup.userData.eaves=[];
       const porchPositions=[],porchColors=[],porchUv=[],porchSurface=[];
       roadGroup.name='Street district origin';Object.assign(roadGroup.userData,{originX:cx,originZ:cz});
-      let shorePatch=null,shoreFootings=null,formationMesh=null,fieldPixels=null,committed=false;
+      let shorePatch=null,shoreFootings=null,formationMesh=null,showWaterField=null,committed=false;
       const registerObstacle=o=>{obstacles.set(o.id,o);return indexObstacle(obstacleCells,o);};
       try{
       const landscapes=yield* landscapeSource.prepareSteps(graph,streamed?renderer:null);
@@ -541,7 +541,8 @@
         if(waterPixel>=wetMask.length)wetMask=null;
         if(wetMask){
           const field=yield* waterBankField(wetMask,current.getImageData(0,0,maskSize,maskSize).data,maskSize,1/maskScale);
-          fieldPixels=field;yield;
+          showWaterField=waterSurface.prepareField(field,maskSize,maskX,maskZ,maskScale,cx,cz,streamed&&driveWarmed?renderer:null);
+          yield;
           shorePatch=yield* buildMappedShoreSteps(T,{mask:wetMask,field,size:maskSize,scale:maskScale,maskX,maskZ,cx,cz,gx,gz,landWidth,land,landIndex,
             ground:localGround,pools,group:roadGroup,waterMaterial:waterSurface.material});
           // The bank mesh replaces the grass near water. Keep its bare
@@ -1532,7 +1533,7 @@
       landscapeSource.setWaterDistrict(cx,cz,cutoff);
       if(graph)atmosphere.setLocation(...graph.geo(cx,cz));
       landscapeSource.activate(landscapes);relief.activate(terrain,cx,cz);showTunnelCut();showCover();farms.activate();
-      if(fieldPixels)waterSurface.setField(fieldPixels,maskSize,maskX,maskZ,maskScale,cx,cz);
+      showWaterField?.();
       // Local plane UV runs towards -Z. Synchronize the three PBR maps at a rebase.
       for(const [mat,tile] of [[meadow,3.1],[upland,14.2]]){
         surfaces.transform(mat,landWidth/tile,landWidth/tile,(gx/tile)%1,(-gz/tile)%1);
@@ -1604,6 +1605,12 @@
     async function loadRoads(edges,cx,cz,water=[],graph=null){
       beginRoads(edges,cx,cz,water,graph,true);
       const mine=job;
+      // These same desktop assets are required by prepareShaders at departure.
+      // Fetch them during the first road build so the launch waits only once.
+      if(!small&&!warmedTrafficProfiles.has(graphics.profile.id)){
+        for(const kind of Object.keys(trafficModels))loadModel(kind);
+        streetLife.preloadWardrobe();
+      }
       while(job===mine){
         if(advanceRoads(12))return true;
         if(waiting)await waiting.ready;

@@ -9,6 +9,7 @@ function createWorldStreetLife(T,scene,small,environment,amenities,prepareActor)
   const walkGroup=new T.Group();
   walkGroup.name='Người đi bộ';scene.add(walkGroup);
   const walkers=new Map(),models=new Map(),rigTextures=new Map(),spare=[];
+  const wardrobeAssets=['casual-walker','hiker',...pedestrianWardrobe.flat()];
   let bins=new Map();
   let graph,places=[],paths=[],originX=0,originZ=0,walkTime=0;
   function localHour(){return (new Date().getUTCHours()+7)%24;}
@@ -168,12 +169,15 @@ function createWorldStreetLife(T,scene,small,environment,amenities,prepareActor)
       actor.mixer?.update(dt);
     }
   }
+  function preloadWardrobe(){
+    for(const asset of wardrobeAssets)loadWalker(asset).catch(()=>{});
+  }
   async function prepareDeparture(wardrobe){
     // render() has already requested every walker visible from the starting point.
     const departure=small?walkers.values():paths.map(walker);
     const templates=new T.Group();
     const ready=Array.from(departure,item=>item.ready);
-    if(wardrobe)for(const asset of ['casual-walker','hiker',...pedestrianWardrobe.flat()]){
+    if(wardrobe)for(const asset of wardrobeAssets){
       ready.push(loadWalker(asset).then(({scene:rig})=>{
         rig.traverse(node=>{if(node.isMesh)node.castShadow=node.receiveShadow=true;});
         templates.add(rig);
@@ -182,5 +186,5 @@ function createWorldStreetLife(T,scene,small,environment,amenities,prepareActor)
     await Promise.all(ready);
     return {walkGroup,templates};
   }
-  return {activity,prepare,render,prepareDeparture,get places(){return places;}};
+  return {activity,prepare,render,preloadWardrobe,prepareDeparture,get places(){return places;}};
 }
