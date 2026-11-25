@@ -2075,10 +2075,12 @@
     }
     const uploadScene=new T.Scene(),uploadMaterial=new T.MeshBasicMaterial({visible:false});
     const uploadProbe=new T.Mesh(undefined,uploadMaterial),stagedGeometry=new WeakSet(),stagedInstances=new WeakSet();
+    const indexProbe=new T.Mesh(undefined,new T.MeshBasicMaterial({colorWrite:false,depthWrite:false}));
+    const stagedIndices=new WeakMap();
+    indexProbe.frustumCulled=false;
     uploadProbe.frustumCulled=false;uploadScene.matrixWorldAutoUpdate=false;
     function* uploadDistrictGeometry(root,land){
-      // Upload to Three's own attribute cache. With clearing disabled and every
-      // material invisible this pass preserves the screen and its depth buffer.
+      // Populate Three's attribute cache while preserving screen colour and depth.
       const batch=[];
       let bytes=0;
       function upload(){
@@ -2086,6 +2088,18 @@
         try{
           renderer.autoClear=false;renderer.shadowMap.needsUpdate=false;
           for(const node of batch){
+            // Three uploads an element buffer on its first draw, even if all
+            // vertex attributes were staged. Pay for large terrain indices here.
+            const g=node.geometry,index=g.index;
+            if(index&&index.array.byteLength>=16384&&stagedIndices.get(index)!==index.version){
+              const {start,count}=g.drawRange;
+              indexProbe.geometry=g;uploadScene.children=[indexProbe];
+              try{
+                g.setDrawRange(0,3);renderer.render(uploadScene,camera);
+                stagedIndices.set(index,index.version);
+              }finally{g.setDrawRange(start,count);indexProbe.geometry=null;}
+              if(!node.isInstancedMesh)continue;
+            }
             if(node.children.length){
               // A terrain parent can also own visible shore and formation meshes.
               uploadProbe.geometry=node.geometry;uploadScene.children=[uploadProbe];
@@ -2240,22 +2254,23 @@
       // Some drivers specialize a linked program on its first draw. Prime the
       // skinned, vehicle and impact layouts behind the departure screen.
       const actorsToRestore=[],scissor=renderer.getScissor(new T.Vector4()),clipped=renderer.getScissorTest();
-      const canopyProbes=[];
+      const departureProbes=[];
       try{
         const rider=actors.get('scooter')?.rider;
         if(warmRoster&&rider)templates.add(rider.departureVariants());
         scene.add(templates);
         await warmMaterials(scene);
-        // At departure distant trees can all be billboards. The first nearby
-        // grove uses a different shader, with or without per-instance colour.
+        // Distant trees can all be billboards at departure. Solid coloured
+        // roadside instances also need a different depth program on the first bend.
         {
           const lods=[[treeModels.geometry('tree',true,0),treeModels.material],
-            [treeModels.distantGeometry('tree',0),treeModels.billboardMaterial()]];
+            [treeModels.distantGeometry('tree',0),treeModels.billboardMaterial()],
+            [unitBox,material.steel]];
           for(const [geometry,mat] of lods)for(const tinted of [false,true]){
             const probe=new T.InstancedMesh(geometry,mat,1);
             if(tinted)probe.setColorAt(0,new T.Color(0xffffff));
             probe.receiveShadow=probe.castShadow=true;probe.frustumCulled=false;
-            scene.add(probe);canopyProbes.push(probe);
+            scene.add(probe);departureProbes.push(probe);
           }
         }
         for(const root of [walkGroup,templates,driveFx.group,...Array.from(actors.values(),item=>item.root)])root.traverse(node=>{
@@ -2268,7 +2283,7 @@
         renderer.render(scene,camera);
       }finally{
         templates.removeFromParent();templates.clear();
-        for(const probe of canopyProbes){probe.removeFromParent();probe.dispose();}
+        for(const probe of departureProbes){probe.removeFromParent();probe.dispose();}
         for(const [node,visible,culled] of actorsToRestore){node.visible=visible;node.frustumCulled=culled;}
         renderer.setScissor(scissor);renderer.setScissorTest(clipped);renderer.shadowMap.needsUpdate=true;
       }
