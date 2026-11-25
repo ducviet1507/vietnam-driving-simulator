@@ -49,6 +49,7 @@ function createDriveInput({timedSteering=false}={}) {
   // Integrate only the part of each physics step for which a button was down.
   // A complete tap between two rendered frames still reaches the wheels.
   function steering(end,dt,profile=4) {
+    if (profile==='adaptive') profile=4;
     if (profile<=2&&!compressedFrame) {
       edges.length=0;applied=latest;
       return latest;
