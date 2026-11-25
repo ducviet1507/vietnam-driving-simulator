@@ -304,14 +304,16 @@ function createVietnamRelief(T,scene,compact,landscapes,tunnelCut,landWidth,cave
       nationalColour.follow(x,z);
     }
     if(next!==terrain){
+      // Road formation changes the near ground at each district boundary.
+      // The distant mesh samples the underlying elevation data across districts.
+      if((terrain.ungraded??terrain)!==(next.ungraded??next))building=null;
       terrain=next;graph=next.graph;activePass=next.pass;
-      building=null;
       passSurface.select(activePass?.stage.id,activePass?.x,activePass?.z,activePass?.cos,activePass?.sin,activePass?.eastScale);
     }
     originX=x;originZ=z;nearCentre.value.set(Math.round(x/step)*step,Math.round(z/step)*step);
   }
   const ground=(x,z)=>terrain.ground(x,z);
-  function* buildHorizon(ax,az){
+  function* buildHorizon(ax,az,elevation){
     const target=spare??=horizonGeometry(),attrs=target.attributes;
     const pos=attrs.position.array,uv=attrs.uv.array;
     const us=Float64Array.from(axis,dx=>uvAt(ax+dx,az)[0]);
@@ -319,7 +321,7 @@ function createVietnamRelief(T,scene,compact,landscapes,tunnelCut,landWidth,cave
       const dz=axis[j],v=uvAt(ax,az+dz)[1];
       for(let k=0;k<=cells;k++,i++){
         const dx=axis[k],u=us[k];
-        pos[i*3]=dx;pos[i*3+1]=terrain.height(ax+dx,az+dz,u,v)-.17;pos[i*3+2]=dz;
+        pos[i*3]=dx;pos[i*3+1]=elevation.height(ax+dx,az+dz,u,v)-.17;pos[i*3+2]=dz;
         uv[i*2]=u;uv[i*2+1]=1-v;
       }
       if((j&3)===3)yield;
@@ -327,13 +329,14 @@ function createVietnamRelief(T,scene,compact,landscapes,tunnelCut,landWidth,cave
     yield* updateTerrainNormals(T,target);
     for(const attr of Object.values(attrs))attr.needsUpdate=true;
     target.boundingSphere=null;
-    spare=mesh.geometry;mesh.geometry=target;anchorX=ax;anchorZ=az;anchor.value.set(ax,az);displayedTerrain=terrain;
+    spare=mesh.geometry;mesh.geometry=target;anchorX=ax;anchorZ=az;anchor.value.set(ax,az);displayedTerrain=elevation;
   }
   function update(x,z){
     if(!graph||!pixels)return;
     const [u,v]=uvAt(x,z);mesh.visible=u>=0&&u<1&&v>=0&&v<1;if(!mesh.visible)return;
     const ax=Math.round(x/spacing)*spacing,az=Math.round(z/spacing)*spacing;
-    if(!building&&(ax!==anchorX||az!==anchorZ||displayedTerrain!==terrain))building=buildHorizon(ax,az);
+    const elevation=terrain.ungraded??terrain;
+    if(!building&&(ax!==anchorX||az!==anchorZ||displayedTerrain!==elevation))building=buildHorizon(ax,az,elevation);
     if(building){
       const deadline=displayedTerrain?.graph===graph?performance.now()+1.5:Infinity;
       do{if(building.next().done){building=null;break;}}while(performance.now()<deadline);

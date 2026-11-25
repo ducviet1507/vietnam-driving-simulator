@@ -1,5 +1,15 @@
 'use strict';
 
+function clonePedestrian(T,scene){
+  const rig=TrafficModels.clone(scene);
+  // All shipped pedestrian clips fit within 1.13 m of this mesh-local
+  // centre. Allow room for blended poses and the seated scooter rider.
+  rig.traverse(part=>{
+    if(part.isSkinnedMesh)part.boundingSphere=new T.Sphere(new T.Vector3(0,1,0),1.6);
+  });
+  return rig;
+}
+
 const pedestrianWardrobe = [
   ['hust-tee', 'hust-jacket'],
   ['manchester-united'],

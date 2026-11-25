@@ -737,13 +737,19 @@ function frame(now){
      // Look ahead at cruising speed so the next district starts building inside the overlap.
      const gap=gfx.districtDistance(car.x,car.z);
      const speed=mode==='drive'?Math.hypot(car.vx||0,car.vz||0):0;
-     const lead=speed?Math.min(4,155/speed):0;
+     // At highway speeds carry a wide district farther ahead. Extend both
+     // distances together so the next build starts with the same road overlap.
+     const extra=clamp((speed-25)*3,0,Math.min(90,Math.max(0,gfx.districtRadius*.4-155)));
+     const lead=speed?(Math.min(speed*4,155)+extra)/speed:0;
      const aheadX=car.x+(car.vx||0)*lead,aheadZ=car.z+(car.vz||0)*lead;
-     const moved=mode==='drive'&&Math.hypot(aheadX-viewX,aheadZ-viewZ)>125+Math.min(65,speed*2);
+     const moved=mode==='drive'&&Math.hypot(aheadX-viewX,aheadZ-viewZ)>125+Math.min(65,speed*2)+extra;
      // A late scenery download can start a second build at the departure point.
      // Once the car leaves, spend that work on the road ahead instead.
      const leavingRefresh=moved&&speed>22&&gfx.districtDistance(viewX,viewZ)<1;
-     const readyToRefresh=leavingRefresh||gfx.advanceRoads(mode==='drive'&&gap>210?10:4);
+     // The background pump uses the idle part of each frame. Reserve most
+     // of the driving frame for controls and drawing while the road overlaps.
+     const urgent=mode==='drive'&&gap>Math.min(360,gfx.districtRadius*.65);
+     const readyToRefresh=leavingRefresh||gfx.advanceRoads(mode==='drive'?(urgent?4:1):4);
      if(readyToRefresh){
        if(gfx.sceneryChanged)pendingDistrict=districtView;
        if(moved||(pendingDistrict&&mode!=='tour'&&speed<22)){

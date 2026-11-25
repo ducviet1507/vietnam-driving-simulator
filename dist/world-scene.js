@@ -350,7 +350,7 @@
       let shorePatch=null,shoreFootings=null,formationMesh=null,fieldPixels=null,committed=false;
       const registerObstacle=o=>{obstacles.push(o);return indexObstacle(obstacleCells,o);};
       try{
-      const landscapes=landscapeSource.prepare(graph);
+      const landscapes=yield* landscapeSource.prepareSteps(graph,streamed?renderer:null);
       const raw=relief.prepare(graph,landscapes);
       const formation=createPassRoadFormation(graph,passGrades.tiles(graph),raw,cx,cz,landWidth/2+64,worldRoadHalfWidth);
       const terrain=formation?{...raw,ungraded:raw,revision:Symbol(),ground:formation.ground,
@@ -361,12 +361,8 @@
       const localGround=(x,z)=>terrain.ground(cx+x,cz+z);
       const landmarks=landmarkSource?yield* landmarkSource.prepareSteps(graph,cx,cz,terrain.ground,bridges?.signatureHeight):null;
       yield;
-      yield* grounds.prepare(graph,cx,cz,landmarks);
+      yield* grounds.prepare(graph,cx,cz,landmarks,streamed?renderer:null);
       yield;
-      if(streamed&&grounds.uniforms.visitorActive.value){
-        renderer.initTexture(grounds.uniforms.visitorMap.value);
-        yield;
-      }
       const vistas=[];
       if(graph)for(const site of VietnamLandmarks.entries){
         const end=graph.point(site.lon,site.lat);if(Math.hypot(end.x-cx,end.z-cz)>1000)continue;
@@ -1185,13 +1181,36 @@
       }
       function* surface(data,mat,y,freq,groundHeight=null){
         if(!data.length)return;
-        const verts=[],uv=[],crossSection=[],step=data===passVerges?formation.fine:terrain.step;
-        const asphalt=mat===material.asphalt;
+        const step=data===passVerges?formation.fine:terrain.step;
+        const asphalt=mat===material.asphalt,stride=asphalt?11:8,chunkVertices=shorePatch?3072:12288;
+        let buffer=new Float32Array(Math.min(chunkVertices,Math.max(96,data.length))*stride),used=0;
         let section,fitTriangle=false;
 
+        function finishChunk(){
+          if(!used)return;
+          const floats=buffer.subarray(0,used);
+          writeFlatNormals(floats,floats,stride,3);
+          const vertices=new T.InterleavedBuffer(floats,stride),g=new T.BufferGeometry();
+          const attr=(size,offset)=>new T.InterleavedBufferAttribute(vertices,size,offset);
+          g.setAttribute('position',attr(3,0));g.setAttribute('normal',attr(3,3));
+          g.setAttribute('uv',attr(2,6));
+          if(asphalt)g.setAttribute('carriageway',attr(3,8));
+          if(mat!==whitePaint&&mat!==yellowPaint)shorePatch?.addCover(g);
+          g.computeBoundingSphere();
+          const mesh=new T.Mesh(g,mat);mesh.receiveShadow=true;
+          if(mat.transparent&&mat.userData.templeSurface)mesh.renderOrder=1;
+          roadGroup.add(mesh);used=0;
+        }
         function vertex(x,z,roadY){
+          // Keep complete triangles together. A fitted hairpin can otherwise
+          // grow several large JS arrays and upload the entire road in one draw.
+          if(used===buffer.length){
+            finishChunk();
+            buffer=new Float32Array(Math.min(chunkVertices*stride,buffer.length*2));
+          }
           const h=groundHeight?groundHeight(x,z):roadY??roadway(cx+x,cz+z);
-          verts.push(x,h+y,z);
+          const i=used;used+=stride;
+          buffer[i]=x;buffer[i+1]=h+y;buffer[i+2]=z;
           if(asphalt){
             let sag=0;
             if(section && !section.elevated){
@@ -1204,13 +1223,14 @@
               const u=Math.max(0,Math.min(1,along/section.len))*(samples.length-1),i=Math.floor(u);
               sag=samples[i]+((samples[i+1]??samples[i])-samples[i])*(u-i);
             }
-            crossSection.push(section?(x-section.ax)*section.nx+(z-section.az)*section.nz:0,section?.w||0,sag);
+            buffer[i+8]=section?(x-section.ax)*section.nx+(z-section.az)*section.nz:0;
+            buffer[i+9]=section?.w||0;buffer[i+10]=sag;
           }
           if(mat.userData.roadPanels&&section){
             const dx=x-section.ax,dz=z-section.az;
-            uv.push(section.station+dx*section.fx+dz*section.fz,dx*section.nx+dz*section.nz);
-          }else if(mat.userData.templeSurface||mat===material.pavers)uv.push(cx+x,cz+z);
-          else uv.push(x*freq+(cx*freq)%1,z*freq+(cz*freq)%1);
+            buffer[i+6]=section.station+dx*section.fx+dz*section.fz;buffer[i+7]=dx*section.nx+dz*section.nz;
+          }else if(mat.userData.templeSurface||mat===material.pavers){buffer[i+6]=cx+x;buffer[i+7]=cz+z;}
+          else{buffer[i+6]=x*freq+(cx*freq)%1;buffer[i+7]=z*freq+(cz*freq)%1;}
         }
         const fitRoad=wooded&&(mat===material.pavers||mat===curbStone);
         // Child faces share the parent's corners and edge midpoints. Keep their
@@ -1232,7 +1252,7 @@
               yield* triangle(ca,bc,c,depth+1);yield* triangle(ab,bc,ca,depth+1);return;
             }
           }
-          vertex(...a);vertex(...b);vertex(...c);
+          vertex(a[0],a[1],a[2]);vertex(b[0],b[1],b[2]);vertex(c[0],c[1],c[2]);
         }
         // Split at terrain edges so a long road, its paint and the ground coincide
         // even when all three meshes have different source triangulations.
@@ -1272,27 +1292,7 @@
             if(fitTriangle)yield* triangle([ax,az],[bx,bz],[dx,dz]);else{vertex(ax,az);vertex(bx,bz);vertex(dx,dz);}
           }else yield* split([[ax,az],[bx,bz],[dx,dz]],0);
         }
-        const g=new T.BufferGeometry(),positions=new Float32Array(verts.length),normals=new Float32Array(verts.length);
-        const uvs=new Float32Array(uv.length),carriageway=asphalt?new Float32Array(crossSection.length):null;
-        g.setAttribute('position',new T.BufferAttribute(positions,3));
-        g.setAttribute('normal',new T.BufferAttribute(normals,3));
-        g.setAttribute('uv',new T.BufferAttribute(uvs,2));
-        if(carriageway)g.setAttribute('carriageway',new T.BufferAttribute(carriageway,3));
-        // A fitted pass can have hundreds of thousands of vertices. Finish the
-        // normals and shoreline contact index in batches of complete triangles.
-        const count=positions.length/3;
-        for(let start=0;start<count;start+=3072){
-          const end=Math.min(count,start+3072);
-          for(let i=start*3;i<end*3;i++)positions[i]=verts[i];
-          for(let i=start*2;i<end*2;i++)uvs[i]=uv[i];
-          if(carriageway)for(let i=start*3;i<end*3;i++)carriageway[i]=crossSection[i];
-          writeFlatNormals(positions.subarray(start*3,end*3),normals.subarray(start*3,end*3));
-          if(mat!==whitePaint&&mat!==yellowPaint)shorePatch?.addCover(g,null,start,end);
-          if(end<count)yield;
-        }
-        const mesh=new T.Mesh(g,mat);mesh.receiveShadow=true;
-        if(mat.transparent&&mat.userData.templeSurface)mesh.renderOrder=1;
-        roadGroup.add(mesh);
+        finishChunk();
       }
       material.white.side=T.DoubleSide;
       // Full-scale lights require a recorded height. Locations without a
@@ -1471,6 +1471,7 @@
       if(streamed&&driveWarmed){
         const pending=new T.Group(),owner=job;
         pending.children.push(roadGroup,district.group,land,...(landmarks?.active||[]).map(site=>site.mesh));
+        yield* uploadDistrictGeometry(pending);
         yield {ready:warmMaterials(pending,()=>job!==owner,true).catch(error=>console.warn('District shader preparation',error))};
       }
       yield;
@@ -1569,11 +1570,14 @@
       const mine=job;
       const schedule=()=>{
         if(job!==mine||document.hidden)return;
-        if(globalThis.scheduler?.postTask)scheduler.postTask(pump,{priority:'background'});
+        if(globalThis.requestIdleCallback)requestIdleCallback(pump,{timeout:48});
+        else if(globalThis.scheduler?.postTask)scheduler.postTask(pump,{priority:'background'});
         else setTimeout(pump,0);
       };
-      function pump(){
-        if(job!==mine||document.hidden||advanceRoads(4))return;
+      function pump(idle){
+        if(job!==mine||document.hidden)return;
+        const budget=idle?Math.min(6,Math.max(idle.didTimeout?1:0,idle.timeRemaining()-1)):3;
+        if(budget>0&&advanceRoads(budget))return;
         if(waiting)waiting.ready.then(schedule);
         else schedule();
       }
@@ -1987,13 +1991,57 @@
       }else localLight.wetLights([],0,0);
       // The cockpit is already hidden in chase view. Keep its headlight in
       // the cube capture so every face uses the precompiled scene lighting.
-      localLight.reflect(player.root.position,[player.root],now,!inside&&!car.sightView&&graphics.profile.id!=='low');
-      waterSurface.reflect(renderer,scene,camera,reflectionLevel,now,reflectionLevel!==null,graphics.profile,mirrorUpdated);
+      const shadowDue=renderer.shadowMap.enabled&&renderer.shadowMap.needsUpdate;
+      const paintUpdated=localLight.reflect(player.root.position,[player.root],now,!inside&&!car.sightView&&graphics.profile.id!=='low',
+        shadowDue||waterSurface.capturePending);
+      waterSurface.reflect(renderer,scene,camera,reflectionLevel,now,reflectionLevel!==null,graphics.profile,mirrorUpdated||paintUpdated);
       renderer.render(scene,camera);
       return player.modelReady;
     }
     let driveWarmed=false;
     const actorPrograms=new Map(),preparedPrograms=new WeakSet(),uploadedTextures=new WeakMap();
+    const preparedLayouts=new WeakMap();
+    function layoutKey(node){
+      const g=node.geometry,attr=g.attributes,morph=g.morphAttributes;
+      return [renderer.shadowMap.enabled,!!node.isInstancedMesh,!!node.instanceColor,!!node.isSkinnedMesh,
+        attr.color?.itemSize||0,!!attr.tangent,!!attr.uv1,!!attr.uv2,!!attr.uv3,
+        morph.position?.length||0,morph.normal?.length||0,morph.color?.length||0].join('|');
+    }
+    const uploadedGeometry=new WeakSet(),uploadScene=new T.Scene(),uploadTarget=new T.WebGLRenderTarget(1,1);
+    const uploadMaterial=new T.MeshBasicMaterial({visible:false});
+    const uploadProbes=[];
+    function* uploadDistrictGeometry(root){
+      // Three uploads geometry before checking material visibility. Stage the
+      // buffers without drawing triangles or compiling an extra shader.
+      const geometries=new Set();
+      root.traverse(node=>{
+        const g=node.geometry;
+        if(g?.attributes.position?.count>=512&&!uploadedGeometry.has(g))geometries.add(g);
+      });
+      let batch=[],vertices=0;
+      function upload(){
+        const previous=renderer.getRenderTarget(),face=renderer.getActiveCubeFace(),mip=renderer.getActiveMipmapLevel();
+        const shadow=renderer.shadowMap.needsUpdate;
+        try{
+          for(const [i,g] of batch.entries()){
+            const probe=uploadProbes[i]??=new T.Mesh(g,uploadMaterial);
+            probe.geometry=g;probe.frustumCulled=false;uploadScene.add(probe);
+          }
+          renderer.shadowMap.needsUpdate=false;renderer.setRenderTarget(uploadTarget);
+          renderer.render(uploadScene,camera);
+          for(const g of batch)uploadedGeometry.add(g);
+        }finally{
+          renderer.setRenderTarget(previous,face,mip);renderer.shadowMap.needsUpdate=shadow;
+          for(const probe of uploadScene.children)probe.geometry=null;
+          uploadScene.clear();
+        }
+      }
+      for(const g of geometries){
+        batch.push(g);vertices+=g.attributes.position.count;
+        if(vertices>=12000||batch.length>=12){upload();yield;batch=[];vertices=0;}
+      }
+      if(batch.length){upload();yield;}
+    }
     async function warmMaterials(object,canceled=()=>false,streamed=false){
       const programs=new Set(),textures=new Set();
       function queueTexture(tex){
@@ -2020,15 +2068,31 @@
       function compileBatch(batch){
         waterSurface.prepare(renderer,graphics.profile,()=>compile(batch));
         compile(batch);
+        batch.traverse(node=>{
+          if(!node.geometry||!node.material)return;
+          const key=layoutKey(node);
+          for(const mat of Array.isArray(node.material)?node.material:[node.material]){
+            if(!preparedLayouts.has(mat))preparedLayouts.set(mat,new Set());
+            preparedLayouts.get(mat).add(key);
+          }
+        });
       }
       if(streamed){
         // The same road and building materials recur at every origin. Warm new
         // surfaces in small batches while the driver still sees the previous district.
-        const fresh=[],batch=new T.Group(),seen=new Set();
+        const fresh=[],batch=new T.Group(),seen=new Set(),queued=new Map();
         object.traverse(node=>{
-          if(!node.material)return;
+          if(!node.material||!node.geometry)return;
           const materials=Array.isArray(node.material)?node.material:[node.material];
-          if(materials.some(mat=>!renderer.properties.get(mat).programs?.size))fresh.push(node);
+          const key=layoutKey(node);
+          if(materials.some(mat=>!queued.get(mat)?.has(key)&&
+            (!preparedLayouts.get(mat)?.has(key)||!renderer.properties.get(mat).programs?.size))){
+            fresh.push(node);
+            for(const mat of materials){
+              if(!queued.has(mat))queued.set(mat,new Set());
+              queued.get(mat).add(key);
+            }
+          }
           for(const mat of materials)if(!seen.has(mat)){
             seen.add(mat);queueUniformTextures(renderer.properties.get(mat));
           }
@@ -2080,12 +2144,13 @@
       try{
         // At departure distant trees can all be billboards. The first nearby
         // grove uses a different shader, with or without per-instance colour.
-        if(small&&treeBatches.length){
-          const canopy=treeModels.geometry('tree',true,0);
-          for(const tinted of [false,true]){
-            const probe=new T.InstancedMesh(canopy,treeModels.material,1);
+        {
+          const lods=[[treeModels.geometry('tree',true,0),treeModels.material],
+            [treeModels.distantGeometry('tree',0),treeModels.billboardMaterial()]];
+          for(const [geometry,mat] of lods)for(const tinted of [false,true]){
+            const probe=new T.InstancedMesh(geometry,mat,1);
             if(tinted)probe.setColorAt(0,new T.Color(0xffffff));
-            probe.receiveShadow=true;probe.frustumCulled=false;
+            probe.receiveShadow=probe.castShadow=true;probe.frustumCulled=false;
             scene.add(probe);canopyProbes.push(probe);
           }
         }
@@ -2150,7 +2215,7 @@
       const m=camera.matrixWorld.elements;
       return DriveBody.passingBikes(m,originX,originZ,car,traffic.filter(n=>n.kind==='scooter'&&!n.flood&&Math.abs(n.deckLift-car.deckLift)<3));
     }
-    return {ambience,motorcycleSound,get sceneryChanged(){return districtRadius!==graphics.profile.districtRadius;},get mappedFurniture(){return grounds.streetFurniture;},
+    return {ambience,motorcycleSound,get districtRadius(){return districtRadius;},get sceneryChanged(){return districtRadius!==graphics.profile.districtRadius;},get mappedFurniture(){return grounds.streetFurniture;},
       get roadsideSurvey(){return roadGroup?.userData.roadsideSurvey;},
       capturePhoto,hitDashboardMap,refreshMap,prepareShaders,projectSummit,weather,streetLife,accessLane:(x,z)=>grounds.accessLane(x,z),loadStructures:structures.load,preloadVehicle:loadModel,waterAt:(x,z,edge)=>{if(edge&&sceneGraph.tunnels.info(edge)?.bore&&tunnels.at(x,z,edge)!=null)return null;const wet=waterAt(x,z),deck=wet&&bridges?.at(x,z,edge);return wet&&deck!=null&&deck>=wet.level?null:wet;},terrainReady:relief.ready,grade:driveGrade,ground:driveGround,setRoads,queueRoads,loadRoads,advanceRoads,cancelRoads,districtDistance:(x,z)=>Math.hypot(x-originX,z-originZ),render,resize:graphics.resize,contact,loadDistrict:async(g,x,z)=>(await Promise.all([buildingSource.load(g,x,z),osmBuildings.load(g,x,z),relief.loadLocal(g,x,z),passGrades.load(g,x,z),landscapeSource.load(g,x,z),groundSource.load(g,x,z),environment.load(g,x,z),amenities.load(g,x,z),farmland.load(g,x,z)])).some(Boolean),splash:(x,z,nx,nz,strength,level)=>driveFx.impact(x,z,nx,nz,strength,'water',level,.3),sightFootprint:(...args)=>district.footprint(...args),footprintViews:(...args)=>district.footprintViews(...args,relief.ground),nearLandmark:(x,z,id)=>landmarks?.nearest(x,z,650,id),reactToContact:roadsideImpact.react,impact:(x,z,nx,nz,s,k,h=0,g,edge)=>driveFx.impact(x,z,nx,nz,s,k,driveGround(x,z,edge)+h,g),scrape:(x,y,z,vx,vz,edge)=>driveFx.scrape(x,driveGround(x,z,edge)+y,z,vx,vz),resetFx(){driveFx.reset();roadsideImpact.reset();sightings.reset();}};
   };

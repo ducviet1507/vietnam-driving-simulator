@@ -1,7 +1,7 @@
 /* Traffic models face +Z. Distances in the lesson increase towards world -Z. */
 window.createStreetTraffic = function(scene,contactMap,prepare=async()=>{}) {
   const T=window.THREE;
-  const {load,clone}=window.TrafficModels;
+  const {load}=window.TrafficModels;
   const library=new Map();
   const actors=[];
   const roadUsers=[];
@@ -57,7 +57,7 @@ window.createStreetTraffic = function(scene,contactMap,prepare=async()=>{}) {
   }
   function attachPerson(item,name,riderColor){
     return asset(name).then(async data=>{
-      const rig=clone(data.scene);rig.name=name;
+      const rig=clonePedestrian(T,data.scene);rig.name=name;
       if(riderColor!==undefined){
         seatDriver(rig,riderColor);
       }else{
@@ -102,7 +102,7 @@ window.createStreetTraffic = function(scene,contactMap,prepare=async()=>{}) {
       item.group.add(mesh);item.loaded=true;
       if(riderColor!==undefined)return attachPerson(item,'casual-walker',riderColor);
       return asset('casual-walker').then(async person=>{
-        const rig=clone(person.scene);
+        const rig=clonePedestrian(T,person.scene);
         seatDriver(rig);
         rig.scale.setScalar(.89);
         rig.position.add(new T.Vector3(.36,model==='kei-van'?-.07:-.23,.12));
