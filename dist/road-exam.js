@@ -108,6 +108,7 @@ renderer.shadowMap.autoUpdate=false;
 Object.assign(sun.shadow.camera,{left:-43,right:43,top:43,bottom:-43,near:1,far:170});sun.shadow.camera.updateProjectionMatrix();
 sun.shadow.normalBias=.025;sun.shadow.bias=-.00022;
 const camera=new T.PerspectiveCamera(62,1,.08,3300);
+const courseLight=arcade?createStreetVehicleLight(T,renderer,scene):null;
 const graphics=createDrivingGraphics(renderer,camera,sun);
 const geom={box:new T.BoxGeometry(1,1,1),leaf:new T.PlaneGeometry(1,1),houseRoof:new T.ConeGeometry(Math.SQRT1_2,1,4).rotateY(Math.PI/4),pole:new T.CylinderGeometry(.5,.5,1,8)};
 geom.shopSheet=geom.box;
@@ -464,6 +465,11 @@ function teaRows(d0,end,side){
   rows.receiveShadow=true;scene.add(rows);
 }
 if(route.id==='pass')for(const [d,end,side] of [[8,230,-1],[60,395,1],[580,950,-1],[1150,1450,1],[1580,1890,-1],[2010,2380,1]])teaRows(d,end,side);
+const courseJoints=route.stage?[]:[bridgeStart+1.2,bridgeEnd-1.2].map(d=>{
+  const p=at(d);
+  beside(d,0,'box',0x494642,roadHalfWidth*2,.014,.086,.013);
+  return {x:p.x,z:p.z,fx:Math.sin(p.h),fz:-Math.cos(p.h),width:roadHalfWidth};
+});
 if(!route.stage)for(let d=bridgeStart;d<=bridgeEnd;d+=4){
   beside(d,0,'box',0x857e6d,roadHalfWidth*2+1.5,.6,4.2,-.62);
   for(const side of [-1,1]){
@@ -815,12 +821,13 @@ function render(now){
  const s=state,ground=at(s.d);
  nationalColour?.follow(s.x,s.z);
  loadCourseFronts(s.d,now);
- rig.position.set(s.x,ground.y+(arcade?s.lift:0),s.z);
- rig.rotation.set(Math.atan(roadGrade(s.d,s.h))+(arcade?s.jumpPitch:0),-s.h,0,'YXZ');yawQ.copy(rig.quaternion);
+ const joints=arcade&&!matchMedia('(prefers-reduced-motion: reduce)').matches;
+ rig.position.set(s.x,ground.y+(arcade?s.lift:0)+(joints?cupBody.jointHeave||0:0),s.z);
+ rig.rotation.set(Math.atan(roadGrade(s.d,s.h))+(arcade?s.jumpPitch:0)+(joints?cupBody.jointPitch||0:0),-s.h,0,'YXZ');yawQ.copy(rig.quaternion);
  if(!mountainField)hills.position.set(s.x,0,s.z);
  const focus=at(s.d+20);sun.target.position.set(Math.round(focus.x),Math.round(focus.y),Math.round(focus.z));sun.position.copy(sun.target.position);sun.position.x-=38;sun.position.y+=45;sun.position.z+=22;
  if(now-lastShadow>(s.mode==='drive'?graphics.profile.shadowMs:300)){renderer.shadowMap.needsUpdate=true;lastShadow=now;}
- outer.visible=!inside;cabin.update(inside,s.v*3.6,s.steer,s.d,route,arcade?undefined:(s.gear||'N'));
+ outer.visible=!inside;cabin.update(inside,s.v*3.6,s.steer+(joints?cupBody.jointSteer||0:0),s.d,route,arcade?undefined:(s.gear||'N'));
  const inset=cabin.seatInset(camera.aspect),seatX=inside?-.31+inset*.72:0;
  eye.set(seatX,inside?1.10:3.4,inside?.58+inset*2.35:7.6).applyQuaternion(yawQ).add(rig.position);
  look.set(seatX,inside?.02:.6,inside?-12:-6).applyQuaternion(yawQ).add(rig.position);camera.position.copy(eye);camera.lookAt(look);
@@ -838,9 +845,26 @@ function render(now){
  if(s.mode==='ready'||s.mode==='grid')cabin.prepare(renderer,scene,camera);
  const mirrorUpdated=inside&&(route.stage||!courseWater.capturePending)&&
    cabin.reflect(mirrorAdapter,scene,cabin.interior,0,0,graphics.profile.mirrorMs,now);
+ if(arcade){
+   const wet=courseWeather.moisture.asphalt.value,night=passSky?.lamps.value||0;
+   const lights=[];
+   if(wet*night>.01&&!s.airborne){
+     lights.push({x:s.x,z:s.z,y:ground.y,yaw:s.h,grade:roadGrade(s.d,s.h),length:cupBody.spec.length,width:cupBody.spec.width||1.8,brake:cupBody.brake});
+     for(const n of roadTraffic.filter(n=>n.model.visible&&Math.abs(n.d-s.d)<45&&!n.recoil?.fallen).slice(0,4)){
+       const p=at(n.d,n.lane),yaw=p.h+(n.cruise<0?Math.PI:0);
+       lights.push({...p,yaw,grade:roadGrade(n.d,yaw),length:n.bike?1.9:4,width:n.bike?.55:1.7,bike:n.bike,brake:n.recoil?.braking});
+     }
+   }
+   courseLight.wetLights(lights,wet,night);
+   courseLight.reflect(rig.position,[rig],now,!inside&&graphics.profile.id!=='low');
+ }
  if(!route.stage)courseWater.reflect(renderer,scene,camera,waterLevel,now,Math.abs(s.d-(bridgeStart+bridgeEnd)*.5)<220||(river&&s.d<bridgeEnd+150),graphics.profile,mirrorUpdated);
  renderer.render(scene,camera);
- driveAudio.update({ambience:s.mode==='drive'?courseAmbience:null,electric:arcade&&cupBody.spec.electric,boost:arcade&&cupBody.driving&&cupBody.boost,slip:arcade?cupBody.slip:0,speed:Math.abs(s.v)*3.6,throttle:keys.has('arrowup')||keys.has('w'),braking:keys.has('arrowdown')||keys.has('s'),signal:!!s.signal,mode:s.mode==='drive'?'driving':arcade&&['grid','countdown'].includes(s.mode)?'idling':'ready'});
+ driveAudio.update({roadSound:{surface:arcade&&cupBody.offroad?'earth':'asphalt',wet:courseWeather.moisture.asphalt.value,
+   cabin:inside,windowOpen:Number(document.body.dataset.sideWindow==='open')},
+   motorcycles:arcade?()=>DriveBody.passingBikes(camera.matrixWorld.elements,0,0,cupBody,roadTraffic.filter(n=>n.bike&&n.model.visible).map(n=>{
+     const p=n.model.position;return {id:n.id,x:p.x,z:p.z,speed:Math.abs(n.v),yaw:at(n.d).h+(n.v<0?Math.PI:0)};
+   })):null,ambience:s.mode==='drive'?courseAmbience:null,electric:arcade&&cupBody.spec.electric,boost:arcade&&cupBody.driving&&cupBody.boost,slip:arcade?cupBody.slip:0,speed:Math.abs(s.v)*3.6,throttle:keys.has('arrowup')||keys.has('w'),braking:keys.has('arrowdown')||keys.has('s'),signal:!!s.signal,mode:s.mode==='drive'?'driving':arcade&&['grid','countdown'].includes(s.mode)?'idling':'ready'});
  if(now-lastHud>90){if(arcade)raceHud();else hud();mapDraw();lastHud=now;}requestAnimationFrame(render);
 }
 $('sound').textContent=sound?'Tắt âm':'Bật âm';

@@ -1178,7 +1178,7 @@ window.VietnamLandmarks=(()=>{
       const [lon,lat]=graph.geo(cx,cz);
       for(const site of window.VietnamTourism?.nearby(lon,lat,900/graph.mx,900/graph.my)||[]){
         const p=graph.point(site.lon,site.lat);
-        gardens.push({...p,r:gardenRadius(site,window.VietnamSightDetails?.[site.id]?.extent)});
+        gardens.push({...p,publicPark:site.kind==='Công viên',r:gardenRadius(site,window.VietnamSightDetails?.[site.id]?.extent)});
       }
     }
     if(graph)for(const data of entries){

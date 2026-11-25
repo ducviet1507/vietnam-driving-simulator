@@ -28,10 +28,11 @@ async function fitCoupe(parent,paint,isPlayer,kind,driver){
    if(!part.isMesh)return;
    part.castShadow=true;part.receiveShadow=true;
    const src=part.material;
-   if(!['paint','paint_body','light_rear'].includes(src.name))return;
+   if(!['paint','paint_body','light_rear'].includes(src.name)&&!(isPlayer&&src.name==='glass'))return;
    if(!finish.has(src)){
      const m=src.clone();
-     if(src.name!=='light_rear'){m.color.set(paint);m.envMapIntensity=1.35;m.clearcoat=1;m.clearcoatRoughness=.11;}
+     if(src.name==='glass'){courseLight.coat(m);}
+     else if(src.name!=='light_rear'){if(isPlayer)courseLight.coat(m);m.color.set(paint);m.envMapIntensity=1.35;m.clearcoat=1;m.clearcoatRoughness=.11;}
      else{m.emissive.set(0xff1604);m.emissiveIntensity=.6;}
      finish.set(src,m);
    }
@@ -87,17 +88,24 @@ for(let i=0;i<12;i++){
    const mesh=base.clone(true),bounds=new T.Box3().setFromObject(mesh);
    const scale=(kind==='motor-scooter'?1.9:kind==='city-taxi'?4.7:3.95)/(bounds.max.z-bounds.min.z);
    mesh.scale.setScalar(scale);mesh.traverse(n=>{if(n.isMesh)n.castShadow=true;});
-   const npc={bike:kind==='motor-scooter',d,lane:(oncoming?-3.65:(i%2?3.8:2.45))*roadHalfWidth/6,v:cruise,cruise,model:mesh};
-   scene.add(mesh);placeCivilian(npc);roadTraffic.push(npc);
+   const model=new T.Group();model.add(mesh);
+   const bike=kind==='motor-scooter',rider=bike?createTrafficScooterRider(T,model):null;
+   const stand=bike&&mesh.getObjectByName('kickstand');if(stand)stand.visible=false;
+   const npc={id:i,bike,rider,d,lane:(oncoming?-3.65:(i%2?3.8:2.45))*roadHalfWidth/6,v:cruise,cruise,model};
+   scene.add(model);placeCivilian(npc);roadTraffic.push(npc);
  }).catch(()=>{});
 }
-function placeCivilian(n){
+function placeCivilian(n,dt=0){
  if(!n.model)return;
  const p=at(n.d,n.lane),r=n.recoil,angle=p.h+(r?.angle||0);
  const x=p.x+(r?.x||0),z=p.z+(r?.z||0);
  const ground=r?.fallen?height(roadCoordinates(x,z,n.d).d):p.y;
  n.model.position.set(x,ground+(r?.y||0)+(r?.fallen ? .25*Math.abs(Math.sin(r.roll)) : 0),z);
  n.model.rotation.set(-(r?.pitch||0),-angle+(n.cruise>0?Math.PI:0),-(r?.roll||0),'YXZ');
+ if(n.rider){
+   n.speed=Math.abs(n.v);n.rider.update(n,dt,{rain:courseWeather.rainfall,detail:Math.abs(n.d-(state?.d||0))<95,
+     look:Math.sin(at(n.d+8*Math.sign(n.v||1)).h-p.h)*2});
+ }
  updateBodywork(T,n.model,n.dent,angle+(n.cruise<0?Math.PI:0));
  n.model.visible=n.d>0&&n.d<route.finish&&Math.abs(n.d-(state?.d||0))<340;
 }
@@ -214,7 +222,7 @@ function finishRace(){
 }
 function raceUpdate(dt,stepEnd){
  if(state.mode==='crash'){
-   for(const n of roadTraffic){advanceRacerRecoil(n,n.lane,dt);placeCivilian(n);}
+   for(const n of roadTraffic){advanceRacerRecoil(n,n.lane,dt);placeCivilian(n,dt);}
    for(const r of rivals)DriveBody.advanceRecoil(r,dt);placeRivals();
    DriveBody.settle(cupBody,dt);syncCup();crashTime-=dt;if(crashTime<=0)openPit(crashKind);return;}
  if(state.mode==='countdown'){
@@ -236,9 +244,10 @@ function raceUpdate(dt,stepEnd){
    cupBody.boost=false;cupBody.brake=false;cupBody.slip=0;
  }else{
    s.charge=nitroCharge(s.charge,nitro,held('shift'),drafting,dt);
-   DriveBody.step(cupBody,{grade:roadGrade(s.d,cupBody.yaw),gas,brake:held(' '),reverse:held('s','arrowdown'),steeringProfile,steer,boost:nitro,power:setup.power+(drafting?1.6:0),top:setup.top},dt);
+   DriveBody.step(cupBody,{surface:cupBody.offroad?'earth':'asphalt',wetness:courseWeather.moisture.asphalt.value,grade:roadGrade(s.d,cupBody.yaw),gas,brake:held(' '),reverse:held('s','arrowdown'),steeringProfile,steer,boost:nitro,power:setup.power+(drafting?1.6:0),top:setup.top},dt);
  }
  syncCup();
+ DriveBody.axleJoints(cupBody,dt,s.airborne?[]:courseJoints,(speed,rear)=>driveAudio.bridgeAxle(speed,rear,inside));
  updateCupFeatures(s,previousD,previousLane,dt);
  const angle=at(s.d).h;
  const rail=route.stage&&mountainRails.get(Math.sign(s.offset))?.find(span=>s.d>=span.start&&s.d<=span.end);
@@ -264,7 +273,7 @@ function raceUpdate(dt,stepEnd){
    n.v+=clamp(target-n.v,-step,step);
    n.d+=n.v*dt;
    if(n.d>0&&n.d<route.finish)trafficContact(n,n.lane,dt);
-   placeCivilian(n);if(s.mode!=='drive')return;
+   placeCivilian(n,dt);if(s.mode!=='drive')return;
  }
  for(const r of rivals){
    advanceCupDriver(r,racers,roadTraffic,dt);

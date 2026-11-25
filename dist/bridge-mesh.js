@@ -313,6 +313,9 @@
       const layout=roadLaneLayout(edge,w),finish=roadSurfaceClass(edge);
       if(!decks.has(finish))decks.set(finish,{finish,positions:[],uv:[],carriageway:[]});
       activeDeck=decks.get(finish);
+      for(const seam of info.joints||[]){
+        if(inRange(seam.x,seam.z,w))ribbon(row(seam.s-.043),row(seam.s+.043),-w,w,.013,0x494642);
+      }
       const apron=node=>(graph.nodes.get(node)?.length||0)>2?w+1.4:0;
       const railMin=apron(edge.start),railMax=edge.length-apron(edge.end);
       for(const [start,end] of info.ranges){

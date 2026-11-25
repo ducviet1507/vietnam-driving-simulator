@@ -1,0 +1,24 @@
+Mặt đứng nhà phố trong Xuyên Việt
+
+Game lấy đường bao, sân trong, số tầng và chiều cao nhà từ dữ liệu OSM khi có. Mặt nhà được chọn theo hướng của cạnh tường so với đường. Các khoảng lùi, bậc, cửa, khung và lan can là mô hình kiến trúc ước lượng. Tất cả nằm trong đường bao công trình. Các ảnh và video sau dùng để quan sát; trò chơi chỉ phân phối hình học tự dựng.
+
+Hà Nội, phố Hàng Bạc
+
+Christophe95 chụp giao Hàng Bạc, Hàng Bồ, Hàng Ngang và Hàng Đào ngày 5/8/2018, tại 21.034038°B, 105.850664°Đ. Có thể thấy những gian phố hẹp, tầng trệt nằm sau mép che và khung nhiều ô ở tầng trên xen với ban công mở. Trên khoảng 70 m đầu phố Hàng Bạc phía đông giao lộ, một số căn đủ chiều sâu có thêm khung đứng cao suốt tầng ở mặt trước logia. Ảnh cung cấp mẫu cho đoạn phố. Số đo và bố trí cửa từng căn là ước lượng.
+https://commons.wikimedia.org/wiki/File:H%C3%A0ng_B%E1%BA%A1c_and_H%C3%A0ng_B%E1%BB%93_streets.jpg
+
+Manan Vatsyayana, AFP, bộ ảnh nhà ống Hà Nội năm 2021. Các dãy nhà thể hiện sự khác biệt về số tầng và cách mở ban công giữa những lô liền nhau.
+https://www.theguardian.com/artanddesign/gallery/2021/jul/09/the-tube-houses-of-hanoi-in-pictures
+
+Đà Nẵng, Hoàng Diệu và Hùng Vương
+
+Vuong Tri Binh chụp dãy cửa hàng Hoàng Diệu năm 2015, tại 16.062940°B, 108.217807°Đ. Ảnh cho thấy khoang tầng trệt mở cạnh cửa riêng, cửa kính sau lan can thanh ngang và trần sáng ở ban công tầng trên. Mẫu thanh ngang và khoang cửa lùi dùng cho các nhà phù hợp trong game.
+https://commons.wikimedia.org/wiki/File:Hoang_Dieu_shops_in_2015_(Da_Nang).jpg
+
+shika wilai, “Da Nang Vietnam Night Walking tour - 4K 60fps - vietnamese big city”. Tác giả đánh dấu Hùng Vương từ phút 24:08 đến 28:39. Tại 27:10 và 28:00, các khung hình cho thấy cửa cuốn đóng cạnh mặt tiền sáng còn hoạt động. Đoạn video dùng để đối chiếu mặt tiền ở tầm người đi đường buổi tối.
+https://www.youtube.com/watch?v=0EDXEDyPQ6I&t=1630s
+
+TP.HCM, đường Đề Thám
+
+Kevin Decherf, “De Tham Street, Saigon”, 20/3/2018. Trong cùng dãy có cửa trệt mở sâu, tầng trên lắp kính, khoang lan can hở và căn có một vách bên che ban công. Các chi tiết này là tư liệu cho biến thể cửa, hồi và lan can của mẫu nhà phố. Dựng địa điểm cụ thể vẫn theo đường bao và tuyến đường của OSM.
+https://commons.wikimedia.org/wiki/File:De_Tham_Street,_Saigon_(40466945334).jpg

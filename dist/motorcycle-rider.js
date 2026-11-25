@@ -390,3 +390,216 @@
     }
   };
 })();
+
+// Everyday traffic scooters face +Z; their rider's left side is +X. The six
+// rigid joints and two shared PBR finishes stay on the vehicle across body LODs.
+(() => {
+  const palettes=[
+    [0x466b73,0x32404b,0xe8e2ce,0xc59373,0x405e79], [0x92906a,0x384451,0x58413b,0xb87e5d,0x5c7057],
+    [0xad6251,0x343b42,0xe1d5b6,0xcb9774,0xbc9654], [0x43536a,0x55534a,0x4b6670,0xbe8d68,0x4e687c],
+    [0xc3bba5,0x445063,0x854f43,0xa97759,0x566b60], [0x667963,0x474856,0xdfd9c2,0xd0a180,0x4e6688],
+    [0x827582,0x38434a,0x3c555d,0xbd896b,0x99784c], [0x73829a,0x454944,0xddd6ce,0xc59676,0x476e69]
+  ];
+  const sole=0x2c3031,strap=0x353637;
+  const thighLength=.384,shinLength=.356;
+  const cache=new WeakMap();
+
+  // Build all closed surfaces into one indexed skin, with colour in linear
+  // space. The coat morph uses the same shoulder, wrist and seat attachment
+  // points in both poses; it can open around the legs without adding a layer.
+  function pattern(T,style,detailed){
+    const pos=[],wet=[],col=[],wetCol=[],joints=[],weights=[],tri=[[],[]];
+    const cloth=0,gloss=1,up=new T.Vector3(0,1,0);
+    const passenger=style===2||style===6;
+    function vertex(p,w,c,rc,b){
+      pos.push(p.x,p.y,p.z);wet.push(w.x-p.x,w.y-p.y,w.z-p.z);
+      col.push(c.r,c.g,c.b);wetCol.push(rc.r-c.r,rc.g-c.g,rc.b-c.b);
+      joints.push(b,0,0,0);weights.push(1,0,0,0);
+    }
+    function rings(b,m,c,rows,N=12,options={}){
+      const first=pos.length/3,colour=new T.Color(c),rainColour=new T.Color(options.rainColour??c);
+      const levels=detailed?rows.map((_,i)=>i):[...new Set([0,Math.floor((rows.length-1)*.5),rows.length-1])];
+      if(!detailed)N=6;
+      const at=(row,t)=>{
+        const [x,y,z,rx,rz]=row;
+        return new T.Vector3(x+rx*Math.sin(t),y,z+rz*Math.cos(t));
+      };
+      for(const i of levels)for(let j=0;j<N;j++){
+        const a=j*2*Math.PI/N,point=at(rows[i],a),rain=at(options.rain?.[i]??rows[i],a);
+        options.shape?.(point,i,a);options.shape?.(rain,i,a);
+        options.transform?.(point);options.transform?.(rain);
+        const shade=options.weave?.(i,a)??1;
+        vertex(point,rain,colour.clone().multiplyScalar(shade),rainColour.clone().multiplyScalar(shade),b);
+      }
+      for(let i=1;i<levels.length;i++)for(let j=0;j<N;j++){
+        const a=first+(i-1)*N+j,b=first+(i-1)*N+(j+1)%N;
+        tri[m].push(a,b,a+N,b,b+N,a+N);
+      }
+      for(let j=1;j<N-1;j++){
+        const last=first+(levels.length-1)*N;
+        tri[m].push(first,first+j+1,first+j,last,last+j,last+j+1);
+      }
+    }
+    function oval(b,m,c,x,y,z,rx,ry,rz,N=12){
+      if(!detailed&&Math.max(rx,ry,rz)<.065)return;
+      const rows=[],steps=N<=10?4:6;
+      for(let i=0;i<=steps;i++){
+        const a=Math.PI*i/steps-Math.PI/2,r=Math.max(.02,Math.cos(a));
+        rows.push([x,y+ry*Math.sin(a),z,rx*r,rz*r]);
+      }
+      rings(b,m,c,rows,N);
+    }
+    function segment(b,c,a,end,ra,rb,wetColour=c){
+      if(!detailed&&ra<.02)return;
+      const start=new T.Vector3(...a),d=new T.Vector3(...end).sub(start),length=d.length();
+      const rot=new T.Quaternion().setFromUnitVectors(up,d.normalize());
+      const radius=t=>ra+(rb-ra)*t;
+      const profile=ra<.02?[[0,1],[1,1]]:[[-.026,.72],[.07,1],[.46,1],[.76,.95],[.815,1.02],[.94,.98],[1.025,.90]];
+      rings(b,cloth,c,profile.map(([t,k])=>[0,t*length,0,radius(t)*k,radius(t)*k*.94]),ra<.02?6:10,
+        {transform:p=>p.applyQuaternion(rot).add(start),rainColour:wetColour,
+          weave:(i,a)=>1-.065*(i===4||i===6?1:0)-.05*Math.abs(Math.sin(a))**12});
+    }
+    function shoe(b,x,y,z){
+      rings(b,cloth,sole,[[x,y-.075,z+.05,.056,.142],[x,y-.060,z+.05,.06,.145],
+        [x,y-.055,z+.05,.061,.145]],12);
+      rings(b,cloth,0x454947,[[x,y-.054,z+.05,.060,.143],[x,y-.035,z+.048,.060,.142],
+        [x,y-.019,z+.033,.057,.122],[x,y+.005,z+.011,.052,.094],[x,y+.034,z-.012,.044,.053]],12);
+    }
+    function person(extra){
+      const colors=palettes[(style+(extra?3:0))%palettes.length];
+      const [jacket,denim,helmet,skin,rain]=colors,z=extra?-.46:-.085,y=extra?.026:0,id=extra?5:1;
+      const bodyRows=[[.78,.00,.153,.118],[.84,.00,.168,.13],[.95,.014,.157,.115],
+        [1.11,.027,.181,.140],[1.235,.04,.201,.117],[1.284,.044,.123,.085],[1.30,.042,.073,.073]];
+      const dry=bodyRows.map(([h,d,w,l])=>[0,h+y,z+d,w,l]);
+      const cape=dry.map(row=>row.slice());
+      cape[0]=[0,.698+y,z+.057,.228,extra?.194:.252];cape[1]=[0,.815+y,z+.04,.205,.195];
+      cape[2][3]=.188;cape[3][3]=.199;cape[4][3]=.222;
+      rings(0,cloth,jacket,dry,18,{rain:cape,rainColour:rain,
+        weave:(row,a)=>.94+.06*Math.cos(2*a)-.06*(row===1||row===5?1:0)});
+      // A stitched front placket, drawn on the dry jacket and the rain shell.
+      const placket=rows=>rows.slice(1).map(([x,h,d,w,l])=>[x,h,d+l-.002,.005,.004]);
+      if(detailed)rings(0,cloth,0x4b5051,placket(dry),6,{rain:placket(cape),rainColour:0x68777a});
+      oval(0,cloth,denim,0,.790+y,z-.006,.153,.093,.15);
+      oval(0,cloth,skin,0,1.313+y,z+.043,.059,.082,.062);
+      rings(0,cloth,jacket,[[0,1.275+y,z+.04,.09,.08],[0,1.305+y,z+.04,.074,.072]],12,{rainColour:rain});
+      // Face and helmet are in a head-local frame whose origin is the neck.
+      rings(id,cloth,skin,[[0,-.004,.010,.041,.048],[0,.022,.016,.071,.075],
+        [0,.072,.010,.091,.087],[0,.126,.001,.094,.094],[0,.181,-.005,.082,.084]],16);
+      oval(id,cloth,skin,0,.095,.091,.014,.025,.020,10);
+      oval(id,cloth,skin,0,.080,.10,.017,.009,.012,10);
+      oval(id,cloth,0x945e50,0,.048,.092,.023,.003,.005,10);
+      for(const side of [-1,1]){
+        oval(id,cloth,skin,side*.091,.094,-.006,.014,.029,.017,8);
+        oval(id,cloth,0x513c34,side*.038,.125,.091,.018,.004,.005,8);
+        oval(id,cloth,strap,side*.037,.111,.094,.013,.003,.005,8);
+        segment(id,strap,[side*.087,.087,-.018],[side*.066,.006,.039],.008,.007);
+      }
+      // The brow sits above the eyes, with a deeper shell over the nape.
+      const rim=(p,i,a)=>{p.y-=Math.max(0,1-i/3)*.044*(1-Math.cos(a));};
+      rings(id,gloss,strap,[[0,.139,-.006,.105,.109],[0,.149,-.006,.111,.116],
+        [0,.162,-.006,.111,.116]],18,{shape:rim});
+      const shellColor=extra?palettes[(style+2)%8][2]:helmet;
+      rings(id,gloss,shellColor,[[0,.149,-.006,.112,.117],[0,.173,-.005,.115,.12],
+        [0,.195,-.006,.107,.114],[0,.225,-.008,.089,.093],[0,.247,-.009,.057,.063],
+        [0,.256,-.01,.016,.019]],18,{shape:rim});
+      oval(id,gloss,shellColor,0,.15,.083,.096,.007,.069);
+      for(const side of [-1,1])oval(id,gloss,0x686b68,side*.108,.135,-.005,.004,.011,.011,8);
+      for(const side of [-1,1]){
+        const shoulder=[side*.161,1.228+y,z+.028],
+          elbow=[side*(extra?.184:.222),1.032+y,z+(extra?.035:.119)],
+          hand=extra?[side*.142,.984,-.17]:[side*.285,1.084,.204];
+        segment(0,jacket,shoulder,elbow,.077,.055,rain);
+        segment(0,jacket,elbow,hand,.058,.036,rain);
+        oval(0,cloth,skin,...hand,.044,.030,.046,10);
+        oval(0,cloth,skin,hand[0]-side*.027,hand[1]-.009,hand[2]+.013,.018,.018,.031,8);
+        const hip=[side*.109,.77+y,z-.012],knee=[side*(extra?.213:.177),.56+y,z+(extra?.205:.302)],
+          ankle=[side*(extra?.219:.181),extra?.327:.243,z+(extra?.103:.183)];
+        if(extra||side<0){
+          segment(0,denim,hip,knee,.105,.073);oval(0,cloth,denim,...knee,.073,.073,.077);
+          segment(0,denim,knee,ankle,.075,.047);shoe(0,...ankle);
+        }else{
+          segment(2,denim,[0,0,0],[0,thighLength,0],.104,.073);
+          oval(3,cloth,denim,0,0,0,.073,.073,.077);
+          segment(3,denim,[0,0,0],[0,shinLength,0],.075,.047);shoe(4,0,0,0);
+        }
+      }
+    }
+    person(false);if(passenger)person(true);
+    const geometry=new T.BufferGeometry(),attribute=(arr,n)=>new T.Float32BufferAttribute(arr,n);
+    geometry.setAttribute('position',attribute(pos,3));geometry.setAttribute('color',attribute(col,3));
+    geometry.setAttribute('skinIndex',new T.Uint16BufferAttribute(joints,4));geometry.setAttribute('skinWeight',attribute(weights,4));
+    geometry.setIndex(tri[0].concat(tri[1]));geometry.addGroup(0,tri[0].length,0);geometry.addGroup(tri[0].length,tri[1].length,1);
+    geometry.computeVertexNormals();
+    geometry.morphTargetsRelative=true;geometry.morphAttributes.position=[attribute(wet,3)];geometry.morphAttributes.color=[attribute(wetCol,3)];
+    const draped=new T.BufferGeometry();draped.setIndex(geometry.index);
+    draped.setAttribute('position',attribute(pos.map((value,i)=>value+wet[i]),3));draped.computeVertexNormals();
+    const wetNormals=draped.attributes.normal.array,dryNormals=geometry.attributes.normal.array;
+    geometry.morphAttributes.normal=[attribute(wetNormals.map((value,i)=>value-dryNormals[i]),3)];
+    return geometry;
+  }
+
+  window.createTrafficScooterRider=function(T,parent){
+    if(!cache.has(T))cache.set(T,{patterns:new Map(),materials:[
+      new T.MeshStandardMaterial({vertexColors:true,roughness:.83}),
+      new T.MeshStandardMaterial({vertexColors:true,roughness:.31,metalness:.09})]});
+    const {patterns,materials}=cache.get(T);
+    function outfit(style,detailed){
+      const key=style+(detailed?8:0);
+      if(!patterns.has(key))patterns.set(key,pattern(T,style,detailed));
+      return patterns.get(key);
+    }
+    const mesh=new T.SkinnedMesh(outfit(0,false),materials[0]);mesh.name='traffic-scooter-rider';
+    mesh.castShadow=true;mesh.receiveShadow=true;
+    const bones=['body','driver head','left thigh','left shin','left shoe','passenger head'].map(name=>{
+      const bone=new T.Bone();bone.name=name;mesh.add(bone);return bone;
+    });
+    // Bind in scooter-local space before attachment, including when a pooled
+    // traffic root has already moved, rotated or been tilted onto a grade.
+    mesh.bind(new T.Skeleton(bones));parent.add(mesh);
+    mesh.boundingSphere=new T.Sphere(new T.Vector3(0,.815,-.12),1.06);
+    bones[1].position.set(0,1.326,-.046);bones[5].position.set(0,1.352,-.421);
+    const up=new T.Vector3(0,1,0),hip=new T.Vector3(.109,.77,-.097),ankle=new T.Vector3(),
+      axis=new T.Vector3(),towardFront=new T.Vector3(),knee=new T.Vector3(),dir=new T.Vector3();
+    let occupant,plant=0,look=0,coat=0,lastPlant=-1,detail;
+    function placeFoot(amount){
+      if(Math.abs(lastPlant-amount)<.0002)return;
+      lastPlant=amount;
+      const s=amount*amount*(3-2*amount);
+      ankle.set(.181+.115*s+.038*Math.sin(Math.PI*s),.243-.179*s,.098-.193*s);
+      // Solve the two measured lengths analytically. The knee keeps pointing
+      // forward while the boot swings out around the scooter footboard.
+      axis.subVectors(ankle,hip);const length=axis.length();axis.divideScalar(length);
+      towardFront.set(.21,0,1).addScaledVector(axis,-(.21*axis.x+axis.z)).normalize();
+      const along=(thighLength**2-shinLength**2+length**2)/(2*length);
+      knee.copy(hip).addScaledVector(axis,along).addScaledVector(towardFront,Math.sqrt(Math.max(0,thighLength**2-along**2)));
+      bones[2].position.copy(hip);bones[2].quaternion.setFromUnitVectors(up,dir.subVectors(knee,hip).normalize());
+      bones[3].position.copy(knee);bones[3].quaternion.setFromUnitVectors(up,dir.subVectors(ankle,knee).normalize());
+      bones[4].position.copy(ankle);bones[4].rotation.set(-.065*(1-s),.14*s,0);
+    }
+    function update(car,dt,context={}){
+      const speed=Math.abs(car.speed||0),standing=1-T.MathUtils.smoothstep(speed,.12,1.35);
+      const desired=car.recoil?.fallen||car.flood?0:standing;
+      const gaze=T.MathUtils.clamp(context.look??car.steer??0,-1,1);
+      const wet=T.MathUtils.smoothstep(Number(context.rain)||0,.04,.42);
+      const requestedDetail=context.detail!==false;
+      if(occupant!==car.id||lastPlant<0){
+        const seed=typeof car.id==='number'?car.id:Array.from(String(car.id??'')).reduce((n,c)=>Math.imul(n,31)+c.charCodeAt(0)|0,0);
+        const style=((seed%8)+8)%8;occupant=car.id;detail=undefined;
+        mesh.userData.passenger=style===2||style===6;mesh.userData.style=style;
+        plant=desired;look=gaze;coat=wet;lastPlant=-1;
+      }else{
+        const time=Math.max(0,Math.min(dt||0,.25));
+        plant+=(desired-plant)*(1-Math.exp(-time*(desired>plant?6:8)));
+        look+=(gaze-look)*(1-Math.exp(-time*5));
+        coat+=(wet-coat)*(1-Math.exp(-time*1.35));
+      }
+      if(detail!==requestedDetail){
+        detail=requestedDetail;
+        mesh.geometry=outfit(mesh.userData.style,detail);mesh.material=detail?materials:materials[0];
+      }
+      placeFoot(plant);bones[1].rotation.y=-look*.58;bones[5].rotation.y=-look*.23;
+      mesh.morphTargetInfluences[0]=coat;
+    }
+    return {mesh,update};
+  };
+})();

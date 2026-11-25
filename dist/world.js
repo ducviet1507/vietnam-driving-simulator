@@ -363,11 +363,21 @@ function trafficStep(dt){
    }
    const ahead=dx*fx+dz*fz;
    if(Math.abs(car.deckLift-n.deckLift)<=2.5&&ahead>0&&ahead<17&&Math.abs(dx*fz-dz*fx)<1.75)target=Math.min(target,Math.max(0,(ahead-5)*1.2));
+   n.brake=target<n.speed-.35||wait&&stopAt<1;
    n.speed=fallen?0:n.speed+clamp(target-n.speed,-9*dt,2.8*dt);
-   const moved=roads.advance(n,Math.min(stopAt,n.speed*dt),options=>{
-     const opts=n.kind==='scooter'?options.filter(o=>!o.edge.kind.startsWith('motorway')):options;
-     return opts.length>1&&Math.random()<.24?opts[Math.floor(Math.random()*opts.length)]:opts[0];
-   });
+   function chooseTurn(options){
+     const allowed=n.kind==='scooter'?options.filter(o=>!o.edge.kind.startsWith('motorway')):options;
+     return allowed.length>1&&Math.random()<.24?allowed[Math.floor(Math.random()*allowed.length)]:allowed[0];
+   }
+   const toJunction=n.dir>0?n.edge.length-n.s:n.s;
+   if(n.kind==='scooter'&&toJunction<Math.max(13,n.speed*1.7)){
+     if(n.planFrom!==n.edge||n.planDir!==n.dir){
+       n.planFrom=n.edge;n.planDir=n.dir;n.turnPlan=chooseTurn(roads.options(n));
+     }
+     n.turnLook=clamp((n.turnPlan?.angle||0)/1.1,-1,1);
+   }else n.turnLook=0;
+   const moved=roads.advance(n,Math.min(stopAt,n.speed*dt),options=>
+     n.planFrom===n.edge&&n.planDir===n.dir&&options.includes(n.turnPlan)?n.turnPlan:chooseTurn(options));
    if(moved<.001&&!fallen&&!wait&&target>0)n.stopped+=dt;else n.stopped=0;
    const pos=roads.sample(n,roadLaneOffset(n,n.kind==='scooter'));
    const landing=DriveBody.advanceRecoil(n,dt);Object.assign(n,pos);
@@ -481,7 +491,7 @@ function tick(dt,stepEnd){
  nitro=clamp(nitro+(boost?-27:held('shift')?0:6)*dt,0,100);
  const x=car.x,z=car.z;
  const steeringProfile=window.driveSteeringProfile;
- DriveBody.step(car,{grade:gfx.grade(car.x,car.z,car.yaw,car.edge),gas,reverse,brake,boost,steeringProfile,steer:keySet.steering(stepEnd,dt,steeringProfile),power:car.spec.power,top:car.spec.top},dt);
+ DriveBody.step(car,{surface:car.offroad?'earth':car.edge?roadSurfaceClass(car.edge):'asphalt',wetness:roadWetness(),grade:gfx.grade(car.x,car.z,car.yaw,car.edge),gas,reverse,brake,boost,steeringProfile,steer:keySet.steering(stepEnd,dt,steeringProfile),power:car.spec.power,top:car.spec.top},dt);
  const radius=car.spec.width?car.spec.width/2:.88;
  const probeOffset=car.spec.width?car.spec.length/2-radius:1.2;
  const probes=car.spec.rearAxle?[probeOffset,0,-probeOffset]:[probeOffset,-probeOffset];
@@ -492,6 +502,8 @@ function tick(dt,stepEnd){
    if(impact.closing>.7)hurt(hit.kind||'shoulder',impact,hit);
  }
  trackRoad();
+ DriveBody.axleJoints(car,dt,car.offroad||car.flood?[]:roads.bridges.jointsNear(car.edge),
+   (speed,rear)=>driveAudio.bridgeAxle(speed,rear,inside&&car.model!=='motorcycle'));
  if(mode==='drive')waterStep(dt);
  const moved=Math.hypot(car.x-x,car.z-z);distance+=moved;
  if(mode!=='drive')return;
@@ -684,6 +696,7 @@ function drawMini(landmark){
  gfx.refreshMap();
 }
 let nextWeatherCheck=0;
+function roadWetness(){return car.edge&&roads.tunnels.info(car.edge)?.bore?0:gfx.weather.moisture.asphalt.value;}
 function journeyAmbience(){return gfx.ambience(car,npcs,inside&&!car.sightView);}
 function frame(now){
  const elapsed=now-last,dt=clamp(elapsed/1000,0,.1);last=now;
@@ -755,7 +768,9 @@ function frame(now){
    }
    if(mode==='drive'||mode==='sinking'){uiTick+=dt;if(uiTick>.13){uiTick=0;updateHud();}}
    const listen=mode==='drive'||mode==='tour'&&!$('sightPhoto').open&&!$('fieldDialog').open&&!$('postcard').open;
-   driveAudio.update({ambience:listen?journeyAmbience:null,electric:car.spec.electric,speed:Math.abs(car.speed)*3.6,boost:car.driving&&car.boost,slip:car.slip,offroad:car.offroad,throttle:held('w','arrowup'),braking:car.brake,signal:false,mode:mode==='drive'?'driving':mode==='grid'?'idling':'ready'});
+   driveAudio.update({roadSound:{surface:car.offroad?'earth':car.edge?roadSurfaceClass(car.edge):'asphalt',wet:gfx?roadWetness():0,
+     cabin:inside&&!car.sightView&&car.model!=='motorcycle',windowOpen:Number(document.body.dataset.sideWindow==='open')},
+     motorcycles:listen?()=>gfx.motorcycleSound(car,npcs):null,ambience:listen?journeyAmbience:null,electric:car.spec.electric,speed:Math.abs(car.speed)*3.6,boost:car.driving&&car.boost,slip:car.slip,offroad:car.offroad,throttle:held('w','arrowup'),braking:car.brake,signal:false,mode:mode==='drive'?'driving':mode==='grid'?'idling':'ready'});
  }
  if(toastTime>0&&(toastTime-=dt)<=0)$('callout').textContent='';
  requestAnimationFrame(frame);

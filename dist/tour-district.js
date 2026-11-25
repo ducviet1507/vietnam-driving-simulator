@@ -384,6 +384,10 @@ function createTourDistrict(T,scene,plaster,structures,osmBuildings,nightLights)
       return mix(mix(recessWall,room,recess),reflection,.17+.59*grazing*grazing);
     }\n`;
   const grain={value:null},stelePhoto={value:null},photoReady={value:0};
+  function prepareHouseMaterial(){
+    if(typeof document!=='undefined')grain.value??=getLandmarkGrain(T);
+    loadEntrances();return roof;
+  }
   function loadMonumentSurfaces(){
     if(stelePhoto.value||typeof document==='undefined')return;
     const loader=new T.TextureLoader();
@@ -571,7 +575,7 @@ function createTourDistrict(T,scene,plaster,structures,osmBuildings,nightLights)
     for(const b of cells.get(Math.floor(x/cell)+','+Math.floor(z/cell))||[]){
       if(b.bottom>2.2)continue;
       if(x<b.minX-r||z<b.minZ-r||x>b.maxX+r||z>b.maxZ+r)continue;
-      for(const rings of b.solids||[b.rings]){
+      for(const rings of b.solids||[b.contactRings||b.rings]){
         let inside=false,min=Infinity,px,pz;
         for(const ring of rings){
           for(let j=0,k=ring.length-1;j<ring.length;k=j++){
@@ -620,9 +624,10 @@ function createTourDistrict(T,scene,plaster,structures,osmBuildings,nightLights)
     }
     return false;
   }
-  function overlapsGarden(landmarks,rings,box){
-    for(const {x,z,r} of landmarks?.gardens||[]){
+  function overlapsGarden(landmarks,rings,box,acrossStreet){
+    for(const {x,z,r,publicPark} of landmarks?.gardens||[]){
       if(x+r<box.minX||x-r>box.maxX||z+r<box.minZ||z-r>box.maxZ)continue;
+      if(publicPark&&acrossStreet?.(x,z))continue;
       if(insideBuilding(x,z,rings))return true;
       for(const ring of rings)for(let i=0,j=ring.length-1;i<ring.length;j=i++){
         const a=ring[j],b=ring[i],dx=b.x-a.x,dz=b.y-a.y;
@@ -697,7 +702,7 @@ function createTourDistrict(T,scene,plaster,structures,osmBuildings,nightLights)
       if((++roadSegments&63)===0)yield;
       const a=edge.points[n-1],b=edge.points[n],w=worldRoadHalfWidth(edge),dx=b.x-a.x,dz=b.z-a.z;
       const length2=dx*dx+dz*dz;if(!length2)continue;
-      const segment={a,dx,dz,length2,w,name:edge.name,id:edge.id};
+      const segment={a,dx,dz,length2,w,kind:edge.kind,name:edge.name,id:edge.id};
       const margin=w+18;
       const left=Math.max(cx-850,Math.min(a.x,b.x)-margin),right=Math.min(cx+850,Math.max(a.x,b.x)+margin);
       const top=Math.max(cz-850,Math.min(a.z,b.z)-margin),bottom=Math.min(cz+850,Math.max(a.z,b.z)+margin);
@@ -834,7 +839,7 @@ function createTourDistrict(T,scene,plaster,structures,osmBuildings,nightLights)
           }
         }
       }
-      streetFronts.push({x:x-cx,y:baseY,z:z-cz,nx,nz,ux,uz,half,top,h,seed,zone,canopy,balcony});
+      streetFronts.push({x:x-cx,y:baseY,z:z-cz,nx,nz,ux,uz,half,top,h,seed,zone,canopy,balcony,residential});
     }
     const ids=new Set(),surveyedIds=new Set(surveyed.map(row=>row[0]));
     if(!footprints.has(graph))footprints.set(graph,new WeakMap());
@@ -880,7 +885,20 @@ function createTourDistrict(T,scene,plaster,structures,osmBuildings,nightLights)
       if(Math.hypot(x-cx,z-cz)>radius+Math.hypot(maxX-minX,maxZ-minZ)/2)continue;
       const original=surveyedIds.has(id);
       if(overlapsModel(landmarks,rings,box))continue;
-      const visitorArea=overlapsGarden(landmarks,rings,box)||memorialAt(x,z);
+      // The radius around a long public park also reaches occupied blocks on
+      // the far side of the street. Preserve the mapped open ground itself.
+      function acrossParkStreet(px,pz){
+        if(!original||openGround(x,z))return false;
+        const vx=px-x,vz=pz-z;
+        for(const road of roadsAt({minX:Math.min(x,px),maxX:Math.max(x,px),minZ:Math.min(z,pz),maxZ:Math.max(z,pz)})){
+          if(!/^(residential|living_street|unclassified|tertiary|secondary|primary|trunk)/.test(road.kind))continue;
+          const det=vx*road.dz-vz*road.dx;if(Math.abs(det)<.0001)continue;
+          const ax=road.a.x-x,az=road.a.z-z,t=(ax*road.dz-az*road.dx)/det,u=(ax*vz-az*vx)/det;
+          if(t>0&&t<1&&u>=0&&u<=1)return true;
+        }
+        return false;
+      }
+      const visitorArea=overlapsGarden(landmarks,rings,box,acrossParkStreet)||memorialAt(x,z);
       if(!original){
         if(visitorArea||outer.some(p=>openGround(p.x,p.y))||(openGround(x,z)&&insideBuilding(x,z,rings)))continue;
         if(overlapsMapped(rings,box))continue;
@@ -950,11 +968,15 @@ function createTourDistrict(T,scene,plaster,structures,osmBuildings,nightLights)
         const wallTint=surveyTint(detail?.['building:colour'],detail?.['building:material']);
         let roofColor=roofTint||(zRoofs?new T.Color(zRoofs[opening===1?0:seed%zRoofs.length]):roofs[opening===1?0:seed%roofs.length]);
         let base=wallTint||(zWalls?new T.Color(zWalls[seed%zWalls.length]):palette[seed%palette.length]);
-        let frontage=null;
-        if(!part&&!opening&&!unclassified&&Math.hypot(x-cx,z-cz)<185&&h>=3&&h<17&&maxX-minX<32&&maxZ-minZ<32&&
-          (/^(yes|residential|house|terrace|apartments|retail|commercial|building)$/.test(kind)||kind==='hotel'&&streetSurvey?.kind==='hotel')){
+        let frontage=null,houseFront=null;
+        if(!part&&!opening&&!unclassified&&Math.hypot(x-cx,z-cz)<185&&h>=3&&h<25&&maxX-minX<65&&maxZ-minZ<65&&
+          (/^(yes|residential|house|terrace|detached|apartments|retail|commercial|building)$/.test(kind)||kind==='hotel'&&streetSurvey?.kind==='hotel')){
           if(streetSurvey&&h<10.5)frontage=window.SurveyedStreetFronts.select(streetSurvey,outer,nearRoads,graph,(px,pz)=>insideBuilding(px,pz,rings));
-          if(!frontage)streetFront(outer,h,roofColor,seed,zone,
+          if(!frontage&&!site&&!survey&&!streetSurvey&&!visitorArea&&bottom===0){
+            houseFront=window.VietnamHouseFronts?.select(rings,nearRoads,(px,pz)=>insideBuilding(px,pz,rings),
+              {h,levels,seed,kind,zone,lon:bLon,lat:bLat});
+          }
+          if(!frontage&&!houseFront&&h<17)streetFront(outer,h,roofColor,seed,zone,
             !site&&!streetSurvey&&!/^(retail|commercial|hotel)$/.test(kind));
         }
         const colour=frontage&&window.SurveyedStreetFronts.wallColour(frontage.surveyKind,seed);
@@ -996,6 +1018,20 @@ function createTourDistrict(T,scene,plaster,structures,osmBuildings,nightLights)
           for(const tri of outline.triangles)for(const index of [tri[0],tri[2],tri[1]]){
             const p=flat[index];vertex(batches[1],p.x,h,p.y,p.x-x,p.y-z,roofColor,metal||tile?streetFinish:0);
           }
+        }
+        if(houseFront){
+          prepareHouseMaterial();
+          window.VietnamHouseFronts.draw(T,houseFront,eave,base,roofColor,(...args)=>vertex(batches[1],...args));
+          const f=houseFront,span=f.half-f.shoulder,cut=[];
+          const corner=(u,v)=>new T.Vector2(f.x+f.ux*u+f.nx*v,f.z+f.uz*u+f.nz*v);
+          for(let j=0;j<outer.length;j++){
+            if(!f.edges.has(j)){cut.push(outer[j]);continue;}
+            if(f.edges.has((j+outer.length-1)%outer.length))continue;
+            cut.push(outer[j],corner(-span,0),corner(-span,-f.inset*.70),corner(span,-f.inset*.70),corner(span,0));
+          }
+          b.contactRings=[cut,...rings.slice(1)];b.houseFront=f;
+          streetFronts.push({...f,x:f.x-cx,z:f.z-cz,y:baseY,buildingId:id,house:true,residential:true,
+            zone,top:Math.min(3.1,eave),canopy:0,balcony:false});
         }
         if(frontage){
           const f=frontage;
@@ -1042,7 +1078,7 @@ function createTourDistrict(T,scene,plaster,structures,osmBuildings,nightLights)
           const count=warehouse||unclassified?0:Math.floor(length/(opening?3.8:2.85)),floors=opening?Math.max(1,levels||1):Math.max(1,Math.round(h/3.3));
           const samples=profile[j],next=profile[(j+1)%ring.length][0],wallBatch=batches[0];
           if(bottom>0){quad(wallBatch,a,c,bottom,Math.max(bottom,eave),base,count,floors);continue;}
-          const recessed=ri===0&&frontage?.edges.has(j);
+          const recessed=ri===0&&(frontage||houseFront)?.edges.has(j);
           // On nearly level blocks the wall itself can reach beneath the grass.
           if(samples.every(p=>baseY-p.h<.16)&&baseY-next.h<.16){
             quad(wallBatch,a,c,-.39,recessed?0:eave,base,recessed?0:count,floors);continue;
@@ -1173,7 +1209,7 @@ function createTourDistrict(T,scene,plaster,structures,osmBuildings,nightLights)
     return overview&&detail?[overview,detail]:null;
   }
   return {group,clear,buildSteps,build(...args){for(const step of buildSteps(...args)){}},contact,footprint,footprintViews,overlapsSight:(landmarks,rings,box)=>overlapsModel(landmarks,rings,box)||overlapsGarden(landmarks,rings,box),
-    streetFronts,businessFront,builtUp:(x,z)=>cells.has(Math.floor(x/cell)+','+Math.floor(z/cell)),
+    streetFronts,businessFront,prepareHouseMaterial,builtUp:(x,z)=>cells.has(Math.floor(x/cell)+','+Math.floor(z/cell)),
     mappedBlock:(x,z)=>(blocks.get(Math.floor(x/70)+','+Math.floor(z/70))||0)>=3};
   }
   return {...createView(scene),createView,load:async(g,x,z)=>(await Promise.all([load(g,x,z),parts.load(g,x,z)])).some(Boolean)};

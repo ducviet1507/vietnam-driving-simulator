@@ -28,6 +28,7 @@ class ElevationImage {
 }
 const context=vm.createContext({window:{},Image:ElevationImage,performance,
   fetch:async url=>{assert.equal(url,'urban-terrain/index.json');return {ok:true,json:async()=>index};},
+  createNationalTerrainColour:()=>({setFrame(){},follow(){},shade(){}}),
   createPassSurface:()=>({select(){}}),document:{createElement:()=>({getContext:()=>({
     drawImage(image){this.image=image;},getImageData(){return {data:this.image.data};}})})}});
 for(const file of ['shore-terrain','urban-terrain','vietnam-relief','cave-openings','world-land-cover'])

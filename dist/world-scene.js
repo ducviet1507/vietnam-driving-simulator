@@ -54,6 +54,7 @@
     }).catch(()=>{});
     const sun=new T.DirectionalLight(0xffefcf,2.30);
     const atmosphere=createWorldAtmosphere(T,scene,sun,skyLoader);
+    const localLight=createStreetVehicleLight(T,renderer,scene);
     const graphics=createDrivingGraphics(renderer,camera,sun);
     sun.castShadow=true;
     Object.assign(sun.shadow.camera,{left:-43,right:43,bottom:-43,top:43,near:1,far:175});
@@ -158,19 +159,6 @@
     surfaces.transform(material.wall,2,2);
     const shopTypes=['cafe','bakery','grocer','pho','garage','pharmacy'];
     const upstairs=new Set(['cafe','grocer','pharmacy']);
-    // Measured from the foot of the six shopfront elevations. Place the
-    // projecting canopy on the illustrated lintel or eave and its baked shade.
-    const awningHeights=[.53,.78,.51,.68,.66,.51];
-    function defaultFront(i){
-      const key='front'+i,name=shopTypes[i];
-      if(material[key])return key;
-      material[key]=new T.MeshStandardMaterial({
-        name:'Shopfront '+name,map:texture('surfaces/front-'+name+'.webp'),roughness:.91,metalness:0
-      });
-      material[key].userData.awningHeightRatio=awningHeights[i];
-      atmosphere.registerFinish(material[key]);
-      return key;
-    }
     const centralStreetscapes=window.CentralStreetscapes?.create(T,scene,renderer,material);
     const meadow=surfaces.scanned('meadow',0xafbd9d,.56);
     const upland=surfaces.scanned('grass',0x8ea68d,.67);
@@ -333,6 +321,7 @@
     function contact(...args){return regionContact(obstacleCells,originX,originZ,sceneGraph,tunnels,landmarks,district,...args);}
     function discardRoads(roadGroup){
       if(!roadGroup)return;roadGroup.removeFromParent();
+      roadGroup.userData.discarded=true;roadGroup.userData.parking?.removeFromParent();
       roadGroup.userData.disposeSurvey?.();
       roadGroup.traverse(obj=>{if(obj.isInstancedMesh)obj.dispose();else if(obj.geometry)obj.geometry.dispose();});
     }
@@ -356,7 +345,8 @@
       const {land,district,grounds}=slot;
       const roadGroup=new T.Group(),treeBatches=[],streetBulbs=[],obstacleCells=new Map(),obstacles=[];
       roadGroup.userData.eaves=[];
-      const regionalFronts=new Set();
+      const porchPositions=[],porchColors=[],porchUv=[],porchSurface=[];
+      roadGroup.name='Street district origin';Object.assign(roadGroup.userData,{originX:cx,originZ:cz});
       let shorePatch=null,shoreFootings=null,formationMesh=null,fieldPixels=null,committed=false;
       const registerObstacle=o=>{obstacles.push(o);return indexObstacle(obstacleCells,o);};
       try{
@@ -1023,15 +1013,27 @@
               buildingBase=high;
               const foot=high-low+.23;
               instance('concrete',unitBox,hx,.02-foot/2,hz,width,foot,depth,rot);
-              registerObstacle({id:c.key,kind:'building',x:hx,z:hz,fx:s.fx,fz:s.fz,w:width/2,d:depth/2,baseY:low-.21,height:h+foot});
+
               const wallPal=rZone?rZone.walls:[0xe9d4b5,0xc7d6bb,0xf3dfb0];
               const roofPal=rZone?rZone.roofs:[0x989d98,0xaf846d,0x99aeb0];
               const gablePal=rZone?rZone.gables:[0xa26148,0x825947,0x7b8688];
               const awningPal=rZone?rZone.awnings:[0xa2a692,0xbc8062,0x809b93];
-              const frontKey=rZone?centralStreetscapes.frontMaterial(rZone,type):defaultFront(type);
-              if(rZone)regionalFronts.add(frontKey);
-              instance('wall',unitBox,hx,h*.5,hz,width,h,depth,rot,wallPal[type%wallPal.length]);
-              instance(frontKey,unitPlane,hx+sx*(depth/2+.025),h/2,hz+sz*(depth/2+.025),width,h,1,rot);
+              const seed=Math.floor(c.priority*4294967295)>>>0;
+              const wall=wallPal[type%wallPal.length],inset=Math.min(1.85,depth*.24,width*.29);
+              const face={x:hx+sx*depth/2,z:hz+sz*depth/2,nx:sx,nz:sz,ux:s.fx,uz:s.fz,half:width/2,
+                shoulder:Math.min(.47,width*.065),inset,levels:twoStory?2:1,seed,kind:type%3===0?'retail':'house'};
+              const backDepth=depth-inset;
+              instance('wall',unitBox,hx-sx*inset/2,h*.5,hz-sz*inset/2,width,h,backDepth,rot,wall);
+              const solid=(id,x,z,w,d)=>registerObstacle({id,kind:'building',x,z,fx:s.fx,fz:s.fz,w,d,baseY:low-.21,height:h+foot});
+              solid(c.key,hx-sx*inset/2,hz-sz*inset/2,width/2,backDepth/2);
+              for(const side of [-1,1]){
+                const u=side*(width-face.shoulder)/2;
+                const px=face.x+s.fx*u-sx*inset/2,pz=face.z+s.fz*u-sz*inset/2;
+                instance('wall',unitBox,px,h/2,pz,face.shoulder,h,inset,rot,wall);
+                solid(c.key+side,px,pz,face.shoulder/2,inset/2);
+              }
+              const gallery=VietnamHouseFronts.draw(T,face,h,new T.Color(wall),new T.Color(roofPal[type%roofPal.length]),
+                (px,py,pz,u,v,tint,finish=0)=>{porchPositions.push(px,high+py,pz);porchColors.push(tint.r,tint.g,tint.b);porchUv.push(u,v);porchSurface.push(finish);});
               for(const side of [-1,1]){
                 const wx=hx+s.fx*side*(width/2+.035),wz=hz+s.fz*side*(width/2+.035);
                 for(const floor of h>5?[1.7,4.5]:[1.7]){
@@ -1043,7 +1045,7 @@
               const pitched=(rZone?.forcePitched?h<8:h<5)&&c.priority<(rZone?.forcePitched?.95:.7);
               if(pitched)instance('gable',gable,hx,h+.14,hz,width+.5,width*(rZone?.forcePitched?.29:.24),depth+.59,rot,gablePal[type%gablePal.length]);
               const projection=Math.min(1.9,width*.27,c.setback-1.2);
-              const porch=(depth+projection)/2,awningY=h*material[frontKey].userData.awningHeightRatio;
+              const porch=(depth+projection)/2,awningY=gallery.top;
               walks.porch(s,hx+sx*porch,hz+sz*porch,width+.35,projection+.18);
               const outer=depth/2+projection-.1;
               const postX=hx+sx*outer+s.fx*width*.45,postZ=hz+sz*outer+s.fz*width*.45;
@@ -1402,7 +1404,45 @@
         if(mesh.children.length)meshes.push(...mesh.children);
         if((i & 7)===0)yield;
       }
+      if(porchPositions.length){
+        const g=new T.BufferGeometry();
+        g.setAttribute('position',new T.Float32BufferAttribute(porchPositions,3));g.setAttribute('color',new T.Float32BufferAttribute(porchColors,3));
+        g.setAttribute('uv',new T.Float32BufferAttribute(porchUv,2));g.setAttribute('roofFinish',new T.Float32BufferAttribute(porchSurface,1));
+        g.computeVertexNormals();const mesh=new T.Mesh(g,district.prepareHouseMaterial());mesh.castShadow=true;mesh.receiveShadow=true;
+        mesh.name='Roadside house porches';roadGroup.add(mesh);
+      }
+      district.group.userData.houseCount=district.streetFronts.filter(f=>f.house).length;
+      const apronsAtDoors=[];
+      for(const f of district.streetFronts){
+        if(!f.house||f.gap<.7||f.gap>6||Math.hypot(f.x,f.z)>150)continue;
+        const span=Math.min(f.half-f.shoulder,2.4),reach=Math.max(.35,f.gap-.42);
+        const point=(u,v)=>{
+          const x=f.x+f.ux*u+f.nx*v,z=f.z+f.uz*u+f.nz*v;
+          return [x,groundAt(cx+x,cz+z)+.023,z];
+        };
+        const a=point(-span,.035),b=point(span,.035),c=point(span,reach),d=point(-span,reach);
+        if([a,b,c,d].some(p=>Math.abs(p[1]-f.y)>.42)||[c,d].some(p=>district.contact(cx+p[0],cz+p[2],.05)))continue;
+        apronsAtDoors.push(...a,...b,...d,...b,...c,...d);
+      }
+      if(apronsAtDoors.length){
+        const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(apronsAtDoors,3));g.computeVertexNormals();
+        const aprons=new T.Mesh(g,material.pavers);aprons.name='Paved house entrances';aprons.receiveShadow=true;roadGroup.add(aprons);
+      }
       const districtRunoff=addEaveRunoff(T,roadGroup,district.streetFronts,localGround,eaveMaterial);
+      // A parked scooter fits sideways under a wide overhang, wholly on
+      // the lot. Leave a full doorway and the entire pavement clear.
+      const bays=district.streetFronts.filter(f=>f.house&&f.seed%9===1&&f.inset>=1.5&&f.half-f.shoulder>2.25)
+        .sort((a,b)=>Math.hypot(a.x,a.z)-Math.hypot(b.x,b.z)).slice(0,4);
+      if(bays.length)loadModel('scooter').then(base=>{
+        if(!base||roadGroup.userData.discarded)return;
+        const parking=new T.Group();roadGroup.add(parking);roadGroup.userData.parking=parking;
+        for(const f of bays){
+          const u=f.half-f.shoulder-1.13,v=-.43,x=f.x+u*f.ux+v*f.nx,z=f.z+u*f.uz+v*f.nz;
+          const stand=new T.Group();stand.position.set(x,f.y+.17,z);stand.rotation.y=Math.atan2(f.ux,f.uz);
+          stand.add(base.clone(true));parking.add(stand);
+          registerObstacle({id:'parked:'+f.buildingId,kind:'scooter',x,z,fx:f.ux,fz:f.uz,w:.90,d:.26,baseY:f.y,height:1.13,parts:[]});
+        }
+      });
       district.group.userData.surveyedFronts=district.streetFronts.filter(f=>f.surveyKind).map(f=>({kind:f.surveyKind,id:f.buildingId}));
       if(streamed&&driveWarmed){
         const pending=new T.Group(),owner=job;
@@ -1414,7 +1454,7 @@
       activate({land,district,grounds,landmarks,roadGroup,shorePatch,formationMesh,groundAt,bridges,tunnels,roadFormation:formation,obstacleCells,waterAt,
         nearestWaterBlock,sceneGraph:graph,originX:cx,originZ:cz,treeBatches,streetBulbs,runoff:districtRunoff});
       committed=true;districtRadius=cutoff;nextLightCheck=0;asphaltOrigin.set(cx,cz);landOrigin.set(gx,gz);
-      centralStreetscapes?.trimFronts(regionalFronts);
+
       landscapeSource.setWaterDistrict(cx,cz,cutoff);
       if(graph)atmosphere.setLocation(...graph.geo(cx,cz));
       landscapeSource.activate(landscapes);relief.activate(terrain,cx,cz);tunnelCut.update(graph,tunnels,cx,cz);showCover();farms.activate();
@@ -1547,28 +1587,6 @@
         return model;
       }).catch(()=>{cache.delete(kind);return null;}));return cache.get(kind);
     }
-    const riderGeometry={
-      head:new T.SphereGeometry(1,16,10),
-      helmet:new T.SphereGeometry(1,20,12,0,Math.PI*2,0,1.8),
-      limb:new T.CylinderGeometry(.063,.08,1,8)
-    };
-    const riderMats={skin:basic(0xb98e6a),jacket:basic(0x506d69),jeans:basic(0x37474b),helmet:new T.MeshStandardMaterial({color:0xe4ddd2,roughness:.26})};
-    function scooterRider(parent){
-      function blob(geometry,material,x,y,z,sx,sy,sz){
-        const m=new T.Mesh(geometry,material);m.position.set(x,y,z);m.scale.set(sx,sy,sz);m.castShadow=true;parent.add(m);return m;
-      }
-      function limb(a,b,mat){
-        const from=new T.Vector3(...a),to=new T.Vector3(...b),dir=to.clone().sub(from),mid=from.add(to).multiplyScalar(.5);
-        const m=blob(riderGeometry.limb,mat,mid.x,mid.y,mid.z,1,dir.length(),1);m.quaternion.setFromUnitVectors(new T.Vector3(0,1,0),dir.normalize());
-      }
-      blob(riderGeometry.head,riderMats.jacket,0,1.07,-.10,.205,.335,.148).rotation.x=.16;
-      blob(riderGeometry.head,riderMats.skin,0,1.49,-.045,.112,.135,.119);
-      blob(riderGeometry.helmet,riderMats.helmet,0,1.53,-.054,.136,.138,.14);
-      for(const s of [-1,1]){
-        limb([s*.15,1.26,-.075],[s*.216,1.05,.06],riderMats.jacket);limb([s*.216,1.05,.06],[s*.255,1.03,.34],riderMats.skin);
-        limb([s*.107,.83,-.14],[s*.175,.58,.24],riderMats.jeans);limb([s*.175,.58,.24],[s*.18,.26,.09],riderMats.jeans);
-      }
-    }
     function makeVehicle(kind,idx,player=false){
       const root=new T.Group(),outside=new T.Group(),low=new T.Group();root.add(outside);outside.add(low);scene.add(root);
       const spec=player?worldGarage[kind]:trafficModels[kind];
@@ -1583,7 +1601,7 @@
           const wheel=new T.Mesh(unitPole,tires);wheel.rotation.z=Math.PI/2;wheel.scale.set(.52,.16,.52);wheel.position.set(0,.26,z);low.add(wheel);
         }
         block(0,.46,-.26,.43,.42,.83,paint);block(0,.74,-.28,.39,.12,.63,tires);
-        block(0,.4,.13,.36,.1,.7,paint);block(0,.69,.5,.32,.54,.18,paint);block(0,.98,.5,.57,.07,.1,tires);
+        block(0,.4,.13,.36,.1,.7,paint);block(0,.69,.5,.32,.54,.18,paint);block(0,1.06,.20,.58,.06,.09,tires);
       }else{
       block(0,high*.38,0,wide,high*.42,len*.97,paint);block(0,high*.69,-len*.055,wide*.87,high*.43,len*.56,windows);
       block(0,high*.92,-len*.08,wide*.84,.07,len*.49,paint);
@@ -1603,6 +1621,7 @@
         low.add(body);
       }
       const item={root,outside,low,shadow,axleShadows:[],kind,idx,wheels:[],front:[],light:null,detail:null,loading:false};
+      if(kind==='scooter'&&!player)item.rider=createTrafficScooterRider(T,outside);
       item.request=()=>{
         if(item.loading)return;item.loading=true;
         item.ready=loadModel(kind).then(async base=>{
@@ -1620,24 +1639,29 @@
                 else if(kind!=='taxi')m.color.setHex(colors[idx%colors.length]);
                 tints.set(src,m);
               }n.material=tints.get(src);
+            }else if(player&&src.name==='glass'){
+              if(!tints.has(src))tints.set(src,src.clone());
+              n.material=tints.get(src);
             }else if(src.name==='light_rear'){
               if(!item.light){item.light=src.clone();item.light.emissive.setHex(0xff210b);}
               n.material=item.light;
             }
             atmosphere.registerFinish(n.material);
           });
+          if(player)for(const m of tints.values())localLight.coat(m);
           item.wheels=['FL','FR','RL','RR','F','R'].map(id=>({n:model.getObjectByName('wheel_'+id),id})).filter(i=>i.n);
           item.front=['FL','FR','F'].map(id=>model.getObjectByName('steer_'+id)).filter(Boolean);
           if(kind==='motorcycle'){
             item.helmet=model.getObjectByName('rider_helmet');
             item.gripPivot=model.worldToLocal(item.front[0].getWorldPosition(new T.Vector3()));
           }
-          const detail=new T.Group();detail.add(model);if(kind==='scooter')scooterRider(detail);
+          const detail=new T.Group();detail.add(model);
+          const stand=kind==='scooter'&&model.getObjectByName('kickstand');if(stand)stand.visible=false;
           outside.add(detail);detail.visible=false;
           for(const {n} of item.wheels){
-            const axle=root.worldToLocal(n.getWorldPosition(new T.Vector3()));
+            const axle=outside.worldToLocal(n.getWorldPosition(new T.Vector3()));
             const patch=new T.Mesh(unitPlane,contactMat);patch.rotation.x=-Math.PI/2;
-            patch.position.set(axle.x,.014,axle.z);patch.scale.set(kind==='scooter'?.24:.48,.62,1);detail.add(patch);item.axleShadows.push(patch);
+            patch.position.set(axle.x,.014,axle.z);patch.scale.set(kind==='scooter'?.24:.48,.62,1);root.add(patch);item.axleShadows.push(patch);
           }
           await prepareActor(kind,detail);
           item.detail=detail;item.modelReady=true;
@@ -1678,6 +1702,10 @@
       if(near)item.request();
       const detailed=near&&!!item.detail;item.low.visible=!detailed;
       if(item.detail)item.detail.visible=detailed;
+      for(const patch of item.axleShadows)patch.visible=detailed&&!car.flood&&!(car.recoil?.y>.06);
+      if(item.rider){
+        item.rider.update(car,dt,{rain:weather.rainfall,look:car.turnLook,detail:near});
+      }
       if(detailed){
         item.wheels.forEach(({n,id})=>n.rotateX((id.endsWith('R')&&id.length===2?-1:1)*car.speed*dt/(car.spec?.wheelRadius??.33)));
         for(const steer of item.front)steer.rotation.y=-(car.steer||0)*.34;
@@ -1749,17 +1777,18 @@
       }
       pose(player,car,dt,true);player.root.visible=!car.sightView;player.outside.visible=!inside;
       driveFx.mountExhaust(player.detail?.children[0],kind);
-      player.shadow.visible=!car.flood;for(const shadow of player.axleShadows)shadow.visible=!car.flood;
-      player.outside.rotation.set(-(car.pitch||0),0,-(car.roll||0));
+      player.shadow.visible=!car.flood;for(const shadow of player.axleShadows)shadow.visible=!car.flood&&!inside;
+      const bump=reducedCameraMotion.matches?0:car.jointPitch||0;
+      player.outside.rotation.set(-(car.pitch||0)-bump,0,-(car.roll||0));
       car.y=player.root.position.y-.011;playerRig.position.copy(player.root.position);
-      playerRig.position.y+=car.spec.seatLift??0;
-      playerRig.rotation.set(-player.root.rotation.x,-car.yaw,-player.root.rotation.z,'YXZ');
+      playerRig.position.y+=(car.spec.seatLift??0)+(reducedCameraMotion.matches?0:car.jointHeave||0);
+      playerRig.rotation.set(-player.root.rotation.x+bump,-car.yaw,-player.root.rotation.z,'YXZ');
       mirrorRotation.copy(playerRig.quaternion);
       if(inside&&!cabin){
         cabin=car.spec.license?WorldSpecialVehicles.buildCabin(T,playerRig,kind,kind==='motorcycle'?loadModel(kind):null):window.buildDriverCabin(T,playerRig,document.getElementById('map'));
         cabins.set(car.spec.license?kind:'car',cabin);
       }
-      cabin?.update(inside,(car.speed||0)*3.6,car.steer||0);
+      cabin?.update(inside,(car.speed||0)*3.6,(car.steer||0)+(car.jointSteer||0));
       const visibleTraffic=car.sightView?.data.memorialVisit?[]:traffic||[];
       const lightTraffic=small&&graphics.profile.id==='low';
       const trafficRange=lightTraffic?220:360,detailRange=lightTraffic?70:140;
@@ -1925,6 +1954,14 @@
       const waterLevel=wetBlock?shorePatch?.sample(wetBlock.x,wetBlock.z)?.level??null:null;
       const wetRoad=Math.max(weather.moisture.asphalt.value,weather.moisture.pools.value)>.12&&!sheltered&&!car.sightView&&!car.flood;
       const reflectionLevel=waterLevel??(wetRoad?car.y:null);
+      if(wetRoad){
+        const vehicles=[{a:car},...closest.slice(0,4)].filter(({a})=>!a.flood&&!a.recoil?.fallen&&Math.abs(a.deckLift-car.deckLift)<3);
+        localLight.wetLights(vehicles.map(({a})=>({x:a.x-originX,z:a.z-originZ,y:driveGround(a.x,a.z,a.edge),yaw:a.yaw,
+          grade:driveGrade(a.x,a.z,a.yaw,a.edge),length:a.spec?.length||trafficModels[a.kind]?.length||4.2,
+          width:a.spec?.width||trafficModels[a.kind]?.width||1.7,bike:a.kind==='scooter'||a.model==='motorcycle',brake:a.brake||a.recoil?.braking})),
+          weather.moisture.asphalt.value,atmosphere.lamps.value);
+      }else localLight.wetLights([],0,0);
+      localLight.reflect(player.root.position,[player.root,playerRig],now,!inside&&!car.sightView&&graphics.profile.id!=='low');
       waterSurface.reflect(renderer,scene,camera,reflectionLevel,now,reflectionLevel!==null,graphics.profile,mirrorUpdated);
       renderer.render(scene,camera);
       return player.modelReady;
@@ -2072,7 +2109,11 @@
         pan:street?pan*(1-closest/70):0,rain:weather.rainfall,cabin,
         water:wet?Math.max(0,1-waterDistance/72):0,waterPan:(dx*right[0]+dz*right[2])/Math.max(1,waterDistance)};
     }
-    return {ambience,get sceneryChanged(){return districtRadius!==graphics.profile.districtRadius;},get mappedFurniture(){return grounds.streetFurniture;},
+    function motorcycleSound(car,traffic){
+      const m=camera.matrixWorld.elements;
+      return DriveBody.passingBikes(m,originX,originZ,car,traffic.filter(n=>n.kind==='scooter'&&!n.flood&&Math.abs(n.deckLift-car.deckLift)<3));
+    }
+    return {ambience,motorcycleSound,get sceneryChanged(){return districtRadius!==graphics.profile.districtRadius;},get mappedFurniture(){return grounds.streetFurniture;},
       get roadsideSurvey(){return roadGroup?.userData.roadsideSurvey;},
       capturePhoto,hitDashboardMap,refreshMap,prepareShaders,projectSummit,weather,streetLife,accessLane:(x,z)=>grounds.accessLane(x,z),loadStructures:structures.load,preloadVehicle:loadModel,waterAt:(x,z,edge)=>{if(edge&&sceneGraph.tunnels.info(edge)?.bore&&tunnels.at(x,z,edge)!=null)return null;const wet=waterAt(x,z),deck=wet&&bridges?.at(x,z,edge);return wet&&deck!=null&&deck>=wet.level?null:wet;},terrainReady:relief.ready,grade:driveGrade,ground:driveGround,setRoads,queueRoads,loadRoads,advanceRoads,cancelRoads,districtDistance:(x,z)=>Math.hypot(x-originX,z-originZ),render,resize:graphics.resize,contact,loadDistrict:async(g,x,z)=>(await Promise.all([buildingSource.load(g,x,z),osmBuildings.load(g,x,z),relief.loadLocal(g,x,z),passGrades.load(g,x,z),landscapeSource.load(g,x,z),groundSource.load(g,x,z),environment.load(g,x,z),amenities.load(g,x,z),farmland.load(g,x,z)])).some(Boolean),splash:(x,z,nx,nz,strength,level)=>driveFx.impact(x,z,nx,nz,strength,'water',level,.3),sightFootprint:(...args)=>district.footprint(...args),footprintViews:(...args)=>district.footprintViews(...args,relief.ground),nearLandmark:(x,z,id)=>landmarks?.nearest(x,z,650,id),reactToContact:roadsideImpact.react,impact:(x,z,nx,nz,s,k,h=0,g,edge)=>driveFx.impact(x,z,nx,nz,s,k,driveGround(x,z,edge)+h,g),scrape:(x,y,z,vx,vz,edge)=>driveFx.scrape(x,driveGround(x,z,edge)+y,z,vx,vz),resetFx(){driveFx.reset();roadsideImpact.reset();sightings.reset();}};
   };

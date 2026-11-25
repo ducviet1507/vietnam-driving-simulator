@@ -669,56 +669,11 @@
       return g;
     }
 
-    function getShopSignMaterial(zone, shop) {
-      const sKey = 'shopSign:' + zone.id + ':' + shop.title;
-      let signMat = signCache.get(sKey);
-      if (!signMat) {
-        const c = document.createElement('canvas');
-        c.width = 512; c.height = 160;
-        const ctx = c.getContext('2d');
-        const st = zone.signStyle;
-        ctx.fillStyle = shop.accent || st.bg;
-        ctx.fillRect(0, 0, 512, 160);
-        ctx.strokeStyle = st.trim; ctx.lineWidth = 8; ctx.strokeRect(6, 6, 500, 148);
-        ctx.fillStyle = st.fg; ctx.font = 'bold 44px "Segoe UI", Arial, sans-serif';
-        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-        ctx.fillText(shop.title, 256, 62, 470);
-        ctx.fillStyle = 'rgba(255,244,218,0.92)'; ctx.font = 'bold 22px "Segoe UI", Arial, sans-serif';
-        ctx.fillText(shop.sub, 256, 118, 464);
-        const tex = new T.CanvasTexture(c);
-        tex.colorSpace = T.SRGBColorSpace;
-        signMat = new T.MeshStandardMaterial({
-          map: tex, roughness: 0.6,
-          emissiveMap: tex, emissive: new T.Color(0xffffff), emissiveIntensity: 0.14
-        });
-        glowMats.push({ mat: signMat, base: 0.10, night: 0.78 });
-        signCache.set(sKey, signMat);
-      }
-      return signMat;
-    }
-
-    // Build a free-standing roadside shop signboard (biển hiệu đứng / biển vẫy quán đặc sản)
-    function buildRoadsideSign(zone, shop, seed) {
-      const g = new T.Group();
-      const signMat = getShopSignMaterial(zone, shop);
-      for (const px of [-1.05, 1.05]) addPart(g, geo.cyl, mat.steel, px, 1.55, 0, 0.045, 3.1, 0.045);
-      addPart(g, geo.box, mat.wood, 0, 2.75, 0, 2.52, 0.86, 0.14);
-      addPart(g, geo.plane, signMat, 0, 2.75, 0.075, 2.42, 0.76, 1);
-      addPart(g, geo.plane, signMat, 0, 2.75, -0.075, 2.42, 0.76, 1, 0, Math.PI, 0);
-      if (zone.lanterns) {
-        for (const px of [-0.75, 0.75]) {
-          addPart(g, geo.sphere, lanternMats[(seed + (px > 0 ? 1 : 0)) % lanternMats.length], px, 2.12, 0, 0.18, 0.23, 0.18);
-        }
-      }
-      return g;
-    }
-
-    // Mount authentic regional Vietnamese shopfront signboards, under-awning silk lanterns,
-    // and potted bougainvillea directly onto surveyed OSM shophouse facades from tour-district.js!
+    // Add physical street details under existing canopies. Business signs use mapped POIs.
     function decorateDistrictFronts(fronts, clearFn, compact) {
       if (!fronts || !fronts.length) return;
       const nearest = fronts
-        .filter(f => f.zone && !f.named && f.half >= 1.35 && Math.hypot(f.x, f.z) <= 155)
+        .filter(f => f.zone && !f.named && !f.residential && f.half >= 1.35 && Math.hypot(f.x, f.z) <= 155)
         .sort((a, b) => Math.hypot(a.x, a.z) - Math.hypot(b.x, b.z));
       const mounted = [];
       let count = 0;
@@ -726,20 +681,8 @@
         if (count >= (compact ? 12 : 26)) break;
         if (mounted.some(p => Math.hypot(p.x - f.x, p.z - f.z) < 5.5)) continue;
         const zone = f.zone;
-        const shop = zone.shops[f.seed % zone.shops.length];
-        const signMat = getShopSignMaterial(zone, shop);
-        const w = Math.min(f.half * 1.72, 4.2);
-        const h = Math.min(0.84, Math.max(0.58, w * 0.24));
         const yaw = Math.atan2(f.nx, f.nz);
         const g = new T.Group();
-        // Backlit signboard mounted cleanly flush above the awning (or on the 2nd-floor balcony fascia when present!)
-        const hasBalcony = f.h >= 6.4 && f.seed % 4 !== 0;
-        const sy = hasBalcony ? 3.68 : Math.min(f.h - h * 0.55, f.top + 0.54);
-        const sz = hasBalcony ? f.balcony + 0.04 : 0.14;
-        if (sy > f.top + 0.18) {
-          addPart(g, geo.box, mat.wood, 0, sy, sz, w + 0.14, h + 0.10, 0.10);
-          addPart(g, geo.plane, signMat, 0, sy, sz + 0.055, w, h, 1);
-        }
         // Hanging glowing silk lanterns under Hội An / Huế / Đà Lạt shop awnings
         if (zone.lanterns) {
           const lx = Math.min(f.half * 0.62, 1.45);
@@ -780,7 +723,7 @@
       const zone = zoneAt(lon, lat);
       if (!zone) return;
 
-      // 1. Mount authentic regional Vietnamese shopfront signboards & lanterns onto real OSM shophouses
+      // Mount lanterns and planters on appropriate commercial frontages.
       decorateDistrictFronts(districtFronts, clearFn, compact);
 
       // Boost priority of street segments close to real OSM cafes & markets
@@ -804,12 +747,10 @@
       let stallCount = 0;
       let overheadCount = 0;
       let garlandCount = 0;
-      let signCount = 0;
       const maxStalls = compact ? 6 : 14;
       const strings = compact ? 4 : 10;
       const maxOverhead = (zone.id === 'hoi-an' || zone.id === 'hue') ? strings : 0;
       const maxGarlands = zone.lanterns ? strings : 0;
-      const maxSigns = compact ? 4 : 8;
 
       // 2. String overhead silk lantern canopies right across narrow Hội An & Huế Old Town streets!
       if (maxOverhead > 0) {
@@ -840,7 +781,7 @@
 
       // 3. Place specialty sidewalk food/coffee stalls, plastic stools, umbrellas & projecting shop signs
       for (const { s } of nearby) {
-        if (stallCount >= maxStalls && garlandCount >= maxGarlands && signCount >= maxSigns) break;
+        if (stallCount >= maxStalls && garlandCount >= maxGarlands) break;
         const step = Math.max(13, Math.min(26, s.len * 0.45));
         for (let d = 3.5 + (s.seed % 5); d < s.len - 3.5; d += step) {
           for (const side of [-1, 1]) {
@@ -864,14 +805,6 @@
               mountProp(garland);
               placed.push({ x, z });
               garlandCount++;
-            } else if (signCount < maxSigns && pick === 1) {
-              const shop = zone.shops[hash % zone.shops.length];
-              const board = buildRoadsideSign(zone, shop, hash);
-              board.position.set(x, wy, z);
-              board.rotation.y = Math.atan2(s.fx, s.fz);
-              mountProp(board);
-              placed.push({ x, z });
-              signCount++;
             } else if (stallCount < maxStalls) {
               if (!clearFn(x + s.fx * 1.2, z + s.fz * 1.2, 0.65) || !clearFn(x - s.fx * 1.2, z - s.fz * 1.2, 0.65)) continue;
               const label = zone.stalls[hash % zone.stalls.length];
@@ -882,9 +815,9 @@
               placed.push({ x, z });
               stallCount++;
             }
-            if (stallCount >= maxStalls && garlandCount >= maxGarlands && signCount >= maxSigns) break;
+            if (stallCount >= maxStalls && garlandCount >= maxGarlands) break;
           }
-          if (stallCount >= maxStalls && garlandCount >= maxGarlands && signCount >= maxSigns) break;
+          if (stallCount >= maxStalls && garlandCount >= maxGarlands) break;
         }
       }
       flushProps();

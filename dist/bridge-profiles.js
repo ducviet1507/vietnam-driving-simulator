@@ -68,10 +68,19 @@ function buildBridgeProfiles(graph,details={}){
       navigation=Math.max(navigation,window.VietnamBridgeSignatures?.clearance?.(graph,mid.x,mid.z)||0);
       major||=/^(?:motorway|trunk|primary)/.test(edge.kind)||/cầu vượt/i.test(edge.name);
     }
+    const joined=new Set(chain);
     const clearance=major?6.8:Math.min(6.8,1+length*.085);
     for(const edge of chain){
       const info=record(edge),extra=details[edge.id]||{};
       Object.assign(info,extra,{bridge:true,layer:extra.layer??1,ranges:[[0,edge.length]]});
+      info.joints=[];
+      if(length>=10&&edge.length>.6&&!['low_water_crossing','floating','boardwalk'].includes(info.structure)){
+        for(const [node,s] of [[edge.start,Math.min(1.2,edge.length*.25)],[edge.end,edge.length-Math.min(1.2,edge.length*.25)]]){
+          if(graph.nodes.get(node)?.some(other=>other!==edge&&joined.has(other)))continue;
+          const p=graph.sample({edge,s,dir:1});
+          info.joints.push({s,x:p.x,z:p.z,fx:Math.sin(p.yaw),fz:-Math.cos(p.yaw),width:window.worldRoadHalfWidth?.(edge)??3.5});
+        }
+      }
       const terrainLift=Number.isFinite(extra.terrainLift)?extra.terrainLift:clearance;
       info.top=info.structure==='low_water_crossing'||info.structure==='floating'?.55:
         Math.max(.8,navigation,terrainLift+(tier-1)*6.8);
@@ -80,7 +89,17 @@ function buildBridgeProfiles(graph,details={}){
       }
     }
   }
-  return solveRoadGrades(graph,profiles,levels,grade,pinned,e=>!e.traffic?.tunnel,record);
+  const result=solveRoadGrades(graph,profiles,levels,grade,pinned,e=>!e.traffic?.tunnel,record);
+  const local=new WeakMap();
+  result.jointsNear=edge=>{
+    if(!edge)return [];
+    if(!local.has(edge)){
+      const adjacent=new Set([edge,...graph.nodes.get(edge.start)||[],...graph.nodes.get(edge.end)||[]]);
+      local.set(edge,[...adjacent].flatMap(e=>profiles.get(e.id)?.joints||[]));
+    }
+    return local.get(edge);
+  };
+  return result;
 }
 
 // Shared by elevated decks and descending tunnel approaches. All displacements

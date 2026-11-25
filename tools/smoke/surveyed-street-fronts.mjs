@@ -13,7 +13,7 @@ const context={createVietnamOsmBuildings:()=>({rows:()=>[]}),createSightFinishes
   ClipperLib:require('../../dist/clipper.min.js')};
 context.window=context;
 for(const script of ['tourism-catalog','sight-details','visitor-atlas','sights-hoi-an','central-streetscapes','surface-materials',
-    'visitor-roofs','vietnam-relief','landmark-materials','vietnam-landmarks','world-scene','surveyed-street-fronts','tour-district']){
+    'visitor-roofs','vietnam-relief','landmark-materials','vietnam-landmarks','world-scene','surveyed-street-fronts','vietnam-house-fronts','tour-district']){
   runInNewContext(read(script+'.js').toString(),context);
 }
 const scene=new T.Scene(),district=context.createTourDistrict(T,scene,new T.MeshStandardMaterial(),
@@ -26,11 +26,11 @@ const landmarks=context.VietnamLandmarks.create(T,scene);
 const footprints=JSON.parse(read('vn-osm-buildings/index.json')).tiles;
 const mapped=new Set(context.VietnamSights.flatMap(site=>site.modeledBuildings));
 const roadRows=new Map();
-for(const name of readdirSync(new URL('vn-roads/',dist)).filter(f=>f.startsWith('433_63')&&f.endsWith('.gz'))){
+for(const name of readdirSync(new URL('vn-roads/',dist)).filter(f=>(f.startsWith('433_63')||f.startsWith('426_43'))&&f.endsWith('.gz'))){
   const traffic=existsSync(new URL('vn-traffic/'+name,dist))?tile('vn-traffic/'+name):{};
   for(const row of tile('vn-roads/'+name))roadRows.set(row[0],{row,traffic:traffic[row[0]]});
 }
-function build(lon,lat){
+function build(lon,lat,park){
   const mx=111320*Math.cos(lat*Math.PI/180),my=110900;
   const graph={mx,my,point:(a,b)=>({x:(a-lon)*mx,z:(lat-b)*my}),geo:(x,z)=>[lon+x/mx,lat-z/my]};
   buildings=[];
@@ -47,8 +47,9 @@ function build(lon,lat){
     for(let k=0;k<coords.length;k+=2)points.push(graph.point(coords[k]/1e5,coords[k+1]/1e5));
     if(points.some(p=>Math.abs(p.x)<400&&Math.abs(p.z)<400))roads.push({id,name,kind,oneway,points,traffic});
   }
-  landmarks.setOrigin(graph,0,0);
-  district.build(graph,0,0,landmarks,()=>0,roads,()=>false,210);
+  const reserve=park?{gardens:[{...graph.point(park.lon,park.lat),r:120,publicPark:true}],buildingAreas:[],modeledBuildings:new Set()}:landmarks;
+  if(!park)landmarks.setOrigin(graph,0,0);
+  district.build(graph,0,0,reserve,()=>0,roads,()=>false,210);
   for(const mesh of district.group.children){
     assert.ok(mesh.geometry.attributes.position.data.array.every(Number.isFinite),'finite wall, roof and gallery buffers');
   }
@@ -63,6 +64,9 @@ function build(lon,lat){
 const hotel=build(108.326889,15.877082).find(f=>f.buildingId==='w626704907');
 assert.ok(hotel&&hotel.surveyKind==='hotel'&&hotel.nz<-.98,'hotel faces the pedestrian block of Trần Phú');
 assert.ok(hotel.half>4,'both sides of the split entrance edge form a single gallery');
+build(106.693411,10.768457,context.VietnamTourism.byId.get('osm-relation-14939719'));
+assert.ok(district.streetFronts.some(f=>f.house&&f.buildingId==='w1489506037'),
+  'The mapped house across De Tham from September 23 Park keeps its recessed frontage.');
 const town=build(108.32929,15.87710).filter(f=>f.surveyKind==='trading');
 assert.ok(town.length>=2,'several mapped shop houses on the driveable street');
 const lane=build(108.311714,15.870650);
