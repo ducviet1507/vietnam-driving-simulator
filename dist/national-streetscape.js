@@ -1,17 +1,17 @@
 'use strict';
 
-// The OSM position and name identify the place. Sign designs and untagged
-// dimensions are representative. A building-mounted sign needs a containing outline.
+// Use mapped amenities to locate services. Their public shop signs carry
+// category labels. A building-mounted sign needs a containing outline.
 const roadsideSignStyles={
   bank:['Ngân hàng','#274e67'],cafe:['Cà phê','#63493b'],fuel:['Trạm xăng','#275971'],
-  hospital:['Y tế','#376566'],hotel:['Lưu trú','#554f59'],market:['Chợ','#8e553a'],
-  pharmacy:['Nhà thuốc','#256654'],restaurant:['Quán ăn','#944b37'],school:['Giáo dục','#903e38'],
+  hospital:['Cơ sở y tế','#376566'],hotel:['Lưu trú','#554f59'],market:['Chợ','#8e553a'],
+  pharmacy:['Nhà thuốc','#256654'],restaurant:['Quán ăn','#944b37'],school:['Trường học','#903e38'],
   shop:['Cửa hàng','#3b5662'],bus:['Điểm dừng xe buýt','#245487']
 };
 
 function* buildNationalStreetscape(T,ctx){
   const {points,district,grounds,cx,cz,cellRoads,blocked,ground,placeBox,plant,register,group,radius,compact}=ctx;
-  const signs=[],trees=[],usedBuildings=new Set();
+  const signs=[],sourceNames=[],trees=[],usedBuildings=new Set();
   const distance=p=>p.x*p.x+p.z*p.z;
   const sorted=[...points].sort((a,b)=>distance(a)-distance(b));
   function nearest(x,z,reach){
@@ -57,7 +57,8 @@ function* buildNationalStreetscape(T,ctx){
     const side=(p.x-rx)*s.nx+(p.z-rz)*s.nz>=0?1:-1;
     let x=p.x,z=p.z,nx=-s.nx*side,nz=-s.nz*side;
     let width,height,y,base,bay,shopShell,mounted=false,shelter=false;
-    const name=bus?p.detail[0]||p.detail[1]||'Điểm dừng xe buýt':p.detail;
+    const sourceName=bus?p.detail[0]||p.detail[1]||roadsideSignStyles.bus[0]:p.detail;
+    const name=roadsideSignStyles[p.kind][0];
     const front=!bus&&district.businessFront(cx+x,cz+z,cx+rx,cz+rz);
     if(front){
       if(usedBuildings.has(front.id)||p.kind===front.authoredBusinessKind)continue;
@@ -103,8 +104,8 @@ function* buildNationalStreetscape(T,ctx){
       if(blocked(x,z,width*.52))continue;
       shelter=bus&&p.detail[2]&&!blocked(x-nx*1.3,z-nz*1.3,2.4);
     }
-    if(grounds.memorialAt(cx+x,cz+z)||signs.some(other=>Math.hypot(x-other.x,z-other.z)<
-      (name===other.name?12:Math.max(width,other.width)*.65)))continue;
+    if(grounds.memorialAt(cx+x,cz+z)||signs.some((other,i)=>Math.hypot(x-other.x,z-other.z)<
+      (sourceName===sourceNames[i]?12:Math.max(width,other.width)*.65)))continue;
     const yaw=Math.atan2(nx,nz),ux=nz,uz=-nx;
     const clearFace=(extent,depth)=>[-extent,0,extent].every(u=>offRoad(x+ux*u+nx*depth,z+uz*u+nz*depth));
     if(!clearFace(width*.52,.08))continue;
@@ -119,7 +120,7 @@ function* buildNationalStreetscape(T,ctx){
         const tint={shop:0xe1d1b5,cafe:0xcdb38f,restaurant:0xe6c9ab,pharmacy:0xd4ddd2}[p.kind];
         box(0,-d*.5-.09,(3.65-foot)*.5,w,3.65+foot,d,tint,'wall');
         box(0,-d*.5-.09,3.72,w+.21,.14,d+.19,0xa7a095);
-        register({id:'survey-shop:'+p.kind+':'+p.detail+':'+(cx+x)+':'+(cz+z),kind:'building',
+        register({id:'survey-shop:'+p.kind+':'+(cx+p.x)+':'+(cz+p.z),kind:'building',
           x:bx,z:bz,fx:ux,fz:uz,w:w*.5,d:d*.5,baseY:base-foot,height:3.8+foot});
       }else usedBuildings.add(front.id);
       const frontage=['shop','pharmacy','restaurant','cafe','bank','hotel'].includes(p.kind);
@@ -140,7 +141,7 @@ function* buildNationalStreetscape(T,ctx){
           }
         }
       }
-      // Prefer the recorded business over regional stock advertising here.
+      // Keep nearby street props clear of this occupied frontage.
       for(const f of district.streetFronts)if(Math.hypot(f.x-x,f.z-z)<4.5)f.named=true;
     }else{
       grounds.occupy(x,z,Math.min(2,width*.55),'business');
@@ -164,11 +165,19 @@ function* buildNationalStreetscape(T,ctx){
       }
     }
     box(0,0,y,width+.055,height+.055,.12,0xbbb9aa);
+    sourceNames.push(sourceName);
     signs.push({x,z,nx,nz,y:base+y,width,height,name,kind:p.kind,mounted:mounted||!!shopShell,estimated:!!shopShell,shelter,
-      ref:bus?p.detail[1]:'',anchorX:p.x,anchorZ:p.z});
+      ref:bus?busStopRef(p.detail[1]):'',anchorX:p.x,anchorZ:p.z});
   }
   if(signs.length)mountRoadsideSigns(T,group,signs);
   group.userData.roadsideSurvey={signs,trees:trees.length};
+}
+
+// Some OSM platforms use a neighbouring business as their name. Keep the
+// stop pictogram and short transit codes on the physical sign.
+function busStopRef(raw){
+  return String(raw||'').split(/[;,/]/).map(s=>s.trim().replace(/^(?:route|tuyến)\s+/iu,''))
+    .filter(s=>/^[a-z]{0,3}\d{1,5}(?:-\d{1,4})?[a-z]?$/i.test(s)).join(' · ');
 }
 
 function mountRoadsideSigns(T,group,signs){
@@ -176,7 +185,7 @@ function mountRoadsideSigns(T,group,signs){
   const canvas=document.createElement('canvas');canvas.width=cols*w;canvas.height=rows*h;
   const ctx=canvas.getContext('2d'),vertices=[],uv=[];
   for(const [i,s] of signs.entries()){
-    const left=i%cols*w,top=Math.floor(i/cols)*h,[type,bg]=roadsideSignStyles[s.kind];
+    const left=i%cols*w,top=Math.floor(i/cols)*h,[,bg]=roadsideSignStyles[s.kind];
     ctx.save();ctx.translate(left,top);ctx.fillStyle=bg;ctx.fillRect(0,0,w,h);
     let inset=0;
     if(s.kind==='bus'){
@@ -186,23 +195,9 @@ function mountRoadsideSigns(T,group,signs){
       inset=67;ctx.fillStyle='#ecf8eb';ctx.fillRect(28,32,16,47);ctx.fillRect(12,48,48,16);
     }
     const textX=(w+inset)*.5,maxWidth=w-inset-24;
-    const heading=s.kind==='bus'&&s.ref?type+' · '+s.ref:type;
-    const repeated=s.name.toLocaleLowerCase('vi').startsWith(heading.toLocaleLowerCase('vi'));
     ctx.fillStyle=s.kind==='school'?'#ffdf8e':'#fff7e4';ctx.textAlign='center';ctx.textBaseline='middle';
-    if(!repeated){
-      ctx.font='600 19px Arial';ctx.fillText(heading.toLocaleUpperCase('vi'),textX,22,maxWidth);
-      ctx.fillRect(inset+16,37,w-inset-32,2);
-    }
-    const font=['hotel','cafe'].includes(s.kind)?'Georgia':'Arial';
-    ctx.font='bold 46px '+font;
-    const words=s.name.trim().split(/\s+/);
-    if(ctx.measureText(s.name).width>maxWidth&&words.length>1){
-      let split=1;
-      while(split<words.length-1&&words.slice(0,split).join(' ').length<s.name.length*.45)split++;
-      ctx.font='bold '+(repeated?37:30)+'px '+font;
-      ctx.fillText(words.slice(0,split).join(' '),textX,repeated?33:58,maxWidth);
-      ctx.fillText(words.slice(split).join(' '),textX,repeated?77:91,maxWidth);
-    }else ctx.fillText(s.name,textX,repeated?56:74,maxWidth);
+    ctx.font='bold 42px Arial';ctx.fillText(s.name,textX,s.ref?37:h/2,maxWidth);
+    if(s.ref){ctx.font='bold 28px Arial';ctx.fillText(s.ref,textX,81,maxWidth);}
     ctx.restore();
     // Render legible outward faces on both sides of a freestanding sign.
     for(const dir of s.mounted?[1]:[1,-1]){

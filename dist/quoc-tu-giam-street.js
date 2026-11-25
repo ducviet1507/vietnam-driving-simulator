@@ -11,19 +11,25 @@ window.QuocTuGiamStreet=(()=>{
   function createAssets(T){
     const box=new T.BoxGeometry(1,1,1),round=new T.CylinderGeometry(.5,.5,1,12);
     const stone=new T.MeshStandardMaterial({roughness:.91});
-    function photoAtlas(file,count,width){
+    function photoAtlas(file,count,width,retainedRows){
       const map=new T.TextureLoader().load(file);map.colorSpace=T.SRGBColorSpace;map.anisotropy=4;
       const material=new T.MeshStandardMaterial({map,roughness:.92});
       const panels=Array.from({length:count},(_,i)=>{
         const geo=new T.PlaneGeometry(1,1),uv=geo.attributes.uv,margin=1/width;
-        for(let k=0;k<uv.count;k++)uv.setX(k,i/count+margin+uv.getX(k)*(1/count-2*margin));
+        for(let k=0;k<uv.count;k++){
+          uv.setX(k,i/count+margin+uv.getX(k)*(1/count-2*margin));
+          if(retainedRows)uv.setY(k,1-(1-uv.getY(k))*retainedRows[i]/384);
+        }
         return geo;
       });
       return {material,panels};
     }
     const panels=photoAtlas('landmark-scans/van-mieu-street-panels.webp',6,768);
-    const signs=photoAtlas('streetscape/quoc-tu-giam-signs.webp',4,1024);
-    const balconies=photoAtlas('streetscape/quoc-tu-giam-balconies.webp',5,1280);
+    const rows=[384,320,384,268,384];
+    const windows=photoAtlas('streetscape/quoc-tu-giam-windows.webp',5,1280,rows);
+    const crossingMap=new T.TextureLoader().load('streetscape/quoc-tu-giam-crossing.webp');
+    crossingMap.colorSpace=T.SRGBColorSpace;crossingMap.anisotropy=4;
+    const crossingSign=new T.MeshStandardMaterial({map:crossingMap,roughness:.86});
     const sign=document.createElement('canvas');sign.width=sign.height=128;
     const pen=sign.getContext('2d');pen.fillStyle='#154880';pen.fillRect(0,0,128,128);
     pen.fillStyle='#e8ece6';pen.font='bold 46px sans-serif';pen.textAlign='center';pen.fillText('38',64,82);
@@ -39,7 +45,7 @@ window.QuocTuGiamStreet=(()=>{
     const map=new T.CanvasTexture(c);map.wrapS=T.RepeatWrapping;
     map.anisotropy=4;
     const ironwork=new T.MeshStandardMaterial({map,color:0x254236,alphaTest:.36,side:T.DoubleSide,roughness:.77});
-    return {box,round,stone,ironwork,panels,signs,balconies,plane:new T.PlaneGeometry(1,1),
+    return {box,round,stone,ironwork,panels,crossingSign,windows,rows,plane:new T.PlaneGeometry(1,1),
       busSign:new T.MeshStandardMaterial({map:busMap,roughness:.85})};
   }
   function near(graph,cx,cz){
@@ -209,29 +215,38 @@ window.QuocTuGiamStreet=(()=>{
         block(bu+side*.196,bv,.02,.58,by+.32,by+1.85,0xa6b3ad);
       }
       collision('bus-stop',bu,bv,.38,.74,3);
-      // The photo sequence puts the bookshop, pharmacy and printing shops
-      // between the lake and Tôn Đức Thắng. Keep the mouth of alley 65 open.
+      // The five windows and balcony elevations belong to these specific bays.
       const balconies=new Map([[-13,4],[-37,1],[-43,0],[-69.5,2],[-79,3]]);
       const fronts=[
         [-13,-20,6.1,0xb7ab96],[-20,-25.4,9.2,0xc6bba4],[-25.4,-31,11.8,0xb8c7be],
-        [-31,-37,8.3,0xe3d5ac],[-37,-43,9.7,0xc3bbaa],[-43,-48.6,9.2,0xc9c59a,0],
-        [-48.6,-54,7.8,0xb8bfaf],[-54,-60.4,12.2,0xbfc2b5,1],[-60.4,-64.6,8.9,0xd0b476],
-        [-69.5,-74,8.8,0xc8ab7c,2],[-74,-79,8.6,0xa3968c],[-79,-85,12.8,0xbdb3a2],
+        [-31,-37,8.3,0xe3d5ac],[-37,-43,9.7,0xc3bbaa],[-43,-48.6,9.2,0xc9c59a],
+        [-48.6,-54,7.8,0xb8bfaf],[-54,-60.4,12.2,0xbfc2b5],[-60.4,-64.6,8.9,0xd0b476],
+        [-69.5,-74,8.8,0xc8ab7c],[-74,-79,8.6,0xa3968c],[-79,-85,12.8,0xbdb3a2],
         [-85,-90,9.9,0xb3c0b6],[-90,-96.5,12.5,0xbeae99],[-96.5,-103,9.1,0xd3c298]];
-      for(const [east,west,h,paint,sign] of fronts){
+      for(const [east,west,h,paint] of fronts){
         const u=(east+west)/2,w=east-west,v=16.6+.46*Math.sin(u),y=height(u,v);
         block(u,v+2.4,w-.06,4.8,y-.17,y+h,paint);
         block(u,v-.025,w*.84,.06,y+.16,y+2.62,0x424b4a);
         block(u,v-.12,w*.96,.42,y+2.55,y+2.70,0x86877d);
         const image=balconies.get(east);
         if(image!==undefined){
-          instance(assets.balconies.panels[image],assets.balconies.material,u,v-.09,y+(h+3.7)/2,w-.13,h-3.7,1,white,Math.PI);
+          // Preserve the scale and roof line of the survey photograph. Where
+          // the crop ended, model a separate clerestory below the balcony.
+          const faceHeight=(h-3.7)*assets.rows[image]/384,bottom=h-faceHeight;
+          instance(assets.windows.panels[image],assets.windows.material,u,v-.09,y+h-faceHeight/2,w-.13,faceHeight,1,white,Math.PI);
+          if(assets.rows[image]<384){
+            const span=w*.80;
+            block(u,v-.035,span,.09,y+3.72,y+bottom,0x607073);
+            for(let j=0;j<=4;j++)block(u+span*(j/4-.5),v-.099,.065,.06,y+3.70,y+bottom,0xc1baa7);
+            block(u,v-.11,span+.12,.18,y+bottom-.075,y+bottom+.025,paint);
+          }
           block(u,v-.34,w+.10,.78,y+h-.12,y+h+.02,0x8d8275);
         }
         for(let level=3.8;image===undefined&&level<h-1.1;level+=2.75){
+          const head=Math.min(h-.16,level+1.55);
           for(const side of [-1,1]){
-            block(u+side*w*.217,v-.05,w*.35,.12,y+level,y+level+1.55,0x4a636b);
-            block(u+side*w*.217,v-.13,.055,.065,y+level,y+level+1.55,0xd8d1b8);
+            block(u+side*w*.217,v-.05,w*.35,.12,y+level,y+head,0x4a636b);
+            block(u+side*w*.217,v-.13,.055,.065,y+level,y+head,0xd8d1b8);
           }
           block(u,v-.26,w*.94,.65,y+level-.39,y+level-.22,0xc6bca6);
           for(let j=0;j<9;j++)block(u+w*(j/9-.45),v-.56,.045,.045,y+level-.23,y+level+.42,0x68716a);
@@ -241,13 +256,18 @@ window.QuocTuGiamStreet=(()=>{
         block(u,v-.46,w*.95,.88,y+2.66,y+2.78,paint);
         const [lipX,lipZ]=at(u,v-.90);
         group.userData.eaves?.push([lipX,y+2.66,lipZ,fx,fz,w*.95]);
-        if(sign!==undefined)instance(assets.signs.panels[sign],assets.signs.material,u,v-.4,y+3.1,w*.93,1.35,1,white,Math.PI);
+        if(east===-43||east===-54||east===-69.5){
+          const span=w*.77;
+          block(u,v-.045,span,.10,y+2.83,y+3.42,0x65726e);
+          for(let j=0;j<=4;j++)block(u+span*(j/4-.5),v-.109,.065,.045,y+2.83,y+3.42,0xbcb6a6);
+          block(u,v-.11,span+.13,.19,y+3.42,y+3.52,paint);
+        }
         collision('shop:'+east,u,v+2.4,w,4.8,h);
       }
       const crossingU=24,crossingV=curb(crossingU,false)-.34,sy=height(crossingU,crossingV);
       block(crossingU,crossingV,.075,.075,sy,sy+2.54,0xa6a39a);
       for(let k=0;k<3;k++)block(crossingU,crossingV,.08,.08,sy+.25+k*.46,sy+.45+k*.46,0xb1483b);
-      instance(assets.signs.panels[3],assets.signs.material,crossingU+.05,crossingV,sy+2.38,.74,.74,1,white,Math.PI/2);
+      instance(plane,assets.crossingSign,crossingU+.05,crossingV,sy+2.38,.74,.74,1,white,Math.PI/2);
       collision('crossing-sign',crossingU,crossingV,.1,.1,2.75);
       if(panels.length){
         const g=new T.BufferGeometry();

@@ -159,7 +159,7 @@
     surfaces.transform(material.wall,2,2);
     const shopTypes=['cafe','bakery','grocer','pho','garage','pharmacy'];
     const upstairs=new Set(['cafe','grocer','pharmacy']);
-    const centralStreetscapes=window.CentralStreetscapes?.create(T,scene,renderer,material);
+    const centralStreetscapes=window.CentralStreetscapes?.create(T,scene);
     const meadow=surfaces.scanned('meadow',0xafbd9d,.56);
     const upland=surfaces.scanned('grass',0x8ea68d,.67);
     const landscapeSource=createSightLandscapes(T);
@@ -995,8 +995,7 @@
         const {house,s,sign,hx,hz,width,depth,type,random}=c;
             if(house){
               const rZone=graph&&centralStreetscapes?.zoneAt(...graph.geo(hx+cx,hz+cz));
-              const rShop=rZone?.shops[type%rZone.shops.length];
-              const twoStory=rShop?rShop.upstairs:upstairs.has(shopTypes[type]);
+              const twoStory=rZone?type%2===0:upstairs.has(shopTypes[type]);
               const h=(twoStory?6.7:3.65)+random()*.62;
               // Local +Z faces the road, with the façade just outside the wall.
               const sx=-s.nx*sign,sz=-s.nz*sign,rot=Math.atan2(sx,sz);

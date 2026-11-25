@@ -11,8 +11,8 @@ Trần Phú
 Vĩnh Hưng Hotel at 143 Trần Phú is represented on way 626704907, which contains
 the mapped hotel node. Its frontage faces the pedestrian block of Trần Phú.
 The 2015 view shows an ochre two-storey elevation, three ground-floor bays, a
-timber gallery, four round red lanterns and a name board over the centre door.
-The model interprets these features; detail and height are visual estimates.
+timber gallery and four round red lanterns. These architectural features are
+represented in the model. Detail and height are visual estimates.
 
 https://www.openstreetmap.org/way/626704907
 https://www.openstreetmap.org/node/2076856055

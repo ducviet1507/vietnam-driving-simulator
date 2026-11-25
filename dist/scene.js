@@ -118,7 +118,7 @@
   }
   sceneryParent=routeSets.city;
   roadMarkings(90);
-  const shopNames=['CÀ PHÊ PHỐ','BÁNH MÌ','HOA TƯƠI','NHÀ SÁCH','PHỞ HÀ NỘI','TRÀ VIỆT','TẠP HÓA','TIỆM ẢNH'];
+  const shopTypes=['CÀ PHÊ','BÁNH MÌ','HOA TƯƠI','NHÀ SÁCH','PHỞ BÒ','QUÁN TRÀ','TẠP HÓA','TIỆM ẢNH'];
   const paints=['#e4c190','#cbd8c5','#e2b9a1','#e7dbbe','#c9cbbb','#e3cc9d','#b4c6bf','#ecd4b5'];
   const boards=['#12594f','#ae4c35','#3d6862','#394e63','#9a342d','#39614a','#ab7031','#374653'];
   function facade(i,floors) {
@@ -142,8 +142,7 @@
         c.fillStyle='#eee2c7';c.fillRect(0,top+fh-6,w,6);
       }
       c.fillStyle=boards[i];c.fillRect(0,544,w,72);
-      c.fillStyle='#fff6d9';c.font='bold 49px Arial';c.textAlign='center';c.fillText(shopNames[i],256,598,482);
-      c.fillStyle='#cdc4a6';c.font='bold 11px Arial';c.fillText(['CÀ PHÊ RANG XAY','BÁNH MÌ NÓNG','HOA TƯƠI MỖI NGÀY','SÁCH VÀ VĂN PHÒNG PHẨM','PHỞ BÒ GIA TRUYỀN','TRÀ VÀ CÀ PHÊ','HÀNG TIÊU DÙNG','IN ẢNH KỸ THUẬT SỐ'][i],256,612,475);
+      c.fillStyle='#fff6d9';c.font='bold 49px Arial';c.textAlign='center';c.fillText(shopTypes[i],256,598,482);
       c.restore();c.translate(0,520);c.scale(1,(h-520)/(h-618));c.translate(0,-618);
       c.fillStyle='#344746';c.fillRect(12,625,488,143);
       // Layer a reflected street, shelving and merchandise behind the shop glass.
@@ -168,7 +167,7 @@
       c.fillStyle='#c6bea7';c.fillRect(entrance+56,716,3,15);
     })});
   }
-  const facades=shopNames.map((_,i)=>facade(i,2+i%3));
+  const facades=shopTypes.map((_,i)=>facade(i,2+i%3));
   const panel=new T.PlaneGeometry();
   const streetTrees=createTreeModels(T);
   function tree(x,z){

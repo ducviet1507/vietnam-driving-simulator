@@ -165,14 +165,6 @@
       pipe(T,k,post,[x+s*1.52,5.93,front],[x+s*2.07,6.83,front],.073,4);
     }
     k.box(post,x,6.42,front,4.1,.16,.19);k.box(post,x,7.28,front,.12,1.69,.17);
-    k.place(x,front+.13,0,()=>{
-      k.outline([[-.86,-.02],[-.83,-.29],[-.45,-.31],[-.12,-.25],[.21,-.35],[.60,-.26],[.82,-.15],[.75,.03],[.81,.18],[.48,.31],[.18,.29],[-.03,.37],[-.37,.26],[-.64,.28],[-.87,.15]],umber,0,5.92,-.06,.13);
-      const m=new T.MeshStandardMaterial({map:texture(T,384,134,(g,w,h)=>{
-        g.fillStyle='#e0b25e';g.font='italic bold 41px Georgia,serif';g.textAlign='center';g.fillText('Bảo Đại',w*.45,h*.42);
-        g.font='italic bold 59px Georgia,serif';g.fillText('Villa',w*.61,h*.88);
-      }),roughness:.9,transparent:true,alphaTest:.20});
-      plate(T,k,m,[[-.69,5.65,.09],[.69,5.65,.09],[.69,6.17,.09],[-.69,6.17,.09]],[[0,0],[1,0],[1,1],[0,1]]);
-    });
     // The wide concrete flight climbs laterally to the entrance landing.
     const stairStart=x-7.23,stairEnd=x-1.45,stairDepth=stairEnd-stairStart,n=17;
     for(let i=0;i<n;i++){
