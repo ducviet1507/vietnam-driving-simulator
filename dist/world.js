@@ -82,8 +82,8 @@ function loadStructuresNear(graph,x,z){
  // Large regional archives stream separately so even an offline departure
  // can enter the driving view immediately with the bundled scenery.
  if(structureRequest?.graph===graph&&Math.hypot(x-structureRequest.x,z-structureRequest.z)<220)return;
- const request=structureRequest={graph,x,z};
- request.ready=gfx.loadStructures(graph,x,z).then(changed=>{
+ const request=structureRequest={graph,x,z,bundled:false};
+ request.ready=gfx.loadStructures(graph,x,z,bundled=>{request.bundled=bundled;}).then(changed=>{
    const view=districtView;
    if(changed&&request===structureRequest&&view?.graph===graph)
      pendingDistrict=view;
@@ -163,6 +163,15 @@ async function prepareWorld(graph,token){
    VietnamTourism.loadRegion(...graph.geo(car.x,car.z))
  ]);
  if(token!==loadToken)return false;
+ // Let nearby release assets join the first scene before building it twice.
+ // Large external archives and slow connections can finish on the road.
+ const structures=structureRequest;
+ if(structures?.graph===graph&&structures.bundled){
+   let timer;
+   try{await Promise.race([structures.ready,new Promise(resolve=>{timer=setTimeout(resolve,350);})]);}
+   finally{clearTimeout(timer);}
+   if(token!==loadToken)return false;
+ }
  progress('Đang nối mặt đường và đặt xe vào làn…');
  if(!await refreshView(gfx.loadRoads)||token!==loadToken)return false;
  seedTraffic();
@@ -696,6 +705,22 @@ function drawMini(landmark){
  gfx.refreshMap();
 }
 let nextWeatherCheck=0;
+function roadAhead(metres){
+ const guided=guide?.sceneryAhead(metres);
+ if(guided)return guided;
+ const cursor={...player};
+ // Follow the bends of the present road. At an ambiguous turn, keep the
+ // junction and both exits inside the incoming district until the driver chooses.
+ for(let i=0;i<48;i++){
+   const left=cursor.dir>0?cursor.edge.length-cursor.s:cursor.s;
+   if(metres<=left){cursor.s+=metres*cursor.dir;break;}
+   metres-=left;cursor.s=cursor.dir>0?cursor.edge.length:0;
+   const choices=roads.options(cursor);
+   if(!choices.length||choices.length>1&&Math.abs(choices[0].angle)>.5)break;
+   Object.assign(cursor,choices[0]);
+ }
+ return roads.sample(cursor);
+}
 function roadWetness(){return car.edge&&roads.tunnels.info(car.edge)?.bore?0:gfx.weather.moisture.asphalt.value;}
 function journeyAmbience(){return gfx.ambience(car,npcs,inside&&!car.sightView);}
 function frame(now){
@@ -739,10 +764,13 @@ function frame(now){
      const speed=mode==='drive'?Math.hypot(car.vx||0,car.vz||0):0;
      // At highway speeds carry a wide district farther ahead. Extend both
      // distances together so the next build starts with the same road overlap.
-     const extra=clamp((speed-25)*3,0,Math.min(90,Math.max(0,gfx.districtRadius*.4-155)));
-     const lead=speed?(Math.min(speed*4,155)+extra)/speed:0;
-     const aheadX=car.x+(car.vx||0)*lead,aheadZ=car.z+(car.vz||0)*lead;
-     const moved=mode==='drive'&&Math.hypot(aheadX-viewX,aheadZ-viewZ)>125+Math.min(65,speed*2)+extra;
+     const reach=Math.min(560,gfx.districtRadius);
+     const extra=clamp((speed-25)*6,0,Math.max(0,reach*.60-155));
+     const metres=Math.min(speed*4,155)+extra,lead=speed?metres/speed:0;
+     const forward=mode==='drive'&&speed>25&&!car.offroad&&car.speed>0&&player.edge?roadAhead(metres):null;
+     const aheadX=forward?.x??(car.x+(car.vx||0)*lead),aheadZ=forward?.z??(car.z+(car.vz||0)*lead);
+     const moved=mode==='drive'&&(Math.hypot(aheadX-viewX,aheadZ-viewZ)>125+Math.min(65,speed*2)+extra||
+       gap>reach*.67&&Math.hypot(car.x-viewX,car.z-viewZ)>reach*.55);
      // A late scenery download can start a second build at the departure point.
      // Once the car leaves, spend that work on the road ahead instead.
      const leavingRefresh=moved&&speed>22&&gfx.districtDistance(viewX,viewZ)<1;
@@ -752,7 +780,8 @@ function frame(now){
      const readyToRefresh=leavingRefresh||gfx.advanceRoads(mode==='drive'?(urgent?4:1):4);
      if(readyToRefresh){
        if(gfx.sceneryChanged)pendingDistrict=districtView;
-       if(moved||(pendingDistrict&&mode!=='tour'&&speed<22)){
+       const stopped=speed<.6&&!held('w','arrowup','s','arrowdown');
+       if(moved||(pendingDistrict&&mode!=='tour'&&(mode!=='drive'||stopped))){
          refreshView(gfx.queueRoads,aheadX,aheadZ);
        }else if(pendingDistrict&&mode==='tour'){
          const {edges,x,z,waterways,graph}=pendingDistrict;

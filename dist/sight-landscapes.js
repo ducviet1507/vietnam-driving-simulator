@@ -6,7 +6,9 @@ function sightRasterPages(base,grid,extensions){
   function page(name){
     if(!pages.has(name)){
       const read=ext=>new Promise((resolve,reject)=>{
-        const img=new Image();img.onload=()=>resolve(img);img.onerror=reject;img.src=base+name+ext;
+        const img=new Image();
+        img.onload=()=>img.decode?img.decode().then(()=>resolve(img),reject):resolve(img);
+        img.onerror=reject;img.src=base+name+ext;
       });
       pages.set(name,Promise.all(extensions.map(read)).catch(e=>{pages.delete(name);throw e;}));
     }
@@ -35,14 +37,16 @@ function sightRasterPages(base,grid,extensions){
       }
       await Promise.all(next.cells.map(async tile=>{tile.images=await page(tile.name);}));
       if(byGraph.get(graph)!==next)return false;
+      const changed=needed.size>0||Boolean(next.previous?.cells.length);
       next.ready=true;delete next.previous;
       for(const key of pages.keys())if(!needed.has(key))pages.delete(key);
-      return true;
+      return changed;
     }catch{if(byGraph.get(graph)===next){if(next.previous)byGraph.set(graph,next.previous);else byGraph.delete(graph);}return false;}
   }
   return {load,current(graph){
     const found=graph&&byGraph.get(graph);
-    return found?.ready?found:found?.previous||null;
+    const ready=found?.ready?found:found?.previous;
+    return ready?.cells.length?ready:null;
   }};
 }
 // In the output colour space, distant open water takes its light from the sky.
@@ -55,13 +59,29 @@ function createSightLandscapes(T){
   let front,spare;
   function createView(){
   const canvas=document.createElement('canvas');canvas.width=canvas.height=side;
-  const colour=canvas.getContext('2d');
+  const colour=canvas.getContext('2d',{willReadFrequently:true});
   const mask=canvas.cloneNode(),surface=mask.getContext('2d',{willReadFrequently:true});
   canvas.width=canvas.height=side*4;
   const water=document.createElement('canvas');water.width=water.height=side*4;
   const waterPen=water.getContext('2d',{willReadFrequently:true});
-  const texture=new T.CanvasTexture(canvas);texture.colorSpace=T.SRGBColorSpace;
-  const waterTexture=new T.CanvasTexture(water);
+  function rasterTexture(){
+    const map=new T.DataTexture(null,canvas.width,canvas.height);
+    map.flipY=true;map.magFilter=T.LinearFilter;map.minFilter=T.LinearMipmapLinearFilter;map.generateMipmaps=true;
+    return map;
+  }
+  const texture=rasterTexture();texture.colorSpace=T.SRGBColorSpace;
+  const waterTexture=rasterTexture();
+  function* copyRaster(ctx,map){
+    const {width,height}=map.image;
+    const data=map.image.data??=new Uint8Array(width*height*4);
+    // CPU-backed rows avoid a synchronous copy between the canvas and WebGL
+    // contexts when a new imagery page is needed during a drive.
+    for(let y=0;y<height;y+=96){
+      data.set(ctx.getImageData(0,y,width,Math.min(96,height-y)).data,y*width*4);
+      yield;
+    }
+    map.needsUpdate=true;
+  }
   const uniforms={sightImage:{value:texture},sightWater:{value:waterTexture},sightBounds:{value:new T.Vector4(0,0,1,1)},sightEnabled:{value:0}};
   let active=null,activeFine=null,activeExtra=null,pixels=null,complete=true;
   const heights=new Float32Array(side*side),distance=new Float32Array(side*side);
@@ -117,27 +137,35 @@ function createSightLandscapes(T){
   function* setOrigin(graph,renderer){
     const next=coarse.current(graph),detail=fine.current(graph),extra=supplement.current(graph);
     if(complete&&active===next&&activeFine===detail&&activeExtra===extra)return;
+    const terrainChanged=!complete||active!==next||activeExtra!==extra;
     complete=false;
-    active=next;activeFine=detail;activeExtra=extra;pixels=null;uniforms.sightEnabled.value=0;
+    active=next;activeFine=detail;activeExtra=extra;uniforms.sightEnabled.value=0;
+    if(terrainChanged)pixels=null;
     if(!next?.cells.length&&!extra?.cells.length){heights.fill(NaN);distance.fill(0);complete=true;return;}
     const area=next?.cells.length?next:extra;
-    colour.clearRect(0,0,canvas.width,canvas.height);surface.clearRect(0,0,side,side);waterPen.clearRect(0,0,water.width,water.height);
+    colour.clearRect(0,0,canvas.width,canvas.height);
+    if(terrainChanged){surface.clearRect(0,0,side,side);waterPen.clearRect(0,0,water.width,water.height);}
     for(const {slot,i,j,images} of next?.cells||[]){
       const rect=[slot%8*size,Math.floor(slot/8)*size,size,size,i*size,j*size,size,size];
-      colour.drawImage(images[0],...rect.slice(0,4),...rect.slice(4).map(n=>n*4));surface.drawImage(images[1],...rect);
-      waterPen.drawImage(images[2],...rect.map(n=>n*4));
+      colour.drawImage(images[0],...rect.slice(0,4),...rect.slice(4).map(n=>n*4));
+      if(terrainChanged){surface.drawImage(images[1],...rect);waterPen.drawImage(images[2],...rect.map(n=>n*4));}
       yield;
     }
     if(detail)for(const {slot,i,j,images} of detail.cells){
       const x=(detail.west-area.west*4+i)*size,y=(area.north*4-detail.north+j)*size;
       colour.drawImage(images[0],slot%8*size,Math.floor(slot/8)*size,size,size,x,y,size,size);
+      yield;
     }
     const origin=graph.point(area.west/grid,area.north/grid);
     uniforms.sightBounds.value.set(origin.x,origin.z,grid/(3*graph.mx),grid/(3*graph.my));
-    if(next?.cells.length)pixels=surface.getImageData(0,0,side,side).data;
-    yield* composeHeights(area,extra,graph);
-    texture.needsUpdate=waterTexture.needsUpdate=true;uniforms.sightEnabled.value=pixels?1:0;
-    if(renderer&&pixels){renderer.initTexture(texture);yield;renderer.initTexture(waterTexture);}
+    if(terrainChanged){
+      if(next?.cells.length)pixels=surface.getImageData(0,0,side,side).data;
+      yield* composeHeights(area,extra,graph);
+      if(pixels)yield* copyRaster(waterPen,waterTexture);
+    }
+    if(pixels)yield* copyRaster(colour,texture);
+    uniforms.sightEnabled.value=pixels?1:0;
+    if(renderer&&pixels){renderer.initTexture(texture);yield;if(terrainChanged)renderer.initTexture(waterTexture);}
     complete=true;
   }
   function sample(x,z,field){

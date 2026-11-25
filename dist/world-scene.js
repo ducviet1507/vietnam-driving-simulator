@@ -229,6 +229,8 @@
     const gable=new T.ExtrudeGeometry(roofSection,{depth:1,bevelEnabled:false});gable.translate(0,0,-.5);
     const wireMaterial=new T.LineBasicMaterial({color:0x50554d,transparent:true,opacity:.64});
     const temp=new T.Object3D(),tone=new T.Color();
+    let commonSignAtlas;
+    const commonSigns=()=>commonSignAtlas??=createRoadsideSignAtlas(T,Object.entries(roadsideSignStyles).map(([kind,[name]])=>({kind,name})));
     const roadsideImpact=createRoadsideImpact(T,scene,relief.ground);
     let groundAt=relief.ground,bridges=null,tunnels=null,roadFormation=null;
     const driveGround=(x,z,edge)=>groundAt(x,z,edge);
@@ -289,14 +291,14 @@
         }
       return o;
     }
-    function regionContact(obstacleCells,originX,originZ,sceneGraph,tunnels,landmarks,district,x,z,r=.95,y=null,edge=null){
+    function regionContact(obstacleCells,originX,originZ,sceneGraph,tunnels,landmarks,district,ground,x,z,r=.95,y=null,edge=null){
       const px=x-originX,pz=z-originZ;
       const inBore=edge&&sceneGraph.tunnels.info(edge)?.bore&&tunnels.at(x,z,edge,r+1)!=null;
       let hit=null;
       for(const o of obstacleCells.get(obstacleKey(px,pz))||[]){
         if(inBore&&o.baseY==null)continue;
         if(y!==null){
-          const base=o.baseY??relief.ground(x,z);
+          const base=o.baseY??ground(x,z);
           if(y+1.35<base||y>base+(o.height??7)+.12)continue;
         }
         const dx=px-o.x,dz=pz-o.z;
@@ -316,14 +318,56 @@
         if(depth>0&&(!hit||depth>hit.depth))hit={nx,nz,depth,kind:o.kind,id:o.id,height:o.height,pointX:x+nx*(depth-r),pointZ:z+nz*(depth-r)};
       }
       if(inBore)return hit;
-      return hit||landmarks?.contact(x,z,r,y)||(y===null||y<relief.ground(x,z)+3?district.contact(x,z,r):null);
+      return hit||landmarks?.contact(x,z,r,y)||(y===null||y<ground(x,z)+3?district.contact(x,z,r):null);
     }
-    function contact(...args){return regionContact(obstacleCells,originX,originZ,sceneGraph,tunnels,landmarks,district,...args);}
+    function contact(...args){return regionContact(obstacleCells,originX,originZ,sceneGraph,tunnels,landmarks,district,relief.ground,...args);}
+    // Keep a bounded supply of detached GPU buffers for the next road and
+    // building meshes. Reusing their vertex arrays also reuses driver bindings.
+    const freeGeometry=new Map(),bufferKeys=new WeakMap();
+    let freeBytes=0;
+    function releaseGeometry(g){
+      const key=bufferKeys.get(g);
+      if(key){
+        const bytes=g.attributes.position.data.array.byteLength;
+        if(freeBytes+bytes<=(small?8:32)*1024*1024){
+          if(!freeGeometry.has(key))freeGeometry.set(key,[]);
+          freeGeometry.get(key).push(g);freeBytes+=bytes;return;
+        }
+      }
+      g.dispose();
+    }
+    function reuseGeometry(node){
+      const source=node.geometry,attrs=source.attributes,packed=attrs.position.data;
+      if(!source.userData.streamedSurface||!packed||bufferKeys.has(source)||packed.count<192)return false;
+      const entries=Object.entries(attrs);
+      if(entries.some(([,a])=>a.data!==packed)||!(packed.array instanceof Float32Array))return false;
+      const capacity=2**Math.ceil(Math.log2(packed.count));
+      const layout=entries.map(([name,a])=>name+','+a.itemSize+','+a.offset+','+Number(a.normalized)).join('|');
+      const key=layout+'|'+packed.stride+'|'+capacity;
+      const spare=freeGeometry.get(key)?.pop();
+      const g=spare||source;
+      let buffer;
+      if(spare){
+        buffer=spare.attributes.position.data;
+        freeBytes-=buffer.array.byteLength;
+        g.boundingSphere=source.boundingSphere;g.boundingBox=source.boundingBox;
+        node.geometry=g;
+      }else{
+        buffer=new T.InterleavedBuffer(new Float32Array(capacity*packed.stride),packed.stride);
+        buffer.setUsage(T.DynamicDrawUsage);
+        for(const [name,a] of entries)g.setAttribute(name,new T.InterleavedBufferAttribute(buffer,a.itemSize,a.offset,a.normalized));
+        bufferKeys.set(g,key);
+      }
+      buffer.count=packed.count;buffer.array.set(packed.array);
+      buffer.clearUpdateRanges();buffer.addUpdateRange(0,packed.array.length);buffer.needsUpdate=true;
+      g.setDrawRange(0,packed.count);
+      return true;
+    }
     function discardRoads(roadGroup){
       if(!roadGroup)return;roadGroup.removeFromParent();
       roadGroup.userData.discarded=true;roadGroup.userData.parking?.removeFromParent();
       roadGroup.userData.disposeSurvey?.();
-      roadGroup.traverse(obj=>{if(obj.isInstancedMesh)obj.dispose();else if(obj.geometry)obj.geometry.dispose();});
+      roadGroup.traverse(obj=>{if(obj.isInstancedMesh)obj.dispose();else if(obj.geometry)releaseGeometry(obj.geometry);});
     }
     function makeSpare(){
       const nextLand=new T.Mesh(new T.PlaneGeometry(landWidth,landWidth,landSegments,landSegments),land.material);
@@ -334,7 +378,7 @@
     function activate(next){
       const previous={land,district,grounds};
       formationMesh?.dispose();shorePatch?.dispose();
-      discardRoads(roadGroup);land.removeFromParent();district.group.removeFromParent();district.clear();
+      discardRoads(roadGroup);land.removeFromParent();district.group.removeFromParent();district.clear(releaseGeometry);
       ({land,district,grounds,landmarks,roadGroup,shorePatch,formationMesh,groundAt,bridges,tunnels,roadFormation,obstacleCells,waterAt,
         nearestWaterBlock,sceneGraph,originX,originZ,treeBatches,streetBulbs,runoff}=next);
       spare=previous;
@@ -343,12 +387,12 @@
     function* buildRoads(slot,edges,cx,cz,water,graph,streamed){
       let work=0;
       const {land,district,grounds}=slot;
-      const roadGroup=new T.Group(),treeBatches=[],streetBulbs=[],obstacleCells=new Map(),obstacles=[];
+      const roadGroup=new T.Group(),treeBatches=[],streetBulbs=[],obstacleCells=new Map(),obstacles=new Map();
       roadGroup.userData.eaves=[];
       const porchPositions=[],porchColors=[],porchUv=[],porchSurface=[];
       roadGroup.name='Street district origin';Object.assign(roadGroup.userData,{originX:cx,originZ:cz});
       let shorePatch=null,shoreFootings=null,formationMesh=null,fieldPixels=null,committed=false;
-      const registerObstacle=o=>{obstacles.push(o);return indexObstacle(obstacleCells,o);};
+      const registerObstacle=o=>{obstacles.set(o.id,o);return indexObstacle(obstacleCells,o);};
       try{
       const landscapes=yield* landscapeSource.prepareSteps(graph,streamed?renderer:null);
       const raw=relief.prepare(graph,landscapes);
@@ -550,7 +594,7 @@
       }
       const groundEdges=graph?bridgeGroundEdges(graph,edges):edges;
       yield* district.buildSteps(graph,cx,cz,landmarks,terrain.ground,groundEdges,openGround,Math.min(620,cutoff),terrain.revision,grounds.memorialAt,shoreFootings,grounds.finishes);
-      const contact=(...args)=>regionContact(obstacleCells,cx,cz,graph,tunnels,landmarks,district,...args);
+      const contact=(...args)=>regionContact(obstacleCells,cx,cz,graph,tunnels,landmarks,district,terrain.ground,...args);
       function nearbyCell(x,z){return Math.floor(x/cellSize)+','+Math.floor(z/cellSize);}
       function bounds(seg,pad,fn){
         for(let ix=Math.floor((Math.min(seg.ax,seg.bx)-pad)/cellSize);ix<=Math.floor((Math.max(seg.ax,seg.bx)+pad)/cellSize);ix++)
@@ -866,7 +910,7 @@
         builtLand:(x,z)=>environment.sample(graph,cx+x,cz+z).cover===50,
         placeBox:(mat,...args)=>instance(mat,unitBox,...args),register:registerObstacle,
         plant:(kind,x,z,h,w,a,owner)=>plantTree(kind,x,z,h,w,a,null,owner),group:roadGroup,
-        radius:detailRadius,compact:graphics.profile.id==='low'});
+        radius:detailRadius,commonSigns,compact:graphics.profile.id==='low'});
       const footbridgeIds=new Set(bridges?.footbridges.map(f=>'w'+f.id));
       function existingFarmBridge(id,x,z,fx,fz){
         if(footbridgeIds.has(id))return true;
@@ -1191,6 +1235,7 @@
           const floats=buffer.subarray(0,used);
           writeFlatNormals(floats,floats,stride,3);
           const vertices=new T.InterleavedBuffer(floats,stride),g=new T.BufferGeometry();
+          g.userData.streamedSurface=true;
           const attr=(size,offset)=>new T.InterleavedBufferAttribute(vertices,size,offset);
           g.setAttribute('position',attr(3,0));g.setAttribute('normal',attr(3,3));
           g.setAttribute('uv',attr(2,6));
@@ -1468,10 +1513,14 @@
         }
       });
       district.group.userData.surveyedFronts=district.streetFronts.filter(f=>f.surveyKind).map(f=>({kind:f.surveyKind,id:f.buildingId}));
+      const showLights=yield* mappedLights.prepare(graph,edges,cx,cz,signGround,(x,z)=>cells.get(nearbyCell(x,z))||[],
+        (x,z,y,edge)=>!contact(x,z,.45,y,edge));
+      const showTunnelCut=yield* tunnelCut.prepare(graph,tunnels,cx,cz,streamed?renderer:null);
       if(streamed&&driveWarmed){
         const pending=new T.Group(),owner=job;
         pending.children.push(roadGroup,district.group,land,...(landmarks?.active||[]).map(site=>site.mesh));
-        yield* uploadDistrictGeometry(pending);
+        if(showSigns.group)pending.children.push(showSigns.group);
+        yield* uploadDistrictGeometry(pending,land);
         yield {ready:warmMaterials(pending,()=>job!==owner,true).catch(error=>console.warn('District shader preparation',error))};
       }
       yield;
@@ -1482,21 +1531,19 @@
 
       landscapeSource.setWaterDistrict(cx,cz,cutoff);
       if(graph)atmosphere.setLocation(...graph.geo(cx,cz));
-      landscapeSource.activate(landscapes);relief.activate(terrain,cx,cz);tunnelCut.update(graph,tunnels,cx,cz);showCover();farms.activate();
+      landscapeSource.activate(landscapes);relief.activate(terrain,cx,cz);showTunnelCut();showCover();farms.activate();
       if(fieldPixels)waterSurface.setField(fieldPixels,maskSize,maskX,maskZ,maskScale,cx,cz);
       // Local plane UV runs towards -Z. Synchronize the three PBR maps at a rebase.
       for(const [mat,tile] of [[meadow,3.1],[upland,14.2]]){
         surfaces.transform(mat,landWidth/tile,landWidth/tile,(gx/tile)%1,(-gz/tile)%1);
       }
-      showPeople();showSigns();
-      mappedLights.rebuild(graph,edges,cx,cz,signGround,(x,z)=>cells.get(nearbyCell(x,z))||[],
-        (x,z,y,edge)=>!contact(x,z,.45,y,edge));
+      showPeople();showSigns();showLights();
       breakfast.place(graph,cx,cz,segments,(x,z,r)=>!grounds.memorialAt(x+cx,z+cz)&&!blocked(x,z,r)&&!contact(x+cx,z+cz,r),driveGround);
       centralStreetscapes?.place(graph,cx,cz,segments,(x,z,r)=>!blocked(x,z,r)&&!contact(x+cx,z+cz,r),driveGround,district.streetFronts,streetLife.places,graphics.profile.id==='low');
-      roadsideImpact.rebase(cx,cz);for(const o of obstacles)roadsideImpact.register(o);
+      roadsideImpact.rebase(cx,cz,obstacles);
       shadowStamp=-1000;
       }finally{
-        if(!committed){formationMesh?.dispose();shorePatch?.dispose();discardRoads(roadGroup);district.clear();signs.cancel();landmarkSource?.trim();}
+        if(!committed){formationMesh?.dispose();shorePatch?.dispose();discardRoads(roadGroup);district.clear(releaseGeometry);signs.cancel();landmarkSource?.trim();}
       }
     }
     let contourWorker=null,workerDisabled=false,contourSerial=0,waiting=null;
@@ -1615,8 +1662,12 @@
         return model;
       }).catch(()=>{cache.delete(kind);return null;}));return cache.get(kind);
     }
+    // Pooled vehicles and the hidden level of detail have no visible descendants.
+    class VehicleGroup extends T.Group {
+      updateMatrixWorld(force){if(this.visible)super.updateMatrixWorld(force);}
+    }
     function makeVehicle(kind,idx,player=false){
-      const root=new T.Group(),outside=new T.Group(),low=new T.Group();root.add(outside);outside.add(low);scene.add(root);
+      const root=new VehicleGroup(),outside=new VehicleGroup(),low=new VehicleGroup();root.add(outside);outside.add(low);scene.add(root);
       const spec=player?worldGarage[kind]:trafficModels[kind];
       const len=spec.length,wide=spec.width??(kind==='scooter'?.55:1.8),high=spec.height??(kind==='van'?1.65:1.18);
       const shadow=new T.Mesh(unitPlane,contactMat);shadow.rotation.x=-Math.PI/2;shadow.position.y=.013;shadow.scale.set(wide*1.75,len*1.32,1);root.add(shadow);
@@ -1638,15 +1689,24 @@
         for(const side of [-1,1])block(s*wide*.47,.29,side*len*.31,.16,.38,.54,tires);
       }
       }
-      // Small-screen traffic proxies can draw their body, windows and tyres in one pass.
-      if(small&&!player){
-        const panels=low.children.filter(mesh=>mesh.geometry===unitBox);
-        const body=new T.InstancedMesh(unitBox,trafficBody,panels.length);
-        panels.forEach((panel,i)=>{
-          panel.updateMatrix();body.setMatrixAt(i,panel.matrix);body.setColorAt(i,panel.material.color);
-          low.remove(panel);
-        });
-        low.add(body);
+      if(!player){
+        const groups=new Map();
+        for(const panel of low.children){
+          if(panel.geometry!==unitBox)continue;
+          const mat=small?trafficBody:panel.material;
+          if(!groups.has(mat))groups.set(mat,[]);
+          groups.get(mat).push(panel);
+        }
+        for(const [mat,panels] of groups){
+          if(panels.length===1)continue;
+          const body=new T.InstancedMesh(unitBox,mat,panels.length);
+          panels.forEach((panel,i)=>{
+            panel.updateMatrix();body.setMatrixAt(i,panel.matrix);
+            if(small)body.setColorAt(i,panel.material.color);
+            low.remove(panel);
+          });
+          low.add(body);
+        }
       }
       const item={root,outside,low,shadow,axleShadows:[],kind,idx,wheels:[],front:[],light:null,detail:null,loading:false};
       if(kind==='scooter'&&!player)item.rider=createTrafficScooterRider(T,outside);
@@ -1683,7 +1743,7 @@
             item.helmet=model.getObjectByName('rider_helmet');
             item.gripPivot=model.worldToLocal(item.front[0].getWorldPosition(new T.Vector3()));
           }
-          const detail=new T.Group();detail.add(model);
+          const detail=new VehicleGroup();detail.add(model);
           const stand=kind==='scooter'&&model.getObjectByName('kickstand');if(stand)stand.visible=false;
           outside.add(detail);detail.visible=false;
           for(const {n} of item.wheels){
@@ -1992,13 +2052,19 @@
       // The cockpit is already hidden in chase view. Keep its headlight in
       // the cube capture so every face uses the precompiled scene lighting.
       const shadowDue=renderer.shadowMap.enabled&&renderer.shadowMap.needsUpdate;
-      const paintUpdated=localLight.reflect(player.root.position,[player.root],now,!inside&&!car.sightView&&graphics.profile.id!=='low',
-        shadowDue||waterSurface.capturePending);
-      waterSurface.reflect(renderer,scene,camera,reflectionLevel,now,reflectionLevel!==null,graphics.profile,mirrorUpdated||paintUpdated);
-      renderer.render(scene,camera);
+      const autoUpdate=scene.matrixWorldAutoUpdate;
+      if(autoUpdate)scene.updateMatrixWorld();
+      scene.matrixWorldAutoUpdate=false;
+      try{
+        const paintUpdated=localLight.reflect(player.root.position,[player.root],now,!inside&&!car.sightView&&graphics.profile.id!=='low',
+          shadowDue||waterSurface.capturePending);
+        waterSurface.reflect(renderer,scene,camera,reflectionLevel,now,reflectionLevel!==null,graphics.profile,mirrorUpdated||paintUpdated);
+        renderer.render(scene,camera);
+      }finally{scene.matrixWorldAutoUpdate=autoUpdate;}
       return player.modelReady;
     }
     let driveWarmed=false;
+    const warmedTrafficProfiles=new Set();
     const actorPrograms=new Map(),preparedPrograms=new WeakSet(),uploadedTextures=new WeakMap();
     const preparedLayouts=new WeakMap();
     function layoutKey(node){
@@ -2007,38 +2073,61 @@
         attr.color?.itemSize||0,!!attr.tangent,!!attr.uv1,!!attr.uv2,!!attr.uv3,
         morph.position?.length||0,morph.normal?.length||0,morph.color?.length||0].join('|');
     }
-    const uploadedGeometry=new WeakSet(),uploadScene=new T.Scene(),uploadTarget=new T.WebGLRenderTarget(1,1);
-    const uploadMaterial=new T.MeshBasicMaterial({visible:false});
-    const uploadProbes=[];
-    function* uploadDistrictGeometry(root){
-      // Three uploads geometry before checking material visibility. Stage the
-      // buffers without drawing triangles or compiling an extra shader.
-      const geometries=new Set();
-      root.traverse(node=>{
-        const g=node.geometry;
-        if(g?.attributes.position?.count>=512&&!uploadedGeometry.has(g))geometries.add(g);
-      });
-      let batch=[],vertices=0;
+    const uploadScene=new T.Scene(),uploadMaterial=new T.MeshBasicMaterial({visible:false});
+    const uploadProbe=new T.Mesh(undefined,uploadMaterial),stagedGeometry=new WeakSet(),stagedInstances=new WeakSet();
+    uploadProbe.frustumCulled=false;uploadScene.matrixWorldAutoUpdate=false;
+    function* uploadDistrictGeometry(root,land){
+      // Upload to Three's own attribute cache. With clearing disabled and every
+      // material invisible this pass preserves the screen and its depth buffer.
+      const batch=[];
+      let bytes=0;
       function upload(){
-        const previous=renderer.getRenderTarget(),face=renderer.getActiveCubeFace(),mip=renderer.getActiveMipmapLevel();
-        const shadow=renderer.shadowMap.needsUpdate;
+        const clear=renderer.autoClear,shadow=renderer.shadowMap.needsUpdate,restore=[];
         try{
-          for(const [i,g] of batch.entries()){
-            const probe=uploadProbes[i]??=new T.Mesh(g,uploadMaterial);
-            probe.geometry=g;probe.frustumCulled=false;uploadScene.add(probe);
+          renderer.autoClear=false;renderer.shadowMap.needsUpdate=false;
+          for(const node of batch){
+            if(node.children.length){
+              // A terrain parent can also own visible shore and formation meshes.
+              uploadProbe.geometry=node.geometry;uploadScene.children=[uploadProbe];
+              renderer.render(uploadScene,camera);
+            }else{
+              restore.push([node,node.material,node.frustumCulled,node.visible]);
+              node.material=uploadMaterial;node.frustumCulled=false;node.visible=true;
+            }
           }
-          renderer.shadowMap.needsUpdate=false;renderer.setRenderTarget(uploadTarget);
-          renderer.render(uploadScene,camera);
-          for(const g of batch)uploadedGeometry.add(g);
+          uploadScene.children=restore.map(item=>item[0]);
+          if(restore.length)renderer.render(uploadScene,camera);
         }finally{
-          renderer.setRenderTarget(previous,face,mip);renderer.shadowMap.needsUpdate=shadow;
-          for(const probe of uploadScene.children)probe.geometry=null;
-          uploadScene.clear();
+          for(const [node,mat,culled,visible] of restore){node.material=mat;node.frustumCulled=culled;node.visible=visible;}
+          uploadScene.children=[];uploadProbe.geometry=null;
+          renderer.autoClear=clear;renderer.shadowMap.needsUpdate=shadow;
         }
+        batch.length=0;bytes=0;
       }
-      for(const g of geometries){
-        batch.push(g);vertices+=g.attributes.position.count;
-        if(vertices>=12000||batch.length>=12){upload();yield;batch=[];vertices=0;}
+      const nodes=[];
+      root.traverse(node=>{if(node.geometry?.attributes.position)nodes.push(node);});
+      for(const node of nodes){
+        const reused=node.geometry.userData.streamedSurface&&reuseGeometry(node);
+        const g=node.geometry;
+        const geometry=reused||!stagedGeometry.has(g)||node===land;
+        const instances=node.isInstancedMesh&&!stagedInstances.has(node);
+        if(!geometry&&!instances)continue;
+        if(geometry){
+          const arrays=new Set(Object.values(g.attributes).map(a=>(a.data||a).array));
+          if(g.index)arrays.add(g.index.array);
+          for(const array of arrays)bytes+=array.byteLength;
+          stagedGeometry.add(g);
+        }
+        if(instances){
+          bytes+=node.instanceMatrix.array.byteLength+(node.instanceColor?.array.byteLength||0);
+          stagedInstances.add(node);
+        }
+        batch.push(node);
+        if(bytes>=768*1024||batch.length>=64){
+          upload();
+          // A fast CPU can otherwise queue a whole district on the GPU in one idle callback.
+          yield {ready:new Promise(requestAnimationFrame)};
+        }
       }
       if(batch.length){upload();yield;}
     }
@@ -2116,8 +2205,12 @@
           if(performance.now()>=end)break;
           if(uploadedTextures.get(tex)!==tex.version){renderer.initTexture(tex);uploadedTextures.set(tex,tex.version);}
           textures.delete(tex);
+          if(streamed)break;
         }
-        if(programs.size||textures.size)await new Promise(resolve=>setTimeout(resolve,8));
+        if(programs.size||textures.size){
+          if(streamed)await new Promise(requestAnimationFrame);
+          else await new Promise(resolve=>setTimeout(resolve,8));
+        }
       }
     }
     function prepareActor(kind,object){
@@ -2127,21 +2220,32 @@
       return actorPrograms.get(key);
     }
     async function warmScene(){
+      const profile=graphics.profile.id,warmRoster=!small&&!warmedTrafficProfiles.has(profile);
       const actors=new Map([[player.kind,player]]);
       for(const item of trafficItems.values()){
         if(small&&!item.loading)continue;
         if(!actors.has(item.kind))actors.set(item.kind,item);
       }
+      if(warmRoster)for(const kind of Object.keys(trafficModels)){
+        if(actors.has(kind))continue;
+        if(!pools.has(kind))pools.set(kind,[]);
+        const pool=pools.get(kind),item=pool[0]||makeVehicle(kind,0);
+        if(!pool.length){item.root.visible=false;pool.push(item);}
+        actors.set(kind,item);
+      }
       for(const item of actors.values())item.request();
-      const [walkers]=await Promise.all([streetLife.prepareDeparture(),environmentReady,
+      const [{walkGroup,templates}]=await Promise.all([streetLife.prepareDeparture(warmRoster),environmentReady,
         ...Array.from(actors.values(),item=>item.ready)]);
       driveFx.mountExhaust(player.detail?.children[0],player.kind);
-      await warmMaterials(scene);
       // Some drivers specialize a linked program on its first draw. Prime the
       // skinned, vehicle and impact layouts behind the departure screen.
       const actorsToRestore=[],scissor=renderer.getScissor(new T.Vector4()),clipped=renderer.getScissorTest();
       const canopyProbes=[];
       try{
+        const rider=actors.get('scooter')?.rider;
+        if(warmRoster&&rider)templates.add(rider.departureVariants());
+        scene.add(templates);
+        await warmMaterials(scene);
         // At departure distant trees can all be billboards. The first nearby
         // grove uses a different shader, with or without per-instance colour.
         {
@@ -2154,7 +2258,7 @@
             scene.add(probe);canopyProbes.push(probe);
           }
         }
-        for(const root of [walkers,driveFx.group,...Array.from(actors.values(),item=>item.root)])root.traverse(node=>{
+        for(const root of [walkGroup,templates,driveFx.group,...Array.from(actors.values(),item=>item.root)])root.traverse(node=>{
           actorsToRestore.push([node,node.visible,node.frustumCulled]);
           node.visible=true;node.frustumCulled=false;
         });
@@ -2163,6 +2267,7 @@
         waterSurface.prepare(renderer,graphics.profile,()=>renderer.render(scene,camera),true);
         renderer.render(scene,camera);
       }finally{
+        templates.removeFromParent();templates.clear();
         for(const probe of canopyProbes){probe.removeFromParent();probe.dispose();}
         for(const [node,visible,culled] of actorsToRestore){node.visible=visible;node.frustumCulled=culled;}
         renderer.setScissor(scissor);renderer.setScissorTest(clipped);renderer.shadowMap.needsUpdate=true;
@@ -2173,6 +2278,7 @@
         try{while(gl.clientWaitSync(fence,0,0)===gl.TIMEOUT_EXPIRED)await new Promise(resolve=>setTimeout(resolve,8));}
         finally{gl.deleteSync(fence);}
       }
+      if(warmRoster)warmedTrafficProfiles.add(profile);
       driveWarmed=true;
     }
     function prepareShaders(car,traffic){

@@ -104,17 +104,17 @@ function createTunnelDistrict(graph,edges,ground,profileHeight){
 function createTunnelCut(T){
   const size=768,metres=2,canvas=document.createElement('canvas');
   canvas.width=canvas.height=size;
-  const texture=new T.CanvasTexture(canvas);texture.flipY=false;texture.generateMipmaps=false;
-  texture.minFilter=texture.magFilter=T.NearestFilter;
-  const box={value:new T.Vector4(0,0,0,0)},map={value:texture},ctx=canvas.getContext('2d');
-  function update(graph,zone,cx,cz){
-    box.value.w=0;
-    if(!zone?.edges.length)return;
+  const buffers=[new T.DataTexture(null,size,size),new T.DataTexture(null,size,size)];
+  const box={value:new T.Vector4(0,0,0,0)},map={value:buffers[0]},ctx=canvas.getContext('2d',{willReadFrequently:true});
+  function* prepare(graph,zone,cx,cz,renderer){
+    if(!zone?.edges.length)return ()=>{box.value.w=0;};
+    const texture=map.value===buffers[0]?buffers[1]:buffers[0];
     ctx.setTransform(1,0,0,1,0,0);ctx.clearRect(0,0,size,size);
     const span=size*metres,left=Math.floor(cx/metres)*metres-span/2,top=Math.floor(cz/metres)*metres-span/2;
     ctx.setTransform(1/metres,0,0,1/metres,-left/metres,-top/metres);
     ctx.lineCap='butt';
     for(const e of zone.edges){
+      yield;
       const info=graph.tunnels.info(e),section=zone.section(e);
       ctx.lineWidth=2*section.innerHalfWidth;
       for(const [lo,hi] of info.ranges)for(let j=1;j<e.dist.length;j++){
@@ -135,7 +135,13 @@ function createTunnelCut(T){
         }
       }
     }
-    box.value.set(left,top,1/span,1);texture.needsUpdate=true;
+    const data=texture.image.data??=new Uint8Array(size*size*4);
+    for(let y=0;y<size;y+=64){
+      data.set(ctx.getImageData(0,y,size,64).data,y*size*4);
+      yield;
+    }
+    texture.needsUpdate=true;renderer?.initTexture(texture);
+    return ()=>{map.value=texture;box.value.set(left,top,1/span,1);};
   }
   function shade(shader,xz){
     shader.uniforms.tunnelCutBox=box;shader.uniforms.tunnelCutMap=map;
@@ -152,5 +158,10 @@ function createTunnelCut(T){
         }
       }`);
   }
-  return {update,shade};
+  function update(...args){
+    const steps=prepare(...args);
+    let step;do{step=steps.next();}while(!step.done);
+    step.value();
+  }
+  return {prepare,update,shade};
 }

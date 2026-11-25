@@ -142,14 +142,18 @@ function createMappedTrafficLights(T,scene,small){
     pose.position.set(x,y,z);pose.scale.set(1,height,1);pose.rotation.set(0,-yaw,0);
     pose.updateMatrix();mesh.setMatrixAt(i,pose.matrix);
   }
-  function rebuild(graph,edges,cx,cz,ground,roadsAt,siteClear){
+  function* prepare(graph,edges,cx,cz,ground,roadsAt,siteClear){
     const candidates=[];
-    for(const edge of edges)for(const point of edge.controls||[]){
-      for(const dir of edge.oneway?[1]:[1,-1]){
-        if(!signalApplies(point,edge,dir))continue;
-        const p=graph.sample({edge,dir,s:point.s},worldRoadHalfWidth(edge)+.65);
-        const x=p.x-cx,z=p.z-cz,distance=Math.hypot(x,z);
-        if(distance<450)candidates.push({yaw:p.yaw,distance,node:point.node,edge,dir,s:point.s});
+    let scanned=0;
+    for(const edge of edges){
+      if((++scanned&63)===0)yield;
+      for(const point of edge.controls||[]){
+        for(const dir of edge.oneway?[1]:[1,-1]){
+          if(!signalApplies(point,edge,dir))continue;
+          const p=graph.sample({edge,dir,s:point.s},worldRoadHalfWidth(edge)+.65);
+          const x=p.x-cx,z=p.z-cz,distance=Math.hypot(x,z);
+          if(distance<450)candidates.push({yaw:p.yaw,distance,node:point.node,edge,dir,s:point.s});
+        }
       }
     }
     function roadside(p){
@@ -172,19 +176,30 @@ function createMappedTrafficLights(T,scene,small){
         if(!overlaps&&siteClear(at.x,at.z,y,p.edge))return {x,y,z,yaw:at.yaw};
       }
     }
-    active=[];
+    const next=[];
     for(const p of candidates.sort((a,b)=>a.distance-b.distance)){
-      if(active.length===capacity)break;
-      if(active.some(q=>p.node===q.node&&Math.cos(p.yaw-q.yaw)>.86))continue;
+      if(next.length===capacity)break;
+      if(next.some(q=>p.node===q.node&&Math.cos(p.yaw-q.yaw)>.86))continue;
+      yield;
       const site=roadside(p);
-      if(!site)continue;
-      const {x,y,z,yaw}=site,i=active.length;
-      active.push(p);place(poles,i,x,y+1.65,z,3.3,yaw);place(heads,i,x,y+3.65,z,1,yaw);
-      for(let j=0;j<3;j++)place(bulbs,3*i+j,x-.19*Math.sin(yaw),y+4.03-j*.38,z+.19*Math.cos(yaw),1,yaw);
+      if(site)next.push({...p,site});
     }
-    poles.count=heads.count=active.length;bulbs.count=3*active.length;
-    for(const mesh of objects)mesh.instanceMatrix.needsUpdate=true;
-    lastTick=-1;update(performance.now()/1000);
+    return ()=>{
+      active=next;
+      active.forEach(({site:{x,y,z,yaw}},i)=>{
+        place(poles,i,x,y+1.65,z,3.3,yaw);place(heads,i,x,y+3.65,z,1,yaw);
+        for(let j=0;j<3;j++)place(bulbs,3*i+j,x-.19*Math.sin(yaw),y+4.03-j*.38,z+.19*Math.cos(yaw),1,yaw);
+      });
+      poles.count=heads.count=active.length;bulbs.count=3*active.length;
+      for(const mesh of objects)mesh.instanceMatrix.needsUpdate=true;
+      lastTick=-1;update(performance.now()/1000);
+    };
   }
-  return {rebuild,update};
+  function rebuild(...args){
+    const steps=prepare(...args);
+    let step=steps.next();
+    while(!step.done)step=steps.next();
+    step.value();
+  }
+  return {prepare,rebuild,update};
 }

@@ -58,6 +58,11 @@ function poleAt(crossHeight){
 const corner=poleAt(0);
 assert.ok(corner.x>half&&corner.z<crossRoad.az-crossRoad.w-.45,'signal is visible beyond the far right corner');
 assert.equal(poleAt(8).z,-20,'a road on a separate deck does not displace the pole');
+const incoming=lights.prepare(roadGraph,[],0,0,()=>0,()=>[],()=>true).next();
+assert.ok(incoming.done);
+assert.equal(signalScene.children[0].count,1,'the active junction remains lit while the next district is prepared');
+incoming.value();
+assert.equal(signalScene.children[0].count,0,'the new district publishes its own signal count');
 
 const material={};
 for(const finish of ['asphalt','earth','pavers','roadConcrete','roadSlabs','roadWood','roadMetal'])

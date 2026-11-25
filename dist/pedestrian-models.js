@@ -2,10 +2,19 @@
 
 function clonePedestrian(T,scene){
   const rig=TrafficModels.clone(scene);
+  const skins=[];
   // All shipped pedestrian clips fit within 1.13 m of this mesh-local
   // centre. Allow room for blended poses and the seated scooter rider.
   rig.traverse(part=>{
-    if(part.isSkinnedMesh)part.boundingSphere=new T.Sphere(new T.Vector3(0,1,0),1.6);
+    if(!part.isSkinnedMesh)return;
+    part.boundingSphere=new T.Sphere(new T.Vector3(0,1,0),1.6);
+    // The clothes and body of one walker can be separate primitives bound
+    // to the same bones. Update and upload that palette once per pose.
+    const skin=part.skeleton;
+    const shared=skins.find(s=>s.bones.length===skin.bones.length&&s.bones.every((bone,i)=>
+      bone===skin.bones[i]&&s.boneInverses[i].equals(skin.boneInverses[i])));
+    if(shared)part.skeleton=shared;
+    else skins.push(skin);
   });
   return rig;
 }

@@ -67,6 +67,15 @@ standard.frames(450, 16);
 assert.equal(standard.renderer.scale, .9);
 assert.equal(graphicsFor(false, 8).graphics.profile.id, 'high');
 {
+  const pc=graphicsFor(false,8);
+  pc.frames(90,16.7);pc.frames(1,100);pc.frames(90,16.7);
+  assert.equal(pc.graphics.profile.id,'high');
+  for(let i=0;i<20;i++){pc.frames(12,16.7);pc.frames(1,40);}
+  assert.equal(pc.graphics.profile.id,'medium');
+  pc.frames(300,16.7);
+  assert.equal(pc.graphics.profile.id,'medium');
+}
+{
   const T=createRequire(import.meta.url)('../../dist/three.min.js');
   const script=readFileSync(new URL('../../dist/street-vehicle-light.js',import.meta.url),'utf8');
   const create=runInNewContext(script+'\ncreateStreetVehicleLight');

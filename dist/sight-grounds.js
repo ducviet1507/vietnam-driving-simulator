@@ -44,6 +44,7 @@ function createSightGrounds(T,small,source){
   const texture=new T.DataTexture(null,canvas.width,canvas.height);
   texture.magFilter=texture.minFilter=T.LinearFilter;
   const strip=new T.DataTexture(),offset=new T.Vector2();
+  let stripPixels;
   const uniforms={visitorMap:{value:texture},visitorOrigin:{value:new T.Vector2()},visitorActive:{value:0}};
   const codes={sand:1,rock:2,lawn:3,orchard:3,tea:3,court:4,trail:5,walk:6,steps:6,drive:7};
   const surfaces={asphalt:1,concrete:2,'concrete:plates':2,gravel:3,wood:4,brick:5,
@@ -299,11 +300,32 @@ function createSightGrounds(T,small,source){
     for(let row=0;row<height;row+=64){
       const rows=Math.min(64,height-row),start=row*width*4;
       const pixels=pen.getImageData(0,row,width,rows).data;
-      mask.set(pixels,start);
       if(resident){
-        Object.assign(strip.image,{width,height:rows,data:mask.subarray(start,start+pixels.length)});
-        renderer.copyTextureToTexture(offset.set(0,row),strip,texture);
+        const prev=new Uint32Array(mask.buffer,mask.byteOffset+start,width*rows);
+        const next=new Uint32Array(pixels.buffer,pixels.byteOffset,width*rows);
+        let left=width,right=-1,top=rows,bottom=-1;
+        for(let y=0;y<rows;y++){
+          const at=y*width;let x=0;
+          while(x<width&&prev[at+x]===next[at+x])x++;
+          if(x===width)continue;
+          left=Math.min(left,x);top=Math.min(top,y);bottom=y;
+          let end=width-1;
+          while(end>x&&prev[at+end]===next[at+end])end--;
+          right=Math.max(right,end);
+        }
+        if(right>=left){
+          const w=right-left+1,h=bottom-top+1;
+          stripPixels??=new Uint8Array(width*64*4);
+          const data=stripPixels.subarray(0,w*h*4);
+          for(let y=0;y<h;y++){
+            const i=((top+y)*width+left)*4;
+            data.set(pixels.subarray(i,i+w*4),y*w*4);
+          }
+          Object.assign(strip.image,{width:w,height:h,data});
+          renderer.copyTextureToTexture(offset.set(left,row+top),strip,texture);
+        }
       }
+      mask.set(pixels,start);
       yield;
     }
     texture.image.data=mask;

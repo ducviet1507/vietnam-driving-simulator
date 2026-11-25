@@ -169,7 +169,7 @@ function* buildNationalStreetscape(T,ctx){
     signs.push({x,z,nx,nz,y:base+y,width,height,name,kind:p.kind,mounted:mounted||!!shopShell,estimated:!!shopShell,shelter,
       ref:bus?busStopRef(p.detail[1]):'',anchorX:p.x,anchorZ:p.z});
   }
-  if(signs.length)mountRoadsideSigns(T,group,signs);
+  if(signs.length)mountRoadsideSigns(T,group,signs,ctx.commonSigns);
   group.userData.roadsideSurvey={signs,trees:trees.length};
 }
 
@@ -180,11 +180,14 @@ function busStopRef(raw){
     .filter(s=>/^[a-z]{0,3}\d{1,5}(?:-\d{1,4})?[a-z]?$/i.test(s)).join(' · ');
 }
 
-function mountRoadsideSigns(T,group,signs){
-  const cols=4,rows=Math.ceil(signs.length/cols),w=384,h=112;
-  const canvas=document.createElement('canvas');canvas.width=cols*w;canvas.height=rows*h;
-  const ctx=canvas.getContext('2d'),vertices=[],uv=[];
-  for(const [i,s] of signs.entries()){
+function roadsideLabelKey(s){return s.kind+'|'+(s.ref||'');}
+function createRoadsideSignAtlas(T,labels){
+  const slots=new Map();
+  for(const s of labels)if(!slots.has(roadsideLabelKey(s)))slots.set(roadsideLabelKey(s),{s,i:slots.size});
+  const cols=Math.min(4,slots.size),w=384,h=112;
+  const canvas=document.createElement('canvas');canvas.width=cols*w;canvas.height=Math.ceil(slots.size/cols)*h;
+  const ctx=canvas.getContext('2d');
+  for(const {s,i} of slots.values()){
     const left=i%cols*w,top=Math.floor(i/cols)*h,[,bg]=roadsideSignStyles[s.kind];
     ctx.save();ctx.translate(left,top);ctx.fillStyle=bg;ctx.fillRect(0,0,w,h);
     let inset=0;
@@ -199,19 +202,36 @@ function mountRoadsideSigns(T,group,signs){
     ctx.font='bold 42px Arial';ctx.fillText(s.name,textX,s.ref?37:h/2,maxWidth);
     if(s.ref){ctx.font='bold 28px Arial';ctx.fillText(s.ref,textX,81,maxWidth);}
     ctx.restore();
-    // Render legible outward faces on both sides of a freestanding sign.
-    for(const dir of s.mounted?[1]:[1,-1]){
-      for(const [u,v] of [[0,0],[1,0],[1,1],[0,0],[1,1],[0,1]]){
-        const dx=(u-.5)*s.width*dir;
-        vertices.push(s.x+s.nz*dx+s.nx*.066*dir,s.y+(v-.5)*s.height,s.z-s.nx*dx+s.nz*.066*dir);
-        uv.push((left+2+(w-4)*u)/canvas.width,1-(top+2+(h-4)*(1-v))/canvas.height);
-      }
-    }
   }
   const texture=new T.CanvasTexture(canvas);texture.colorSpace=T.SRGBColorSpace;texture.anisotropy=4;
-  const geometry=new T.BufferGeometry();geometry.setAttribute('position',new T.Float32BufferAttribute(vertices,3));
-  geometry.setAttribute('uv',new T.Float32BufferAttribute(uv,2));geometry.computeVertexNormals();
   const material=new T.MeshLambertMaterial({map:texture});
-  const mesh=new T.Mesh(geometry,material);mesh.name='Biển hiệu theo địa điểm OSM';mesh.receiveShadow=true;
-  group.add(mesh);group.userData.disposeSurvey=()=>{material.dispose();texture.dispose();};
+  return {slots,cols,w,h,width:canvas.width,height:canvas.height,material,dispose(){material.dispose();texture.dispose();}};
+}
+function mountRoadsideSigns(T,group,signs,commonSigns){
+  // The same eleven category labels recur across the country. Only transit
+  // route numbers need lettering specific to the incoming district.
+  const standard=commonSigns?signs.filter(s=>!s.ref):[];
+  const specific=commonSigns?signs.filter(s=>s.ref):signs;
+  const custom=specific.length?createRoadsideSignAtlas(T,specific):null;
+  group.userData.disposeSurvey=()=>custom?.dispose();
+  if(standard.length)mount(standard,commonSigns());
+  if(custom)mount(specific,custom);
+  function mount(signs,atlas){
+    const {slots,cols,w,h,material}=atlas,vertices=[],uv=[];
+    for(const s of signs){
+      const {i}=slots.get(roadsideLabelKey(s)),left=i%cols*w,top=Math.floor(i/cols)*h;
+      // Render legible outward faces on both sides of a freestanding sign.
+      for(const dir of s.mounted?[1]:[1,-1]){
+        for(const [u,v] of [[0,0],[1,0],[1,1],[0,0],[1,1],[0,1]]){
+          const dx=(u-.5)*s.width*dir;
+          vertices.push(s.x+s.nz*dx+s.nx*.066*dir,s.y+(v-.5)*s.height,s.z-s.nx*dx+s.nz*.066*dir);
+          uv.push((left+2+(w-4)*u)/atlas.width,1-(top+2+(h-4)*(1-v))/atlas.height);
+        }
+      }
+    }
+    const geometry=new T.BufferGeometry();geometry.setAttribute('position',new T.Float32BufferAttribute(vertices,3));
+    geometry.setAttribute('uv',new T.Float32BufferAttribute(uv,2));geometry.computeVertexNormals();
+    const mesh=new T.Mesh(geometry,material);mesh.name='Biển hiệu theo địa điểm OSM';mesh.receiveShadow=true;
+    group.add(mesh);
+  }
 }

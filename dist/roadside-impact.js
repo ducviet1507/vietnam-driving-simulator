@@ -2,7 +2,8 @@
 
 // The geometry stays batched. Only the instance slots touched by a collision move.
 function createRoadsideImpact(T,scene,ground=()=>0){
-  const objects=new Map(),swings=new Map(),leaves=[],scuffs=[];
+  let objects=new Map();
+  const swings=new Map(),leaves=[],scuffs=[];
   const pivot=new T.Matrix4(),shift=new T.Matrix4(),matrix=new T.Matrix4();
   const axis=new T.Vector3(),dummy=new T.Object3D(),tint=new T.Color();
   let ox=0,oz=0;
@@ -35,8 +36,8 @@ function createRoadsideImpact(T,scene,ground=()=>0){
     for(const [id] of swings)rotate(objects.get(id),0,0,0);
     swings.clear();
   }
-  function rebase(x,z){
-    ox=x;oz=z;objects.clear();
+  function rebase(x,z,incoming=new Map()){
+    ox=x;oz=z;objects=incoming;
   }
   function register(o){
     objects.set(o.id,o);
