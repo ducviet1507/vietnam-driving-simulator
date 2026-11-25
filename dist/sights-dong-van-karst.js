@@ -277,7 +277,6 @@
       }
       k.box(timber,0,6.42,front,15.32,.25,.33);
       A.gabledRoof(T,k,0,6.46,front-1.62,15.28,3.58,1.13,tile,0x777269,{alongX:true});
-      A.plaque(T,k,'Cà phê Phố Cổ',0,3.58,front+.19,3.22,.52,{bg:'#866842',fg:'#e6c483',frame:false});
       for(const x of [left+1.44,right-1.44]){
         k.box(ochre,x+Math.sign(x)*1.44,3.07,-1.1,.28,6.08,12.62);
         k.box(timber,x,3.19,-1.10,3.00,.24,12.54);
@@ -408,7 +407,7 @@
       ['Theo rãnh xẻ trên đá tai mèo',-5,-2,4.0,10,-.47,.11]],stoneForest,
     {arrivalNote:'Điểm đến ở sườn nương. Xe dừng trên đường qua Lũng Táo để xem các cụm đá bên đường.'});
   register('osm-node-7961606192','pho-co-dong-van','Phố cổ Đồng Văn',cafeSource,
-    'Dọc phố Nguyễn Trãi dưới chân núi là các nhà mái ngói, cửa gỗ. Ngôi nhà hai tầng của Cà phê Phố Cổ có ba vòm ở mặt tiền, hành lang gỗ và một sân trời nằm giữa các dãy nhà.',
+    'Dọc phố Nguyễn Trãi dưới chân núi là các nhà mái ngói, cửa gỗ. Ngôi nhà hai tầng có ba vòm ở mặt tiền, hành lang gỗ và một sân trời nằm giữa các dãy nhà.',
     [55.0,33.7,.034],[38,16],[['Mặt nhà cổ trên phố Nguyễn Trãi',0,4.75,7.4,16,-.24,.15],
       ['Hành lang và sân trời',-.3,-3.0,5.8,7.8,.15,.13]],oldStreet,
     {solids:[[0,0,7.6,7.8],[-11.2,1.45,3.2,5.9],[11.4,1.45,3.6,5.9],[18.9,1.45,3.8,5.9]],gardenRadius:9,start:townStart,

@@ -38,7 +38,9 @@ for(const [,sha,name] of entries){
   offset+=Number(size)+1;
 }
 const runtimeHash=createHash('sha256');
-for(const file of ['cabin.js','central-streetscapes.js','driving-water.js','world-scene.js']){
+for(const file of ['cabin.js','central-streetscapes.js','driving-water.js','world-scene.js','world.js',
+  'sight-grounds.js','sight-landscapes.js','vietnam-relief.js','street-vehicle-light.js','world-street-life.js','pedestrian-models.js']){
+  if(!overrides.has('/'+file))continue;
   const contents=revision==='working'?await readFile(path.join(dist,file)):overrides.get('/'+file);
   overrides.set('/'+file,contents);
   runtimeHash.update(file).update(contents);
@@ -276,7 +278,8 @@ try{
             });
           }
           return {frames:samples.length,elapsedMs:sum,metres:b.moved,actualKmh:b.moved/sum*3600,stalls,
-            fps:samples.length*1000/sum,p50:p(.5),p95:p(.95),p99:p(.99),maxMs:p(1),over50:dt.filter(t=>t>50).length,
+            fps:samples.length*1000/sum,p50:p(.5),p95:p(.95),p99:p(.99),maxMs:p(1),
+            over25:dt.filter(t=>t>=25).length,over50:dt.filter(t=>t>50).length,
             mirror:samples.filter(s=>s.mirror).length,water:samples.filter(s=>s.water).length,both:samples.filter(s=>s.mirror&&s.water).length,
             npcRange:[Math.min(...samples.map(s=>s.npc)),Math.max(...samples.map(s=>s.npc))],edges:samples[0].edges,rainfall,
             buffers:[...new Set(samples.map(s=>s.width+'x'+s.height))],districtOrigins:new Set(samples.map(s=>s.view)).size,

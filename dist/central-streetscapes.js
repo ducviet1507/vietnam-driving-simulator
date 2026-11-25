@@ -13,17 +13,7 @@
       awnings: [0x7e462d, 0x995333, 0x6c3c27],
       forcePitched: true,
       heritageWood: true,
-      lanterns: true,
-      signStyle: { bg: '#6e311f', fg: '#f6d67a', trim: '#d5a84c', wall: '#ebd072', shutter: '#5a3520' },
-      shops: [
-        { title: 'CAO LẦU HỘI AN', sub: 'MÌ QUẢNG • HOÀNH THÁNH', accent: '#8f3021', upstairs: true },
-        { title: 'ĐÈN LỒNG HỘI AN', sub: 'LỤA TƠ TẰM • THỦ CÔNG', accent: '#b83c2a', upstairs: false },
-        { title: 'CÀ PHÊ PHỐ CỔ', sub: 'TRÀ MÓT • NƯỚC THẢO MỘC', accent: '#6d4428', upstairs: true },
-        { title: 'BÁNH MÌ PHỐ HỘI', sub: 'PATE • XÁ XÍU • RAU THƠM', accent: '#9b4a26', upstairs: false },
-        { title: 'MAY ĐO ÁO DÀI', sub: 'VẢI LỤA • LẤY NGAY', accent: '#2f5e62', upstairs: true },
-        { title: 'MÌ QUẢNG BÀ LỄ', sub: 'ĐẶC SẢN QUẢNG NAM', accent: '#7c3926', upstairs: false }
-      ],
-      stalls: ['CAO LẦU', 'TRÀ MÓT', 'BÁNH MÌ', 'ĐÈN LỒNG']
+      lanterns: true
     },
     {
       id: 'hue',
@@ -34,17 +24,7 @@
       awnings: [0x7e3746, 0x965743, 0x5c685e],
       forcePitched: false,
       heritageWood: true,
-      lanterns: true,
-      signStyle: { bg: '#662839', fg: '#f4df9e', trim: '#c79a50', wall: '#ecdab1', shutter: '#4d3a2c' },
-      shops: [
-        { title: 'BÚN BÒ HUẾ', sub: 'GIÒ HEO • CHẢ CUA • MẮM RUỐC', accent: '#8c2d2c', upstairs: true },
-        { title: 'CÀ PHÊ MUỐI', sub: 'CÀ PHÊ PHIN • TRÀ CUNG ĐÌNH', accent: '#5e3c28', upstairs: false },
-        { title: 'BÁNH BÈO NẬM LỌC', sub: 'BÁNH KHOÁI • NEM LỤI', accent: '#7a3346', upstairs: true },
-        { title: 'CƠM HẾN SÔNG HƯƠNG', sub: 'BÚN HẾN • CHÈ HẺM HUẾ', accent: '#36615d', upstairs: false },
-        { title: 'MÈ XỬNG HUẾ', sub: 'TRÀ SEN • QUÀ CỐ ĐÔ', accent: '#99532b', upstairs: true },
-        { title: 'CHÈ CUNG ĐÌNH', sub: 'CHÈ HẠT SEN • BỘT LỌC HEO QUAY', accent: '#6d3145', upstairs: false }
-      ],
-      stalls: ['BÚN BÒ HUẾ', 'CÀ PHÊ MUỐI', 'CƠM HẾN', 'CHÈ HẺM']
+      lanterns: true
     },
     {
       id: 'da-nang',
@@ -55,17 +35,7 @@
       awnings: [0x2f6c80, 0xb0543a, 0x4c8276],
       forcePitched: false,
       heritageWood: false,
-      lanterns: false,
-      signStyle: { bg: '#1e5b73', fg: '#fff4d4', trim: '#e0a54b', wall: '#efe9dd', shutter: '#2f5460' },
-      shops: [
-        { title: 'MÌ QUẢNG ĐÀ NẴNG', sub: 'ẾCH • GÀ TA • TÔM THỊT', accent: '#b34729', upstairs: true },
-        { title: 'HẢI SẢN TƯƠI SỐNG', sub: 'TÔM HÙM • CUA GHẸ • ỐC BIỂN', accent: '#1b6380', upstairs: false },
-        { title: 'BÁNH TRÁNG CUỐN THỊT', sub: 'MẮM NÊM DÌ VÂN • RAU SỐNG', accent: '#2f7257', upstairs: true },
-        { title: 'BÚN CHẢ CÁ SÔNG HÀN', sub: 'CHẢ CÁ THU • BÚN MẮM NÊM', accent: '#a84f2b', upstairs: false },
-        { title: 'CÀ PHÊ BIỂN MỸ KHÊ', sub: 'TRÀ SỮA • NƯỚC DỪA TƯƠI', accent: '#2c5c6e', upstairs: true },
-        { title: 'ĐẶC SẢN MIỀN TRUNG', sub: 'CHẢ BÒ • MỰC RIM • TRÉ', accent: '#8e362c', upstairs: false }
-      ],
-      stalls: ['MÌ QUẢNG', 'HẢI SẢN', 'BÚN CHẢ CÁ', 'CÀ PHÊ']
+      lanterns: false
     },
     {
       id: 'nghe-an',
@@ -76,17 +46,7 @@
       awnings: [0x9f3f2d, 0x3b6c63, 0xa86f38],
       forcePitched: false,
       heritageWood: false,
-      lanterns: false,
-      signStyle: { bg: '#8c2b22', fg: '#fce39c', trim: '#d5a147', wall: '#ede0c6', shutter: '#4f3e2e' },
-      shops: [
-        { title: 'CHÁO LƯƠN XỨ NGHỆ', sub: 'SÚP LƯƠN • MIẾN LƯƠN ĐỒNG', accent: '#992d22', upstairs: true },
-        { title: 'CÀ PHÊ THÀNH VINH', sub: 'TRÀ ĐÁ • HƯỚNG DƯƠNG', accent: '#5a3d29', upstairs: false },
-        { title: 'BÁNH MƯỚT NGHỆ AN', sub: 'GIÒ NÓNG • XÁO LÒNG', accent: '#2d6859', upstairs: true },
-        { title: 'HẢI SẢN CỬA LÒ', sub: 'MỰC NHÁY • TÔM HẤP SẢ', accent: '#1f5e78', upstairs: false },
-        { title: 'NHÚT THANH CHƯƠNG', sub: 'TƯƠNG NAM ĐÀN • BÁNH GAI', accent: '#7c4c27', upstairs: true },
-        { title: 'SÚP LƯƠN BÁNH MÌ', sub: 'ĐẶC SẢN THÀNH VINH', accent: '#a84426', upstairs: false }
-      ],
-      stalls: ['CHÁO LƯƠN', 'SÚP LƯƠN', 'BÁNH MƯỚT', 'CÀ PHÊ']
+      lanterns: false
     },
     {
       id: 'ha-tinh-quang-tri',
@@ -97,17 +57,7 @@
       awnings: [0x2e6a73, 0x9c4832, 0x6f7c54],
       forcePitched: false,
       heritageWood: false,
-      lanterns: false,
-      signStyle: { bg: '#275966', fg: '#f8e6b4', trim: '#cc974b', wall: '#ede2cb', shutter: '#3e5256' },
-      shops: [
-        { title: 'KẸO CU ĐƠ HÀ TĨNH', sub: 'BÁNH ĐA VỪNG • CHÈ XANH', accent: '#8e3824', upstairs: true },
-        { title: 'CHÁO CANH QUẢNG BÌNH', sub: 'CÁ LÓC • RAM GIÒN', accent: '#256372', upstairs: false },
-        { title: 'BÁNH BỘT LỌC', sub: 'BÁNH KHOÁI • ĐỒNG HỚI', accent: '#a24e2b', upstairs: true },
-        { title: 'CÀ PHÊ NHẬT LỆ', sub: 'NƯỚC DỪA • SINH TỐ', accent: '#4b5e3c', upstairs: false },
-        { title: 'HẢI SẢN SÔNG GIANH', sub: 'MỰC NƯỚNG • CÁ NỤC HẤP', accent: '#1e5a74', upstairs: true },
-        { title: 'BÚN HẾN MAI XÁ', sub: 'CHÁO BỘT • QUẢNG TRỊ', accent: '#7c3f28', upstairs: false }
-      ],
-      stalls: ['CHÁO CANH', 'CU ĐƠ', 'BÁNH LỌC', 'CHÈ XANH']
+      lanterns: false
     },
     {
       id: 'thanh-hoa',
@@ -118,17 +68,7 @@
       awnings: [0x9d3c2b, 0x35696c, 0x8d6738],
       forcePitched: false,
       heritageWood: false,
-      lanterns: false,
-      signStyle: { bg: '#8a2d24', fg: '#fae4a4', trim: '#cfa04c', wall: '#eee2c4', shutter: '#4c3f32' },
-      shops: [
-        { title: 'NEM CHUA THANH HÓA', sub: 'NEM NƯỚNG • TƯƠNG ỚT XỨ THANH', accent: '#9e2e24', upstairs: true },
-        { title: 'CHẢ TÔM XỨ THANH', sub: 'BÁNH CUỐN NÓNG • RAU SỐNG', accent: '#b04e28', upstairs: false },
-        { title: 'HẢI SẢN SẦM SƠN', sub: 'CUA GHẸ • MỰC TRỨNG HẤP', accent: '#1f617a', upstairs: true },
-        { title: 'CÀ PHÊ HÀM RỒNG', sub: 'TRÀ CHANH • HƯỚNG DƯƠNG', accent: '#5c412b', upstairs: false },
-        { title: 'BÁNH RĂNG BỪA', sub: 'CHÈ LAM PHỦ QUẢNG', accent: '#366855', upstairs: true },
-        { title: 'CHÁO CANH SƯỜN', sub: 'BÚN CHẢ • ĐẶC SẢN XỨ THANH', accent: '#8c4228', upstairs: false }
-      ],
-      stalls: ['NEM CHUA', 'CHẢ TÔM', 'BÁNH CUỐN', 'CÀ PHÊ']
+      lanterns: false
     },
     {
       id: 'quang-ngai-quy-nhon',
@@ -139,17 +79,7 @@
       awnings: [0x2e6e7c, 0xb05336, 0x4f7c62],
       forcePitched: false,
       heritageWood: false,
-      lanterns: false,
-      signStyle: { bg: '#215d6d', fg: '#fff1cc', trim: '#d99c46', wall: '#f0e4cc', shutter: '#35545c' },
-      shops: [
-        { title: 'BÁNH XÈO TÔM NHẢY', sub: 'BÁNH HỎI LÒNG HEO • QUY NHƠN', accent: '#b24826', upstairs: true },
-        { title: 'BÚN CHẢ CÁ QUY NHƠN', sub: 'CHẢ CÁ BIỂN • SỨA TƯƠI', accent: '#1e637a', upstairs: false },
-        { title: 'DON QUẢNG NGÃI', sub: 'RAM BẮP • BÁNH TRÁNG NƯỚNG', accent: '#8e3d28', upstairs: true },
-        { title: 'CÀ PHÊ BIỂN', sub: 'NƯỚC DỪA • SINH TỐ TƯƠI', accent: '#346b5a', upstairs: false },
-        { title: 'NEM CHỢ HUYỆN', sub: 'MẠCH NHA • TỎI LÝ SƠN', accent: '#995328', upstairs: true },
-        { title: 'HẢI SẢN GHỀNH RÁNG', sub: 'ỐC HƯƠNG • MỰC NƯỚNG', accent: '#235a78', upstairs: false }
-      ],
-      stalls: ['BÁNH XÈO', 'BÚN CHẢ CÁ', 'DON', 'CÀ PHÊ']
+      lanterns: false
     },
     {
       id: 'nha-trang-phan-rang',
@@ -160,17 +90,7 @@
       awnings: [0x26708c, 0xb85838, 0x3b847a],
       forcePitched: false,
       heritageWood: false,
-      lanterns: false,
-      signStyle: { bg: '#1b6482', fg: '#fff5d8', trim: '#e6aa4c', wall: '#f3ebd9', shutter: '#2a5668' },
-      shops: [
-        { title: 'NEM NƯỚNG NHA TRANG', sub: 'BÁNH ƯỚT • NƯỚC CHẤM ĐẶC BIỆT', accent: '#b34326', upstairs: true },
-        { title: 'BÚN SỨA CHẢ CÁ', sub: 'BÚN CÁ DẦM • NHA TRANG', accent: '#1d6885', upstairs: false },
-        { title: 'MẮT CÁ NGỪ ĐẠI DƯƠNG', sub: 'HẢI SẢN TUY HÒA • PHÚ YÊN', accent: '#2d6c68', upstairs: true },
-        { title: 'CÀ PHÊ TRẦN PHÚ', sub: 'YẾN SÀO • NƯỚC DỪA XIÊM', accent: '#355c74', upstairs: false },
-        { title: 'BÁNH CĂN PHAN RANG', sub: 'NHO TƯƠI • MẬT NHO NINH THUẬN', accent: '#7e3b68', upstairs: true },
-        { title: 'HẢI SẢN NƯỚNG BIỂN', sub: 'TÔM HÙM • NHUM NƯỚNG MỠ HÀNH', accent: '#a84f2b', upstairs: false }
-      ],
-      stalls: ['NEM NƯỚNG', 'BÚN SỨA', 'BÁNH CĂN', 'NƯỚC DỪA']
+      lanterns: false
     },
     {
       id: 'tay-nguyen',
@@ -181,17 +101,7 @@
       awnings: [0x6d3b26, 0x8c4d2d, 0x456544],
       forcePitched: false,
       heritageWood: true,
-      lanterns: false,
-      signStyle: { bg: '#512d1d', fg: '#f6d897', trim: '#c98e46', wall: '#e6d2b4', shutter: '#492e1f' },
-      shops: [
-        { title: 'CÀ PHÊ BAN MÊ', sub: 'ROBUSTA RANG XAY • NGUYÊN CHẤT', accent: '#5a321e', upstairs: true },
-        { title: 'PHỞ KHÔ GIA LAI', sub: 'PHỞ HAI TÔ • TƯƠNG ĐEN PLEIKU', accent: '#8e3824', upstairs: false },
-        { title: 'BÚN ĐỎ BUÔN MA THUỘT', sub: 'BÁNH ƯỚT THỊT NƯỚNG', accent: '#a63e26', upstairs: true },
-        { title: 'GỎI LÁ KON TUM', sub: 'CƠM LAM • GÀ NƯỚNG BẢN ĐÔN', accent: '#356644', upstairs: false },
-        { title: 'CÀ PHÊ NGUYÊN CHẤT', sub: 'MẬT ONG HOA CÀ PHÊ • TIÊU ĐEN', accent: '#6d3e24', upstairs: true },
-        { title: 'BÒ NHÚNG ME TÂY NGUYÊN', sub: 'LẨU LÁ RỪNG • RƯỢU CẦN', accent: '#8a4326', upstairs: false }
-      ],
-      stalls: ['CÀ PHÊ BAN MÊ', 'PHỞ KHÔ', 'BÚN ĐỎ', 'CƠM LAM']
+      lanterns: false
     },
     {
       id: 'da-lat',
@@ -202,17 +112,7 @@
       awnings: [0x8e3a32, 0x456b5a, 0x6b4b5c],
       forcePitched: true,
       heritageWood: true,
-      lanterns: true,
-      signStyle: { bg: '#5a2d36', fg: '#fae6b8', trim: '#d6a45c', wall: '#f2e3c6', shutter: '#3b5748' },
-      shops: [
-        { title: 'BÁNH TRÁNG NƯỚNG', sub: 'SỮA ĐẬU NÀNH NÓNG • ĐÀ LẠT', accent: '#9e3b2e', upstairs: true },
-        { title: 'CÀ PHÊ SƯƠNG MÙ', sub: 'ARABICA CẦU ĐẤT • TRÀ ATISO', accent: '#485e4c', upstairs: false },
-        { title: 'LẨU GÀ LÁ É', sub: 'BÁNH ƯỚT LÒNG GÀ • CHỢ ĐÊM', accent: '#36684f', upstairs: true },
-        { title: 'BÁNH MÌ XÍU MẠI', sub: 'BÁNH CĂN NÓNG • HỒ XUÂN HƯƠNG', accent: '#a8512d', upstairs: false },
-        { title: 'HOA TƯƠI ĐÀ LẠT', sub: 'DÂU TÂY • MỨT ĐẶC SẢN', accent: '#8c3554', upstairs: true },
-        { title: 'SỮA ĐẬU NÀNH NÓNG', sub: 'BÁNH SU KEM • KHOAI NƯỚNG', accent: '#6d4430', upstairs: false }
-      ],
-      stalls: ['BÁNH TRÁNG NƯỚNG', 'SỮA ĐẬU NÀNH', 'CÀ PHÊ NÓNG', 'HOA ĐÀ LẠT']
+      lanterns: true
     },
     {
       id: 'phan-thiet',
@@ -223,17 +123,7 @@
       awnings: [0x26708a, 0xb35235, 0x45806f],
       forcePitched: false,
       heritageWood: false,
-      lanterns: false,
-      signStyle: { bg: '#1e6078', fg: '#fff2d0', trim: '#dfa349', wall: '#f2e4ca', shutter: '#2f5766' },
-      shops: [
-        { title: 'BÁNH CĂN PHAN THIẾT', sub: 'BÁNH XÈO • CÁ KHO TỘ', accent: '#b04828', upstairs: true },
-        { title: 'NƯỚC MẮM PHAN THIẾT', sub: 'MỰC MỘT NẮNG • ĐẶC SẢN', accent: '#8e3824', upstairs: false },
-        { title: 'MÌ QUẢNG VỊT', sub: 'BÁNH QUAI VẠC • CHẢ CÁ', accent: '#23647a', upstairs: true },
-        { title: 'HẢI SẢN MŨI NÉ', sub: 'GỎI CÁ MAI • RĂNG MỰC NƯỚNG', accent: '#2a6f62', upstairs: false },
-        { title: 'CÀ PHÊ ĐỒI DƯƠNG', sub: 'NƯỚC DỪA TƯƠI • THANH LONG', accent: '#7c3658', upstairs: true },
-        { title: 'BÁNH RẾ PHAN THIẾT', sub: 'CỐM SỮA • QUÀ BIỂN', accent: '#9c522a', upstairs: false }
-      ],
-      stalls: ['BÁNH CĂN', 'RĂNG MỰC', 'GỎI CÁ MAI', 'NƯỚC DỪA']
+      lanterns: false
     }
   ];
 
@@ -246,243 +136,11 @@
     return null;
   }
 
-  let plasterGrain;
-  function plasterPattern(g) {
-    if (!plasterGrain) {
-      plasterGrain = document.createElement('canvas');
-      plasterGrain.width = plasterGrain.height = 64;
-      const tile = plasterGrain.getContext('2d');
-      const pixels = tile.createImageData(64, 64);
-      let seed = 831;
-      for (let p = 0; p < pixels.data.length; p += 4) {
-        seed = (Math.imul(1664525, seed) + 1013904223) >>> 0;
-        const tone = seed & 256 ? 255 : 32;
-        pixels.data[p] = pixels.data[p + 1] = pixels.data[p + 2] = tone;
-        pixels.data[p + 3] = seed >>> 28;
-      }
-      tile.putImageData(pixels, 0, 0);
-    }
-    return g.createPattern(plasterGrain, 'repeat');
-  }
-
-  function paintShopfrontTexture(T, zone, shop, renderer) {
-    const c = document.createElement('canvas');
-    c.width = 512;
-    c.height = shop.upstairs ? 512 : 320;
-    const g = c.getContext('2d');
-    const st = zone.signStyle;
-    const W = c.width, H = c.height;
-    // Paint diffuse contact shade once into the existing colour texture. The
-    // directional light still supplies sun shadows as the time of day changes.
-    function shadeBelow(x, y, width, reach, opacity) {
-      const shade = g.createLinearGradient(0, y, 0, y + reach);
-      shade.addColorStop(0, 'rgba(32,27,24,' + opacity + ')');
-      shade.addColorStop(.35, 'rgba(32,27,24,' + opacity * .45 + ')');
-      shade.addColorStop(1, 'rgba(32,27,24,0)');
-      g.fillStyle = shade;
-      g.fillRect(x, y, width, reach);
-    }
-
-    // Base plaster wall with subtle vertical weathering
-    const grad = g.createLinearGradient(0, 0, 0, H);
-    grad.addColorStop(0, st.wall);
-    grad.addColorStop(0.85, st.wall);
-    grad.addColorStop(1, '#b8aa92');
-    g.fillStyle = grad;
-    g.fillRect(0, 0, W, H);
-
-    g.fillStyle = plasterPattern(g);
-    g.fillRect(0, 0, W, H);
-
-    const gfTop = shop.upstairs ? 248 : 28;
-    // Upstairs floor (windows + shutters + balcony) for 2-story shops
-    if (shop.upstairs) {
-      // Molding cornice
-      g.fillStyle = 'rgba(90,65,40,0.22)';
-      g.fillRect(0, 14, W, 12);
-      g.fillStyle = '#d9ccb2';
-      g.fillRect(0, 224, W, 16);
-
-      // Two shuttered Vietnamese windows (Hội An / Huế / Đà Lạt wood or green louvers)
-      for (const wx of [78, 306]) {
-        g.fillStyle = '#3b2c20';
-        g.fillRect(wx - 6, 56, 140, 148);
-        // Higher panes reflect a little more sky than the dark room below.
-        const glass = g.createLinearGradient(0, 66, 0, 194);
-        glass.addColorStop(0, '#506469');
-        glass.addColorStop(.58, '#35474a');
-        glass.addColorStop(1, '#243438');
-        g.fillStyle = glass;
-        g.fillRect(wx + 24, 66, 80, 128);
-        shadeBelow(wx + 24, 66, 80, 34, .36);
-        // Glass mullions
-        g.strokeStyle = '#6b5a46';
-        g.lineWidth = 4;
-        g.strokeRect(wx + 24, 66, 80, 128);
-        g.beginPath();
-        g.moveTo(wx + 64, 66); g.lineTo(wx + 64, 194);
-        g.moveTo(wx + 24, 130); g.lineTo(wx + 104, 130);
-        g.stroke();
-        // Side louvered shutters
-        g.fillStyle = st.shutter;
-        g.fillRect(wx - 4, 62, 28, 136);
-        g.fillRect(wx + 104, 62, 28, 136);
-        g.fillStyle = 'rgba(0,0,0,0.25)';
-        for (let ly = 70; ly < 194; ly += 10) {
-          g.fillRect(wx - 1, ly, 22, 3);
-          g.fillRect(wx + 107, ly, 22, 3);
-        }
-      }
-      // Balcony railing
-      g.fillStyle = '#3d3732';
-      g.fillRect(42, 184, W - 84, 6);
-      g.fillRect(42, 218, W - 84, 6);
-      for (let bx = 50; bx <= W - 50; bx += 22) g.fillRect(bx, 184, 4, 38);
-      shadeBelow(0, 240, W, 20, .23);
-    }
-
-    // Shop signboard (biển hiệu tiếng Việt)
-    const signY = gfTop;
-    const signH = 82;
-    g.fillStyle = shop.accent || st.bg;
-    g.fillRect(16, signY, W - 32, signH);
-    g.strokeStyle = st.trim;
-    g.lineWidth = 5;
-    g.strokeRect(20, signY + 4, W - 40, signH - 8);
-
-    // Main title
-    g.fillStyle = st.fg;
-    g.font = 'bold 38px "Segoe UI", Arial, sans-serif';
-    g.textAlign = 'center';
-    g.textBaseline = 'middle';
-    g.fillText(shop.title, W / 2, signY + 34, W - 58);
-
-    // Subtitle menu
-    g.fillStyle = 'rgba(255,244,218,0.88)';
-    g.font = 'bold 17px "Segoe UI", Arial, sans-serif';
-    g.fillText(shop.sub, W / 2, signY + 64, W - 64);
-
-    // Striped awning valance strip under signboard
-    const valY = signY + signH + 4;
-    for (let x = 16, idx = 0; x < W - 16; x += 32, idx++) {
-      g.fillStyle = idx % 2 === 0 ? (shop.accent || st.bg) : '#f3ead8';
-      g.fillRect(x, valY, Math.min(32, W - 16 - x), 18);
-    }
-
-    // Ground floor open doorway / wooden folding panels (cửa gỗ Hội An / cửa kính quán ăn)
-    const doorY = valY + 22;
-    const doorH = H - doorY - 12;
-    if (zone.heritageWood) {
-      // Heritage timber folding panels (cửa bức bàn / cửa gỗ cổ)
-      g.fillStyle = '#3d2416';
-      g.fillRect(36, doorY, W - 72, doorH);
-      // Warm interior glow
-      const warm = g.createLinearGradient(0, doorY, 0, H);
-      warm.addColorStop(0, '#4a2e1b');
-      warm.addColorStop(0.5, '#7c532e');
-      warm.addColorStop(1, '#3b281c');
-      g.fillStyle = warm;
-      g.fillRect(136, doorY + 12, W - 272, doorH - 12);
-      // Flanking wooden doors with lattice & gold calligraphy panels
-      for (const dx of [40, W - 132]) {
-        g.fillStyle = '#5e351f';
-        g.fillRect(dx, doorY + 6, 92, doorH - 6);
-        g.strokeStyle = '#351c0f';
-        g.lineWidth = 4;
-        g.strokeRect(dx + 6, doorY + 14, 80, doorH * 0.45);
-        g.strokeRect(dx + 6, doorY + doorH * 0.52, 80, doorH * 0.42);
-      }
-      // Two hanging red/gold paper lanterns under lintel
-      for (const lx of [185, W - 185]) {
-        const silk = g.createLinearGradient(lx - 18, 0, lx + 18, 0);
-        silk.addColorStop(0, '#76291f');
-        silk.addColorStop(.4, '#e95b39');
-        silk.addColorStop(.58, '#d7472d');
-        silk.addColorStop(1, '#77281f');
-        g.fillStyle = silk;
-        g.beginPath();
-        g.ellipse(lx, doorY + 32, 18, 22, 0, 0, Math.PI * 2);
-        g.fill();
-        g.strokeStyle = 'rgba(105,37,24,.4)';
-        g.lineWidth = 1;
-        g.beginPath();
-        g.ellipse(lx, doorY + 32, 9, 22, 0, 0, Math.PI * 2);
-        g.stroke();
-        g.fillStyle = '#f2c14e';
-        g.fillRect(lx - 8, doorY + 8, 16, 6);
-        g.fillRect(lx - 6, doorY + 52, 12, 8);
-        g.fillRect(lx - 1, doorY + 59, 2, 9);
-      }
-    } else {
-      // Modern Vietnamese tiled shopfront with open glass/metal roll-up entrance & glass food cabinet
-      g.fillStyle = '#2d3b3e';
-      g.fillRect(36, doorY, W - 72, doorH);
-      // Warm interior wall & light bar
-      const inner = g.createLinearGradient(0, doorY, 0, H);
-      inner.addColorStop(0, '#6a5b44');
-      inner.addColorStop(0.35, '#8f7d60');
-      inner.addColorStop(1, '#4c463c');
-      g.fillStyle = inner;
-      g.fillRect(52, doorY + 12, W - 104, doorH - 12);
-      // Glass food display cabinet (tủ kính bán bún/cháo/mì)
-      const cabinet = g.createLinearGradient(68, doorY + doorH * .36, 198, doorY + doorH * .62);
-      cabinet.addColorStop(0, '#879fa2');
-      cabinet.addColorStop(.42, '#bed7da');
-      cabinet.addColorStop(.56, '#a6c2c6');
-      cabinet.addColorStop(1, '#8da7ab');
-      g.fillStyle = cabinet;
-      g.fillRect(68, doorY + doorH * 0.36, 130, doorH * 0.62);
-      g.fillStyle = '#9aaeb4';
-      g.fillRect(68, doorY + doorH * 0.68, 130, doorH * 0.30);
-      g.strokeStyle = '#6c797c';
-      g.lineWidth = 4;
-      g.strokeRect(68, doorY + doorH * 0.36, 130, doorH * 0.62);
-      // Stacked bowls/dishes silhouette in cabinet
-      g.fillStyle = '#e7decb';
-      for (const bx of [86, 118, 152]) g.fillRect(bx, doorY + doorH * 0.56, 22, 12);
-      // Ceramic wall tile dado on pillars
-      g.fillStyle = '#d8d2c2';
-      g.fillRect(0, doorY + doorH * 0.45, 34, H - (doorY + doorH * 0.45));
-      g.fillRect(W - 34, doorY + doorH * 0.45, 34, H - (doorY + doorH * 0.45));
-    }
-
-    // Only the recess below the fabric is sheltered. Keep the menu and the
-    // lettering on the exposed signboard legible, including in overcast light.
-    shadeBelow(16, valY + 18, W - 32, doorH * .62, .32);
-    shadeBelow(0, 0, W, shop.upstairs ? 15 : 17, .24);
-    const tex = new T.CanvasTexture(c);
-    tex.colorSpace = T.SRGBColorSpace;
-    if (renderer) tex.anisotropy = Math.min(8, renderer.capabilities.getMaxAnisotropy());
-    const material = new T.MeshStandardMaterial({
-      name: 'CentralShop ' + zone.id + ' ' + shop.title,
-      map: tex,
-      roughness: 0.88,
-      metalness: 0.02
-    });
-    material.userData.awningHeightRatio = 1 - valY / H;
-    return material;
-  }
-
-  function makeStallSignTexture(T, text, bg, fg) {
-    const c = document.createElement('canvas');
-    c.width = 256; c.height = 64;
-    const g = c.getContext('2d');
-    g.fillStyle = bg; g.fillRect(0, 0, 256, 64);
-    g.strokeStyle = fg; g.lineWidth = 4; g.strokeRect(4, 4, 248, 56);
-    g.fillStyle = fg; g.font = 'bold 30px "Segoe UI", Arial, sans-serif';
-    g.textAlign = 'center'; g.textBaseline = 'middle';
-    g.fillText(text, 128, 34, 232);
-    const tex = new T.CanvasTexture(c);
-    tex.colorSpace = T.SRGBColorSpace;
-    return tex;
-  }
-
-  function create(T, scene, renderer, materialMap) {
+  function create(T, scene) {
     const root = new T.Group();
     root.name = 'Central Vietnam street life';
     scene.add(root);
 
-    const signCache = new Map();
     const glowMats = [];
 
     // Shared geometries & materials for sidewalk stalls, plastic stools, tables, umbrellas & lanterns
@@ -490,8 +148,7 @@
       box: new T.BoxGeometry(1, 1, 1),
       cyl: new T.CylinderGeometry(1, 1, 1, 10),
       cone: new T.ConeGeometry(1, 1, 8),
-      sphere: new T.SphereGeometry(1, 10, 8),
-      plane: new T.PlaneGeometry(1, 1)
+      sphere: new T.SphereGeometry(1, 10, 8)
     };
     const mat = {
       steel: new T.MeshStandardMaterial({ color: 0xb4bec0, roughness: 0.42, metalness: 0.55 }),
@@ -516,26 +173,6 @@
     });
     const bulbMat = new T.MeshStandardMaterial({ color: 0xfff3d4, roughness: 0.4, emissive: 0xffc870, emissiveIntensity: 0.25 });
     glowMats.push({ mat: bulbMat, base: 0.15, night: 3.1 });
-
-    const cachedFronts = new Set();
-    function frontMaterial(zone, type) {
-      const i = type % zone.shops.length, key = 'cfront_' + zone.id + '_' + i;
-      if (!materialMap[key]) {
-        materialMap[key] = paintShopfrontTexture(T, zone, zone.shops[i], renderer);
-        cachedFronts.add(key);
-      }
-      return key;
-    }
-    function trimFronts(inView) {
-      for (const key of cachedFronts) {
-        if (cachedFronts.size <= 12) break;
-        if (inView.has(key)) continue;
-        materialMap[key].map.dispose();
-        materialMap[key].dispose();
-        delete materialMap[key];
-        cachedFronts.delete(key);
-      }
-    }
 
     const partPose = new T.Object3D(), propBatches = new Map();
     function addPart(parent, geometry, material, x, y, z, sx = 1, sy = 1, sz = 1, rx = 0, ry = 0, rz = 0) {
@@ -574,7 +211,7 @@
     }
 
     // Build a Vietnamese sidewalk specialty food/coffee stall (quán vỉa hè) with low tables & plastic stools
-    function buildStall(zone, label, seed) {
+    function buildStall(zone, seed) {
       const g = new T.Group();
       const awningMat = [mat.umbrellaA, mat.umbrellaB, mat.umbrellaC][seed % 3];
       const stoolMat = seed % 2 ? mat.blueStool : mat.redStool;
@@ -590,16 +227,6 @@
       addPart(g, geo.box, awningMat, -0.75, 2.22, 0.06, 1.85, 0.09, 1.18, 0.14);
       // Glowing warm stall light bulb under awning
       addPart(g, geo.sphere, bulbMat, -0.75, 2.02, 0.18, 0.09, 0.09, 0.09);
-
-      // Vietnamese signboard on front & back of stall canopy
-      const sKey = zone.id + ':' + label;
-      let signMat = signCache.get(sKey);
-      if (!signMat) {
-        signMat = new T.MeshBasicMaterial({ map: makeStallSignTexture(T, label, zone.signStyle.bg, zone.signStyle.fg) });
-        signCache.set(sKey, signMat);
-      }
-      addPart(g, geo.plane, signMat, -0.75, 1.96, 0.56, 1.55, 0.36, 1);
-      addPart(g, geo.plane, signMat, -0.75, 1.96, -0.45, 1.55, 0.36, 1, 0, Math.PI, 0);
 
       // Low table + 3 plastic stools (ghế nhựa vỉa hè) beside the cart
       addPart(g, geo.box, mat.steel, 0.95, 0.52, 0.05, 0.88, 0.05, 0.62);
@@ -669,7 +296,7 @@
       return g;
     }
 
-    // Add physical street details under existing canopies. Business signs use mapped POIs.
+    // Add physical street details under existing canopies. Commercial frontages use neutral service labels.
     function decorateDistrictFronts(fronts, clearFn, compact) {
       if (!fronts || !fronts.length) return;
       const nearest = fronts
@@ -807,8 +434,7 @@
               garlandCount++;
             } else if (stallCount < maxStalls) {
               if (!clearFn(x + s.fx * 1.2, z + s.fz * 1.2, 0.65) || !clearFn(x - s.fx * 1.2, z - s.fz * 1.2, 0.65)) continue;
-              const label = zone.stalls[hash % zone.stalls.length];
-              const stall = buildStall(zone, label, hash);
+              const stall = buildStall(zone, hash);
               stall.position.set(x, wy, z);
               stall.rotation.y = faceRoadYaw;
               mountProp(stall);
@@ -830,7 +456,7 @@
       }
     }
 
-    return { frontMaterial, trimFronts, place, update, zoneAt };
+    return { place, update, zoneAt };
   }
 
   window.CentralStreetscapes = { create, zoneAt };

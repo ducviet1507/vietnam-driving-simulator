@@ -89,6 +89,14 @@ function createGuidedDrive(graph, route, resume=null) {
     get detour(){return detour;},
     get remaining(){return Math.max(0,length-progress);},
     get progress(){return progress;},
+    sceneryAhead(metres){
+      if(offRoute||wrongWay||this.timeMs!==null)return null;
+      const along=Math.min(length,progress+metres);
+      let i=current.index;
+      while(i+1<legs.length&&legs[i+1].offset<=along)i++;
+      const leg=legs[i],edge=graph.edges.get(leg.id);
+      return edge?graph.sample({edge,dir:leg.dir,s:(leg.from+leg.dir*(along-leg.offset)/leg.metres)*edge.length}):null;
+    },
     // Geometry comes from the same streaming tiles used to drive. Even a long
     // cross-country journey draws only the roads inside the current map view.
     visiblePaths(edges) {

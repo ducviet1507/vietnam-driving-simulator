@@ -57,7 +57,7 @@
 
     function tree(kind, x, z, h, w, seed) {
       if (count.tree >= limits.tree || !clear(x, z, .6) || !spaced(x, z, .8)) return false;
-      const owner = registerObstacle({ id: 'coast-tree:' + Math.round(x * 10) + ':' + Math.round(z * 10), kind: 'tree', x, z, radius: .2, height: h, parts: [] });
+      const owner = registerObstacle({ id: 'coast-tree:' + Math.round((cx + x) * 10) + ':' + Math.round((cz + z) * 10), kind: 'tree', x, z, radius: .2, height: h, parts: [] });
       plantTree(kind, x, z, h, w, seed * Math.PI * 2, null, owner);
       taken.push({ x, z, r: .8 }); count.tree++;
       return true;
@@ -122,11 +122,10 @@
 
     for (const s of route.sort((a, b) => a.rank - b.rank)) {
       const edge = routeEdges.get(s.source.id), zone = zoneOf(edge), sea = seaSide(s, edge);
-      const base = Math.round(s.station);
-      for (let d = 2; d < s.len - 1; d += 2) {
+      // Anchor spacing to the edge so segments beginning on an odd metre also get scenery.
+      for (let station = Math.ceil((s.station + 1) / 2) * 2; station < s.station + s.len - 1; station += 2) {
         if ((++work & 31) === 0) yield;
-        const station = base + Math.round(d), seed = s.source.id * 7919 + station;
-        if (station % 2) continue;
+        const d = station - s.station, seed = s.source.id * 7919 + station;
         // A 90 m gap every few hundred metres keeps glimpses of the water.
         const gap = hash(s.source.id, Math.floor(station / 90)) < .22;
         if (zone === 'dike') {

@@ -1,7 +1,7 @@
 /* Traffic models face +Z. Distances in the lesson increase towards world -Z. */
-window.createStreetTraffic = function(scene,contactMap) {
+window.createStreetTraffic = function(scene,contactMap,prepare=async()=>{}) {
   const T=window.THREE;
-  const {load,clone}=window.TrafficModels;
+  const {load}=window.TrafficModels;
   const library=new Map();
   const actors=[];
   const roadUsers=[];
@@ -56,8 +56,8 @@ window.createStreetTraffic = function(scene,contactMap) {
     rig.worldToLocal(helmet.position);rig.add(helmet);
   }
   function attachPerson(item,name,riderColor){
-    return asset(name).then(data=>{
-      const rig=clone(data.scene);rig.name=name;
+    return asset(name).then(async data=>{
+      const rig=clonePedestrian(T,data.scene);rig.name=name;
       if(riderColor!==undefined){
         seatDriver(rig,riderColor);
       }else{
@@ -76,6 +76,7 @@ window.createStreetTraffic = function(scene,contactMap) {
         };
         item.animate('idle',Math.abs(item.initial%3));
       }
+      await prepare(rig);
       item.group.add(rig);
       item.loaded=true;
     });
@@ -83,7 +84,7 @@ window.createStreetTraffic = function(scene,contactMap) {
   function vehicle(id,model,x,d,width,length,v,color,riderColor){
     const item=actor(id,riderColor===undefined?'car':'bike',x,d,width,length,v);
     item.group.rotation.y=v>0?Math.PI:0;
-    asset(model).then(data=>{
+    asset(model).then(async data=>{
       const mesh=data.scene.clone(true);
       const paint=new Map();
       mesh.traverse(part=>{
@@ -97,13 +98,15 @@ window.createStreetTraffic = function(scene,contactMap) {
           part.material=paint.get(part.material);
         }
       });
+      await prepare(mesh);
       item.group.add(mesh);item.loaded=true;
       if(riderColor!==undefined)return attachPerson(item,'casual-walker',riderColor);
-      return asset('casual-walker').then(person=>{
-        const rig=clone(person.scene);
+      return asset('casual-walker').then(async person=>{
+        const rig=clonePedestrian(T,person.scene);
         seatDriver(rig);
         rig.scale.setScalar(.89);
         rig.position.add(new T.Vector3(.36,model==='kei-van'?-.07:-.23,.12));
+        await prepare(rig);
         item.group.add(rig);
       });
     }).catch(error=>console.warn('Không tải được mô hình '+model,error));

@@ -17,13 +17,13 @@ function createDrivingGraphics(renderer, camera, sun) {
   let level = initial, preference, previous = null, duration = 0, frames = 0, slow = 0, fast = 0, recoverAfter;
   let density = 0, smooth = 0, onTime = 0, sharpenAfter = 2;
   let width = 0, height = 0, ratio = 0;
-  let verySlow = 0, reduced = false;
+  let verySlow = 0, uneven = 0, reduced = false;
   const shadows = renderer.shadowMap.enabled;
   const canvas = renderer.domElement;
 
   function resetSamples() {
     previous = null;
-    duration = frames = slow = fast = verySlow = smooth = onTime = 0;
+    duration = frames = slow = fast = verySlow = uneven = smooth = onTime = 0;
   }
   function choose() {
     const selected = document.body.dataset.graphics || 'auto';
@@ -66,14 +66,19 @@ function createDrivingGraphics(renderer, camera, sun) {
     if (duration < 1000) return;
     const average = duration / frames;
     const mobileAuto = touch && preference === 'auto';
+    const desktopAuto = !touch && preference === 'auto';
+    const late = frames - onTime;
+    // Several missed refreshes every second are perceptible even when the
+    // mean stays near 60 FPS. Allow an isolated loading spike to settle.
+    if (desktopAuto) uneven = late >= 3 && average > 17.5 ? uneven + 1 : 0;
     const slowLimit = level > 0 ? 23 : density > 0 ? 32 : 34;
     slow = average > slowLimit ? slow + 1 : 0;
     // Streaming may miss an individual frame even when most draws have headroom.
     const steady = onTime >= frames * .7 && average < (density === 0 ? 28 : 24);
     smooth = steady ? smooth + 1 : 0;
-    fast = average < 18.5 ? fast + 1 : 0;
+    fast = average < 18.5 && (!desktopAuto || late <= 1) ? fast + 1 : 0;
     duration = frames = onTime = 0;
-    if (slow >= 2 && !reduced) {
+    if ((slow >= 2 || uneven >= 3 && level > 0) && !reduced) {
       lowerQuality();
     } else if (mobileAuto && smooth >= (reduced ? 2 : sharpenAfter) && (reduced || density < touchDensity.length - 1)) {
       // Spend spare frame time on road markings first. Shadows, reflections

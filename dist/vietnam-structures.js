@@ -1,7 +1,7 @@
 'use strict';
 
 function createVietnamStructures(){
-  let setup,sources,offlineFootprints,offlineHeights,api,version=0,graphReady;
+  let setup,sources,offlineFootprints,offlineHeights,api,readTile,version=0,graphReady;
   let activeTiles=new Map(),activeHeights=[],signature='';
   const footprintCache=new Map(),heightCache=new Map(),step=.001;
   const limit=matchMedia('(pointer: coarse)').matches?750:1500;
@@ -15,6 +15,7 @@ function createVietnamStructures(){
     [api,sources]=await Promise.all([import('./vn-structures/source.mjs'),json('source-index.json')]);
     const offline=await json('offline.json');
     offlineFootprints=new Set(offline.footprints);offlineHeights=new Set(offline.heights);
+    readTile??=(await import('./vn-structures/region-tiles.mjs')).createRegionReader();
   }
   function cached(cache,key,load){
     if(!cache.has(key)){
@@ -23,44 +24,17 @@ function createVietnamStructures(){
     }
     return cache.get(key);
   }
-  function indexed(rows){
-    if(!rows)return null;
-    const cells=new Map();
-    for(const row of rows){
-      const ring=row[4][0];let x=0,y=0,west=Infinity,east=-Infinity,south=Infinity,north=-Infinity;
-      for(let i=0;i<ring.length;i+=2){
-        x+=ring[i];y+=ring[i+1];west=Math.min(west,x);east=Math.max(east,x);south=Math.min(south,y);north=Math.max(north,y);
-      }
-      const lon=(west+east)/2e5,lat=(south+north)/2e5;
-      const key=Math.floor(lon/step)+'_'+Math.floor(lat/step);
-      if(!cells.has(key))cells.set(key,[]);
-      cells.get(key).push({row,lon,lat});
-    }
-    return cells;
-  }
-  async function localHeight(key){
-    const r=await fetch('vn-structures/heights/'+key+'.gz');
-    if(!r.ok)throw Error('Missing bundled height');
-    const bytes=new Uint8Array(await r.arrayBuffer());
-    const pixels=bytes[0]===31&&bytes[1]===139&&bytes.length!==512*512
-      ?new Uint8Array(await new Response(new Blob([bytes]).stream().pipeThrough(new DecompressionStream('gzip'))).arrayBuffer()):bytes;
-    if(pixels.length!==512*512)throw Error('Invalid bundled height');
-    return pixels;
-  }
-  async function load(graph,x,z){
+  async function load(graph,x,z,onCoverage){
     const seq=++version;
     try{
       setup??=init().catch(e=>{setup=null;throw e;});
       await setup;if(seq!==version)return false;
       const [lon,lat]=graph.geo(x,z),keys=api.tileKeys(lon,lat,950);
       const blocks=api.heightBlocks(sources.heightSources,lon,lat,950);
+      onCoverage?.(keys.every(key=>offlineFootprints.has(key))&&blocks.every(b=>offlineHeights.has(b.key)));
       const tiles=await Promise.allSettled([
-        ...keys.map(key=>cached(footprintCache,key,async()=>{
-          const rows=offlineFootprints.has(key)?await fetchMapTile('vn-structures/footprints/'+key+'.gz'):
-            await api.readFootprints(key,sources.thresholds);
-          return indexed(rows);
-        })),
-        ...blocks.map(b=>cached(heightCache,b.key,()=>offlineHeights.has(b.key)?localHeight(b.key):api.readHeightBlock(b)))
+        ...keys.map(key=>cached(footprintCache,key,()=>readTile({kind:'footprint',key,local:offlineFootprints.has(key),thresholds:sources.thresholds}))),
+        ...blocks.map(({source,i,j,key})=>cached(heightCache,key,()=>readTile({kind:'height',source,i,j,key,local:offlineHeights.has(key)})))
       ]);
       if(seq!==version)return false;
       const local=new Map(),heights=[];

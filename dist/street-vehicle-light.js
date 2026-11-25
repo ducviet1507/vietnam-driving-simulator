@@ -19,17 +19,19 @@ function createStreetVehicleLight(T,renderer,scene){
     };
     material.customProgramCacheKey=()=>key+'-street-'+Number(glass);material.needsUpdate=true;
   }
-  function reflect(position,hidden,now,enabled){
-    if(!enabled){amount.value=0;return;}
-    if(now<next)return;
+  function reflect(position,hidden,now,enabled,defer=false){
+    if(!enabled){amount.value=0;return false;}
+    if(now<next||defer&&now-next<95)return false;
     if(!targets){
       targets=[0,1].map(()=>new T.WebGLCubeRenderTarget(48,{minFilter:T.LinearFilter,generateMipmaps:false}));
       cube=new T.CubeCamera(.45,100,targets[0]);cube.coordinateSystem=renderer.coordinateSystem;cube.updateCoordinateSystem();
     }
     if(Math.hypot(position.x-lastX,position.z-lastZ)>18){face=0;amount.value=0;}
+    // Detect an origin jump between captures. At highway speed a legitimate
+    // six-face sweep travels much further than 18 m from its first face.
+    lastX=position.x;lastZ=position.z;
     if(face===0){
       cube.position.copy(position);cube.position.y+=1.25;cube.updateMatrixWorld(true);
-      lastX=position.x;lastZ=position.z;
     }
     next=now+95;
     const target=renderer.getRenderTarget(),activeFace=renderer.getActiveCubeFace(),mip=renderer.getActiveMipmapLevel(),
@@ -45,6 +47,7 @@ function createStreetVehicleLight(T,renderer,scene){
       hidden.forEach((o,i)=>o.visible=visibility[i]);
     }
     if(++face===6){environment.value=targets[writable].texture;amount.value=1;writable=1-writable;face=0;}
+    return true;
   }
   // Headlight and stop-lamp streaks on the wet road, laid along each
   // vehicle's heading and the slope of its own deck.

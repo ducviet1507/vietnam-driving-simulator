@@ -118,10 +118,10 @@
   },
   {
     "id": "ven-bien-hon-dau",
-    "title": "Đê biển Tiên Lãng → Hải đăng Hòn Dấu",
-    "description": "Xuất phát trên đê biển Tiên Lãng, men theo bờ ra cửa sông Văn Úc, qua cầu Văn Úc và đê biển Kiến Thụy vào Đồ Sơn, rồi đi sát mép biển qua Vạn Lê, Lý Thái Tổ, Vạn Hoa về hải đăng Hòn Dấu.",
+    "title": "Đê biển Tiên Lãng → Bờ biển Đồ Sơn",
+    "description": "Từ đê biển Tiên Lãng, qua cầu Văn Úc rồi theo đê biển Kiến Thụy vào Đồ Sơn. Xe dừng trên bờ, phía đảo Hòn Dấu. Hàng phi lao, nhà và đèn ven tuyến là cảnh minh họa.",
     "startLabel": "Đê biển Tiên Lãng",
-    "finishLabel": "Hải đăng Hòn Dấu",
+    "finishLabel": "Bờ biển Đồ Sơn",
     "start": [106.6347,20.6302698],
     "finish": [106.80707,20.6757],
     "metres": 34392,

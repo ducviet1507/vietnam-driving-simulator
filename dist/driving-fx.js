@@ -95,7 +95,7 @@ window.createDrivingFX = function (T, scene, renderer) {
     transparent:true,depthWrite:false,blending:T.AdditiveBlending,toneMapped:false
   });
   const fires=[],fireGroup=new T.Group();
-  let fireStyle=false,popTime=0,popLevel=0,nextPop=0,wasBoosting=false,flicker=1;
+  let fireStyle=false,popTime=0,popLevel=0,nextPop=0,wasBoosting=false,wasUnderLoad=false,flicker=1;
   function buildFires(pipes){
     for(const f of fires){f.material.dispose();}
     fires.length=0;fireGroup.clear();
@@ -104,7 +104,7 @@ window.createDrivingFX = function (T, scene, renderer) {
       const mesh=new T.Mesh(fireGeometry,material);mesh.frustumCulled=false;mesh.renderOrder=4;
       mesh.position.set(pipe.x,pipe.y,pipe.z);
       mesh.quaternion.setFromUnitVectors(new T.Vector3(0,0,1),new T.Vector3(pipe.dx,pipe.dy||0,pipe.dz).normalize());
-      const pool=new T.Mesh(new T.PlaneGeometry(1,1),fireGlowMaterial);pool.rotation.x=-Math.PI/2;
+      const pool=new T.Mesh(glow.geometry,fireGlowMaterial);pool.rotation.x=-Math.PI/2;
       pool.position.set(pipe.x+pipe.dx*.35,.05,pipe.z+pipe.dz*.35);pool.scale.set(1.5,1.5,1);
       fireGroup.add(mesh,pool);fires.push({mesh,material,pipe,length:pipe.length});
     });
@@ -113,8 +113,9 @@ window.createDrivingFX = function (T, scene, renderer) {
     const outlet=outlets[kind],parent=outlet?model:null;
     if(exhaust.parent===(parent??null)&&exhaust.userData.kind===kind)return;
     exhaust.removeFromParent();exhaust.userData.kind=kind;
+    fireStyle=Boolean(parent&&outlet.pipes);
+    wasBoosting=wasUnderLoad=false;popTime=popLevel=0;
     if(!parent)return;
-    fireStyle=Boolean(outlet.pipes);
     exhaust.clear();
     if(fireStyle){buildFires(outlet.pipes);exhaust.add(fireGroup);}
     else{
@@ -126,9 +127,14 @@ window.createDrivingFX = function (T, scene, renderer) {
     parent.add(exhaust);
   }
   const pipeWorld=new T.Vector3();
-  function updateFires(dt,boosting,driving,speed){
+  function updateFires(dt,boosting,driving,speed,throttle){
+    const underLoad=driving&&(boosting||throttle);
     if(boosting&&!wasBoosting)popTime=.11;
-    if(!boosting&&wasBoosting&&speed>8)popTime=.16;
+    if(driving&&wasUnderLoad&&!underLoad&&speed>8){
+      popTime=.16;
+      window.driveAudio?.backfire();
+    }
+    wasUnderLoad=underLoad;
     wasBoosting=boosting;
     if(boosting&&clock>nextPop){popTime=Math.max(popTime,.06+Math.random()*.07);nextPop=clock+.25+Math.random()*.9;}
     popTime=Math.max(0,popTime-dt);
@@ -272,6 +278,7 @@ window.createDrivingFX = function (T, scene, renderer) {
     puff(x,y+.12,z,-dx*.55,.38,-dz*.55,.2,.55,[.54,.52,.49],.25);
   }
   function reset(){
+    wasUnderLoad=wasBoosting=false;popTime=popLevel=0;
     for(const pool of [smoke,sparks,chips])for(const p of pool)p.life=0;
     marks.fill(null);marksBorn.fill(-100);markGeo.attributes.born.needsUpdate=true;
     kick=boostLevel=flow=smokeFraction=sprayFraction=skidDistance=0;lastCar=previousAxle=null;root.visible=exhaust.visible=false;
@@ -291,7 +298,7 @@ window.createDrivingFX = function (T, scene, renderer) {
     const dry=1-wet,dust=rolling&&car.offroad;
     const boostTarget=driving&&car.boost?1:0;
     boostLevel+=(boostTarget-boostLevel)*(1-Math.exp(-dt*(boostTarget?12:8)));
-    const flame=fireStyle?updateFires(dt,driving&&Boolean(car.boost),driving,speed):boostLevel;
+    const flame=fireStyle?updateFires(dt,driving&&Boolean(car.boost),driving,speed,car.throttle):boostLevel;
     exhaust.visible=driving&&flame>.045&&!inside;
     flameMaterial.uniforms.time.value=reduced.matches?0:clock;
     flameMaterial.uniforms.power.value=boostLevel;

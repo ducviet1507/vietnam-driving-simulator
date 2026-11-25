@@ -41,8 +41,11 @@ function createDrivingWeather(THREE,scene,sun,pavement,reference=''){
   // An authored drive can stage its own sky. Live conditions resume when it ends.
   let staged=null;
   function stage(sky){
+    if(rainDemo||afterRain)return;
+    sky=sky==='sunset'?sky:null;
     if(sky===staged)return;
     staged=sky;due=0;
+    request?.abort();request=null;
     if(sky==='sunset')for(const el of labels){
       el.textContent=(reference?reference+' · ':'')+'Hoàng hôn mô phỏng · Trời quang';el.title='Bầu trời hoàng hôn của tuyến lái';
     }else if(!rainDemo&&!afterRain)display(current,current?'cache':'Đang lấy thời tiết…');
