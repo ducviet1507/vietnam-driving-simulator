@@ -186,6 +186,8 @@ async function startAt(place,restore=null,guided=null){
  const site=place[3]||destinations.find(entry=>restore?.destination===entry.id)||catalogStop(restore?.destination);
  if(site)useSightEntrance(site);
  car.scenicHour=scenicPasses.has(site?.id)?scenicHour():null;
+ car.sky=guided?.sky||null;
+ if(car.sky==='sunset')car.scenicHour=sunsetHour(...(guided.finish||guided.start));
  const departure=restore?null:JourneyDepartures.byId(site?.id);
  if(departure&&!guided&&!reduceMotion.matches)car.openingPose=1;
  JourneyDepartures.select(departure);
@@ -729,7 +731,7 @@ function frame(now){
      }
      crashTime-=dt;if(crashTime<=0){mode='pit';pit(crashKind,car.spec.speedGovernor);}
    }
-   if(mode!=='loading'&&roads&&!document.hidden&&now>=nextWeatherCheck){nextWeatherCheck=now+2000;gfx.weather.locate(...roads.geo(car.x,car.z));}
+   if(mode!=='loading'&&roads&&!document.hidden&&now>=nextWeatherCheck){nextWeatherCheck=now+2000;gfx.weather.stage(car.sky);gfx.weather.locate(...roads.geo(car.x,car.z));}
    car.driving=mode==='drive';car.showroom=mode==='grid';
    vehicleLook.update(dt);
    if(mode!=='loading'&&mode!=='error'&&mode!=='map'&&!$('postcard').open&&!$('fieldDialog').open&&!$('sightPhoto').open&&!document.hidden){
