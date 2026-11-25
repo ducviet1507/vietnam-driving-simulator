@@ -720,14 +720,16 @@
       }
       const wooded=segments.some(s=>s.graded);
       const roadway=!wooded?terrain.ground:(x,z)=>{
-        const lx=x-cx,lz=z-cz,naturalY=natural(lx,lz);
+        const lx=x-cx,lz=z-cz;
         let weightSum=0,formationSum=0,influence=0;
         let highest=0,lowest=Infinity,throughSum=0,throughWeight=0,throughBlend=0;
         for(const s of cells.get(nearbyCell(lx,lz))||[]){
           if(!s.graded)continue;
           const d=Math.max(0,Math.min(s.len,(lx-s.ax)*s.fx+(lz-s.az)*s.fz));
-          const cross=Math.hypot(lx-s.ax-s.fx*d,lz-s.az-s.fz*d);
-          if(cross>=s.w+(s.priority?8:4))continue;
+          const dx=lx-s.ax-s.fx*d,dz=lz-s.az-s.fz*d,cross2=dx*dx+dz*dz;
+          const reach=s.w+(s.priority?8:4);
+          if(cross2>=reach*reach)continue;
+          const cross=Math.sqrt(cross2);
           const j=Math.min(s.crown.length-2,Math.floor(d/s.interval)),f=d/s.interval-j;
           const crown=s.crown[j]*(1-f)+s.crown[j+1]*f;
           const surface=crown-Math.min(s.w,cross)*.018;
@@ -746,9 +748,11 @@
           formationSum+=surface*weight;
           weightSum+=weight;influence=Math.max(influence,blend);
         }
-        if(!weightSum)return naturalY;
+        if(!weightSum)return natural(lx,lz);
         let road=formationSum/weightSum;
         if(lowest<highest&&throughWeight)road+=(throughSum/throughWeight-road)*throughBlend;
+        if(influence===1)return road;
+        const naturalY=natural(lx,lz);
         return naturalY+(road-naturalY)*influence;
       };
       function cutClearance(x,z,own){
@@ -1185,8 +1189,8 @@
         const asphalt=mat===material.asphalt;
         let section,fitTriangle=false;
 
-        function vertex(x,z){
-          const h=groundHeight?groundHeight(x,z):roadway(cx+x,cz+z);
+        function vertex(x,z,roadY){
+          const h=groundHeight?groundHeight(x,z):roadY??roadway(cx+x,cz+z);
           verts.push(x,h+y,z);
           if(asphalt){
             let sag=0;
@@ -1209,17 +1213,23 @@
           else uv.push(x*freq+(cx*freq)%1,z*freq+(cz*freq)%1);
         }
         const fitRoad=wooded&&(mat===material.pavers||mat===curbStone);
-        function triangle(a,b,c,depth=0){
+        // Child faces share the parent's corners and edge midpoints. Keep their
+        // sampled road height on each point, including for the final mesh vertices.
+        const sample=p=>p[2]??(p[2]=roadway(cx+p[0],cz+p[1]));
+        const mid=(p,q)=>[(p[0]+q[0])/2,(p[1]+q[1])/2];
+        let faces=0;
+        function* triangle(a,b,c,depth=0){
+          // A single source triangle on a hairpin can produce 1,024 faces.
+          // Let the existing district scheduler pause even within that triangle.
+          if((++faces&63)===0)yield;
           if(fitTriangle&&depth<5){
-            const sample=p=>roadway(cx+p[0],cz+p[1]);
-            const mid=(p,q)=>[(p[0]+q[0])/2,(p[1]+q[1])/2];
             const ab=mid(a,b),bc=mid(b,c),ca=mid(c,a),ha=sample(a),hb=sample(b),hc=sample(c);
             const middle=[(a[0]+b[0]+c[0])/3,(a[1]+b[1]+c[1])/3];
             const error=Math.max(Math.abs(sample(ab)-(ha+hb)/2),Math.abs(sample(bc)-(hb+hc)/2),
               Math.abs(sample(ca)-(hc+ha)/2),Math.abs(sample(middle)-(ha+hb+hc)/3));
             if(error>.014){
-              triangle(a,ab,ca,depth+1);triangle(ab,b,bc,depth+1);
-              triangle(ca,bc,c,depth+1);triangle(ab,bc,ca,depth+1);return;
+              yield* triangle(a,ab,ca,depth+1);yield* triangle(ab,b,bc,depth+1);
+              yield* triangle(ca,bc,c,depth+1);yield* triangle(ab,bc,ca,depth+1);return;
             }
           }
           vertex(...a);vertex(...b);vertex(...c);
@@ -1227,16 +1237,16 @@
         // Split at terrain edges so a long road, its paint and the ground coincide
         // even when all three meshes have different source triangulations.
         const offset=[cx,cz,cx+cz];
-        function split(poly,axis){
+        function* split(poly,axis){
           if(axis===3){
-            for(let j=1;j<poly.length-1;j++)triangle(poly[0],poly[j],poly[j+1]);
+            for(let j=1;j<poly.length-1;j++)yield* triangle(poly[0],poly[j],poly[j+1]);
             return;
           }
           const coord=p=>axis===2?p[0]+p[1]:p[axis];
           let low=Infinity,high=-Infinity;
           for(const p of poly){const v=coord(p);low=Math.min(low,v);high=Math.max(high,v);}
           const cut=(Math.floor((low+offset[axis]+.00001)/step)+1)*step-offset[axis];
-          if(cut>=high-.00001){split(poly,axis+1);return;}
+          if(cut>=high-.00001){yield* split(poly,axis+1);return;}
           const left=[],right=[];let prev=poly.at(-1),a=coord(prev)-cut;
           for(const p of poly){
             const b=coord(p)-cut;
@@ -1246,7 +1256,7 @@
             }
             if(b<=0)left.push(p);if(b>=0)right.push(p);prev=p;a=b;
           }
-          split(left,axis+1);split(right,axis);
+          yield* split(left,axis+1);yield* split(right,axis);
         }
         const same=(a,b,c,o)=>Math.floor((Math.min(a,b,c)+o)/step)===Math.floor((Math.max(a,b,c)+o)/step);
         const sections=sectionsFor.get(data);
@@ -1259,13 +1269,28 @@
           fitTriangle=fitRoad||section?.profiled||(!groundHeight&&formation?.intersects(
             cx+Math.min(ax,bx,dx),cz+Math.min(az,bz,dz),cx+Math.max(ax,bx,dx),cz+Math.max(az,bz,dz)));
           if(same(ax,bx,dx,cx)&&same(az,bz,dz,cz)&&same(ax+az,bx+bz,dx+dz,cx+cz)){
-            if(fitTriangle)triangle([ax,az],[bx,bz],[dx,dz]);else{vertex(ax,az);vertex(bx,bz);vertex(dx,dz);}
-          }else split([[ax,az],[bx,bz],[dx,dz]],0);
+            if(fitTriangle)yield* triangle([ax,az],[bx,bz],[dx,dz]);else{vertex(ax,az);vertex(bx,bz);vertex(dx,dz);}
+          }else yield* split([[ax,az],[bx,bz],[dx,dz]],0);
         }
-        const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(verts,3));g.setAttribute('uv',new T.Float32BufferAttribute(uv,2));setFlatNormals(T,g);
-        if(asphalt)g.setAttribute('carriageway',new T.Float32BufferAttribute(crossSection,3));
+        const g=new T.BufferGeometry(),positions=new Float32Array(verts.length),normals=new Float32Array(verts.length);
+        const uvs=new Float32Array(uv.length),carriageway=asphalt?new Float32Array(crossSection.length):null;
+        g.setAttribute('position',new T.BufferAttribute(positions,3));
+        g.setAttribute('normal',new T.BufferAttribute(normals,3));
+        g.setAttribute('uv',new T.BufferAttribute(uvs,2));
+        if(carriageway)g.setAttribute('carriageway',new T.BufferAttribute(carriageway,3));
+        // A fitted pass can have hundreds of thousands of vertices. Finish the
+        // normals and shoreline contact index in batches of complete triangles.
+        const count=positions.length/3;
+        for(let start=0;start<count;start+=3072){
+          const end=Math.min(count,start+3072);
+          for(let i=start*3;i<end*3;i++)positions[i]=verts[i];
+          for(let i=start*2;i<end*2;i++)uvs[i]=uv[i];
+          if(carriageway)for(let i=start*3;i<end*3;i++)carriageway[i]=crossSection[i];
+          writeFlatNormals(positions.subarray(start*3,end*3),normals.subarray(start*3,end*3));
+          if(mat!==whitePaint&&mat!==yellowPaint)shorePatch?.addCover(g,null,start,end);
+          if(end<count)yield;
+        }
         const mesh=new T.Mesh(g,mat);mesh.receiveShadow=true;
-        if(mat!==whitePaint&&mat!==yellowPaint)shorePatch?.addCover(g);
         if(mat.transparent&&mat.userData.templeSurface)mesh.renderOrder=1;
         roadGroup.add(mesh);
       }
@@ -1960,7 +1985,9 @@
           width:a.spec?.width||trafficModels[a.kind]?.width||1.7,bike:a.kind==='scooter'||a.model==='motorcycle',brake:a.brake||a.recoil?.braking})),
           weather.moisture.asphalt.value,atmosphere.lamps.value);
       }else localLight.wetLights([],0,0);
-      localLight.reflect(player.root.position,[player.root,playerRig],now,!inside&&!car.sightView&&graphics.profile.id!=='low');
+      // The cockpit is already hidden in chase view. Keep its headlight in
+      // the cube capture so every face uses the precompiled scene lighting.
+      localLight.reflect(player.root.position,[player.root],now,!inside&&!car.sightView&&graphics.profile.id!=='low');
       waterSurface.reflect(renderer,scene,camera,reflectionLevel,now,reflectionLevel!==null,graphics.profile,mirrorUpdated);
       renderer.render(scene,camera);
       return player.modelReady;
@@ -1969,17 +1996,25 @@
     const actorPrograms=new Map(),preparedPrograms=new WeakSet(),uploadedTextures=new WeakMap();
     async function warmMaterials(object,canceled=()=>false,streamed=false){
       const programs=new Set(),textures=new Set();
+      function queueTexture(tex){
+        if(tex?.isTexture&&!tex.isRenderTargetTexture&&tex.image&&tex.image.complete!==false&&
+          tex.version>0&&uploadedTextures.get(tex)!==tex.version)textures.add(tex);
+      }
+      function queueUniformTextures(properties){
+        // Roofs and entrances use custom atlas uniforms shared between districts.
+        // Their images can finish loading after the material's first compilation.
+        if(properties.uniforms)for(const uniform of Object.values(properties.uniforms))queueTexture(uniform.value);
+      }
       function compile(batch){
         for(const mat of renderer.compile(batch,camera,scene)){
+          const properties=renderer.properties.get(mat);
           // A material can have separate screen, reflection and instancing
           // programs. A concurrent draw changes its currentProgram.
-          for(const program of renderer.properties.get(mat).programs.values()){
+          for(const program of properties.programs.values()){
             if(!preparedPrograms.has(program))programs.add(program);
           }
-          for(const key of ['map','normalMap','roughnessMap','metalnessMap','aoMap','emissiveMap','alphaMap']){
-            const tex=mat[key];
-            if(tex?.image&&tex.image.complete!==false&&tex.version>0&&!tex.isRenderTargetTexture&&uploadedTextures.get(tex)!==tex.version)textures.add(tex);
-          }
+          for(const key of ['map','normalMap','roughnessMap','metalnessMap','aoMap','emissiveMap','alphaMap'])queueTexture(mat[key]);
+          queueUniformTextures(properties);
         }
       }
       function compileBatch(batch){
@@ -1989,11 +2024,14 @@
       if(streamed){
         // The same road and building materials recur at every origin. Warm new
         // surfaces in small batches while the driver still sees the previous district.
-        const fresh=[],batch=new T.Group();
+        const fresh=[],batch=new T.Group(),seen=new Set();
         object.traverse(node=>{
           if(!node.material)return;
           const materials=Array.isArray(node.material)?node.material:[node.material];
           if(materials.some(mat=>!renderer.properties.get(mat).programs?.size))fresh.push(node);
+          for(const mat of materials)if(!seen.has(mat)){
+            seen.add(mat);queueUniformTextures(renderer.properties.get(mat));
+          }
         });
         for(let i=0;i<fresh.length&&!canceled();i+=8){
           batch.children=fresh.slice(i,i+8);

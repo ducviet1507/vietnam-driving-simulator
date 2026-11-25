@@ -78,7 +78,7 @@
   });
   const sky=new T.Mesh(new T.SphereGeometry(500,32,20),skyMaterial);scene.add(sky);
   const loader=new T.TextureLoader();
-  loader.load('streetscape/sky.jpg',map=>{
+  const skyReady=loader.loadAsync('streetscape/sky.jpg').then(map=>{
     skyMaterial.uniforms.pano.value=map;
     skyMaterial.uniforms.hasPano.value=1;
     const reflections=map.clone();
@@ -86,7 +86,7 @@
     reflections.colorSpace=T.SRGBColorSpace;
     reflections.needsUpdate=true;
     scene.environment=reflections;
-  });
+  }).catch(()=>{});
   const asphalt=texture(256,256,(ctx,w,h)=>{
     ctx.fillStyle='#585952';ctx.fillRect(0,0,w,h);
     for(let i=0;i<19000;i++){ctx.fillStyle=random()>.5?'rgba(255,245,221,.1)':'rgba(0,0,0,.15)';ctx.fillRect(random()*w,random()*h,1+random()*2,1);}
@@ -512,6 +512,7 @@
       seed=selectedCourse==='school'?12473:20473;
       build();sceneryParent=scene;seed=previousSeed;
       flushStaticParts();
+      prepareMirrors(routeSets[selectedCourse]);
       unbuiltCourses.delete(selectedCourse);
     }
     for(const [id,group] of Object.entries(routeSets))group.visible=id===selectedCourse;
@@ -626,12 +627,18 @@
     const heaterGlass=new T.BufferGeometry();
     heaterGlass.setAttribute('position',new T.Float32BufferAttribute(heaterWire,3));
     model.add(new T.LineSegments(heaterGlass,new T.LineBasicMaterial({color:0x413b32,transparent:true,opacity:.42,depthWrite:false})));
+    await prepareStreetObject(model);
     const groundShadow=player.children[0];
     player.clear();
     player.add(groundShadow,model);
   }
   loadPlayerSedan().catch(()=>{ /* Keep the lightweight car on older browsers or offline file URLs. */ });
-  const traffic=window.createStreetTraffic(scene,shadowTex);
+  async function prepareStreetObject(object){
+    await skyReady;
+    try{await driverCabin.prepare(renderer,scene,camera,object,true);}
+    catch(error){console.warn('Street shader preparation',error);}
+  }
+  const traffic=window.createStreetTraffic(scene,shadowTex,prepareStreetObject);
   function flushStaticParts(){
     for(const {geo,mat,matrices,host} of staticParts.values()){
       const mesh=new T.InstancedMesh(geo,mat,matrices.length);
@@ -644,6 +651,12 @@
   }
   flushStaticParts();
 
+  let pendingMirrorBatches=0;
+  function prepareMirrors(object){
+    pendingMirrorBatches++;
+    prepareStreetObject(object).finally(()=>pendingMirrorBatches--);
+  }
+  prepareMirrors(scene);
   let cockpit=true;
   window.streetAmbience=()=>{
     const works=selectedCourse==='works',school=selectedCourse==='school';
@@ -730,8 +743,7 @@
     renderer.autoClear=true;
     if(driverCabin){
       driverCabin.update(showCabin,speed,steering,distance,courses.find(c=>c.id===selectedCourse)||courses[0]);
-      if(mode==='ready')driverCabin.prepare(renderer,scene,camera);
-      if(showCabin)driverCabin.reflect(renderer,scene,cabinRig,distance,lateral,graphics.profile.mirrorMs);
+      if(showCabin&&!pendingMirrorBatches)driverCabin.reflect(renderer,scene,cabinRig,distance,lateral,graphics.profile.mirrorMs);
     }
     renderer.render(scene,camera);
   };

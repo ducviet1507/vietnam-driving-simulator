@@ -410,9 +410,9 @@ window.buildDriverCabin = function(T, rig, mapCanvas) {
     refreshMap(){mapDirty=true;},
     // On narrow screens, sit a little farther back to keep the wheel and console in view.
     seatInset(aspect){return T.MathUtils.clamp((1-aspect)*.40,0,.24);},
-    async prepare(renderer,scene,camera,object=scene){
-      if(!scene.environment)return;
-      if(object===scene){
+    async prepare(renderer,scene,camera,object=scene,waitForScene=false){
+      if(!scene.environment&&!waitForScene)return;
+      if(object===scene&&!waitForScene){
         if(preparedEnvironment===scene.environment)return;
         preparedEnvironment=scene.environment;
         if(!renderer.extensions.has('KHR_parallel_shader_compile'))return;
@@ -426,7 +426,7 @@ window.buildDriverCabin = function(T, rig, mapCanvas) {
         renderer.setRenderTarget(target);
         renderer.compile(object,rearCamera,scene);
       }finally{renderer.setRenderTarget(previous);}
-      if(object!==scene){
+      if(object!==scene||waitForScene){
         const pending=new Set();
         for(const mat of materials)for(const program of renderer.properties.get(mat).programs.values())pending.add(program);
         while(pending.size){
