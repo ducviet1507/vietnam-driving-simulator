@@ -40,6 +40,33 @@ for(let i=0;i<100;i++){
   body.step(unset,input,.01);body.step(gentle,{...input,steeringProfile:4},.01);
 }
 assert.equal(unset.x,gentle.x,'An absent preference uses gentle steering');
+for(const hz of [30,60,144]){
+  for(const speed of [-10,20,60,100,200]){
+    for(const dir of [-1,1]){
+      const flexible=start(speed),soft=start(speed);
+      drive(flexible,dir,.14,hz,'adaptive');drive(soft,dir,.14,hz,4);
+      assert.equal(flexible.x,soft.x,'A short adaptive correction follows the gentle trajectory');
+      drive(flexible,0,.1,hz,'adaptive');
+      drive(flexible,dir,.14,hz,'adaptive');
+      assert.equal(flexible.directBlend,0,'Separate lane corrections do not accumulate');
+      drive(flexible,dir,.14,hz,'adaptive');
+      assert.ok(flexible.directBlend>.45&&flexible.directBlend<.55,'The wheel blends partway through the hold');
+      drive(flexible,dir,.13,hz,'adaptive');
+      const direct={...flexible};
+      drive(flexible,dir,.1,hz,'adaptive');drive(direct,dir,.1,hz,1);
+      assert.ok(Math.abs(flexible.yaw-direct.yaw)<1e-9,'A sustained hold uses the original direct steering angle');
+      drive(flexible,-dir,.16,hz,'adaptive');
+      assert.ok(flexible.steer*dir<0&&flexible.directBlend<.05,'Reversing starts a new hold');
+      drive(flexible,-dir,.3,hz,'adaptive');
+      drive(flexible,0,.05,hz,'adaptive');
+      assert.ok(flexible.directBlend>0&&flexible.directBlend<1,'Release eases out of a direct turn');
+      drive(flexible,0,.11,hz,'adaptive');
+      assert.equal(flexible.directBlend,0,'Released steering returns to gentle');
+      body.reset(flexible);
+      assert.equal(flexible.steerHold,0);
+    }
+  }
+}
 for(const hz of [30,60,100,144]){
   for(const speed of [-10,20,40,60,100,200]){
     const right=start(speed),left=start(speed),previous=start(speed);
@@ -128,10 +155,10 @@ for(const hz of [30,60,100,144]) {
     assert.equal(input.steering(1250,.01),0,'Clearing input discards pending turns');
   }
 }
-for(const profile of [1,1.5,2,2.5,3,3.5,4,undefined]){
+for(const profile of [1,1.5,2,2.5,3,3.5,4,'adaptive',undefined]){
   const input=makeInput({timedSteering:true});
   input.add('d',5);input.delete('d',15);
-  const timedShare=Math.max(0,Math.min(1,(profile??4)-2));
+  const timedShare=profile==='adaptive'?1:Math.max(0,Math.min(1,(profile??4)-2));
   assert.ok(Math.abs(input.steering(20,.020,profile)-.5*timedShare)<1e-10,'A between-frame tap is counted once');
 }
 // Reproduce capped frames using the same clock and substeps as both game loops.
@@ -146,7 +173,7 @@ function frameSteering(input,start,end,profile){
   }
   return [right,left].map(Math.round);
 }
-for(const profile of [1,2,2.5,3,4]){
+for(const profile of [1,2,2.5,3,4,'adaptive']){
   const input=makeInput({timedSteering:true});
   input.add('a',20);input.delete('a',120);
   input.add('d',255);input.delete('d',265);
@@ -165,4 +192,4 @@ for(const profile of [1,2,2.5,3,4]){
   assert.deepEqual(frameSteering(input,810,1060,profile),[100,0],'A held turn is counted up to the simulation cap');
   assert.deepEqual(frameSteering(input,1060,1080,profile),[0,0],'The release survives compression');
 }
-console.log('PASS gentle steering, legacy profiles and taps across ordinary and stalled frames');
+console.log('PASS adaptive, gentle and legacy steering across ordinary and stalled frames');

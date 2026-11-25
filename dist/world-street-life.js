@@ -8,7 +8,8 @@ const vietnamPlaceTypes={
 function createWorldStreetLife(T,scene,small,environment,amenities,prepareActor){
   const walkGroup=new T.Group();
   walkGroup.name='Người đi bộ';scene.add(walkGroup);
-  const walkers=new Map(),models=new Map();
+  const walkers=new Map(),models=new Map(),rigTextures=new Map(),spare=[];
+  const wardrobeAssets=['casual-walker','hiker',...pedestrianWardrobe.flat()];
   let bins=new Map();
   let graph,places=[],paths=[],originX=0,originZ=0,walkTime=0;
   function localHour(){return (new Date().getUTCHours()+7)%24;}
@@ -89,9 +90,14 @@ function createWorldStreetLife(T,scene,small,environment,amenities,prepareActor)
     for(const [key,item] of walkers){
       if(active.has(key))continue;
       walkGroup.remove(item.group);
-      item.mixer?.stopAllAction();
-      item.group.traverse(part=>{if(part.isSkinnedMesh)part.skeleton.dispose();});
       walkers.delete(key);
+      if(!item.group.children.length)continue;
+      spare.push(item);
+      if(spare.length>(small?6:11)){
+        const oldest=spare.shift();
+        oldest.mixer?.stopAllAction();
+        oldest.group.traverse(part=>{if(part.isSkinnedMesh)part.skeleton.dispose();});
+      }
     }
   }
   function* prepare(g,x,z,segments,clear){
@@ -107,16 +113,43 @@ function createWorldStreetLife(T,scene,small,environment,amenities,prepareActor)
       graph=g;originX=x;originZ=z;places=nextPlaces;bins=nextBins;paths=nextPaths;trimWalkers();
     };
   }
+  function loadWalker(asset){
+    if(!models.has(asset))models.set(asset,TrafficModels.load.loadAsync('traffic/'+asset+'.glb').then(({scene,animations,parser})=>{
+      // Costumes point into the same source rig for normal and roughness
+      // maps. Keep one GPU texture for each identical external buffer view.
+      const json=parser.json;
+      scene.traverse(node=>{
+        const mat=node.material;if(!mat)return;
+        for(const name of ['normalMap','roughnessMap','metalnessMap']){
+          const tex=mat[name],spec=tex&&json.textures?.[parser.associations.get(tex)?.textures];
+          const view=spec&&json.bufferViews?.[json.images[spec.source]?.bufferView];
+          const uri=view&&json.buffers[view.buffer].uri;
+          if(!uri)continue;
+          const key=JSON.stringify([uri,view.byteOffset,view.byteLength,json.samplers?.[spec.sampler],tex.channel,tex.colorSpace,tex.matrix.elements]);
+          if(rigTextures.has(key))mat[name]=rigTextures.get(key);
+          else rigTextures.set(key,tex);
+        }
+      });
+      return {scene,animations};
+    }).catch(error=>{
+      models.delete(asset);throw error;
+    }));
+    return models.get(asset);
+  }
   function walker(p){
     if(walkers.has(p.key))return walkers.get(p.key);
+    const asset=p.model,index=spare.findIndex(item=>item.asset===asset);
+    if(index>=0){
+      const [item]=spare.splice(index,1);
+      item.mixer?.setTime(p.phase);walkGroup.add(item.group);walkers.set(p.key,item);
+      return item;
+    }
     const group=new T.Group();walkGroup.add(group);
-    const item={group};walkers.set(p.key,item);
-    const asset=p.model;
-    if(!models.has(asset))models.set(asset,TrafficModels.load.loadAsync('traffic/'+asset+'.glb'));
-    item.ready=models.get(asset).then(async data=>{
+    const item={group,asset};walkers.set(p.key,item);
+    item.ready=loadWalker(asset).then(async data=>{
       await prepareActor(asset,data.scene);
       if(walkers.get(p.key)!==item)return;
-      const rig=TrafficModels.clone(data.scene);group.add(rig);
+      const rig=clonePedestrian(T,data.scene);group.add(rig);
       rig.traverse(part=>{if(part.isMesh){part.castShadow=true;part.receiveShadow=true;}});
       const clip=data.animations.find(c=>c.name==='walk');
       if(clip){item.mixer=new T.AnimationMixer(rig);item.mixer.clipAction(clip).play();item.mixer.setTime(p.phase);}
@@ -136,11 +169,22 @@ function createWorldStreetLife(T,scene,small,environment,amenities,prepareActor)
       actor.mixer?.update(dt);
     }
   }
-  async function prepareDeparture(){
+  function preloadWardrobe(){
+    for(const asset of wardrobeAssets)loadWalker(asset).catch(()=>{});
+  }
+  async function prepareDeparture(wardrobe){
     // render() has already requested every walker visible from the starting point.
     const departure=small?walkers.values():paths.map(walker);
-    await Promise.all(Array.from(departure,item=>item.ready));
-    return walkGroup;
+    const templates=new T.Group();
+    const ready=Array.from(departure,item=>item.ready);
+    if(wardrobe)for(const asset of wardrobeAssets){
+      ready.push(loadWalker(asset).then(({scene:rig})=>{
+        rig.traverse(node=>{if(node.isMesh)node.castShadow=node.receiveShadow=true;});
+        templates.add(rig);
+      }).catch(()=>{}));
+    }
+    await Promise.all(ready);
+    return {walkGroup,templates};
   }
-  return {activity,prepare,render,prepareDeparture,get places(){return places;}};
+  return {activity,prepare,render,preloadWardrobe,prepareDeparture,get places(){return places;}};
 }

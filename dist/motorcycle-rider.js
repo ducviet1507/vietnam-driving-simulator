@@ -600,6 +600,15 @@
       placeFoot(plant);bones[1].rotation.y=-look*.58;bones[5].rotation.y=-look*.23;
       mesh.morphTargetInfluences[0]=coat;
     }
-    return {mesh,update};
+    function departureVariants(){
+      const variants=new T.Group();
+      for(let style=0;style<8;style++)for(const detail of [false,true]){
+        const probe=new T.SkinnedMesh(outfit(style,detail),detail?materials:materials[0]);
+        probe.bind(mesh.skeleton,mesh.bindMatrix);
+        probe.castShadow=probe.receiveShadow=true;variants.add(probe);
+      }
+      return variants;
+    }
+    return {mesh,update,departureVariants};
   };
 })();

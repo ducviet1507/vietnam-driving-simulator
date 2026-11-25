@@ -173,6 +173,7 @@ function createPassRoadFormation(graph,tiles,terrain,cx,cz,radius,halfWidth){
   function ground(x,z){
     if(!affected(x,z))return terrain.ground(x,z);
     const i=Math.floor(x/fine),j=Math.floor(z/fine),u=x/fine-i,v=z/fine-j;
+    if(u===0&&v===0)return earthNode(i,j);
     const b=earthNode(i+1,j),c=earthNode(i,j+1);
     if(u+v<=1){const a=earthNode(i,j);return a+(b-a)*u+(c-a)*v;}
     const d=earthNode(i+1,j+1);return d+(c-d)*(1-u)+(b-d)*(1-v);
@@ -195,33 +196,91 @@ function createPassRoadFormation(graph,tiles,terrain,cx,cz,radius,halfWidth){
 // occupied land cells. Water banks already replace their own cells.
 function* meshPassRoadFormation(T,formation,land,gx,gz,width){
   const geometry=land.geometry,segments=geometry.parameters.widthSegments,coarse=width/segments;
-  const left=gx-width/2,top=gz-width/2,index=geometry.index.array,remaining=[];
-  const verts=[],uv=[],triangles=[],vertices=new Map(),steps=coarse/formation.fine;
+  const left=gx-width/2,top=gz-width/2,index=geometry.index.array,steps=coarse/formation.fine;
+  const pitch=segments+2,occupied=new Uint8Array(pitch*pitch);
+  let cells=0;
+  for(let p=0;p<index.length;p+=6){
+    const first=index[p],i=first%(segments+1),j=Math.floor(first/(segments+1));
+    if(formation.affected(left+(i+.5)*coarse,top+(j+.5)*coarse)){
+      occupied[(j+1)*pitch+i+1]=1;cells++;
+    }
+    if(p%1536===0)yield;
+  }
+  if(!cells)return null;
+  // Count corners, shared edge points and interiors. Shore cells can leave
+  // holes in the grid; allocate only the vertices that will actually be drawn.
+  let vertexCount=cells*(steps-1)**2;
+  for(let j=0;j<=segments;j++){
+    for(let i=0;i<=segments;i++){
+      const k=(j+1)*pitch+i+1,se=occupied[k],sw=occupied[k-1],ne=occupied[k-pitch];
+      if(se||sw||ne||occupied[k-pitch-1])vertexCount++;
+      if(se||ne)vertexCount+=steps-1;
+      if(se||sw)vertexCount+=steps-1;
+    }
+  }
+  const verts=new Float32Array(vertexCount*3),uv=new Float32Array(vertexCount*2);
+  const IndexArray=vertexCount>65535?Uint32Array:Uint16Array;
+  const triangles=new IndexArray(cells*steps*steps*6),remaining=new index.constructor(index.length-cells*6);
   const rowSize=segments*steps+1;
+  const vertices=new Uint32Array(rowSize*rowSize);
+  const bands=[];
+  let low=Infinity,high=-Infinity,nextVertex=0,nextIndex=0,nextLand=0;
   function vertex(i,j){
-    const k=i+j*rowSize;if(vertices.has(k))return vertices.get(k);
-    const px=i*formation.fine-width/2,pz=j*formation.fine-width/2,v=verts.length/3;
-    verts.push(px,-pz,formation.ground(gx+px,gz+pz));uv.push(px/width+.5,.5-pz/width);
-    vertices.set(k,v);return v;
+    const k=i+j*rowSize;if(vertices[k])return vertices[k]-1;
+    const px=i*formation.fine-width/2,pz=j*formation.fine-width/2,v=nextVertex++;
+    const height=formation.ground(gx+px,gz+pz);
+    low=Math.min(low,height);high=Math.max(high,height);
+    verts[v*3]=px;verts[v*3+1]=-pz;verts[v*3+2]=height;
+    uv[v*2]=px/width+.5;uv[v*2+1]=.5-pz/width;
+    vertices[k]=v+1;return v;
   }
   for(let p=0;p<index.length;p+=6){
     // PlaneGeometry stores each cell as (NW, SW, NE), (SW, SE, NE).
     const first=index[p],i=first%(segments+1),j=Math.floor(first/(segments+1));
-    if(!formation.affected(left+(i+.5)*coarse,top+(j+.5)*coarse)){
-      for(let k=p;k<p+6;k++)remaining.push(index[k]);continue;
+    if(!occupied[(j+1)*pitch+i+1]){
+      for(let k=p;k<p+6;k++)remaining[nextLand++]=index[k];continue;
     }
+    // The index stream is ordered by coarse terrain row, even with shore cells removed.
+    const bandId=Math.floor(j/4);
+    let band=bands[bands.length-1];
+    if(band?.id!==bandId){
+      band={id:bandId,start:nextIndex,bounds:new T.Box3()};
+      bands.push(band);
+    }
+    const box=band.bounds;
+    box.min.x=Math.min(box.min.x,i*coarse-width/2);box.max.x=Math.max(box.max.x,(i+1)*coarse-width/2);
+    box.min.y=Math.min(box.min.y,width/2-(j+1)*coarse);box.max.y=Math.max(box.max.y,width/2-j*coarse);
     for(let z=j*steps;z<(j+1)*steps;z++)for(let x=i*steps;x<(i+1)*steps;x++){
       const a=vertex(x,z),b=vertex(x+1,z),c=vertex(x,z+1),d=vertex(x+1,z+1);
-      triangles.push(a,c,b,b,c,d);
+      triangles[nextIndex++]=a;triangles[nextIndex++]=c;triangles[nextIndex++]=b;
+      triangles[nextIndex++]=b;triangles[nextIndex++]=c;triangles[nextIndex++]=d;
     }
     if((p%24)===0)yield;
   }
-  if(!triangles.length)return null;
-  const patch=new T.BufferGeometry();patch.setAttribute('position',new T.Float32BufferAttribute(verts,3));
-  patch.setAttribute('uv',new T.Float32BufferAttribute(uv,2));
-  patch.setAttribute('shoreSediment',new T.Float32BufferAttribute(new Float32Array(verts.length/3),1));
-  patch.setIndex(triangles);yield* updateTerrainNormals(T,patch);
+  const patch=new T.BufferGeometry();patch.setAttribute('position',new T.BufferAttribute(verts,3));
+  patch.setAttribute('uv',new T.BufferAttribute(uv,2));
+  patch.setAttribute('shoreSediment',new T.BufferAttribute(new Float32Array(vertexCount),1));
+  patch.setIndex(new T.BufferAttribute(triangles,1));yield* updateTerrainNormals(T,patch);
   const mesh=new T.Mesh(patch,land.material);mesh.name='Mountain road cuts and embankments';mesh.receiveShadow=true;
-  const original=geometry.index;geometry.setIndex(remaining);land.add(mesh);
+  if(bands.length>1){
+    for(const {bounds} of bands){bounds.min.z=low;bounds.max.z=high;bounds.expandByScalar(.25);}
+    const frustum=new T.Frustum(),clip=new T.Matrix4();
+    let originalStart,originalCount;
+    // Omit only leading/trailing bands fully outside this camera. Keep one draw
+    // and the original triangle order for the road, water and reflection cameras.
+    mesh.onBeforeRender=(renderer,scene,camera)=>{
+      originalStart=patch.drawRange.start;originalCount=patch.drawRange.count;
+      clip.multiplyMatrices(camera.projectionMatrix,camera.matrixWorldInverse).multiply(mesh.matrixWorld);
+      frustum.setFromProjectionMatrix(clip);
+      let first=0,last=bands.length-1;
+      while(first<=last&&!frustum.intersectsBox(bands[first].bounds))first++;
+      while(last>=first&&!frustum.intersectsBox(bands[last].bounds))last--;
+      const begin=Math.max(originalStart,bands[first]?.start??patch.index.count);
+      const end=Math.min(originalStart+originalCount,bands[last+1]?.start??patch.index.count);
+      patch.setDrawRange(begin,Math.max(0,end-begin));
+    };
+    mesh.onAfterRender=()=>patch.setDrawRange(originalStart,originalCount);
+  }
+  const original=geometry.index;geometry.setIndex(new T.BufferAttribute(remaining,1));land.add(mesh);
   return {dispose(){land.remove(mesh);patch.dispose();geometry.setIndex(original);}};
 }

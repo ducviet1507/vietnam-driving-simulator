@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {runInNewContext} from 'node:vm';
+import {createRequire} from 'node:module';
 
 const source = readFileSync(new URL('../../dist/driving-graphics.js', import.meta.url), 'utf8');
 function graphicsFor(touch, deviceMemory, devicePixelRatio = 3) {
@@ -65,4 +66,29 @@ standard.dataset.graphics = 'low';
 standard.frames(450, 16);
 assert.equal(standard.renderer.scale, .9);
 assert.equal(graphicsFor(false, 8).graphics.profile.id, 'high');
+{
+  const pc=graphicsFor(false,8);
+  pc.frames(90,16.7);pc.frames(1,100);pc.frames(90,16.7);
+  assert.equal(pc.graphics.profile.id,'high');
+  for(let i=0;i<20;i++){pc.frames(12,16.7);pc.frames(1,40);}
+  assert.equal(pc.graphics.profile.id,'medium');
+  pc.frames(300,16.7);
+  assert.equal(pc.graphics.profile.id,'medium');
+}
+{
+  const T=createRequire(import.meta.url)('../../dist/three.min.js');
+  const script=readFileSync(new URL('../../dist/street-vehicle-light.js',import.meta.url),'utf8');
+  const create=runInNewContext(script+'\ncreateStreetVehicleLight');
+  const faces=[],renderer={coordinateSystem:T.WebGLCoordinateSystem,shadowMap:{},xr:{},
+    getRenderTarget:()=>null,getActiveCubeFace:()=>0,getActiveMipmapLevel:()=>0,
+    setRenderTarget(target,face){if(target)faces.push(face);},render(){}};
+  const light=create(T,renderer,new T.Scene()),position=new T.Vector3();
+  for(let i=0;i<8;i++){
+    position.z=i*200/3.6*.1;
+    light.reflect(position,[],i*100,true);
+  }
+  assert.deepEqual(faces,[0,1,2,3,4,5,0,1],'200 km/h must complete and publish a paint reflection');
+  position.z+=500;light.reflect(position,[],800,true);
+  assert.equal(faces.at(-1),0,'a district origin jump must restart the cube');
+}
 console.log('PASS automatic touch graphics, recovery and manual quality');

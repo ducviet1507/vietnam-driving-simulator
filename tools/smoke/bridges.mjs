@@ -9,6 +9,26 @@ for(const file of ['bridge-profiles','world-roads']){
   runInNewContext(readFileSync(new URL('../../dist/'+file+'.js',import.meta.url),'utf8'),world);
 }
 const proto=runInNewContext('VietnamRoads.prototype',world);
+// Crossing a rear tile boundary must keep both the edges and their solved
+// deck heights alive. A failed speculative tile must never block the road.
+{
+  const ctx={performance,RoadTileCodec:{roadRows:()=>()=>{}},buildBridgeProfiles:()=>({}),buildTunnelProfiles:()=>({})};
+  runInNewContext(readFileSync(new URL('../../dist/world-roads.js',import.meta.url),'utf8'),ctx);
+  const Roads=runInNewContext('VietnamRoads',ctx),r=new Roads({tiles:[]},0,0);
+  let required=['a','b'],buffered=['a','b','c'];
+  r.tileKeys=(_lon,_lat,radius)=>radius===.034?buffered:required;
+  r.tile=async key=>{if(key==='offline')throw Error('offline');return {rows:[]};};
+  await r.load(0,0);
+  const bridges=r.bridges;
+  required=['b','c'];await r.load(0,0);
+  assert.equal(r.bridges,bridges);
+  required=['d'];buffered=['d','offline'];await r.load(0,0);
+  assert.deepEqual([...r.loadedKeys],['d']);
+  await r.load(0,0,true);
+  assert.equal(r.wide,true);
+  required=[];await r.load(0,0);
+  assert.equal(r.loadedKeys.size,0);
+}
 const graph=Object.assign(Object.create(proto),{edges:new Map(),nodes:new Map(),footbridgeTiles:{},lon:0,lat:0,mx:100000,my:100000});
 function edge(id,start,end,x,z,xx,zz,bridge=false){
   const length=Math.hypot(xx-x,zz-z);

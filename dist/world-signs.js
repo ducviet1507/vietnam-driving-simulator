@@ -98,7 +98,7 @@ function createWorldSigns(T, scene, small) {
     const guide = Boolean(sign.rows), canvas = document.createElement('canvas');
     canvas.width = guide ? 768 : 192;
     canvas.height = guide ? 104 * sign.rows.length + 28 : sign.type === 'one-way' || sign.type === 'no-entry' ? 192 : 176;
-    const g = canvas.getContext('2d');
+    const g = canvas.getContext('2d', {willReadFrequently:true});
     g.lineJoin = g.lineCap = 'round';
     if (guide) {
       g.fillStyle = '#145798'; g.fillRect(0, 0, canvas.width, canvas.height);
@@ -142,7 +142,10 @@ function createWorldSigns(T, scene, small) {
       }
       g.stroke();
     }
-    const map = new T.CanvasTexture(canvas); map.colorSpace = T.SRGBColorSpace;
+    const pixels = g.getImageData(0,0,canvas.width,canvas.height);
+    const map = new T.DataTexture(new Uint8Array(pixels.data.buffer),canvas.width,canvas.height);
+    map.flipY=true;map.colorSpace=T.SRGBColorSpace;map.magFilter=T.LinearFilter;
+    map.minFilter=T.LinearMipmapLinearFilter;map.generateMipmaps=true;map.needsUpdate=true;
     const mat = new T.MeshLambertMaterial({map, alphaTest: .45});
     faces.set(key, mat); return mat;
   }
@@ -250,9 +253,10 @@ function createWorldSigns(T, scene, small) {
           kind:'pole', x:pole.position.x, z:pole.position.z, radius:.085, baseY:bottom,height:top-bottom, parts:[]});
       }
     }
-    return () => {
+    const publish=() => {
       displayed.clear();displayed.add(group);displayedFaces=used;trim(used);
     };
+    publish.group=group;return publish;
   }
   return {prepare, cancel:()=>trim(displayedFaces)};
 }

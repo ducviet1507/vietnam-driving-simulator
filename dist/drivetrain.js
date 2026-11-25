@@ -78,6 +78,7 @@ window.DriveBody={
  },
  reset(c){
    delete c.dent;delete c.axlePose;c.jointPitch=0;c.jointHeave=0;c.jointSteer=0;
+   c.steerHold=0;c.directBlend=0;
    c.vx=0;c.vz=0;c.speed=0;c.steer=0;c.steerTravel=0;c.spin=0;c.slip=0;c.pitch=0;c.roll=0;c.boost=false;c.brake=false;c.offroad=false;c.reverseDelay=0;
  },
  settle(c,dt){
@@ -141,15 +142,28 @@ window.DriveBody={
    return c.spec?.speedGovernor?Math.min(next,input.top):next;
  },
  wheelAngle(c,input,dt,forward,next,wheelbase,traction=1){
-   const profile=input.steeringProfile??4;
+   const adaptive=input.steeringProfile==='adaptive';
+   const profile=adaptive?4:(input.steeringProfile??4);
+   let classic=Math.max(0,2-profile);
+   if(adaptive){
+     // Accumulate time in one direction. A partial digital step counts only its held fraction.
+     const previousHold=c.steerHold||0;
+     c.steerHold=(previousHold*input.steer>0?previousHold:0)+input.steer*dt;
+     const target=Math.min(1,Math.max(0,(Math.abs(c.steerHold)-.15)/.25));
+     // Ease back out over 150 ms on release or reversal, even from full lock.
+     c.directBlend=Math.max(target,(c.directBlend||0)-dt/.15);
+     classic=c.directBlend*c.directBlend*(3-2*c.directBlend);
+   }else{
+     c.steerHold=0;c.directBlend=0;
+   }
    const steeringLock=(c.spec?.steerLock??.52)/(1+Math.abs(next)*.056);
    if(profile===1){
      c.steer+=(input.steer-c.steer)*(1-Math.exp(-dt*8));
      c.steerTravel=c.steer;
      return c.steer*steeringLock;
    }
-   const classic=Math.max(0,2-profile),revised=Math.min(1,Math.max(0,profile-2));
-   const middle=1-classic-revised;
+   const revised=adaptive?1-classic:Math.min(1,Math.max(0,profile-2));
+   const middle=adaptive?0:1-classic-revised;
    const travel=c.steerTravel??c.steer;
    const speedKmh=Math.abs(forward)*3.6;
    const middleCurve=3*Math.max(0,Math.min(1,(speedKmh-20)/120));

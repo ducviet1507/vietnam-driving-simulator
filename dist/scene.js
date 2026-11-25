@@ -78,7 +78,7 @@
   });
   const sky=new T.Mesh(new T.SphereGeometry(500,32,20),skyMaterial);scene.add(sky);
   const loader=new T.TextureLoader();
-  loader.load('streetscape/sky.jpg',map=>{
+  const skyReady=loader.loadAsync('streetscape/sky.jpg').then(map=>{
     skyMaterial.uniforms.pano.value=map;
     skyMaterial.uniforms.hasPano.value=1;
     const reflections=map.clone();
@@ -86,7 +86,7 @@
     reflections.colorSpace=T.SRGBColorSpace;
     reflections.needsUpdate=true;
     scene.environment=reflections;
-  });
+  }).catch(()=>{});
   const asphalt=texture(256,256,(ctx,w,h)=>{
     ctx.fillStyle='#585952';ctx.fillRect(0,0,w,h);
     for(let i=0;i<19000;i++){ctx.fillStyle=random()>.5?'rgba(255,245,221,.1)':'rgba(0,0,0,.15)';ctx.fillRect(random()*w,random()*h,1+random()*2,1);}
@@ -118,7 +118,7 @@
   }
   sceneryParent=routeSets.city;
   roadMarkings(90);
-  const shopNames=['CÀ PHÊ PHỐ','BÁNH MÌ','HOA TƯƠI','NHÀ SÁCH','PHỞ HÀ NỘI','TRÀ VIỆT','TẠP HÓA','TIỆM ẢNH'];
+  const shopTypes=['CÀ PHÊ','BÁNH MÌ','HOA TƯƠI','NHÀ SÁCH','PHỞ BÒ','QUÁN TRÀ','TẠP HÓA','TIỆM ẢNH'];
   const paints=['#e4c190','#cbd8c5','#e2b9a1','#e7dbbe','#c9cbbb','#e3cc9d','#b4c6bf','#ecd4b5'];
   const boards=['#12594f','#ae4c35','#3d6862','#394e63','#9a342d','#39614a','#ab7031','#374653'];
   function facade(i,floors) {
@@ -142,8 +142,7 @@
         c.fillStyle='#eee2c7';c.fillRect(0,top+fh-6,w,6);
       }
       c.fillStyle=boards[i];c.fillRect(0,544,w,72);
-      c.fillStyle='#fff6d9';c.font='bold 49px Arial';c.textAlign='center';c.fillText(shopNames[i],256,598,482);
-      c.fillStyle='#cdc4a6';c.font='bold 11px Arial';c.fillText(['CÀ PHÊ RANG XAY','BÁNH MÌ NÓNG','HOA TƯƠI MỖI NGÀY','SÁCH VÀ VĂN PHÒNG PHẨM','PHỞ BÒ GIA TRUYỀN','TRÀ VÀ CÀ PHÊ','HÀNG TIÊU DÙNG','IN ẢNH KỸ THUẬT SỐ'][i],256,612,475);
+      c.fillStyle='#fff6d9';c.font='bold 49px Arial';c.textAlign='center';c.fillText(shopTypes[i],256,598,482);
       c.restore();c.translate(0,520);c.scale(1,(h-520)/(h-618));c.translate(0,-618);
       c.fillStyle='#344746';c.fillRect(12,625,488,143);
       // Layer a reflected street, shelving and merchandise behind the shop glass.
@@ -168,7 +167,7 @@
       c.fillStyle='#c6bea7';c.fillRect(entrance+56,716,3,15);
     })});
   }
-  const facades=shopNames.map((_,i)=>facade(i,2+i%3));
+  const facades=shopTypes.map((_,i)=>facade(i,2+i%3));
   const panel=new T.PlaneGeometry();
   const streetTrees=createTreeModels(T);
   function tree(x,z){
@@ -513,6 +512,7 @@
       seed=selectedCourse==='school'?12473:20473;
       build();sceneryParent=scene;seed=previousSeed;
       flushStaticParts();
+      prepareMirrors(routeSets[selectedCourse]);
       unbuiltCourses.delete(selectedCourse);
     }
     for(const [id,group] of Object.entries(routeSets))group.visible=id===selectedCourse;
@@ -627,12 +627,18 @@
     const heaterGlass=new T.BufferGeometry();
     heaterGlass.setAttribute('position',new T.Float32BufferAttribute(heaterWire,3));
     model.add(new T.LineSegments(heaterGlass,new T.LineBasicMaterial({color:0x413b32,transparent:true,opacity:.42,depthWrite:false})));
+    await prepareStreetObject(model);
     const groundShadow=player.children[0];
     player.clear();
     player.add(groundShadow,model);
   }
   loadPlayerSedan().catch(()=>{ /* Keep the lightweight car on older browsers or offline file URLs. */ });
-  const traffic=window.createStreetTraffic(scene,shadowTex);
+  async function prepareStreetObject(object){
+    await skyReady;
+    try{await driverCabin.prepare(renderer,scene,camera,object,true);}
+    catch(error){console.warn('Street shader preparation',error);}
+  }
+  const traffic=window.createStreetTraffic(scene,shadowTex,prepareStreetObject);
   function flushStaticParts(){
     for(const {geo,mat,matrices,host} of staticParts.values()){
       const mesh=new T.InstancedMesh(geo,mat,matrices.length);
@@ -645,6 +651,12 @@
   }
   flushStaticParts();
 
+  let pendingMirrorBatches=0;
+  function prepareMirrors(object){
+    pendingMirrorBatches++;
+    prepareStreetObject(object).finally(()=>pendingMirrorBatches--);
+  }
+  prepareMirrors(scene);
   let cockpit=true;
   window.streetAmbience=()=>{
     const works=selectedCourse==='works',school=selectedCourse==='school';
@@ -731,8 +743,7 @@
     renderer.autoClear=true;
     if(driverCabin){
       driverCabin.update(showCabin,speed,steering,distance,courses.find(c=>c.id===selectedCourse)||courses[0]);
-      if(mode==='ready')driverCabin.prepare(renderer,scene,camera);
-      if(showCabin)driverCabin.reflect(renderer,scene,cabinRig,distance,lateral,graphics.profile.mirrorMs);
+      if(showCabin&&!pendingMirrorBatches)driverCabin.reflect(renderer,scene,cabinRig,distance,lateral,graphics.profile.mirrorMs);
     }
     renderer.render(scene,camera);
   };

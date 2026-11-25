@@ -55,8 +55,8 @@ class VietnamRoads {
      this.cache.set(key,pending);
    }return this.cache.get(key);
  }
- async load(x,z,wide=false){
-   const [lon,lat]=this.geo(x,z),r=wide?.13:.022,keys=[];
+ tileKeys(lon,lat,r){
+   const keys=[];
    for(let a=Math.floor((lon-r)*4);a<=Math.floor((lon+r)*4);a++)
      for(let b=Math.floor((lat-r)*4);b<=Math.floor((lat+r)*4);b++){
        const key=a+'_'+b;if(!this.available.has(key))continue;
@@ -67,8 +67,22 @@ class VietnamRoads {
            const part=key+'_'+i+'_'+j;if(this.subtiles.has(part))keys.push(part);
          }
      }
-   const signature=keys.join(','),stamp=++this.stamp;if(this.signature===signature)return;
-   const tiles=await Promise.all(keys.map(k=>this.tile(k)));
+   return keys;
+ }
+ async load(x,z,wide=false){
+   const [lon,lat]=this.geo(x,z),required=this.tileKeys(lon,lat,wide?.13:.022),stamp=++this.stamp;
+   // Keep the assembled graph until the required driving window leaves
+   // its buffered area. Dropping a rear tile alone needlessly rebuilds all
+   // intersections, bridge approaches and tunnel profiles under a moving car.
+   if(this.signature!=null&&wide===this.wide&&
+     (required.length?required.every(key=>this.loadedKeys.has(key)):this.loadedKeys.size===0))return;
+   let keys=wide||!required.length?required:this.tileKeys(lon,lat,.034),tiles;
+   try{tiles=await Promise.all(keys.map(k=>this.tile(k)));}
+   catch(error){
+     if(stamp!==this.stamp)return;
+     if(keys.length===required.length)throw error;
+     keys=required;tiles=await Promise.all(keys.map(k=>this.tile(k)));
+   }
    if(stamp!==this.stamp)return;
    const fresh=new Map(),nodes=new Map(),buckets=new Map(),updatedTags=[];
    const streaming=this.edges.size>0;
@@ -123,7 +137,8 @@ class VietnamRoads {
    this.turnOptions.clear();this.lastNearby=null;
    this.bridges=buildBridgeProfiles(this,this.bridgeDetails);
    this.tunnels=buildTunnelProfiles(this,this.tunnelData);
-   this.signature=tiles.some(tile=>tile.details===null)?null:signature;
+   this.loadedKeys=new Set(keys);this.wide=wide;
+   this.signature=tiles.some(tile=>tile.details===null)?null:keys.join(',');
    for(const k of this.cache.keys())if(!keys.includes(k))this.cache.delete(k);
  }
  nearby(x,z,r){

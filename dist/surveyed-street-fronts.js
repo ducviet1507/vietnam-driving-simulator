@@ -206,7 +206,7 @@ window.SurveyedStreetFronts=(()=>{
       }
     }
     if(surveyKind==='hotel'){
-      // The four round lanterns and the name board are visible in the 2015 elevation.
+      // Four round lanterns hang from the street gallery.
       for(const offset of [-.73,-.30,.30,.73]){
         const u=offset*span,v=post-.22,r=Math.min(.20,pitch*.09),y=soffit-r*1.36;
         const rings=[[.32,-1],[.88,-.62],[1,0],[.88,.62],[.32,1]];
@@ -218,24 +218,6 @@ window.SurveyedStreetFronts=(()=>{
           face(point(l,rings[j-1]),point(h,rings[j-1]),point(h,rings[j]),point(l,rings[j]),k%2?0x9d463a:0x963d32);
         }
         panel(u-.011,u+.011,y-r-.12,y+r*1.4,v,0x745644);
-      }
-      const size=Math.min(.056,pitch/50),signY=head-.30,depth=back+.14;
-      const signWidth=40*size,across=Math.sign(f.ux*f.nz-f.uz*f.nx);
-      panel(-signWidth/2,signWidth/2,signY-size,signY+size*7.4,depth,0x514134);
-      const glyphs={V:[5,5,5,5,2],I:[7,2,2,2,7],N:[5,7,7,5,5],H:[5,5,7,5,5],U:[5,5,5,5,7],G:[7,4,5,5,7]};
-      const chars='VINH HUNG';
-      for(let j=0;j<chars.length;j++){
-        const rows=glyphs[chars[j]];if(!rows)continue;
-        for(let k=0;k<5;k++)for(let n=0;n<3;n++){
-          if(!(rows[k]&(4>>n)))continue;
-          const u=(4*j+n-17)*size*across,y=signY+(4-k)*size;
-          panel(u-size*.5,u+size*.5,y,y+size,depth+.009,0xebce83);
-        }
-      }
-      // The tilde in VĨNH and horn in HƯNG are part of the photographed name.
-      for(const [j,k] of [[4,5.8],[5,5.65],[6,5.80],[25.7,4.8],[26.3,5.4]]){
-        const u=(j-17)*size*across,y=signY+k*size;
-        panel(u-size*.50,u+size*.50,y,y+size*.58,depth+.010,0xebce83);
       }
     }
     return {top:soffit,balcony:upper?inset:0};

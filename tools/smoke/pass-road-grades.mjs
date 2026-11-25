@@ -23,6 +23,29 @@ const job=ctx.meshPassRoadFormation(T,f,land,0,0,size);let step;
 do{step=job.next();}while(!step.done);
 assert.ok(land.geometry.index.count<original.count);
 land.updateMatrixWorld(true);
+const formationMesh=land.children[0],patch=formationMesh.geometry;
+const camera=new T.PerspectiveCamera(55,16/9,.1,400);
+let trimmed=false;
+for(const target of [[0,10,-90],[0,10,90],[500,10,500],[0,10,0]]){
+  camera.position.set(0,15,10);camera.lookAt(...target);camera.updateMatrixWorld();
+  const projection=new T.Matrix4().multiplyMatrices(camera.projectionMatrix,camera.matrixWorldInverse).multiply(formationMesh.matrixWorld);
+  const clip=Array.from({length:patch.attributes.position.count},(_,i)=>{
+    const p=new T.Vector3().fromBufferAttribute(patch.attributes.position,i);
+    return new T.Vector4(p.x,p.y,p.z,1).applyMatrix4(projection);
+  });
+  formationMesh.onBeforeRender(null,null,camera);
+  const {start,count}=patch.drawRange;
+  trimmed||=count<patch.index.count;
+  for(let i=0;i<patch.index.count;i+=3){
+    if(i>=start&&i<start+count)continue;
+    const points=[0,1,2].map(j=>clip[patch.index.getX(i+j)]);
+    assert.ok(['x','y','z'].some(axis=>[-1,1].some(sign=>points.every(p=>sign*p[axis]>p.w))),
+      'A skipped formation triangle can intersect the camera view');
+  }
+  formationMesh.onAfterRender();
+  assert.deepEqual(patch.drawRange,{start:0,count:Infinity});
+}
+assert.ok(trimmed,'At least one camera must cull terrain bands');
 const ray=new T.Raycaster(),down=new T.Vector3(0,-1,0);
 for(let x=-120;x<=120;x+=11)for(let z=-100;z<=100;z+=13){
   ray.set(new T.Vector3(x+.3,300,z+.6),down);

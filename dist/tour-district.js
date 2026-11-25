@@ -568,7 +568,7 @@ function createTourDistrict(T,scene,plaster,structures,osmBuildings,nightLights)
   }
   function createView(parent){
   const group=new T.Group();group.name='OSM building footprints';parent.add(group);
-  const batches=[wall,roof].map(mat=>({mat,stride:mat===wall?14:12,data:new Float32Array(0),used:0,curved:[]}));
+  const batchPool=[];
   const cells=new Map(),blocks=new Map(),streetFronts=[];
   function contact(x,z,r){
     let hit;
@@ -660,8 +660,8 @@ function createTourDistrict(T,scene,plaster,structures,osmBuildings,nightLights)
     }
     return false;
   }
-  function clear(){
-    for(const mesh of [...group.children]){group.remove(mesh);mesh.geometry.dispose();}
+  function clear(release=g=>g.dispose()){
+    for(const mesh of [...group.children]){group.remove(mesh);release(mesh.geometry);}
     cells.clear();blocks.clear();streetFronts.length=0;
   }
   function* buildSteps(graph,cx,cz,landmarks,ground=()=>0,edges=[],openGround=()=>false,radius=620,terrainRevision,memorialAt=()=>false,shore=null,finishes=null){
@@ -720,9 +720,20 @@ function createTourDistrict(T,scene,plaster,structures,osmBuildings,nightLights)
       }
       return found;
     }
-    for(const b of batches){
-      if(b.used < b.data.length/4)b.data=new Float32Array(b.used);
-      b.used=0;b.curved.length=0;
+    // Keep neighbouring footprints together so the camera, paint and shadow
+    // frustums can reject whole blocks. Reuse buffers from this spare view.
+    const blocksOfMeshes=new Map();let batches,batchCount=0;
+    function buildingBatches(x,z){
+      const key=Math.floor((x-cx)/160)+','+Math.floor((z-cz)/160);
+      if(blocksOfMeshes.has(key))return blocksOfMeshes.get(key);
+      const pair=batchPool[batchCount++]??=[wall,roof].map(mat=>({
+        mat,stride:mat===wall?14:12,data:new Float32Array(0),used:0,curved:[]
+      }));
+      for(const b of pair){
+        if(b.used<b.data.length/4)b.data=new Float32Array(b.used);
+        b.used=0;b.curved.length=0;
+      }
+      blocksOfMeshes.set(key,pair);return pair;
     }
     let baseY=0,opening=0,facadeSeed=0;
     function vertex(b,x,y,z,u,v,tint,finish=0,bay=-1,floor=0,normal){
@@ -935,6 +946,7 @@ function createTourDistrict(T,scene,plaster,structures,osmBuildings,nightLights)
       const custom=survey&&(survey.steleRows||vanMieuArchitectureRefs.has(id));
       const plots=bottom>2.2||use==='roof'||custom?[outline]:clearBuildingRoads(T,outline,nearRoads);
       if(!plots.length)continue;
+      batches=buildingBatches(x,z);
       const block=Math.floor(x/70)+','+Math.floor(z/70);blocks.set(block,(blocks.get(block)||0)+1);
       for(const outline of plots){
         const {rings,flat,box}=outline,outer=rings[0],{minX,minZ,maxX,maxZ}=box;
@@ -1095,7 +1107,8 @@ function createTourDistrict(T,scene,plaster,structures,osmBuildings,nightLights)
         }
       }
     }
-    for(const b of batches){
+    batchPool.length=batchCount;
+    for(const pair of blocksOfMeshes.values())for(const b of pair){
       if(!b.used)continue;
       const data=b.data.subarray(0,b.used);
       let run=0;
@@ -1113,13 +1126,18 @@ function createTourDistrict(T,scene,plaster,structures,osmBuildings,nightLights)
         }
         writePlanar(cursor,end);yield;
       }
-      const buffer=new T.InterleavedBuffer(data,b.stride),g=new T.BufferGeometry();
-      const attribute=(size,offset)=>new T.InterleavedBufferAttribute(buffer,size,offset);
-      g.setAttribute('position',attribute(3,0));g.setAttribute('normal',attribute(3,3));
-      g.setAttribute('uv',attribute(2,6));g.setAttribute('color',attribute(3,8));
-      g.setAttribute(b.mat===wall?'openingStyle':'roofFinish',attribute(1,11));
-      if(b.mat===wall)g.setAttribute('bays',attribute(2,12));
-      const mesh=new T.Mesh(g,b.mat);mesh.receiveShadow=true;mesh.castShadow=true;group.add(mesh);
+      for(let start=0;start<data.length;start+=b.stride*12288){
+        const chunk=data.subarray(start,start+b.stride*12288),buffer=new T.InterleavedBuffer(chunk,b.stride);
+        const g=new T.BufferGeometry(),attribute=(size,offset)=>new T.InterleavedBufferAttribute(buffer,size,offset);
+        g.userData.streamedSurface=true;
+        g.setAttribute('position',attribute(3,0));g.setAttribute('normal',attribute(3,3));
+        g.setAttribute('uv',attribute(2,6));g.setAttribute('color',attribute(3,8));
+        g.setAttribute(b.mat===wall?'openingStyle':'roofFinish',attribute(1,11));
+        if(b.mat===wall)g.setAttribute('bays',attribute(2,12));
+        g.computeBoundingSphere();
+        const mesh=new T.Mesh(g,b.mat);mesh.receiveShadow=true;mesh.castShadow=true;group.add(mesh);
+        yield;
+      }
     }
   }
   function footprint(site,x,z){

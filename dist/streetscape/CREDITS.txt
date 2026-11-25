@@ -98,7 +98,7 @@ https://polyhaven.com/a/palm_bark
 Landmark grain packs neutral luminance from the plaster and rock scans above and Wood Planks by Poly Haven (CC0).
 https://polyhaven.com/a/wood_planks
 
-quoc-tu-giam-signs.webp and quoc-tu-giam-balconies.webp: Ltn12345, “Quốc Tử Giám Street, Hanoi” 02, 03 and 04, 5 June 2022. Cropped and perspective-corrected shop signs, balcony fronts and pedestrian-crossing sign. Both adapted textures are licensed under CC BY-SA 4.0.
+quoc-tu-giam-crossing.webp and quoc-tu-giam-windows.webp contain the pedestrian-crossing pictogram and five upper-storey window and balcony views. The images are cropped and perspective-corrected from Ltn12345’s “Quốc Tử Giám Street, Hanoi” 02, 03 and 04, 5 June 2022. Both adapted textures are licensed under CC BY-SA 4.0. Reproduce the crops from the archived survey with tools/build_quoc_tu_giam_street_assets.py.
 https://commons.wikimedia.org/wiki/File:Qu%E1%BB%91c_T%E1%BB%AD_Gi%C3%A1m_Street,_Hanoi_02.jpg
 https://commons.wikimedia.org/wiki/File:Qu%E1%BB%91c_T%E1%BB%AD_Gi%C3%A1m_Street,_Hanoi_03.jpg
 https://commons.wikimedia.org/wiki/File:Qu%E1%BB%91c_T%E1%BB%AD_Gi%C3%A1m_Street,_Hanoi_04.jpg
