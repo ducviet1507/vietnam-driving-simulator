@@ -856,7 +856,7 @@ function render(now){
      }
    }
    courseLight.wetLights(lights,wet,night);
-   courseLight.reflect(rig.position,[rig],now,!inside&&graphics.profile.id!=='low');
+   courseLight.reflect(rig.position,[outer],now,!inside&&graphics.profile.id!=='low');
  }
  if(!route.stage)courseWater.reflect(renderer,scene,camera,waterLevel,now,Math.abs(s.d-(bridgeStart+bridgeEnd)*.5)<220||(river&&s.d<bridgeEnd+150),graphics.profile,mirrorUpdated);
  renderer.render(scene,camera);
